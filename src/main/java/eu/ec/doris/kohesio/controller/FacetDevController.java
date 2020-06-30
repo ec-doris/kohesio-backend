@@ -1,6 +1,7 @@
 package eu.ec.doris.kohesio.controller;
 
 import eu.ec.doris.kohesio.controller.payload.Beneficiary;
+import eu.ec.doris.kohesio.controller.payload.NutsRegion;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -61,9 +62,6 @@ public class FacetDevController {
   @Value("${kohesio.directory}")
   String location;
 
-  @Value("${kohesio.sparqlEndpoint}")
-  String sparqlEndpoint;
-
   // Set this to allow browser requests from other websites
   @ModelAttribute
   public void setVaryResponseHeader(HttpServletResponse response) {
@@ -90,7 +88,7 @@ public class FacetDevController {
                     + language
                     + "\")"
                     + "}";
-    TupleQueryResult resultSet = executeAndCacheQuery(query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
 
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
@@ -119,7 +117,7 @@ public class FacetDevController {
                     + language
                     + "\")"
                     + "}";
-    TupleQueryResult resultSet = executeAndCacheQuery(query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -143,7 +141,7 @@ public class FacetDevController {
                     + language
                     + "\")"
                     + "}";
-    TupleQueryResult resultSet = executeAndCacheQuery(query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -171,7 +169,7 @@ public class FacetDevController {
                     + language
                     + "\")"
                     + "}";
-    TupleQueryResult resultSet = executeAndCacheQuery(query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql",query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -209,7 +207,7 @@ public class FacetDevController {
                     + "\")"
                     + "}";
 
-    TupleQueryResult resultSet = executeAndCacheQuery(query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -237,7 +235,7 @@ public class FacetDevController {
                     + "\")"
                     + "}";
 
-    TupleQueryResult resultSet = executeAndCacheQuery(query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -424,7 +422,7 @@ public class FacetDevController {
 
     String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
     System.out.println("query " + query);
-    TupleQueryResult resultSet = executeAndCacheQuery(query, 10);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
     int numResults = 0;
     if (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -461,7 +459,7 @@ public class FacetDevController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P302> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                     + "} ";
-    resultSet = executeAndCacheQuery(query, 10);
+    resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
 
     JSONArray resultList = new JSONArray();
     String previewsKey = "";
@@ -623,7 +621,7 @@ public class FacetDevController {
                     + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID . "
                     + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) .}  }"
                     + "} ";
-    TupleQueryResult resultSet = executeAndCacheQuery(query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
 
     JSONObject result = new JSONObject();
     result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
@@ -816,6 +814,88 @@ public class FacetDevController {
     return result;
   }
 
+  @GetMapping(value = "/facet/eu/project/region", produces = "application/json")
+  public NutsRegion euIdCoordinates( //
+                                     @RequestParam(value = "id") String id,
+                                     @RequestParam(value = "language", defaultValue = "en") String language)
+          throws Exception {
+    String query =
+            "select ?s0 ?coordinates where { "
+                    + " VALUES ?s0 { <"
+                    + id
+                    + "> } "
+
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } }";
+    System.out.println(query);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
+
+    String coo = "";
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+
+      if (querySolution.getBinding("coordinates") != null) {
+        coo = ((Literal) querySolution.getBinding("coordinates").getValue()).stringValue();
+      }
+    }
+    query =
+      "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+      +"PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+      +"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+      +"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+      +"SELECT ?id ?label ?geoJson ?label1 ?id1 ?label2 ?id2 ?label3 ?id3  WHERE { "
+      +"?s rdf:type <http://nuts.de/NUTS3> . "
+      +"?s <http://nuts.de/geometry> ?o . "
+      +" FILTER (geof:sfWithin(\""+coo+"\"^^geo:wktLiteral,?o)) "
+      +"?s <http://nuts.de/geoJson> ?geoJson . "
+      +"?s rdfs:label ?label . "
+      +"?s <http://nuts.de/id> ?id . "
+      +"OPTIONAL {?s <http://nuts.de/contained> ?contained1 . "
+      +"          ?contained1 rdfs:label ?label1 .  "
+      +"          ?contained1 <http://nuts.de/id> ?id1 . "
+      +"           OPTIONAL {?contained1 <http://nuts.de/contained> ?contained2 . "
+      +"          ?contained2 rdfs:label ?label2 .  "
+      +"          ?contained2 <http://nuts.de/id> ?id2 . "
+      +"           OPTIONAL {?contained2 <http://nuts.de/contained> ?contained3 . "
+      +"          ?contained3 rdfs:label ?label3 . "
+      +"          ?contained3 <http://nuts.de/id> ?id3 . }}} "
+      +"}";
+    System.out.println(query);
+    resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/nuts/sparql", query, 5);
+
+    NutsRegion nutsRegion = new NutsRegion();
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      if (querySolution.getBinding("id") != null) {
+        nutsRegion.setId(((Literal) querySolution.getBinding("id").getValue()).stringValue());
+      }
+      if (querySolution.getBinding("label") != null) {
+        nutsRegion.setLabel(((Literal) querySolution.getBinding("label").getValue()).stringValue());
+      }
+      if (querySolution.getBinding("label1") != null) {
+        nutsRegion.setLabelUpper1(((Literal) querySolution.getBinding("label1").getValue()).stringValue());
+      }
+      if (querySolution.getBinding("id1") != null) {
+        nutsRegion.setIdUpper1(((Literal) querySolution.getBinding("id1").getValue()).stringValue());
+      }
+      if (querySolution.getBinding("label2") != null) {
+        nutsRegion.setLabelUpper2(((Literal) querySolution.getBinding("label2").getValue()).stringValue());
+      }
+      if (querySolution.getBinding("id2") != null) {
+        nutsRegion.setIdUpper2(((Literal) querySolution.getBinding("id2").getValue()).stringValue());
+      }
+      if (querySolution.getBinding("label3") != null) {
+        nutsRegion.setLabelUpper3(((Literal) querySolution.getBinding("label3").getValue()).stringValue());
+      }
+      if (querySolution.getBinding("id3") != null) {
+        nutsRegion.setIdUpper3(((Literal) querySolution.getBinding("id3").getValue()).stringValue());
+      }
+      if (querySolution.getBinding("geoJson") != null) {
+        nutsRegion.setGeoJson(((Literal) querySolution.getBinding("geoJson").getValue()).stringValue());
+      }
+    }
+    return nutsRegion;
+  }
+
   @GetMapping(value = "/facet/eu/search/beneficiaries", produces = "application/json")
   public List euSearchBeneficiaries( //
                                      @RequestParam(value = "language", defaultValue = "en") String language,
@@ -894,7 +974,7 @@ public class FacetDevController {
                     + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
                     + "} ";
 
-    TupleQueryResult resultSet = executeAndCacheQuery(query, 30);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 30);
 
     List<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
     Beneficiary beneficary = new Beneficiary();
@@ -1079,7 +1159,7 @@ public class FacetDevController {
     }
   }
 
-  public TupleQueryResult executeAndCacheQuery(String query, int timeout) throws Exception {
+  public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout) throws Exception {
     File dir = new File(location + "/facet/cache/");
     if (!dir.exists()) {
       dir.mkdirs();
