@@ -28,15 +28,9 @@ public class SwaggerConfig {
         .host(publicUrl)
         .select()
         .apis(RequestHandlerSelectors.any())
-        .paths(Predicates.not(PathSelectors.regex("/error.*")))
-        .paths(Predicates.not(PathSelectors.regex("/api/expansion.*")))
-        .paths(Predicates.not(PathSelectors.regex("/api/connection.*")))
-        .paths(Predicates.not(PathSelectors.regex("/api/qa/annotation.*")))
-        .paths(Predicates.not(PathSelectors.regex("/api/chat/annotation.*")))
-        .paths(Predicates.not(PathSelectors.regex("/api/link")))
-        .paths(Predicates.not(PathSelectors.regex("/api/user/admin.*")))
-        .paths(Predicates.not(PathSelectors.regex("/api/dataset/admin.*")))
-        .build()
+            .paths(Predicates.not(PathSelectors.regex("/error.*")))
+            .paths(PathSelectors.any())
+            .build()
         .apiInfo(apiInfo());
   }
 
