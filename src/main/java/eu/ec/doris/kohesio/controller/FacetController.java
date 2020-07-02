@@ -275,6 +275,7 @@ public class FacetController {
                                   @RequestParam(value = "offset", defaultValue = "0") int offset,
                                   Principal principal)
           throws Exception {
+    logger.info("language {} keywords {} country {} theme {} fund {} region {}",language,keywords,country,theme,fund,region);
 
     String search = "";
     if (keywords != null) {
@@ -387,8 +388,10 @@ public class FacetController {
       String row;
       while ((row = csvReader.readLine()) != null) {
         String[] data = row.split(";");
-        if (data.length>4 && region.equals(data[4])) {
-          coordinates = data[5];
+        if (data.length>4){
+          if (region.equals(data[4])){
+            coordinates = data[5];
+          }
         }
       }
         coordinates =
@@ -452,6 +455,7 @@ public class FacetController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P302> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                     + "} ";
+    System.out.println(query);
     resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
 
     JSONArray resultList = new JSONArray();
