@@ -621,7 +621,7 @@ public class FacetDevController {
                     + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID . "
                     + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) .}  }"
                     + "} ";
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2);
 
     JSONObject result = new JSONObject();
     result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
