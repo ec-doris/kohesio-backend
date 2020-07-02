@@ -817,6 +817,15 @@ public class FacetDevController {
     if (nutsRegion.getLabel()!=null){
       result.put("region",nutsRegion.getLabel());
     }
+    if (nutsRegion.getLabelUpper1()!=null){
+      result.put("regionUpper1",nutsRegion.getLabelUpper1());
+    }
+    if (nutsRegion.getLabelUpper2()!=null){
+      result.put("regionUpper2",nutsRegion.getLabelUpper2());
+    }
+    if (nutsRegion.getLabelUpper3()!=null){
+      result.put("regionUpper3",nutsRegion.getLabelUpper3());
+    }
     return result;
   }
 
