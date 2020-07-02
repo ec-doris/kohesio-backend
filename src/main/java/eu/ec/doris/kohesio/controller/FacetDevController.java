@@ -649,6 +649,10 @@ public class FacetDevController {
     result.put("beneficiaries", new JSONArray());
     result.put("managingAuthorityLabel", "");
     result.put("region","");
+    result.put("regionUpper1","");
+    result.put("regionUpper2","");
+    result.put("regionUpper3","");
+
 
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
