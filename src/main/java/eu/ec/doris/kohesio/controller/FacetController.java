@@ -48,6 +48,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,12 +81,9 @@ public class FacetController {
                                    @RequestParam(value = "language", defaultValue = "en") String language)
           throws Exception {
     String row;
-    File file = ResourceUtils.getFile("classpath:regions.csv");
-//    ClassPathResource res = new ClassPathResource("regions.csv");
-//    File file = new File(res.getPath());
-//    System.out.println(res..getPath());
-//    File file = new File(getClass().getResource("regions.csv").getFile());
-    BufferedReader csvReader = new BufferedReader(new FileReader(file));
+    ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    InputStream input = loader.getResourceAsStream("regions.csv");
+    BufferedReader csvReader = new BufferedReader(new BufferedReader(new InputStreamReader(input, "UTF-8")));
     JSONArray result = new JSONArray();
     while ((row = csvReader.readLine()) != null) {
       String[] data = row.split(";");
@@ -381,8 +380,9 @@ public class FacetController {
     }
 
     if (region != null) {
-      File file = ResourceUtils.getFile("classpath:regions.csv");
-      BufferedReader csvReader = new BufferedReader(new FileReader(file));
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      InputStream input = loader.getResourceAsStream("regions.csv");
+      BufferedReader csvReader = new BufferedReader(new BufferedReader(new InputStreamReader(input, "UTF-8")));
       String coordinates = "";
       String row;
       while ((row = csvReader.readLine()) != null) {
