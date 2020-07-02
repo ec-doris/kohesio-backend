@@ -648,6 +648,7 @@ public class FacetDevController {
     result.put("videos", new JSONArray());
     result.put("beneficiaries", new JSONArray());
     result.put("managingAuthorityLabel", "");
+    result.put("region","");
 
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -810,6 +811,11 @@ public class FacetDevController {
                 ((Literal) querySolution.getBinding("managingAuthorityLabel").getValue())
                         .stringValue());
       }
+    }
+    NutsRegion nutsRegion = euIdCoordinates(id,language);
+    System.out.println("COMputing nuts");
+    if (nutsRegion.getLabel()!=null){
+      result.put("region",nutsRegion.getLabel());
     }
     return result;
   }
