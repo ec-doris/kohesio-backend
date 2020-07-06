@@ -28,9 +28,12 @@ import org.mapstruct.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,11 +41,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,9 +62,9 @@ import java.util.Set;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
-@RequestMapping("/api/dev/")
+@RequestMapping("/api/dev")
 public class FacetDevController {
-  private static final Logger logger = LoggerFactory.getLogger(FacetDevController.class);
+  private static final Logger logger = LoggerFactory.getLogger(FacetController.class);
 
   @Value("${kohesio.directory}")
   String location;
@@ -73,31 +80,26 @@ public class FacetDevController {
                                    @RequestParam(value = "country", required = false) String country,
                                    @RequestParam(value = "language", defaultValue = "en") String language)
           throws Exception {
-
-    String kb = "eu";
-    String user = "Max";
-
-    String query =
-            ""
-                    + "select ?region ?regionLabel where { "
-                    + " <"
-                    + country
-                    + "> <https://linkedopendata.eu/prop/direct/P104>  ?region . "
-                    + " ?region rdfs:label ?regionLabel . "
-                    + " FILTER (lang(?regionLabel)=\""
-                    + language
-                    + "\")"
-                    + "}";
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
-
+    String row;
+    ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    InputStream input = loader.getResourceAsStream("regions.csv");
+    BufferedReader csvReader = new BufferedReader(new BufferedReader(new InputStreamReader(input, "UTF-8")));
     JSONArray result = new JSONArray();
-    while (resultSet.hasNext()) {
-      BindingSet querySolution = resultSet.next();
-      JSONObject element = new JSONObject();
-      element.put("region", querySolution.getBinding("region").toString());
-      element.put("name", querySolution.getBinding("regionLabel").getValue().stringValue());
-      result.add(element);
+    while ((row = csvReader.readLine()) != null) {
+      String[] data = row.split(";");
+      if (country.equals("https://linkedopendata.eu/entity/Q2") && data[0].equals("IE")
+              || country.equals("https://linkedopendata.eu/entity/Q15") && data[0].equals("IT")
+              || country.equals("https://linkedopendata.eu/entity/Q13") && data[0].equals("PL")
+              || country.equals("https://linkedopendata.eu/entity/Q25") && data[0].equals("CZ")
+              || country.equals("https://linkedopendata.eu/entity/Q20") && data[0].equals("FR")
+              || country.equals("https://linkedopendata.eu/entity/Q12") && data[0].equals("DK")) {
+        JSONObject element = new JSONObject();
+        element.put("region", data[4]);
+        element.put("name", data[3]);
+        result.add(element);
+      }
     }
+    csvReader.close();
     return result;
   }
 
@@ -248,31 +250,32 @@ public class FacetDevController {
   }
 
   @GetMapping(value = "/facet/eu", produces = "application/json")
-  public ResponseEntity qaSparql( //
-                                  @RequestParam(value = "language", defaultValue = "en") String language,
-                                  @RequestParam(value = "keywords", required = false) String keywords, //
-                                  @RequestParam(value = "country", required = false) String country,
-                                  @RequestParam(value = "theme", required = false) String theme,
-                                  @RequestParam(value = "fund", required = false) String fund,
-                                  @RequestParam(value = "program", required = false) String program,
-                                  @RequestParam(value = "categoryOfIntervention", required = false)
-                                          String categoryOfIntervention,
-                                  @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                  @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-                                  @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-                                  @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-                                  @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
-                                  @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
-                                  @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
-                                  @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
-                                  @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
-                                  @RequestParam(value = "latitude", required = false) String latitude,
-                                  @RequestParam(value = "longitude", required = false) String longitude,
-                                  @RequestParam(value = "region", required = false) String region,
-                                  @RequestParam(value = "limit", defaultValue = "200") int limit,
-                                  @RequestParam(value = "offset", defaultValue = "0") int offset,
-                                  Principal principal)
+  public ResponseEntity euSearchProject( //
+                                         @RequestParam(value = "language", defaultValue = "en") String language,
+                                         @RequestParam(value = "keywords", required = false) String keywords, //
+                                         @RequestParam(value = "country", required = false) String country,
+                                         @RequestParam(value = "theme", required = false) String theme,
+                                         @RequestParam(value = "fund", required = false) String fund,
+                                         @RequestParam(value = "program", required = false) String program,
+                                         @RequestParam(value = "categoryOfIntervention", required = false)
+                                                 String categoryOfIntervention,
+                                         @RequestParam(value = "policyObjective", required = false) String policyObjective,
+                                         @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
+                                         @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
+                                         @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
+                                         @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                         @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
+                                         @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
+                                         @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
+                                         @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+                                         @RequestParam(value = "latitude", required = false) String latitude,
+                                         @RequestParam(value = "longitude", required = false) String longitude,
+                                         @RequestParam(value = "region", required = false) String region,
+                                         @RequestParam(value = "limit", defaultValue = "200") int limit,
+                                         @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                         Principal principal)
           throws Exception {
+    logger.info("language {} keywords {} country {} theme {} fund {} region {}",language,keywords,country,theme,fund,region);
 
     String search = "";
     if (keywords != null) {
@@ -377,34 +380,28 @@ public class FacetDevController {
       }
     }
 
-    System.out.println("REGION " + region);
     if (region != null) {
-      String query =
-              ""
-                      + "select ?coordiantes where { "
-                      + " <"
-                      + region
-                      + "> <https://linkedopendata.eu/prop/direct/P127>  ?coordiantes . "
-                      + "}";
-
-      String sparqlEndpoint = "http://query.linkedopendata.eu/bigdata/namespace/wdq/sparql";
-      Repository repo = new SPARQLRepository(sparqlEndpoint);
-      TupleQueryResult resultSet = repo.getConnection().prepareTupleQuery(query).evaluate();
-      while (resultSet.hasNext()) {
-        BindingSet querySolution = resultSet.next();
-
-        String coordinates = querySolution.getBinding("coordiantes").getValue().toString();
-        System.out.println("COO " + coordinates);
-        coordinates =
-                coordinates
-                        .replace("\"Point(", "")
-                        .replace("\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>", "")
-                        .replace(")", "");
-
-        latitude = coordinates.split(" ")[1];
-        longitude = coordinates.split(" ")[0];
-        System.out.println("lat " + latitude + "--- long " + longitude);
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      InputStream input = loader.getResourceAsStream("regions.csv");
+      BufferedReader csvReader = new BufferedReader(new BufferedReader(new InputStreamReader(input, "UTF-8")));
+      String coordinates = "";
+      String row;
+      while ((row = csvReader.readLine()) != null) {
+        String[] data = row.split(";");
+        if (data.length>4){
+          if (region.replace("https://linkedopendata.eu/entity/","").equals(data[4])){
+            coordinates = data[5];
+          }
+        }
       }
+      coordinates =
+              coordinates
+                      .replace("Point(", "")
+                      //.replace("\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>", "")
+                      .replace(")", "");
+
+      latitude = coordinates.split(" ")[1];
+      longitude = coordinates.split(" ")[0];
     }
 
     if (latitude != null && longitude != null) {
@@ -421,7 +418,6 @@ public class FacetDevController {
             "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
 
     String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
-    System.out.println("query " + query);
     TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
     int numResults = 0;
     if (resultSet.hasNext()) {
@@ -459,6 +455,7 @@ public class FacetDevController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P302> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                     + "} ";
+    System.out.println(query);
     resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
 
     JSONArray resultList = new JSONArray();
@@ -649,6 +646,7 @@ public class FacetDevController {
     result.put("beneficiaries", new JSONArray());
     result.put("managingAuthorityLabel", "");
     result.put("region","");
+    result.put("geoJson","");
     result.put("regionUpper1","");
     result.put("regionUpper2","");
     result.put("regionUpper3","");
@@ -821,6 +819,9 @@ public class FacetDevController {
     if (nutsRegion.getLabel()!=null){
       result.put("region",nutsRegion.getLabel());
     }
+    if (nutsRegion.getGeoJson()!=null){
+      result.put("geoJson",nutsRegion.getGeoJson());
+    }
     if (nutsRegion.getLabelUpper1()!=null){
       result.put("regionUpper1",nutsRegion.getLabelUpper1());
     }
@@ -857,27 +858,27 @@ public class FacetDevController {
       }
     }
     query =
-      "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
-      +"PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-      +"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-      +"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
-      +"SELECT ?id ?label ?geoJson ?label1 ?id1 ?label2 ?id2 ?label3 ?id3  WHERE { "
-      +"?s rdf:type <http://nuts.de/NUTS3> . "
-      +"?s <http://nuts.de/geometry> ?o . "
-      +" FILTER (geof:sfWithin(\""+coo+"\"^^geo:wktLiteral,?o)) "
-      +"?s <http://nuts.de/geoJson> ?geoJson . "
-      +"?s rdfs:label ?label . "
-      +"?s <http://nuts.de/id> ?id . "
-      +"OPTIONAL {?s <http://nuts.de/contained> ?contained1 . "
-      +"          ?contained1 rdfs:label ?label1 .  "
-      +"          ?contained1 <http://nuts.de/id> ?id1 . "
-      +"           OPTIONAL {?contained1 <http://nuts.de/contained> ?contained2 . "
-      +"          ?contained2 rdfs:label ?label2 .  "
-      +"          ?contained2 <http://nuts.de/id> ?id2 . "
-      +"           OPTIONAL {?contained2 <http://nuts.de/contained> ?contained3 . "
-      +"          ?contained3 rdfs:label ?label3 . "
-      +"          ?contained3 <http://nuts.de/id> ?id3 . }}} "
-      +"}";
+            "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+                    +"PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+                    +"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                    +"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+                    +"SELECT ?id ?label ?geoJson ?label1 ?id1 ?label2 ?id2 ?label3 ?id3  WHERE { "
+                    +"?s rdf:type <http://nuts.de/NUTS3> . "
+                    +"?s <http://nuts.de/geometry> ?o . "
+                    +" FILTER (geof:sfWithin(\""+coo+"\"^^geo:wktLiteral,?o)) "
+                    +"?s <http://nuts.de/geoJson> ?geoJson . "
+                    +"?s rdfs:label ?label . "
+                    +"?s <http://nuts.de/id> ?id . "
+                    +"OPTIONAL {?s <http://nuts.de/contained> ?contained1 . "
+                    +"          ?contained1 rdfs:label ?label1 .  "
+                    +"          ?contained1 <http://nuts.de/id> ?id1 . "
+                    +"           OPTIONAL {?contained1 <http://nuts.de/contained> ?contained2 . "
+                    +"          ?contained2 rdfs:label ?label2 .  "
+                    +"          ?contained2 <http://nuts.de/id> ?id2 . "
+                    +"           OPTIONAL {?contained2 <http://nuts.de/contained> ?contained3 . "
+                    +"          ?contained3 rdfs:label ?label3 . "
+                    +"          ?contained3 <http://nuts.de/id> ?id3 . }}} "
+                    +"}";
     System.out.println(query);
     resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/nuts/sparql", query, 5);
 
@@ -1166,6 +1167,10 @@ public class FacetDevController {
       for (Object region : regions) {
         euSearchBeneficiaries(
                 "en", null, country, ((JSONObject) region).get("region").toString(), null, null, null);
+      }
+      for (Object region : regions) {
+        euSearchProject(
+                "en", null, country, null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,((JSONObject) region).get("region").toString(),200,0,null);
       }
     }
   }
