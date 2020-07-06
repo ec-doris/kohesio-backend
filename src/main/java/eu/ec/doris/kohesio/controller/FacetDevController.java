@@ -50,6 +50,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -249,7 +250,7 @@ public class FacetDevController {
     return result;
   }
 
-  @GetMapping(value = "/facet/eu", produces = "application/json")
+  @GetMapping(value = "/facet/eu/search/project", produces = "application/json")
   public ResponseEntity euSearchProject( //
                                          @RequestParam(value = "language", defaultValue = "en") String language,
                                          @RequestParam(value = "keywords", required = false) String keywords, //
@@ -277,6 +278,268 @@ public class FacetDevController {
           throws Exception {
     logger.info("language {} keywords {} country {} theme {} fund {} region {}",language,keywords,country,theme,fund,region);
 
+    String search = filterProject(keywords,country, theme, fund,program, categoryOfIntervention,policyObjective,budgetBiggerThen,budgetSmallerThen,budgetEUBiggerThen,budgetEUSmallerThen,startDateBefore,startDateAfter,endDateBefore,endDateAfter,latitude,longitude,region,limit,offset);
+
+
+    String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
+    int numResults = 0;
+    if (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+    }
+
+    if (search.equals(
+            "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
+      search += " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. ";
+    }
+
+    query =
+            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
+                    + " { SELECT ?s0 ?snippet where { "
+                    + search
+                    + " } limit "
+                    + limit
+                    + " offset "
+                    + offset
+                    + " } "
+                    + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
+                    + " FILTER((LANG(?label)) = \""
+                    + language
+                    + "\") "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
+                    + language
+                    + "\") } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P147> ?image. } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
+                    + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P302> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
+                    + "} ";
+    System.out.println(query);
+    resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
+
+    JSONArray resultList = new JSONArray();
+    String previewsKey = "";
+    Set<String> snippet = new HashSet<>();
+    Set<String> label = new HashSet<>();
+    Set<String> description = new HashSet<>();
+    Set<String> startTime = new HashSet<>();
+    Set<String> endTime = new HashSet<>();
+    Set<String> euBudget = new HashSet<>();
+    Set<String> image = new HashSet<>();
+    Set<String> coordinates = new HashSet<>();
+    Set<String> objectiveId = new HashSet<>();
+    Set<String> countrycode = new HashSet<>();
+    boolean hasEntry = resultSet.hasNext();
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      String currentKey = querySolution.getBinding("s0").getValue().stringValue();
+      if (!previewsKey.equals(currentKey)) {
+        if (!previewsKey.equals("")) {
+          resultList.add(
+                  toJson(
+                          previewsKey,
+                          snippet,
+                          label,
+                          description,
+                          startTime,
+                          endTime,
+                          euBudget,
+                          image,
+                          coordinates,
+                          objectiveId,
+                          countrycode));
+          snippet = new HashSet<>();
+          label = new HashSet<>();
+          description = new HashSet<>();
+          startTime = new HashSet<>();
+          endTime = new HashSet<>();
+          euBudget = new HashSet<>();
+          image = new HashSet<>();
+          coordinates = new HashSet<>();
+          objectiveId = new HashSet<>();
+          countrycode = new HashSet<>();
+        }
+        previewsKey = querySolution.getBinding("s0").getValue().stringValue();
+      }
+      if (querySolution.getBinding("snippet") != null)
+        snippet.add(((Literal) querySolution.getBinding("snippet").getValue()).getLabel());
+      if (querySolution.getBinding("label") != null)
+        label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
+      if (querySolution.getBinding("description") != null)
+        description.add(((Literal) querySolution.getBinding("description").getValue()).getLabel());
+      if (querySolution.getBinding("startTime") != null)
+        startTime.add(
+                ((Literal) querySolution.getBinding("startTime").getValue()).getLabel().split("T")[0]);
+      if (querySolution.getBinding("endTime") != null)
+        endTime.add(
+                ((Literal) querySolution.getBinding("endTime").getValue()).getLabel().split("T")[0]);
+      if (querySolution.getBinding("euBudget") != null)
+        euBudget.add(((Literal) querySolution.getBinding("euBudget").getValue()).getLabel());
+      if (querySolution.getBinding("image") != null) {
+        image.add(querySolution.getBinding("image").getValue().stringValue());
+      }
+      if (querySolution.getBinding("coordinates") != null) {
+        coordinates.add(
+                ((Literal) querySolution.getBinding("coordinates").getValue())
+                        .getLabel()
+                        .replace("Point(", "")
+                        .replace(")", "")
+                        .replace(" ", ","));
+      }
+      if (querySolution.getBinding("objectiveId") != null)
+        objectiveId.add(((Literal) querySolution.getBinding("objectiveId").getValue()).getLabel());
+      if (querySolution.getBinding("countrycode") != null)
+        countrycode.add(((Literal) querySolution.getBinding("countrycode").getValue()).getLabel());
+    }
+    if (hasEntry) {
+      resultList.add(
+              toJson(
+                      previewsKey,
+                      snippet,
+                      label,
+                      description,
+                      startTime,
+                      endTime,
+                      euBudget,
+                      image,
+                      coordinates,
+                      objectiveId,
+                      countrycode));
+    }
+    JSONObject result = new JSONObject();
+    result.put("list", resultList);
+    result.put("numberResults", numResults);
+    return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
+  }
+
+  @GetMapping(value = "/facet/eu/search/project/map", produces = "application/json")
+  public ResponseEntity euSearchProjectMap( //
+                                         @RequestParam(value = "language", defaultValue = "en") String language,
+                                         @RequestParam(value = "keywords", required = false) String keywords, //
+                                         @RequestParam(value = "country", required = false) String country,
+                                         @RequestParam(value = "theme", required = false) String theme,
+                                         @RequestParam(value = "fund", required = false) String fund,
+                                         @RequestParam(value = "program", required = false) String program,
+                                         @RequestParam(value = "categoryOfIntervention", required = false)
+                                                 String categoryOfIntervention,
+                                         @RequestParam(value = "policyObjective", required = false) String policyObjective,
+                                         @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
+                                         @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
+                                         @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
+                                         @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                         @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
+                                         @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
+                                         @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
+                                         @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+                                         @RequestParam(value = "latitude", required = false) String latitude,
+                                         @RequestParam(value = "longitude", required = false) String longitude,
+                                         @RequestParam(value = "region", required = false) String region,
+                                         @RequestParam(value = "limit", defaultValue = "2000") int limit,
+                                         @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                         Principal principal)
+          throws Exception {
+    logger.info("language {} keywords {} country {} theme {} fund {} region {}",language,keywords,country,theme,fund,region);
+
+    String search = filterProject(keywords,country,theme, fund,program, categoryOfIntervention,policyObjective,budgetBiggerThen,budgetSmallerThen,budgetEUBiggerThen,budgetEUSmallerThen,startDateBefore,startDateAfter,endDateBefore,endDateAfter,latitude,longitude,region,limit,offset);
+
+    if (search.equals(
+            "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
+      search += " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. ";
+    }
+
+    String query =
+            "select ?s0 ?label ?coordinates where { "
+                    + " { SELECT ?s0 ?snippet where { "
+                    + search
+                    + " } limit "
+                    + limit
+                    + " offset "
+                    + offset
+                    + " } "
+                    + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
+                    + " FILTER((LANG(?label)) = \""
+                    + language
+                    + "\") "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
+                    + "} ";
+    System.out.println(query);
+    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
+
+    JSONArray resultList = new JSONArray();
+    String previewsKey = "";
+    Set<String> label = new HashSet<>();
+    Set<String> coordinates = new HashSet<>();
+    boolean hasEntry = resultSet.hasNext();
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      String currentKey = querySolution.getBinding("s0").getValue().stringValue();
+      if (!previewsKey.equals(currentKey)) {
+        if (!previewsKey.equals("")) {
+          JSONObject element = new JSONObject();
+          element.put("item", currentKey.replace("https://linkedopendata.eu/entity/", ""));
+          element.put("link", currentKey);
+
+          JSONArray labels = new JSONArray();
+          labels.addAll(new ArrayList<String>(label));
+          element.put("labels", labels);
+
+          JSONArray coordiantes = new JSONArray();
+          coordiantes.addAll(new ArrayList<String>(coordinates));
+          element.put("coordinates", coordiantes);
+
+          resultList.add(element);
+
+
+
+          label = new HashSet<>();
+          coordinates = new HashSet<>();
+        }
+        previewsKey = querySolution.getBinding("s0").getValue().stringValue();
+      }
+      if (querySolution.getBinding("label") != null)
+        label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
+      if (querySolution.getBinding("coordinates") != null) {
+        coordinates.add(
+                ((Literal) querySolution.getBinding("coordinates").getValue())
+                        .getLabel()
+                        .replace("Point(", "")
+                        .replace(")", "")
+                        .replace(" ", ","));
+      }
+    }
+    if (hasEntry) {
+      JSONObject element = new JSONObject();
+      element.put("item", previewsKey.replace("https://linkedopendata.eu/entity/", ""));
+      element.put("link", previewsKey);
+
+      JSONArray labels = new JSONArray();
+      labels.addAll(new ArrayList<String>(label));
+      element.put("labels", labels);
+
+      JSONArray coordiantes = new JSONArray();
+      coordiantes.addAll(new ArrayList<String>(coordinates));
+      element.put("coordinates", coordiantes);
+    }
+    JSONObject result = new JSONObject();
+    result.put("list", resultList);
+    return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
+  }
+
+
+  private String filterProject(String keywords,String country,String theme,String fund,String program, String categoryOfIntervention,
+                               String policyObjective,Integer budgetBiggerThen,Integer budgetSmallerThen,Integer budgetEUBiggerThen,Integer budgetEUSmallerThen,String startDateBefore,String startDateAfter,
+                               String endDateBefore,
+                               String endDateAfter,
+                               String latitude,
+                               String longitude,
+                               String region,
+                               int limit,
+                               int offset) throws IOException {
     String search = "";
     if (keywords != null) {
       search +=
@@ -416,141 +679,7 @@ public class FacetDevController {
 
     search +=
             "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
-
-    String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
-    int numResults = 0;
-    if (resultSet.hasNext()) {
-      BindingSet querySolution = resultSet.next();
-      numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
-    }
-
-    if (search.equals(
-            "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
-      search += " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. ";
-    }
-
-    query =
-            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
-                    + " { SELECT ?s0 ?snippet where { "
-                    + search
-                    + " } limit "
-                    + limit
-                    + " offset "
-                    + offset
-                    + " } "
-                    + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
-                    + " FILTER((LANG(?label)) = \""
-                    + language
-                    + "\") "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
-                    + language
-                    + "\") } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P147> ?image. } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
-                    + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P302> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
-                    + "} ";
-    System.out.println(query);
-    resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
-
-    JSONArray resultList = new JSONArray();
-    String previewsKey = "";
-    Set<String> snippet = new HashSet<>();
-    Set<String> label = new HashSet<>();
-    Set<String> description = new HashSet<>();
-    Set<String> startTime = new HashSet<>();
-    Set<String> endTime = new HashSet<>();
-    Set<String> euBudget = new HashSet<>();
-    Set<String> image = new HashSet<>();
-    Set<String> coordinates = new HashSet<>();
-    Set<String> objectiveId = new HashSet<>();
-    Set<String> countrycode = new HashSet<>();
-    boolean hasEntry = resultSet.hasNext();
-    while (resultSet.hasNext()) {
-      BindingSet querySolution = resultSet.next();
-      String currentKey = querySolution.getBinding("s0").getValue().stringValue();
-      if (!previewsKey.equals(currentKey)) {
-        if (!previewsKey.equals("")) {
-          resultList.add(
-                  toJson(
-                          previewsKey,
-                          snippet,
-                          label,
-                          description,
-                          startTime,
-                          endTime,
-                          euBudget,
-                          image,
-                          coordinates,
-                          objectiveId,
-                          countrycode));
-          snippet = new HashSet<>();
-          label = new HashSet<>();
-          description = new HashSet<>();
-          startTime = new HashSet<>();
-          endTime = new HashSet<>();
-          euBudget = new HashSet<>();
-          image = new HashSet<>();
-          coordinates = new HashSet<>();
-          objectiveId = new HashSet<>();
-          countrycode = new HashSet<>();
-        }
-        previewsKey = querySolution.getBinding("s0").getValue().stringValue();
-      }
-      if (querySolution.getBinding("snippet") != null)
-        snippet.add(((Literal) querySolution.getBinding("snippet").getValue()).getLabel());
-      if (querySolution.getBinding("label") != null)
-        label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
-      if (querySolution.getBinding("description") != null)
-        description.add(((Literal) querySolution.getBinding("description").getValue()).getLabel());
-      if (querySolution.getBinding("startTime") != null)
-        startTime.add(
-                ((Literal) querySolution.getBinding("startTime").getValue()).getLabel().split("T")[0]);
-      if (querySolution.getBinding("endTime") != null)
-        endTime.add(
-                ((Literal) querySolution.getBinding("endTime").getValue()).getLabel().split("T")[0]);
-      if (querySolution.getBinding("euBudget") != null)
-        euBudget.add(((Literal) querySolution.getBinding("euBudget").getValue()).getLabel());
-      if (querySolution.getBinding("image") != null) {
-        image.add(querySolution.getBinding("image").getValue().stringValue());
-      }
-      if (querySolution.getBinding("coordinates") != null) {
-        coordinates.add(
-                ((Literal) querySolution.getBinding("coordinates").getValue())
-                        .getLabel()
-                        .replace("Point(", "")
-                        .replace(")", "")
-                        .replace(" ", ","));
-      }
-      if (querySolution.getBinding("objectiveId") != null)
-        objectiveId.add(((Literal) querySolution.getBinding("objectiveId").getValue()).getLabel());
-      if (querySolution.getBinding("countrycode") != null)
-        countrycode.add(((Literal) querySolution.getBinding("countrycode").getValue()).getLabel());
-    }
-    if (hasEntry) {
-      resultList.add(
-              toJson(
-                      previewsKey,
-                      snippet,
-                      label,
-                      description,
-                      startTime,
-                      endTime,
-                      euBudget,
-                      image,
-                      coordinates,
-                      objectiveId,
-                      countrycode));
-    }
-    JSONObject result = new JSONObject();
-    result.put("list", resultList);
-    result.put("numberResults", numResults);
-    return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
+    return search;
   }
 
   @GetMapping(value = "/facet/eu/project", produces = "application/json")
