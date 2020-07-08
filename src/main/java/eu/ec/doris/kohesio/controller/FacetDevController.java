@@ -70,6 +70,9 @@ public class FacetDevController {
   @Value("${kohesio.directory}")
   String location;
 
+  @Value("${kohesio.sparqlEndpoint}")
+  String sparqlEndpoint;
+
   // Set this to allow browser requests from other websites
   @ModelAttribute
   public void setVaryResponseHeader(HttpServletResponse response) {
@@ -120,7 +123,7 @@ public class FacetDevController {
                     + language
                     + "\")"
                     + "}";
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -144,7 +147,7 @@ public class FacetDevController {
                     + language
                     + "\")"
                     + "}";
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -172,7 +175,7 @@ public class FacetDevController {
                     + language
                     + "\")"
                     + "}";
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql",query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint,query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -210,7 +213,7 @@ public class FacetDevController {
                     + "\")"
                     + "}";
 
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -238,7 +241,7 @@ public class FacetDevController {
                     + "\")"
                     + "}";
 
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -282,7 +285,7 @@ public class FacetDevController {
 
 
     String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
     int numResults = 0;
     if (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -320,7 +323,7 @@ public class FacetDevController {
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P302> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                     + "} ";
     System.out.println(query);
-    resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
 
     JSONArray resultList = new JSONArray();
     String previewsKey = "";
@@ -468,7 +471,7 @@ public class FacetDevController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                     + "} ";
     System.out.println(query);
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 10);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
 
     JSONArray resultList = new JSONArray();
     String previewsKey = "";
@@ -976,7 +979,7 @@ public class FacetDevController {
 
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } }";
     System.out.println(query);
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
 
     String coo = "";
     while (resultSet.hasNext()) {
@@ -1009,7 +1012,7 @@ public class FacetDevController {
                     +"          ?contained3 <http://nuts.de/id> ?id3 . }}} "
                     +"}";
     System.out.println(query);
-    resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/nuts/sparql", query, 5);
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 5);
 
     NutsRegion nutsRegion = new NutsRegion();
     while (resultSet.hasNext()) {
@@ -1123,7 +1126,7 @@ public class FacetDevController {
                     + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
                     + "} ";
 
-    TupleQueryResult resultSet = executeAndCacheQuery("http://qanswer-core1.univ-st-etienne.fr/api/endpoint/Max/eu/sparql", query, 30);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
 
     List<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
     Beneficiary beneficary = new Beneficiary();
