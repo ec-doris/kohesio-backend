@@ -72,6 +72,9 @@ public class FacetController {
   @Value("${kohesio.sparqlEndpoint}")
   String sparqlEndpoint;
 
+  @Value("${kohesio.sparqlEndpointNuts}")
+  String getSparqlEndpointNuts;
+
   // Set this to allow browser requests from other websites
   @ModelAttribute
   public void setVaryResponseHeader(HttpServletResponse response) {
@@ -883,7 +886,7 @@ public class FacetController {
                     +"          ?contained3 <http://nuts.de/id> ?id3 . }}} "
                     +"}";
     System.out.println(query);
-    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 5);
+    resultSet = executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
 
     NutsRegion nutsRegion = new NutsRegion();
     while (resultSet.hasNext()) {
