@@ -316,10 +316,10 @@ public class FacetDevController {
                     + " offset "
                     + offset
                     + " } "
-                    + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
+                    + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
                     + " FILTER((LANG(?label)) = \""
                     + language
-                    + "\") "
+                    + "\") }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
                     + language
                     + "\") } "
