@@ -487,8 +487,8 @@ public class FacetDevController {
       if (!previewsKey.equals(currentKey)) {
         if (!previewsKey.equals("")) {
           JSONObject element = new JSONObject();
-          element.put("item", currentKey.replace("https://linkedopendata.eu/entity/", ""));
-          element.put("link", currentKey);
+          element.put("item", previewsKey.replace("https://linkedopendata.eu/entity/", ""));
+          element.put("link", previewsKey);
 
           JSONArray labels = new JSONArray();
           labels.addAll(new ArrayList<String>(label));
