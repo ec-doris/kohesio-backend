@@ -1092,7 +1092,7 @@ public class FacetDevController {
       while ((row = csvReader.readLine()) != null) {
         String[] data = row.split(";");
         if (data.length>4){
-          if (region.equals(data[4])){
+          if (region.replace("https://linkedopendata.eu/entity/","").equals(data[4])){
             coordinates = data[5];
           }
         }
