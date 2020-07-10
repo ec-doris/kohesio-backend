@@ -1321,7 +1321,7 @@ public class FacetController {
   }
 
   public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout){
-    return this.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+    return this.executeAndCacheQuery(sparqlEndpoint, query, timeout, true);
   }
 
   public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache) throws Exception {
