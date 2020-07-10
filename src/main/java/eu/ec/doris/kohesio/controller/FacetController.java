@@ -333,7 +333,7 @@ public class FacetController {
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P302> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                     + "} ";
     System.out.println(query);
-    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10, false);
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
 
     JSONArray resultList = new JSONArray();
     String previewsKey = "";
@@ -759,7 +759,7 @@ public class FacetController {
                     + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID . "
                     + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) .}  }"
                     + "} ";
-    TupleQueryResult resultSet = executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2);
+    TupleQueryResult resultSet = executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2, false);
 
     JSONObject result = new JSONObject();
     result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
