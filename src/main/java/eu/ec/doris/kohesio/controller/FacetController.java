@@ -1084,31 +1084,27 @@ public class FacetController {
     }
 
     if (region != null) {
-      String query =
-              ""
-                      + "select ?coordiantes where { "
-                      + " <"
-                      + region
-                      + "> <https://linkedopendata.eu/prop/direct/P127>  ?coordiantes . "
-                      + "}";
-
-      String sparqlEndpoint = "http://query.linkedopendata.eu/bigdata/namespace/wdq/sparql";
-      Repository repo = new SPARQLRepository(sparqlEndpoint);
-      TupleQueryResult resultSet = repo.getConnection().prepareTupleQuery(query).evaluate();
-      while (resultSet.hasNext()) {
-        BindingSet querySolution = resultSet.next();
-
-        String coordinates = querySolution.getBinding("coordiantes").getValue().toString();
-        coordinates =
-                coordinates
-                        .replace("\"Point(", "")
-                        .replace("\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>", "")
-                        .replace(")", "");
-
-        latitude = coordinates.split(" ")[1];
-        longitude = coordinates.split(" ")[0];
-        System.out.println("lat " + latitude + "--- long " + longitude);
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      InputStream input = loader.getResourceAsStream("regions.csv");
+      BufferedReader csvReader = new BufferedReader(new BufferedReader(new InputStreamReader(input, "UTF-8")));
+      String coordinates = "";
+      String row;
+      while ((row = csvReader.readLine()) != null) {
+        String[] data = row.split(";");
+        if (data.length>4){
+          if (region.equals(data[4])){
+            coordinates = data[5];
+          }
+        }
       }
+      coordinates =
+              coordinates
+                      .replace("Point(", "")
+                      //.replace("\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>", "")
+                      .replace(")", "");
+
+      latitude = coordinates.split(" ")[1];
+      longitude = coordinates.split(" ")[0];
     }
 
     if (latitude != null && longitude != null) {
