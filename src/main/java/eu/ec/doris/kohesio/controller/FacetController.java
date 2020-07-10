@@ -1332,6 +1332,7 @@ public class FacetController {
       if (files != null) {
         for (File file : files) {
           if (Integer.parseInt(file.getName()) == query.hashCode()) {
+            System.out.println(query.hashCode());
             SPARQLResultsJSONParser sparqlResultsJSONParser = new SPARQLResultsJSONParser();
             TupleQueryResultBuilder tupleQueryResultHandler = new TupleQueryResultBuilder();
             sparqlResultsJSONParser.setQueryResultHandler(tupleQueryResultHandler);

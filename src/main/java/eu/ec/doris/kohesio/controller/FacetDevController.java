@@ -1350,6 +1350,7 @@ public class FacetDevController {
 
     TupleQueryResult resultSet =
             repo.getConnection().prepareTupleQuery(query).evaluate();
+    System.out.println(query.hashCode());
     FileOutputStream out = new FileOutputStream(location + "/facet/cache/" + query.hashCode());
     TupleQueryResultHandler writer = new SPARQLResultsJSONWriter(out);
     QueryResults.report(resultSet, writer);
