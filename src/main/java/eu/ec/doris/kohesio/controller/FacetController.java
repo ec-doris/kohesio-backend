@@ -288,7 +288,7 @@ public class FacetController {
 
 
     String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
-    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 15);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 25);
     int numResults = 0;
     if (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
