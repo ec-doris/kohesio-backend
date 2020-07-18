@@ -107,7 +107,7 @@ public class FacetDevController {
               || country.equals("https://linkedopendata.eu/entity/Q20") && data[0].equals("FR")
               || country.equals("https://linkedopendata.eu/entity/Q12") && data[0].equals("DK")) {
         JSONObject element = new JSONObject();
-        element.put("region", data[5]);
+        element.put("region", data[6]);
         element.put("name", data[3]);
         jsonValues.add(element);
       }
