@@ -1,0 +1,84 @@
+COUNTRY CODE;NUTS LEVEL;NUTS CODE;NUTS LABEL;;;
+CZ;3;CZ010;Hlavní město Praha;http://www.wikidata.org/entity/Q1085;Point(14.416666666667 50.083333333333);https://linkedopendata.eu/entity/Q44
+CZ;3;CZ020;Středočeský kraj;http://www.wikidata.org/entity/Q188399;Point(14.5 49.966666666667);https://linkedopendata.eu/entity/Q214255
+CZ;3;CZ031;Jihočeský kraj;http://www.wikidata.org/entity/Q188373;Point(14.666666666667 49.083333333333);https://linkedopendata.eu/entity/Q214250
+CZ;3;CZ032;Plzeňský kraj;http://www.wikidata.org/entity/Q46070;Point(13.2 49.7);https://linkedopendata.eu/entity/Q214257
+CZ;3;CZ041;Karlovarský kraj;http://www.wikidata.org/entity/Q191091;Point(12.7 50.2);https://linkedopendata.eu/entity/Q214252
+CZ;3;CZ042;Ústecký kraj;http://www.wikidata.org/entity/Q192702;Point(13.85 50.5);https://linkedopendata.eu/entity/Q214253
+CZ;3;CZ051;Liberecký kraj;http://www.wikidata.org/entity/Q193266;Point(15 50.7);https://linkedopendata.eu/entity/Q199089
+CZ;3;CZ052;Královéhradecký kraj;http://www.wikidata.org/entity/Q193295;Point(15.8 50.4);https://linkedopendata.eu/entity/Q214254
+CZ;3;CZ053;Pardubický kraj;http://www.wikidata.org/entity/Q193317;Point(16.2 49.9);https://linkedopendata.eu/entity/Q214256
+CZ;3;CZ063;Kraj Vysočina;http://www.wikidata.org/entity/Q190930;Point(15.7 49.4);https://linkedopendata.eu/entity/Q214373
+CZ;3;CZ064;Jihomoravský kraj;https://www.wikidata.org/wiki/Q192697;Point(16.214872396986 48.896626173199);https://linkedopendata.eu/entity/Q214251
+CZ;3;CZ071;Olomoucký kraj;http://www.wikidata.org/entity/Q193307;Point(17.1 49.716666666667);https://linkedopendata.eu/entity/Q214249
+CZ;3;CZ072;Zlínský kraj;http://www.wikidata.org/entity/Q192536;Point(17.7 49.2);https://linkedopendata.eu/entity/Q214248
+CZ;3;CZ080;Moravskoslezský kraj;http://www.wikidata.org/entity/Q190550;Point(18 49.8);https://linkedopendata.eu/entity/Q214247
+DK;2;DK01;Hovedstaden;http://www.wikidata.org/entity/Q26073;Point(12.3 55.939833333333);https://linkedopendata.eu/entity/Q1964
+DK;2;DK02;Sjælland;http://www.wikidata.org/entity/Q26589;Point(11.833333333333 55.166666666667);https://linkedopendata.eu/entity/Q1961
+DK;2;DK03;Syddanmark;http://www.wikidata.org/entity/Q26061;Point(9.6666666666667 55.333333333333);https://linkedopendata.eu/entity/Q2529977
+DK;2;DK04;Midtjylland;http://www.wikidata.org/entity/Q26586;Point(9.5 56.166666666667);https://linkedopendata.eu/entity/Q1963
+DK;2;DK05;Nordjylland;http://www.wikidata.org/entity/Q26067;Point(9.67 57.18);https://linkedopendata.eu/entity/Q1962
+FR;1;FR1;Île-de-France;http://www.wikidata.org/entity/Q13917;Point(2.3176 48.8522);https://linkedopendata.eu/entity/Q2530448
+FR;1;FRB;Centre-Val de Loire;http://www.wikidata.org/entity/Q13947;Point(1.75 47.5);https://linkedopendata.eu/entity/Q2531306
+FR;1;FRC;Bourgogne-Franche-Comté;http://www.wikidata.org/entity/Q18578267;Point(6.0305 47.234527777);https://linkedopendata.eu/entity/Q2539514
+FR;1;FRD;Normandie;http://www.wikidata.org/entity/Q18677875;Point(-0.352777777 49.186388888);https://linkedopendata.eu/entity/Q3519
+FR;1;FRE;Hauts-de-France;http://www.wikidata.org/entity/Q18677767;Point(2.7029777 49.9205573);https://linkedopendata.eu/entity/Q3537
+FR;1;FRF;Grand Est;http://www.wikidata.org/entity/Q18677983;Point(7.7599 48.5989);https://linkedopendata.eu/entity/Q2530211
+FR;1;FRG;Pays de la Loire;http://www.wikidata.org/entity/Q16994;Point(-0.833333333 47.466666666);https://linkedopendata.eu/entity/Q3538
+FR;1;FRH;Bretagne;http://www.wikidata.org/entity/Q12130;Point(-3.0 48.0);https://linkedopendata.eu/entity/Q3487
+FR;1;FRI;Nouvelle-Aquitaine;http://www.wikidata.org/entity/Q18678082;Point(-0.5888 44.8366);https://linkedopendata.eu/entity/Q1089
+FR;1;FRJ;Occitanie;http://www.wikidata.org/entity/Q18678265;Point(2.343568369 43.648785141);https://linkedopendata.eu/entity/Q2532608
+FR;1;FRK;Auvergne-Rhône-Alpes;http://www.wikidata.org/entity/Q18338206;Point(4.8195 45.7402);https://linkedopendata.eu/entity/Q2531294
+FR;1;FRL;Provence-Alpes-Côte d'Azur;http://www.wikidata.org/entity/Q15104;Point(6.0 44.0);https://linkedopendata.eu/entity/Q3529
+FR;1;FRM;Corse;http://www.wikidata.org/entity/Q14112;Point(9.083333333 42.15);https://linkedopendata.eu/entity/Q3528
+FR;2;FRY1;Guadeloupe;http://www.wikidata.org/entity/Q17012;POINT(16.0 62.0);https://linkedopendata.eu/entity/Q2577038
+FR;2;FRY2;Martinique ;http://www.wikidata.org/entity/Q17054;Point(-61.0 14.666666666);https://linkedopendata.eu/entity/Q198
+FR;2;FRY3;Guyane;http://www.wikidata.org/entity/Q3769;Point(-52.99994 3.99886);https://linkedopendata.eu/entity/Q201
+FR;2;FRY4;La Réunion ;http://www.wikidata.org/entity/Q17070;Point(55.5325 -21.114444444);https://linkedopendata.eu/entity/Q206
+FR;2;FRY5;Mayotte;http://www.wikidata.org/entity/Q17063;Point(45.138333333 -12.843055555);https://linkedopendata.eu/entity/Q2576961
+IE;3;IE041;Border;http://www.wikidata.org/entity/Q4944607;Point(-7.357444444 53.963472222);https://linkedopendata.eu/entity/Q2501480
+IE;3;IE042;West;http://www.wikidata.org/entity/Q7986331;Point(-8.9570134 53.669328);https://linkedopendata.eu/entity/Q2501419
+IE;3;IE051;Mid-West ;http://www.wikidata.org/entity/Q6840838;Point(-8.4394373 52.5768684);https://linkedopendata.eu/entity/Q2501296
+IE;3;IE052;South-East ;http://www.wikidata.org/entity/Q7565274;Point(-7.328611111 52.463055555);https://linkedopendata.eu/entity/Q2501302
+IE;3;IE053;South-West ;http://www.wikidata.org/entity/Q7565299;Point(-9.0639437 52.0604906);https://linkedopendata.eu/entity/Q2501351
+IE;3;IE061;Dublin;http://www.wikidata.org/entity/Q5310956;Point(-6.265833333 53.3425);https://linkedopendata.eu/entity/Q2473402
+IE;3;IE062;Mid-East;http://www.wikidata.org/entity/Q6840712;Point(-6.75 53.166666666);https://linkedopendata.eu/entity/Q2501420
+IE;3;IE063;Midland;http://www.wikidata.org/entity/Q1345331;Point(-7.9425 53.423611111);https://linkedopendata.eu/entity/Q2501313
+IT;2;ITC1;Piemonte;http://www.wikidata.org/entity/Q1216;Point(7.9166666666667 45.25);https://linkedopendata.eu/entity/Q2461
+IT;2;ITC2;Valle d'Aosta/Vallée d'Aoste;http://www.wikidata.org/entity/Q1222;Point(7.3666666666667 45.716666666667);https://linkedopendata.eu/entity/Q2468
+IT;2;ITC3;Liguria;http://www.wikidata.org/entity/Q1256;Point(8.7666666666667 44.45);https://linkedopendata.eu/entity/Q2457
+IT;2;ITC4;Lombardia;http://www.wikidata.org/entity/Q1210;Point(9.95 45.65);https://linkedopendata.eu/entity/Q260631
+IT;2;ITF1;Abruzzo;http://www.wikidata.org/entity/Q1284;Point(13.833333333333 42.216666666667);https://linkedopendata.eu/entity/Q2449
+IT;2;ITF2;Molise;http://www.wikidata.org/entity/Q1443;Point(14.6111 41.6997);https://linkedopendata.eu/entity/Q270535
+IT;2;ITF3;Campania;http://www.wikidata.org/entity/Q1438;Point(14.783333333333 40.75);https://linkedopendata.eu/entity/Q278314
+IT;2;ITF4;Puglia;http://www.wikidata.org/entity/Q1447;Point(16.512777777778 41.008611111111);https://linkedopendata.eu/entity/Q257406
+IT;2;ITF5;Basilicata;http://www.wikidata.org/entity/Q1452;Point(16.5 40.5);https://linkedopendata.eu/entity/Q252896
+IT;2;ITF6;Calabria;http://www.wikidata.org/entity/Q1458;Point(16.5 39);https://linkedopendata.eu/entity/Q275925
+IT;2;ITG1;Sicilia;http://www.wikidata.org/entity/Q1460;Point(14.015377777778 37.599958333333);https://linkedopendata.eu/entity/Q2464
+IT;2;ITG2;Sardegna;http://www.wikidata.org/entity/Q1462;Point(9.0833333333333 40.05);https://linkedopendata.eu/entity/Q2463
+IT;2;ITH1;Provincia Autonoma di Bolzano/Bozen;http://www.wikidata.org/entity/Q15124;Point(11.33333334 46.50000001);https://linkedopendata.eu/entity/Q2501140
+IT;2;ITH2;Provincia Autonoma di Trento;http://www.wikidata.org/entity/Q16289;Point(11.173055555556 46.445555555556);https://linkedopendata.eu/entity/Q252821
+IT;2;ITH3;Veneto;http://www.wikidata.org/entity/Q1243;Point(11.85 45.733333333333);https://linkedopendata.eu/entity/Q2469
+IT;2;ITH4;Friuli-Venezia Giulia;http://www.wikidata.org/entity/Q1250;Point(13.116666666667 46.1);https://linkedopendata.eu/entity/Q2455
+IT;2;ITH5;Emilia-Romagna;http://www.wikidata.org/entity/Q1263;Point(11 44.75);https://linkedopendata.eu/entity/Q252819
+IT;2;ITI1;Toscana;http://www.wikidata.org/entity/Q1273;Point(11.016666666667 43.35);https://linkedopendata.eu/entity/Q293183
+IT;2;ITI2;Umbria;http://www.wikidata.org/entity/Q1280;Point(12.566666666667 42.983333333333);https://linkedopendata.eu/entity/Q257738
+IT;2;ITI3;Marche;http://www.wikidata.org/entity/Q1279;Point(13 43.316666666667);https://linkedopendata.eu/entity/Q260998
+IT;2;ITI4;Lazio;http://www.wikidata.org/entity/Q1282;Point(12.716666666667 41.9);https://linkedopendata.eu/entity/Q2456
+PL;2;PL21;Małopolskie;http://www.wikidata.org/entity/Q54159;Point(20.266666666 49.85);https://linkedopendata.eu/entity/Q2526456
+PL;2;PL22;Śląskie;http://www.wikidata.org/entity/Q54181;Point(19.1603092 49.9249289);https://linkedopendata.eu/entity/Q2166
+PL;2;PL41;Wielkopolskie;http://www.wikidata.org/entity/Q54187;Point(17.233333333 52.333333333);https://linkedopendata.eu/entity/Q2539321
+PL;2;PL42;Zachodniopomorskie;http://www.wikidata.org/entity/Q54188;Point(15.533333333 53.6);https://linkedopendata.eu/entity/Q2517613
+PL;2;PL43;Lubuskie;http://www.wikidata.org/entity/Q54157;Point(15.333333333 52.183333333);https://linkedopendata.eu/entity/Q2520476
+PL;2;PL51;Dolnośląskie;http://www.wikidata.org/entity/Q54150;Point(16.383333333 51.083333333);https://linkedopendata.eu/entity/Q2519009
+PL;2;PL52;Opolskie;http://www.wikidata.org/entity/Q54171;Point(17.9 50.633333333);https://linkedopendata.eu/entity/Q2161
+PL;2;PL61;Kujawsko-pomorskie;http://www.wikidata.org/entity/Q54153;Point(18.483333333 53.066666666);https://linkedopendata.eu/entity/Q2520143
+PL;2;PL62;Warmińsko-mazurskie;http://www.wikidata.org/entity/Q54184;Point(20.816666666 53.85);https://linkedopendata.eu/entity/Q2536796
+PL;2;PL63;Pomorskie;http://www.wikidata.org/entity/Q54180;Point(18.0 54.183333333);https://linkedopendata.eu/entity/Q2164
+PL;2;PL71;Łódzkie;http://www.wikidata.org/entity/Q54158;Point(19.416666666667 51.6);https://linkedopendata.eu/entity/Q2155
+PL;2;PL72;Świętokrzyskie;http://www.wikidata.org/entity/Q54183;Point(20.766666666667 50.75);https://linkedopendata.eu/entity/Q2516123
+PL;2;PL81;Lubelskie;http://www.wikidata.org/entity/Q54155;Point(22.9 51.216666666);https://linkedopendata.eu/entity/Q2158
+PL;2;PL82;Podkarpackie;http://www.wikidata.org/entity/Q54175;Point(22.166666666 49.95);https://linkedopendata.eu/entity/Q2509343
+PL;2;PL84;Podlaskie;http://www.wikidata.org/entity/Q54177;Point(22.931938888 53.267219444);https://linkedopendata.eu/entity/Q2167
+PL;2;PL91;Warszawski stołeczny;http://www.wikidata.org/entity/Q541778;Point(20.9957636 52.2266308);https://linkedopendata.eu/entity/Q2576736
+PL;2;PL92;Mazowiecki regionalny;http://www.wikidata.org/entity/Q541779;Point(20.9957636 52.2266308);https://linkedopendata.eu/entity/Q2576721
