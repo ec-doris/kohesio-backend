@@ -91,7 +91,7 @@ public class FacetDevController {
           throws Exception {
     String row;
     ClassLoader loader = Thread.currentThread().getContextClassLoader();
-    InputStream input = loader.getResourceAsStream("regions.csv");
+    InputStream input = loader.getResourceAsStream("regions2.csv");
     BufferedReader csvReader = new BufferedReader(new BufferedReader(new InputStreamReader(input, "UTF-8")));
 
     List<JSONObject> jsonValues = new ArrayList<JSONObject>();
@@ -316,6 +316,7 @@ public class FacetDevController {
 
 
     String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
+    System.out.println(query);
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 25);
     int numResults = 0;
     if (resultSet.hasNext()) {
