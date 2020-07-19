@@ -509,8 +509,36 @@ public class FacetDevController {
                     + "\") "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                     + "} ";
-    System.out.println(query);
+    logger.info(query);
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+
+
+//    if (region!=null){
+//      query =
+//              "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+//                      + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+//                      + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+//                      + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+//                      + "SELECT ?id ?label ?geoJson ?label1 ?id1 ?label2 ?id2 ?label3 ?id3  WHERE { "
+//                      + "?s rdf:type <http://nuts.de/NUTS3> . "
+//                      + "?s <http://nuts.de/geometry> ?o . "
+//                      + " FILTER (geof:sfWithin(\"" + coo + "\"^^geo:wktLiteral,?o)) "
+//                      + "?s <http://nuts.de/geoJson> ?geoJson . "
+//                      + "?s rdfs:label ?label . "
+//                      + "?s <http://nuts.de/id> ?id . "
+//                      + "OPTIONAL {?s <http://nuts.de/contained> ?contained1 . "
+//                      + "          ?contained1 rdfs:label ?label1 .  "
+//                      + "          ?contained1 <http://nuts.de/id> ?id1 . "
+//                      + "           OPTIONAL {?contained1 <http://nuts.de/contained> ?contained2 . "
+//                      + "          ?contained2 rdfs:label ?label2 .  "
+//                      + "          ?contained2 <http://nuts.de/id> ?id2 . "
+//                      + "           OPTIONAL {?contained2 <http://nuts.de/contained> ?contained3 . "
+//                      + "          ?contained3 rdfs:label ?label3 . "
+//                      + "          ?contained3 <http://nuts.de/id> ?id3 . }}} "
+//                      + "}";
+//      logger.info(query);
+//      resultSet = executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+//    }
 
     JSONArray resultList = new JSONArray();
     String previewsKey = "";
@@ -709,7 +737,7 @@ public class FacetDevController {
                           @RequestParam(value = "language", defaultValue = "en") String language)
           throws Exception {
     String query =
-            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?budget ?euBudget ?cofinancingRate ?image ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?source ?source2 where { "
+            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?budget ?euBudget ?cofinancingRate ?image ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
                     + " VALUES ?s0 { <"
                     + id
                     + "> } "
@@ -767,6 +795,23 @@ public class FacetDevController {
                     + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel .} "
                     + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID . "
                     + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) .}  }"
+
+                    + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  "
+                    + "           ?region <https://linkedopendata.eu/prop/direct/P192> ?regionId . "
+                    + "           ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> . "
+                    + "           ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
+                    + "           FILTER((LANG(?regionLabel)) = \"" + language + "\") "
+                    + "           ?region <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper1 .  "
+                    + "           ?regionUpper1 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576674> . "
+                    + "           ?regionUpper1 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper1Label . "
+                    + "           FILTER((LANG(?regionUpper1Label)) = \"" + language + "\") "
+                    + "           ?regionUpper1 <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper2 ."
+                    + "           ?regionUpper2 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576630> . "
+                    + "           ?regionUpper2 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper2Label . "
+                    + "           FILTER((LANG(?regionUpper2Label)) = \"" + language + "\")  "
+                    + "           ?regionUpper2 <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper3 . "
+                    + "           ?regionUpper3 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper3Label . "
+                    + "           FILTER((LANG(?regionUpper3Label)) = \"" + language + "\") } "
                     + "} ";
     TupleQueryResult resultSet = executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2, false);
 
@@ -963,23 +1008,45 @@ public class FacetDevController {
                 ((Literal) querySolution.getBinding("managingAuthorityLabel").getValue())
                         .stringValue());
       }
-    }
-    NutsRegion nutsRegion = euIdCoordinates(id, language);
-    System.out.println("COMputing nuts");
-    if (nutsRegion.getLabel() != null) {
-      result.put("region", nutsRegion.getLabel());
-    }
-    if (nutsRegion.getGeoJson() != null) {
-      result.put("geoJson", nutsRegion.getGeoJson());
-    }
-    if (nutsRegion.getLabelUpper1() != null) {
-      result.put("regionUpper1", nutsRegion.getLabelUpper1());
-    }
-    if (nutsRegion.getLabelUpper2() != null) {
-      result.put("regionUpper2", nutsRegion.getLabelUpper2());
-    }
-    if (nutsRegion.getLabelUpper3() != null) {
-      result.put("regionUpper3", nutsRegion.getLabelUpper3());
+      if (querySolution.getBinding("regionLabel") != null) {
+        result.put("region", ((Literal) querySolution.getBinding("regionLabel").getValue())
+                .stringValue());
+      }
+      if (querySolution.getBinding("regionUpper1Label") != null) {
+        result.put("regionUpper1", ((Literal) querySolution.getBinding("regionUpper1Label").getValue())
+                .stringValue());
+      }
+      if (querySolution.getBinding("regionUpper2Label") != null) {
+        result.put("regionUpper2", ((Literal) querySolution.getBinding("regionUpper2Label").getValue())
+                .stringValue());
+      }
+      if (querySolution.getBinding("regionUpper3Label") != null) {
+        result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
+                .stringValue());
+      }
+      if (querySolution.getBinding("regionId") != null && result.get("geoJson")!=null) {
+        query =
+                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+                        + "SELECT ?id ?geoJson  WHERE { "
+                        + "?s <http://nuts.de/geoJson> ?geoJson . "
+                        + "?s <http://nuts.de/id> \'"+((Literal) querySolution.getBinding("regionId").getValue()).stringValue()+ "\' . "
+                + "}";
+        logger.info(query);
+        TupleQueryResult resultSet2 = executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+
+        NutsRegion nutsRegion = new NutsRegion();
+        while (resultSet2.hasNext()) {
+          BindingSet querySolution2 = resultSet2.next();
+          if (querySolution2.getBinding("geoJson") != null) {
+            result.put("geoJson", ((Literal) querySolution2.getBinding("geoJson").getValue())
+                    .stringValue());
+          }
+
+        }
+      }
     }
     return result;
   }
@@ -1029,7 +1096,7 @@ public class FacetDevController {
                     + "          ?contained3 rdfs:label ?label3 . "
                     + "          ?contained3 <http://nuts.de/id> ?id3 . }}} "
                     + "}";
-    System.out.println(query);
+    logger.info(query);
     resultSet = executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
 
     NutsRegion nutsRegion = new NutsRegion();
