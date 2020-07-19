@@ -1026,7 +1026,7 @@ public class FacetDevController {
         result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
                 .stringValue());
       }
-      if (querySolution.getBinding("regionId") != null && result.get("geoJson")!="") {
+      if (querySolution.getBinding("regionId") != null && result.get("geoJson").equals("")) {
         query =
                 "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
                         + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
