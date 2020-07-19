@@ -1033,8 +1033,9 @@ public class FacetDevController {
                         + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
                         + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
                         + "SELECT ?id ?geoJson  WHERE { "
-                        + "?s <http://nuts.de/geoJson> ?geoJson . "
                         + "?s <http://nuts.de/id> \'"+((Literal) querySolution.getBinding("regionId").getValue()).stringValue()+ "\' . "
+                        + "?s <http://nuts.de/geoJson> ?geoJson . "
+
                 + "}";
         logger.info(query);
         logger.info("Retrieving nuts geometry");
