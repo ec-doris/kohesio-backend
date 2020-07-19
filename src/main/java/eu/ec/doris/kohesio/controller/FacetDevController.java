@@ -813,7 +813,9 @@ public class FacetDevController {
                     + "           ?regionUpper3 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper3Label . "
                     + "           FILTER((LANG(?regionUpper3Label)) = \"" + language + "\") }} "
                     + "} ";
+    logger.info("Retrieving results");
     TupleQueryResult resultSet = executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2, false);
+    logger.info("Executed");
 
     JSONObject result = new JSONObject();
     result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
@@ -1035,7 +1037,9 @@ public class FacetDevController {
                         + "?s <http://nuts.de/id> \'"+((Literal) querySolution.getBinding("regionId").getValue()).stringValue()+ "\' . "
                 + "}";
         logger.info(query);
+        logger.info("Retrieving nuts geometry");
         TupleQueryResult resultSet2 = executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+        logger.info("Retrieved");
 
         NutsRegion nutsRegion = new NutsRegion();
         while (resultSet2.hasNext()) {
