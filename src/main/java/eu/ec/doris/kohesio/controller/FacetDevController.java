@@ -153,7 +153,7 @@ public class FacetDevController {
                     + " FILTER (lang(?fundLabel)=\""
                     + language
                     + "\")"
-                    + "}";
+                    + "} order by ?fundLabel ";
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
@@ -205,7 +205,7 @@ public class FacetDevController {
                     + " FILTER (lang(?instanceLabel)=\""
                     + language
                     + "\")"
-                    + "}";
+                    + "} order by ?instanceLabel";
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
@@ -242,7 +242,7 @@ public class FacetDevController {
                     + " FILTER (lang(?programLabel)=\""
                     + language
                     + "\")"
-                    + "}";
+                    + "} order by ?programLabel ";
 
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
@@ -270,7 +270,7 @@ public class FacetDevController {
                     + " FILTER (lang(?toLabel)=\""
                     + language
                     + "\")"
-                    + "}";
+                    + "} order by ?toLabel ";
 
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
