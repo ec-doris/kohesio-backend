@@ -141,10 +141,6 @@ public class FacetDevController {
   @GetMapping(value = "/facet/eu/funds", produces = "application/json")
   public JSONArray facetEuFunds( //
                                  @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
-
-    String kb = "eu";
-    String user = "Max";
-
     String query =
             ""
                     + "select ?fund ?fundLabel where { "
@@ -224,10 +220,6 @@ public class FacetDevController {
                                     @RequestParam(value = "language", defaultValue = "en") String language,
                                     @RequestParam(value = "country", required = false) String country)
           throws Exception {
-
-    String kb = "eu";
-    String user = "Max";
-
     String query =
             ""
                     + "select ?program ?programLabel where { "
@@ -310,7 +302,7 @@ public class FacetDevController {
                                          @RequestParam(value = "offset", defaultValue = "0") int offset,
                                          Principal principal)
           throws Exception {
-    logger.info("language {} keywords {} country {} theme {} fund {} region {}", language, keywords, country, theme, fund, region);
+    logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, region {}", language, keywords, country, theme, fund, region);
 
     String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
 
@@ -1176,9 +1168,11 @@ public class FacetDevController {
                                      @RequestParam(value = "region", required = false) String region, //
                                      @RequestParam(value = "latitude", required = false) String latitude, //
                                      @RequestParam(value = "longitude", required = false) String longitude, //
+                                     @RequestParam(value = "fund", required = false) String fund, //
+                                     @RequestParam(value = "program", required = false) String program, //
                                      Principal principal)
           throws Exception {
-
+    logger.info("Beneficiary search language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}",language,keywords, country,region,latitude,longitude,fund,program);
     String search = "";
     if (keywords != null) {
       search +=
@@ -1194,7 +1188,7 @@ public class FacetDevController {
     }
 
     if (region != null) {
-      search += "?s0 <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . ";
+      search += "?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . ";
     }
 
     if (latitude != null && longitude != null) {
@@ -1205,6 +1199,14 @@ public class FacetDevController {
                       + " "
                       + latitude
                       + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)/1000< 100) . ";
+    }
+
+    if (fund != null) {
+      search += "?project <https://linkedopendata.eu/prop/direct/P1584> <" + fund + "> . ";
+    }
+
+    if (program != null) {
+      search += "?project <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
     }
 
     String query =
@@ -1221,7 +1223,7 @@ public class FacetDevController {
                     + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
                     + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
                     + "} ";
-
+    logger.info(query);
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
 
     List<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
@@ -1297,11 +1299,13 @@ public class FacetDevController {
                                         @RequestParam(value = "region", required = false) String region, //
                                         @RequestParam(value = "latitude", required = false) String latitude, //
                                         @RequestParam(value = "longitude", required = false) String longitude, //
+                                        @RequestParam(value = "fund", required = false) String fund, //
+                                        @RequestParam(value = "program", required = false) String program, //
                                         Principal principal,
                                         @Context HttpServletResponse response)
           throws Exception {
     List<Beneficiary> beneficiaryList =
-            euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, principal);
+            euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,principal);
     String filename = "beneficiary_export.csv";
     try {
       response.setContentType("text/csv");
@@ -1335,10 +1339,12 @@ public class FacetDevController {
                                                             @RequestParam(value = "region", required = false) String region, //
                                                             @RequestParam(value = "latitude", required = false) String latitude, //
                                                             @RequestParam(value = "longitude", required = false) String longitude, //
+                                                            @RequestParam(value = "fund", required = false) String fund, //
+                                                            @RequestParam(value = "program", required = false) String program, //
                                                             Principal principal)
           throws Exception {
     List<Beneficiary> beneficiaryList =
-            euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, principal);
+            euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,principal);
     String filename = "beneficiary_export.csv";
     XSSFWorkbook hwb = new XSSFWorkbook();
     XSSFSheet sheet = hwb.createSheet("beneficiary_export");
@@ -1378,27 +1384,32 @@ public class FacetDevController {
 
   @PostMapping(value = "/facet/eu/cache/generate", produces = "application/json")
   public void generateCache() throws Exception {
-    euSearchBeneficiaries("en", null, null, null, null, null, null);
     String[] countries = {
             "https://linkedopendata.eu/entity/Q15",
             "https://linkedopendata.eu/entity/Q2",
             "https://linkedopendata.eu/entity/Q25",
             "https://linkedopendata.eu/entity/Q20",
             "https://linkedopendata.eu/entity/Q13",
-            "https://linkedopendata.eu/entity/Q12"
+            "https://linkedopendata.eu/entity/Q12",
+            null
     };
     for (String country : countries) {
-      euSearchBeneficiaries("en", null, country, null, null, null, null);
+      euSearchBeneficiaries("en", null, country, null, null, null, null,null,null);
     }
     for (String country : countries) {
       JSONArray regions = facetEuRegions(country, "en");
       for (Object region : regions) {
-        euSearchBeneficiaries(
-                "en", null, country, ((JSONObject) region).get("region").toString(), null, null, null);
-      }
-      for (Object region : regions) {
-        euSearchProject(
-                "en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, ((JSONObject) region).get("region").toString(), 200, 0, null);
+        regions.add(null);
+        JSONArray funds = facetEuFunds("en");
+        funds.add(null);
+        for (Object fund : funds) {
+          JSONArray programs = facetEuPrograms(country, "en");
+          programs.add(null);
+          for (Object program : programs) {
+            euSearchBeneficiaries(
+                    "en", null, country, ((JSONObject) region).get("region").toString(), null, null, ((JSONObject) fund).get("instance").toString(), ((JSONObject) program).get("instance").toString(), null);
+          }
+        }
       }
     }
   }
