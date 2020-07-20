@@ -501,7 +501,7 @@ public class FacetDevController {
     if (granularityRegion!=null){
       searchCount+= " . ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+">";
     }
-    String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
+    String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + searchCount + "} ";
     System.out.println(query);
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 25);
     int numResults = 0;
