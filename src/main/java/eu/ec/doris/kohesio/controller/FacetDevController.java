@@ -460,7 +460,7 @@ public class FacetDevController {
   }
 
   @GetMapping(value = "/facet/eu/search/project/map", produces = "application/json")
-  public ResponseEntity euSearchProjectMap( //
+  public ResponseEntity euSearchProjectMap(
                                             @RequestParam(value = "language", defaultValue = "en") String language,
                                             @RequestParam(value = "keywords", required = false) String keywords, //
                                             @RequestParam(value = "country", required = false) String country,
@@ -481,6 +481,8 @@ public class FacetDevController {
                                             @RequestParam(value = "latitude", required = false) String latitude,
                                             @RequestParam(value = "longitude", required = false) String longitude,
                                             @RequestParam(value = "region", required = false) String region,
+                                            @RequestParam(value = "granularity", required = false) String granularity,
+                                            @RequestParam(value = "granularityRegion", required = false) String granularityRegion,
                                             @RequestParam(value = "limit", defaultValue = "2000") int limit,
                                             @RequestParam(value = "offset", defaultValue = "0") int offset,
                                             Principal principal)
@@ -494,109 +496,133 @@ public class FacetDevController {
       search += " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. ";
     }
 
-    String query =
-            "select ?s0 ?label ?coordinates where { "
-                    + " { SELECT ?s0 ?snippet where { "
-                    + search
-                    + " } limit "
-                    + limit
-                    + " offset "
-                    + offset
-                    + " } "
-                    + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
-                    + " FILTER((LANG(?label)) = \""
-                    + language
-                    + "\") "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
-                    + "} ";
-    logger.info(query);
-    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
-
-
-//    if (region!=null){
-//      query =
-//              "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
-//                      + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-//                      + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-//                      + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
-//                      + "SELECT ?id ?label ?geoJson ?label1 ?id1 ?label2 ?id2 ?label3 ?id3  WHERE { "
-//                      + "?s rdf:type <http://nuts.de/NUTS3> . "
-//                      + "?s <http://nuts.de/geometry> ?o . "
-//                      + " FILTER (geof:sfWithin(\"" + coo + "\"^^geo:wktLiteral,?o)) "
-//                      + "?s <http://nuts.de/geoJson> ?geoJson . "
-//                      + "?s rdfs:label ?label . "
-//                      + "?s <http://nuts.de/id> ?id . "
-//                      + "OPTIONAL {?s <http://nuts.de/contained> ?contained1 . "
-//                      + "          ?contained1 rdfs:label ?label1 .  "
-//                      + "          ?contained1 <http://nuts.de/id> ?id1 . "
-//                      + "           OPTIONAL {?contained1 <http://nuts.de/contained> ?contained2 . "
-//                      + "          ?contained2 rdfs:label ?label2 .  "
-//                      + "          ?contained2 <http://nuts.de/id> ?id2 . "
-//                      + "           OPTIONAL {?contained2 <http://nuts.de/contained> ?contained3 . "
-//                      + "          ?contained3 rdfs:label ?label3 . "
-//                      + "          ?contained3 <http://nuts.de/id> ?id3 . }}} "
-//                      + "}";
-//      logger.info(query);
-//      resultSet = executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
-//    }
-
-    JSONArray resultList = new JSONArray();
-    String previewsKey = "";
-    Set<String> label = new HashSet<>();
-    Set<String> coordinates = new HashSet<>();
-    boolean hasEntry = resultSet.hasNext();
-    while (resultSet.hasNext()) {
+    //computing the number of results
+    String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
+    System.out.println(query);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 25);
+    int numResults = 0;
+    if (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
-      String currentKey = querySolution.getBinding("s0").getValue().stringValue();
-      if (!previewsKey.equals(currentKey)) {
-        if (!previewsKey.equals("")) {
-          JSONObject element = new JSONObject();
-          element.put("item", previewsKey.replace("https://linkedopendata.eu/entity/", ""));
-          element.put("link", previewsKey);
+      numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+    }
+    logger.info("Number of results {}",numResults);
+    if (numResults<=2000) {
+      query =
+              "select ?s0 ?label ?coordinates where { "
+                      + " { SELECT ?s0 where { "
+                      + search
+                      + " } limit "
+                      + limit
+                      + " offset "
+                      + offset
+                      + " } "
+                      + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
+                      + " FILTER((LANG(?label)) = \""
+                      + language
+                      + "\") "
+                      + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
+                      + "} ";
+      logger.info(query);
+      resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
 
-          JSONArray labels = new JSONArray();
-          labels.addAll(new ArrayList<String>(label));
-          element.put("labels", labels);
+      JSONArray resultList = new JSONArray();
+      String previewsKey = "";
+      Set<String> label = new HashSet<>();
+      Set<String> coordinates = new HashSet<>();
+      boolean hasEntry = resultSet.hasNext();
+      while (resultSet.hasNext()) {
+        BindingSet querySolution = resultSet.next();
+        String currentKey = querySolution.getBinding("s0").getValue().stringValue();
+        if (!previewsKey.equals(currentKey)) {
+          if (!previewsKey.equals("")) {
+            JSONObject element = new JSONObject();
+            element.put("item", previewsKey.replace("https://linkedopendata.eu/entity/", ""));
+            element.put("link", previewsKey);
 
-          JSONArray coordiantes = new JSONArray();
-          coordiantes.addAll(new ArrayList<String>(coordinates));
-          element.put("coordinates", coordiantes);
+            JSONArray labels = new JSONArray();
+            labels.addAll(new ArrayList<String>(label));
+            element.put("labels", labels);
 
-          resultList.add(element);
+            JSONArray coordiantes = new JSONArray();
+            coordiantes.addAll(new ArrayList<String>(coordinates));
+            element.put("coordinates", coordiantes);
+
+            resultList.add(element);
 
 
-          label = new HashSet<>();
-          coordinates = new HashSet<>();
+            label = new HashSet<>();
+            coordinates = new HashSet<>();
+          }
+          previewsKey = querySolution.getBinding("s0").getValue().stringValue();
         }
-        previewsKey = querySolution.getBinding("s0").getValue().stringValue();
+        if (querySolution.getBinding("label") != null)
+          label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
+        if (querySolution.getBinding("coordinates") != null) {
+          coordinates.add(
+                  ((Literal) querySolution.getBinding("coordinates").getValue())
+                          .getLabel()
+                          .replace("Point(", "")
+                          .replace(")", "")
+                          .replace(" ", ","));
+        }
       }
-      if (querySolution.getBinding("label") != null)
-        label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
-      if (querySolution.getBinding("coordinates") != null) {
-        coordinates.add(
-                ((Literal) querySolution.getBinding("coordinates").getValue())
-                        .getLabel()
-                        .replace("Point(", "")
-                        .replace(")", "")
-                        .replace(" ", ","));
+      if (hasEntry) {
+        JSONObject element = new JSONObject();
+        element.put("item", previewsKey.replace("https://linkedopendata.eu/entity/", ""));
+        element.put("link", previewsKey);
+
+        JSONArray labels = new JSONArray();
+        labels.addAll(new ArrayList<String>(label));
+        element.put("labels", labels);
+
+        JSONArray coordiantes = new JSONArray();
+        coordiantes.addAll(new ArrayList<String>(coordinates));
+        element.put("coordinates", coordiantes);
       }
-    }
-    if (hasEntry) {
-      JSONObject element = new JSONObject();
-      element.put("item", previewsKey.replace("https://linkedopendata.eu/entity/", ""));
-      element.put("link", previewsKey);
+      JSONObject result = new JSONObject();
+      result.put("list", resultList);
+      return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
+    } else {
+      String groupBy = "";
+      if (granularity.equals("country")){
+        groupBy = " ?s0 <https://linkedopendata.eu/prop/direct/P32> ?region ";
+      }
+      if (granularity.equals("nuts1")){
+        groupBy = " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+"> . ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> .";
+      }
+      if (granularity.equals("nuts2")){
+        groupBy = " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+"> . ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
+      }
+      if (granularity.equals("nuts3")){
+        groupBy = " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+"> . ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> .";
+      }
 
-      JSONArray labels = new JSONArray();
-      labels.addAll(new ArrayList<String>(label));
-      element.put("labels", labels);
+      query =
+              "SELECT ?region ?regionLabel ?c WHERE {"
+                      + "{ SELECT ?region (count(?s0) as ?c) where { "
+                      +   search
+                      +   groupBy
+                      + " } group by ?region "
+                      + "} "
+                      + " OPTIONAL {?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . FILTER((LANG(?label)) = \""+ language + "\") }"
+                      + "}";
+      logger.info(query);
+      resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
 
-      JSONArray coordiantes = new JSONArray();
-      coordiantes.addAll(new ArrayList<String>(coordinates));
-      element.put("coordinates", coordiantes);
+      JSONArray resultList = new JSONArray();
+      String previewsKey = "";
+      while (resultSet.hasNext()) {
+        JSONObject element = new JSONObject();
+        BindingSet querySolution = resultSet.next();
+        element.put("region", querySolution.getBinding("region").getValue().stringValue());
+        if (querySolution.getBinding("regionLabel")!=null) {
+          element.put("regionLabel", querySolution.getBinding("regionLabel").getValue().stringValue());
+        }
+        element.put("count", querySolution.getBinding("c").getValue().stringValue());
+        resultList.add(element);
+      }
+      return new ResponseEntity<JSONArray>((JSONArray) resultList, HttpStatus.OK);
     }
-    JSONObject result = new JSONObject();
-    result.put("list", resultList);
-    return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
   }
 
 
