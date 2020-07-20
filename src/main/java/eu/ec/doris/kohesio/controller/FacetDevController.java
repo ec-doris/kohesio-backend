@@ -604,7 +604,7 @@ public class FacetDevController {
                       +   groupBy
                       + " } group by ?region "
                       + "} "
-                      + " OPTIONAL {?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . FILTER((LANG(?label)) = \""+ language + "\") }"
+                      + " OPTIONAL {?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . FILTER((LANG(?regionLabel)) = \""+ language + "\") }"
                       + "}";
       logger.info(query);
       resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
