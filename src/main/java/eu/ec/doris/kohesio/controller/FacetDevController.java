@@ -473,7 +473,6 @@ public class FacetDevController {
                                             @RequestParam(value = "latitude", required = false) String latitude,
                                             @RequestParam(value = "longitude", required = false) String longitude,
                                             @RequestParam(value = "region", required = false) String region,
-                                            @RequestParam(value = "granularity", required = false) String granularity,
                                             @RequestParam(value = "granularityRegion", required = false) String granularityRegion,
                                             @RequestParam(value = "limit", defaultValue = "2000") int limit,
                                             @RequestParam(value = "offset", defaultValue = "0") int offset,
@@ -503,6 +502,9 @@ public class FacetDevController {
     }
     logger.info("Number of results {}",numResults);
     if (numResults<=2000) {
+      if (granularityRegion!=null){
+        search += " ?s0 <https://linkedopendata.eu/prop/direct/P104> <"+granularityRegion+"> .";
+      }
       query =
               "select ?s0 ?label ?coordinates where { "
                       + " { SELECT ?s0 where { "
@@ -579,46 +581,164 @@ public class FacetDevController {
       result.put("list", resultList);
       return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
     } else {
-      String groupBy = "";
-      if (granularity.equals("country")){
-        groupBy = " ?s0 <https://linkedopendata.eu/prop/direct/P32> ?region ";
+
+      //computing nuts information
+      HashMap<String,Nut> nutsRegion = new HashMap<String,Nut>();
+      List<String> gran = new ArrayList<String>();
+      gran.add("continent");
+      gran.add("country");
+      gran.add("nuts1");
+      gran.add("nuts2");
+      for (String g : gran) {
+        System.out.println("INFO OF "+g);
+        String filter = "";
+        if (g.equals("continent")){
+          filter = " VALUES ?region { <https://linkedopendata.eu/entity/Q1> } . ?region <https://linkedopendata.eu/prop/direct/P104>  ?region2 .";
+        }
+        if (g.equals("country")){
+          filter = " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104>  ?region . ";
+        }
+        if (g.equals("nuts1")){
+          filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> .";
+        }
+        if (g.equals("nuts2")){
+          filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
+        }
+        if (g.equals("nuts3")){
+          filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
+        }
+
+        query =
+                "SELECT ?region ?regionLabel where {" +
+                        filter +
+                        " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
+                        "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
+                        "}";
+        logger.info(query);
+        resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+        while (resultSet.hasNext()) {
+          BindingSet querySolution = resultSet.next();
+          String key = querySolution.getBinding("region").getValue().stringValue();
+          System.out.println("ENTERING!!!!!!!!!!! adding info for "+key);
+          Nut nut = new Nut();
+          nut.uri = key;
+          nut.type=g;
+          if (nutsRegion.get(key)!=null) {
+            nut = nutsRegion.get(key);
+          }
+          if (querySolution.getBinding("regionLabel")!=null){
+            System.out.println(querySolution.getBinding("regionLabel").getValue().stringValue());
+            nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
+          }
+          nutsRegion.put(key,nut);
+        }
       }
-      if (granularity.equals("nuts1")){
-        groupBy = " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+"> . ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> .";
+      //retriving the narrower concept
+      for (String key : nutsRegion.keySet()) {
+        query = "";
+        if (nutsRegion.get(key).type.equals("continent")) {
+          query =
+                  "SELECT ?region2 where {" +
+                          " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?region2 . }";
+        }
+        if (nutsRegion.get(key).type.equals("country")) {
+          query =
+                  "SELECT ?region2 where {" +
+                          " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
+                          " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . }";
+        }
+        if (nutsRegion.get(key).type.equals("nuts1")) {
+          query =
+                  "SELECT ?region2 where {" +
+                          " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
+                          " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> . }";
+        }
+        if (nutsRegion.get(key).type.equals("nuts2")) {
+          query =
+                  "SELECT ?region2 where {" +
+                          " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
+                          " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> . }";
+        }
+        System.out.println(query);
+        if (query.equals("")==false) {
+          resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+          while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            if (querySolution.getBinding("region2") != null) {
+              System.out.println(querySolution.getBinding("region2"));
+              if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
+                nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
+              }
+            }
+          }
+        }
       }
-      if (granularity.equals("nuts2")){
-        groupBy = " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+"> . ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
+      //retriving the geoJson geometries
+      for (String key : nutsRegion.keySet()) {
+        query =
+                "SELECT ?regionGeo where {" +
+                        "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
+                        " ?nut <http://nuts.de/geoJson> ?regionGeo . }";
+        logger.info(query);
+        resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+        while (resultSet.hasNext()) {
+          BindingSet querySolution = resultSet.next();
+          nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
+        }
       }
-      if (granularity.equals("nuts3")){
-        groupBy = " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+"> . ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> .";
+
+
+      if (granularityRegion==null){
+        granularityRegion = "https://linkedopendata.eu/entity/Q1";
       }
 
       query =
-              "SELECT ?region ?regionLabel ?c WHERE {"
-                      + "{ SELECT ?region (count(?s0) as ?c) where { "
+              "SELECT ?region (count(?s0) as ?c) where { "
                       +   search
-                      +   groupBy
-                      + " } group by ?region "
-                      + "} "
-                      + " OPTIONAL {?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . FILTER((LANG(?regionLabel)) = \""+ language + "\") }"
-                      + "}";
+                      +   " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region . "
+                      + " } group by ?region ";
       logger.info(query);
       resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
 
-      JSONArray resultList = new JSONArray();
-      String previewsKey = "";
-      while (resultSet.hasNext()) {
+
+      HashMap<String, JSONObject> result = new HashMap();
+      System.out.println(granularityRegion);
+      System.out.println(nutsRegion.get(granularityRegion));
+      System.out.println(nutsRegion.get(granularityRegion).narrower);
+      for (String r: nutsRegion.get(granularityRegion).narrower){
+        System.out.println(r);
         JSONObject element = new JSONObject();
+        element.put("region", r);
+        element.put("regionLabel", nutsRegion.get(r).name);
+        element.put("geoJson", nutsRegion.get(r).geoJson);
+        element.put("count", 0);
+        result.put(r,element);
+      }
+
+      while (resultSet.hasNext()) {
         BindingSet querySolution = resultSet.next();
-        element.put("region", querySolution.getBinding("region").getValue().stringValue());
-        if (querySolution.getBinding("regionLabel")!=null) {
-          element.put("regionLabel", querySolution.getBinding("regionLabel").getValue().stringValue());
+        System.out.println(querySolution.getBinding("region").getValue().stringValue()+"---"+((Literal) querySolution.getBinding("c").getValue()).intValue());
+        if (result.containsKey(querySolution.getBinding("region").getValue().stringValue())) {
+          JSONObject element = result.get(querySolution.getBinding("region").getValue().stringValue());
+          element.put("count", ((Literal) querySolution.getBinding("c").getValue()).intValue());
+          result.put(querySolution.getBinding("region").getValue().stringValue(), element);
         }
-        element.put("count", querySolution.getBinding("c").getValue().stringValue());
-        resultList.add(element);
+      }
+
+      JSONArray resultList = new JSONArray();
+      for (String key : result.keySet()){
+        resultList.add(result.get(key));
       }
       return new ResponseEntity<JSONArray>((JSONArray) resultList, HttpStatus.OK);
     }
+  }
+
+  class Nut{
+    String uri;
+    String type;
+    String name="";
+    String geoJson="";
+    List<String> narrower = new ArrayList<String>();
   }
 
 
