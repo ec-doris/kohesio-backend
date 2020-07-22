@@ -593,11 +593,6 @@ public class FacetDevController {
     initialize(language);
     String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
 
-    if (search.equals(
-            "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
-      search += " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. ";
-    }
-
     //computing the number of results
     String searchCount = search;
     if (granularityRegion!=null){
