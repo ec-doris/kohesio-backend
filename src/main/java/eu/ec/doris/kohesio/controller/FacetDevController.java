@@ -254,20 +254,22 @@ public class FacetDevController {
                                  @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
     String query =
             ""
-                    + "select ?fund ?fundLabel where { "
+                    + "select ?fund ?fundLabel ?id where { "
                     + " ?fund <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2504365> . "
+                    + " ?fund <https://linkedopendata.eu/prop/direct/P1583> ?id ."
+
                     + " ?fund rdfs:label ?fundLabel . "
                     + " FILTER (lang(?fundLabel)=\""
                     + language
                     + "\")"
-                    + "} order by ?fundLabel ";
+                    + "} order by ?id ";
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
       JSONObject element = new JSONObject();
       element.put("instance", querySolution.getBinding("fund").toString());
-      element.put("instanceLabel", querySolution.getBinding("fundLabel").getValue().stringValue());
+      element.put("instanceLabel", querySolution.getBinding("id").getValue().stringValue()+" - "+querySolution.getBinding("fundLabel").getValue().stringValue());
       result.add(element);
     }
     return result;
