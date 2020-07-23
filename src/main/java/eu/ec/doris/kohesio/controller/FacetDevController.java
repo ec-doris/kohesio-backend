@@ -95,6 +95,7 @@ public class FacetDevController {
       gran.add("country");
       gran.add("nuts1");
       gran.add("nuts2");
+      gran.add("nuts3");
       for (String g : gran) {
         System.out.println("INFO OF " + g);
         String filter = "";
@@ -111,7 +112,7 @@ public class FacetDevController {
           filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
         }
         if (g.equals("nuts3")) {
-          filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
+          filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> .";
         }
 
         String query =
@@ -586,8 +587,8 @@ public class FacetDevController {
                                             @RequestParam(value = "longitude", required = false) String longitude,
                                             @RequestParam(value = "region", required = false) String region,
                                             @RequestParam(value = "granularityRegion", required = false) String granularityRegion,
-                                            @RequestParam(value = "limit", defaultValue = "2000") int limit,
-                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                            @RequestParam(value = "limit", defaultValue = "2000") Integer limit,
+                                            @RequestParam(value = "offset", defaultValue = "0") Integer offset,
                                             Principal principal)
           throws Exception {
     logger.info("language {} keywords {} country {} theme {} fund {} region {}", language, keywords, country, theme, fund, region);
@@ -719,7 +720,7 @@ public class FacetDevController {
       System.out.println(nutsRegion.get(granularityRegion));
       System.out.println(nutsRegion.get(granularityRegion).narrower);
       for (String r: nutsRegion.get(granularityRegion).narrower){
-        System.out.println(r);
+        System.out.println("This is the r "+r);
         JSONObject element = new JSONObject();
         element.put("region", r);
         element.put("regionLabel", nutsRegion.get(r).name);
@@ -1545,6 +1546,7 @@ public class FacetDevController {
         }
       }
     }
+    euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null);
   }
 
   @PostMapping(value = "/facet/eu/cache/clean", produces = "application/json")
