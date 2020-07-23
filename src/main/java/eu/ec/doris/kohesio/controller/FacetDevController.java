@@ -333,8 +333,9 @@ public class FacetDevController {
           throws Exception {
     String query =
             ""
-                    + "select ?program ?programLabel where { "
-                    + " ?program <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2463047> . ";
+                    + "select ?program ?programLabel ?cci where { "
+                    + " ?program <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2463047> . "
+                    + " ?program <https://linkedopendata.eu/prop/direct/P1367>  ?cci . ";
 
     if (country != null) {
       query += " ?program <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
@@ -354,7 +355,7 @@ public class FacetDevController {
       JSONObject element = new JSONObject();
       element.put("instance", querySolution.getBinding("program").toString());
       element.put(
-              "instanceLabel", querySolution.getBinding("programLabel").getValue().stringValue());
+              "instanceLabel", querySolution.getBinding("cci").getValue().stringValue()+" - "+querySolution.getBinding("programLabel").getValue().stringValue());
       result.add(element);
     }
     return result;
