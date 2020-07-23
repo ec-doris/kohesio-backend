@@ -686,6 +686,15 @@ public class FacetDevController {
       }
       JSONObject result = new JSONObject();
       result.put("list", resultList);
+      if (granularityRegion!=null) {
+        result.put("geoJson", nutsRegion.get(granularityRegion).geoJson);
+      } else if (country!=null && region == null) {
+        result.put("geoJson", nutsRegion.get(country).geoJson);
+      } else if (country!=null && region != null) {
+        result.put("geoJson", nutsRegion.get(region).geoJson);
+      } else {
+        result.put("geoJson", "");
+      }
       return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
     } else {
 
