@@ -301,18 +301,16 @@ public class FacetDevController {
   public JSONArray facetEuCategoryOfIntervention( //
                                                   @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
 
-    String kb = "eu";
-    String user = "Max";
-
     String query =
             ""
-                    + "select ?instance ?instanceLabel where { "
+                    + "select ?instance ?instanceLabel ?id where { "
                     + " ?instance <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q200769> . "
+                    + " ?instance <https://linkedopendata.eu/prop/direct/P869>  ?id . "
                     + " ?instance rdfs:label ?instanceLabel . "
                     + " FILTER (lang(?instanceLabel)=\""
                     + language
                     + "\")"
-                    + "} order by ?instanceLabel";
+                    + "} order by ?id";
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
@@ -320,7 +318,7 @@ public class FacetDevController {
       JSONObject element = new JSONObject();
       element.put("instance", querySolution.getBinding("instance").toString());
       element.put(
-              "instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
+              "instanceLabel", querySolution.getBinding("id").getValue().stringValue()+" - "+querySolution.getBinding("instanceLabel").getValue().stringValue());
       result.add(element);
     }
     return result;
