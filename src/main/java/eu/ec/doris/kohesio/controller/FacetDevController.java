@@ -346,7 +346,7 @@ public class FacetDevController {
                     + " FILTER (lang(?programLabel)=\""
                     + language
                     + "\")"
-                    + "} order by ?programLabel ";
+                    + "} order by ?cci ";
 
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
