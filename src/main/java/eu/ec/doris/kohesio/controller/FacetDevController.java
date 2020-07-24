@@ -194,7 +194,7 @@ public class FacetDevController {
         String query =
                 "SELECT ?regionGeo where {" +
                         "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
-                        " ?nut <http://nuts.de/geoJson> ?regionGeo . }";
+                        " ?nut <http://nuts.de/geoJson20M> ?regionGeo . }";
         logger.info(query);
         TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
         while (resultSet.hasNext()) {
@@ -624,9 +624,11 @@ public class FacetDevController {
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+"> .";
       }
       String optional = " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
-      if (granularityRegion!=null){
-        optional += " <"+granularityRegion + ">   <http://nuts.de/geometry> ?o . FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) ";
-      }
+
+      // not performing
+      //      if (granularityRegion!=null)
+      //        optional += " ?nut <http://nuts.de/linkedopendata> <"+granularityRegion + ">  . ?nuts  <http://nuts.de/geometry> ?o . FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) ";
+      //      }
       optional += "}";
 
 
