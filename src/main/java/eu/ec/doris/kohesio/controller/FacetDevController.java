@@ -630,7 +630,7 @@ public class FacetDevController {
       numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
     }
     logger.info("Number of results {}",numResults);
-    if (numResults<=2000) {
+    if (numResults<=1000) {
       if (granularityRegion!=null){
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+"> .";
       }
