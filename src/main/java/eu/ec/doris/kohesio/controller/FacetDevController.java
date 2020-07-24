@@ -14,6 +14,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryResults;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.query.TupleQueryResultHandler;
@@ -1355,68 +1356,70 @@ public class FacetDevController {
                     + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
                     + "} ";
     logger.info(query);
-    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 50);
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
 
     List<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
-    Beneficiary beneficary = new Beneficiary();
-    String previewsKey = "";
-    while (resultSet.hasNext()) {
-      BindingSet querySolution = resultSet.next();
-      String currentKey = querySolution.getBinding("beneficiary").getValue().stringValue();
-      if (!previewsKey.equals(currentKey)) {
-        if (!previewsKey.equals("")) {
-          beneficary.computeCofinancingRate();
-          beneficiaries.add(beneficary);
+    if (resultSet!=null) {
+      Beneficiary beneficary = new Beneficiary();
+      String previewsKey = "";
+      while (resultSet.hasNext()) {
+        BindingSet querySolution = resultSet.next();
+        String currentKey = querySolution.getBinding("beneficiary").getValue().stringValue();
+        if (!previewsKey.equals(currentKey)) {
+          if (!previewsKey.equals("")) {
+            beneficary.computeCofinancingRate();
+            beneficiaries.add(beneficary);
+          }
+          beneficary = new Beneficiary();
+          beneficary.setId(currentKey);
+          previewsKey = currentKey;
         }
-        beneficary = new Beneficiary();
-        beneficary.setId(currentKey);
-        previewsKey = currentKey;
-      }
 
-      if (querySolution.getBinding("beneficiaryLabel") != null) {
-        beneficary.setLabel(
-                ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).getLabel());
-      }
+        if (querySolution.getBinding("beneficiaryLabel") != null) {
+          beneficary.setLabel(
+                  ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).getLabel());
+        }
 
-      if (querySolution.getBinding("country") != null) {
-        beneficary.setCountry(querySolution.getBinding("country").getValue().stringValue());
-      }
+        if (querySolution.getBinding("country") != null) {
+          beneficary.setCountry(querySolution.getBinding("country").getValue().stringValue());
+        }
 
-      if (querySolution.getBinding("countryCode") != null) {
-        beneficary.setCountryCode(
-                ((Literal) querySolution.getBinding("countryCode").getValue()).stringValue());
-      }
+        if (querySolution.getBinding("countryCode") != null) {
+          beneficary.setCountryCode(
+                  ((Literal) querySolution.getBinding("countryCode").getValue()).stringValue());
+        }
 
-      if (querySolution.getBinding("numberProjects") != null) {
-        beneficary.setNumberProjects(
-                ((Literal) querySolution.getBinding("numberProjects").getValue()).intValue());
-      }
+        if (querySolution.getBinding("numberProjects") != null) {
+          beneficary.setNumberProjects(
+                  ((Literal) querySolution.getBinding("numberProjects").getValue()).intValue());
+        }
 
-      if (querySolution.getBinding("totalEuBudget") != null) {
-        beneficary.setEuBudget(
-                String.valueOf(
-                        Precision.round(
-                                ((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue(),
-                                2)));
-      }
+        if (querySolution.getBinding("totalEuBudget") != null) {
+          beneficary.setEuBudget(
+                  String.valueOf(
+                          Precision.round(
+                                  ((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue(),
+                                  2)));
+        }
 
-      if (querySolution.getBinding("totalBudget") != null) {
-        beneficary.setBudget(
-                String.valueOf(
-                        Precision.round(
-                                ((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue(),
-                                2)));
-      }
+        if (querySolution.getBinding("totalBudget") != null) {
+          beneficary.setBudget(
+                  String.valueOf(
+                          Precision.round(
+                                  ((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue(),
+                                  2)));
+        }
 
-      if (querySolution.getBinding("link") != null) {
-        beneficary.setLink(
-                "http://wikidata.org/entity/"
-                        + ((Literal) querySolution.getBinding("link").getValue()).getLabel());
+        if (querySolution.getBinding("link") != null) {
+          beneficary.setLink(
+                  "http://wikidata.org/entity/"
+                          + ((Literal) querySolution.getBinding("link").getValue()).getLabel());
+        }
       }
-    }
-    if (!previewsKey.equals("")) {
-      beneficary.computeCofinancingRate();
-      beneficiaries.add(beneficary);
+      if (!previewsKey.equals("")) {
+        beneficary.computeCofinancingRate();
+        beneficiaries.add(beneficary);
+      }
     }
 
     return beneficiaries;
@@ -1515,6 +1518,7 @@ public class FacetDevController {
 
   @PostMapping(value = "/facet/eu/cache/generate", produces = "application/json")
   public void generateCache() throws Exception {
+    recursiveMap(null);
     String[] countries = {
             "https://linkedopendata.eu/entity/Q15",
             "https://linkedopendata.eu/entity/Q2",
@@ -1549,13 +1553,14 @@ public class FacetDevController {
             if (program!=null){
               p = ((JSONObject) program).get("instance").toString();
             }
+            System.out.println("euSearchBeneficiaries");
             euSearchBeneficiaries(
-                    "en", null, country, r, null, null, f, p, null);
+                      "en", null, country, r, null, null, f, p, null);
+            System.out.println("Done");
           }
         }
       }
     }
-    recursiveMap(null);
   }
 
   void recursiveMap(String granularityRegion) throws Exception {
@@ -1613,18 +1618,27 @@ public class FacetDevController {
     SPARQLRepository repo = new SPARQLRepository(sparqlEndpoint);
     repo.setAdditionalHttpHeaders(additionalHttpHeaders);
 
+    try {
     TupleQueryResult resultSet =
             repo.getConnection().prepareTupleQuery(query).evaluate();
     FileOutputStream out = new FileOutputStream(location + "/facet/cache/" + query.hashCode());
     TupleQueryResultHandler writer = new SPARQLResultsJSONWriter(out);
     QueryResults.report(resultSet, writer);
 
+
     SPARQLResultsJSONParser sparqlResultsJSONParser = new SPARQLResultsJSONParser();
     TupleQueryResultBuilder tupleQueryResultHandler = new TupleQueryResultBuilder();
     sparqlResultsJSONParser.setQueryResultHandler(tupleQueryResultHandler);
+
     sparqlResultsJSONParser.parseQueryResult(
             new FileInputStream(location + "/facet/cache/" + query.hashCode()));
-    return tupleQueryResultHandler.getQueryResult();
+      return tupleQueryResultHandler.getQueryResult();
+    } catch(QueryEvaluationException e){
+      System.out.println("To heavy timeout "+query+" --- "+timeout);
+    } catch (QueryResultParseException e){
+      System.out.println("To heavy timeout "+query+" --- "+timeout);
+    }
+    return null;
   }
 
   JSONObject toJson(
