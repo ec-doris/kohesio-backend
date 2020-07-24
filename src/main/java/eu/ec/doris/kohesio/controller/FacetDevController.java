@@ -191,10 +191,21 @@ public class FacetDevController {
       }
       //retriving the geoJson geometries
       for (String key : nutsRegion.keySet()) {
+        String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
+        if (nutsRegion.get(key).type.equals("continent")){
+          geometry = " ?nut <http://nuts.de/geoJson60M> ?regionGeo . ";
+        }
+        if (nutsRegion.get(key).type.equals("country")){
+          geometry = " ?nut <http://nuts.de/geoJson60M> ?regionGeo . ";
+        }
+        if (nutsRegion.get(key).type.equals("nuts1")){
+          geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
+        }
         String query =
                 "SELECT ?regionGeo where {" +
                         "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
-                        " ?nut <http://nuts.de/geoJson20M> ?regionGeo . }";
+                        geometry +
+                        " }";
         logger.info(query);
         TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
         while (resultSet.hasNext()) {
