@@ -1655,12 +1655,12 @@ public class FacetDevController {
     return null;
   }
 
-  @GetMapping(value = "/facet/eu/geoIp/test", produces = "application/json")
-  public GeoIp.Coordinates geoIp(HttpServletRequest request) throws IOException, GeoIp2Exception {
+  @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
+  public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
     String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
     System.out.println(ip);
-    GeoIp.Coordinates coordinates = geoIp.compute(ip);
-    return coordinates;
+    GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
+    return euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,coordinates2.getLatitude(),coordinates2.getLongitude(),null,null,2000,0,null);
   }
 
   JSONObject toJson(
