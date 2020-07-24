@@ -1655,6 +1655,7 @@ public class FacetDevController {
   @GetMapping(value = "/facet/eu/geoIp/test", produces = "application/json")
   public GeoIp.Coordinates geoIp(HttpServletRequest request) throws IOException, GeoIp2Exception {
     String ip = HttpReqRespUtils.getClientIpAddressIfServletRequestExist();
+    System.out.println(ip);
     GeoIp.Coordinates coordinates = geoIp.compute(ip);
     return coordinates;
   }

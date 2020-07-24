@@ -28,8 +28,10 @@ public class HttpReqRespUtils {
         }
 
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        System.out.println(request.toString());
         for (String header: IP_HEADER_CANDIDATES) {
             String ipList = request.getHeader(header);
+            System.out.println(ipList);
             if (ipList != null && ipList.length() != 0 && !"unknown".equalsIgnoreCase(ipList)) {
                 String ip = ipList.split(",")[0];
                 return ip;
