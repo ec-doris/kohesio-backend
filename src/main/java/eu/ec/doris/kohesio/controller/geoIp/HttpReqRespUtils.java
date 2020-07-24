@@ -1,5 +1,6 @@
 package eu.ec.doris.kohesio.controller.geoIp;
 
+import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -21,13 +22,13 @@ public class HttpReqRespUtils {
             "REMOTE_ADDR"
     };
 
-    public static String getClientIpAddressIfServletRequestExist() {
+    public static String getClientIpAddressIfServletRequestExist(HttpServletRequest request) {
 
         if (RequestContextHolder.getRequestAttributes() == null) {
             return "0.0.0.0";
         }
 
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        //HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         System.out.println(request.toString());
         for (String header: IP_HEADER_CANDIDATES) {
             String ipList = request.getHeader(header);
