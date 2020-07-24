@@ -3,6 +3,7 @@ package eu.ec.doris.kohesio.controller;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 
 import eu.ec.doris.kohesio.controller.geoIp.GeoIp;
+import eu.ec.doris.kohesio.controller.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.controller.payload.Beneficiary;
 import eu.ec.doris.kohesio.controller.payload.NutsRegion;
 
@@ -1652,8 +1653,10 @@ public class FacetDevController {
   }
 
   @GetMapping(value = "/facet/eu/geoIp/test", produces = "application/json")
-  public void geoIp(HttpServletRequest request) throws IOException, GeoIp2Exception {
-    GeoIp.Coordinates coordinates = geoIp.compute(request.getRemoteAddr());
+  public GeoIp.Coordinates geoIp(HttpServletRequest request) throws IOException, GeoIp2Exception {
+    String ip = HttpReqRespUtils.getClientIpAddressIfServletRequestExist();
+    GeoIp.Coordinates coordinates = geoIp.compute(ip);
+    return coordinates;
   }
 
   JSONObject toJson(
