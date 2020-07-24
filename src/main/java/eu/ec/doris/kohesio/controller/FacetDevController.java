@@ -726,11 +726,7 @@ public class FacetDevController {
 
 
       HashMap<String, JSONObject> result = new HashMap();
-      System.out.println(granularityRegion);
-      System.out.println(nutsRegion.get(granularityRegion));
-      System.out.println(nutsRegion.get(granularityRegion).narrower);
       for (String r: nutsRegion.get(granularityRegion).narrower){
-        System.out.println("This is the r "+r);
         JSONObject element = new JSONObject();
         element.put("region", r);
         element.put("regionLabel", nutsRegion.get(r).name);
@@ -741,7 +737,7 @@ public class FacetDevController {
 
       while (resultSet.hasNext()) {
         BindingSet querySolution = resultSet.next();
-        System.out.println(querySolution.getBinding("region").getValue().stringValue()+"---"+((Literal) querySolution.getBinding("c").getValue()).intValue());
+        //System.out.println(querySolution.getBinding("region").getValue().stringValue()+"---"+((Literal) querySolution.getBinding("c").getValue()).intValue());
         if (result.containsKey(querySolution.getBinding("region").getValue().stringValue())) {
           JSONObject element = result.get(querySolution.getBinding("region").getValue().stringValue());
           element.put("count", ((Literal) querySolution.getBinding("c").getValue()).intValue());
