@@ -626,9 +626,9 @@ public class FacetDevController {
       String optional = " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
 
       // not performing
-      //      if (granularityRegion!=null)
-      //        optional += " ?nut <http://nuts.de/linkedopendata> <"+granularityRegion + ">  . ?nuts  <http://nuts.de/geometry> ?o . FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) ";
-      //      }
+      if (granularityRegion!=null){
+        optional += " ?nut <http://nuts.de/linkedopendata> <"+granularityRegion + ">  . ?nuts  <http://nuts.de/geometry> ?o . FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) ";
+      }
       optional += "}";
 
 
