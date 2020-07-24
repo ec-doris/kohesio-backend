@@ -623,6 +623,14 @@ public class FacetDevController {
       if (granularityRegion!=null){
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <"+granularityRegion+"> .";
       }
+      String optional = " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
+      if (granularityRegion!=null){
+        optional += " <"+granularityRegion + ">   <http://nuts.de/geometry> ?o . FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) ";
+      }
+      optional += "}";
+
+
+
       query =
               "select ?s0 ?label ?coordinates where { "
                       + " { SELECT ?s0 where { "
@@ -636,7 +644,7 @@ public class FacetDevController {
                       + " FILTER((LANG(?label)) = \""
                       + language
                       + "\") "
-                      + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
+                      + optional
                       + "} ";
       logger.info(query);
       resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
