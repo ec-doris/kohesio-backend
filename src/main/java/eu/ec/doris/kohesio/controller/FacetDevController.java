@@ -89,6 +89,9 @@ public class FacetDevController {
   @Autowired
   GeoIp geoIp;
 
+  @Autowired
+  HttpReqRespUtils httpReqRespUtils;
+
   HashMap<String,Nut> nutsRegion = null;
 
   // Set this to allow browser requests from other websites
@@ -1654,7 +1657,7 @@ public class FacetDevController {
 
   @GetMapping(value = "/facet/eu/geoIp/test", produces = "application/json")
   public GeoIp.Coordinates geoIp(HttpServletRequest request) throws IOException, GeoIp2Exception {
-    String ip = HttpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
+    String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
     System.out.println(ip);
     GeoIp.Coordinates coordinates = geoIp.compute(ip);
     return coordinates;
