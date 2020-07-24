@@ -193,14 +193,14 @@ public class FacetDevController {
       for (String key : nutsRegion.keySet()) {
         String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
         if (nutsRegion.get(key).type.equals("continent")){
-          geometry = " ?nut <http://nuts.de/geoJson60M> ?regionGeo . ";
-        }
-        if (nutsRegion.get(key).type.equals("country")){
-          geometry = " ?nut <http://nuts.de/geoJson60M> ?regionGeo . ";
-        }
-        if (nutsRegion.get(key).type.equals("nuts1")){
           geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
         }
+        if (nutsRegion.get(key).type.equals("country")){
+          geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
+        }
+//        if (nutsRegion.get(key).type.equals("nuts1")){
+//          geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
+//        }
         String query =
                 "SELECT ?regionGeo where {" +
                         "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
