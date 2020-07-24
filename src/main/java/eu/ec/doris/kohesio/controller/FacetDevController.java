@@ -1,5 +1,8 @@
 package eu.ec.doris.kohesio.controller;
 
+import com.maxmind.geoip2.exception.GeoIp2Exception;
+
+import eu.ec.doris.kohesio.controller.geoIp.GeoIp;
 import eu.ec.doris.kohesio.controller.payload.Beneficiary;
 import eu.ec.doris.kohesio.controller.payload.NutsRegion;
 
@@ -29,6 +32,7 @@ import org.json.simple.JSONObject;
 import org.mapstruct.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -64,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
@@ -79,6 +84,9 @@ public class FacetDevController {
 
   @Value("${kohesio.sparqlEndpointNuts}")
   String getSparqlEndpointNuts;
+
+  @Autowired
+  GeoIp geoIp;
 
   HashMap<String,Nut> nutsRegion = null;
 
@@ -1518,7 +1526,9 @@ public class FacetDevController {
 
   @PostMapping(value = "/facet/eu/cache/generate", produces = "application/json")
   public void generateCache() throws Exception {
+    System.out.println("Start recoursive");
     recursiveMap(null);
+    System.out.println("end recoursive");
     String[] countries = {
             "https://linkedopendata.eu/entity/Q15",
             "https://linkedopendata.eu/entity/Q2",
@@ -1639,6 +1649,11 @@ public class FacetDevController {
       System.out.println("To heavy timeout "+query+" --- "+timeout);
     }
     return null;
+  }
+
+  @GetMapping(value = "/facet/eu/geoIp/test", produces = "application/json")
+  public void geoIp(HttpServletRequest request) throws IOException, GeoIp2Exception {
+    GeoIp.Coordinates coordinates = geoIp.compute(request.getRemoteAddr());
   }
 
   JSONObject toJson(

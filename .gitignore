@@ -2,3 +2,5 @@
 *.iml
 dir/
 target/
+src/main/resources/GeoLite2/
+out
