@@ -32,7 +32,7 @@ public class HttpReqRespUtils {
         System.out.println(request.toString());
         for (String header: IP_HEADER_CANDIDATES) {
             String ipList = request.getHeader(header);
-            System.out.println(ipList);
+            System.out.println(header+"---"+ipList);
             if (ipList != null && ipList.length() != 0 && !"unknown".equalsIgnoreCase(ipList)) {
                 String ip = ipList.split(",")[0];
                 return ip;
