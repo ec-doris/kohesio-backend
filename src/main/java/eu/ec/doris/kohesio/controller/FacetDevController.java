@@ -1682,7 +1682,10 @@ public class FacetDevController {
     String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
     System.out.println(ip);
     GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-    return euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,coordinates2.getLatitude(),coordinates2.getLongitude(),null,null,2000,0,null);
+    ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,coordinates2.getLatitude(),coordinates2.getLongitude(),null,null,2000,0,null);
+    JSONObject mod = result.getBody();
+    mod.put("coordinates",coordinates2.getLatitude()+","+coordinates2.getLongitude());
+    return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
   }
 
   JSONObject toJson(
