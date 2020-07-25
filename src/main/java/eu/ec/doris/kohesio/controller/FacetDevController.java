@@ -1599,7 +1599,9 @@ public class FacetDevController {
     ResponseEntity responseEntity = euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,null,null,null,granularityRegion,2000,0,null);
     if (responseEntity.getBody() instanceof JSONArray){
       for (Object element : (JSONArray)responseEntity.getBody()){
-        recursiveMap(((JSONObject)element).get("region").toString());
+        if (!((JSONObject)element).get("region").toString().equals(granularityRegion)) {
+          recursiveMap(((JSONObject) element).get("region").toString());
+        }
       }
     }
 
