@@ -1637,7 +1637,7 @@ public class FacetDevController {
               sparqlResultsJSONParser.parseQueryResult(
                       new FileInputStream(location + "/facet/cache/" + query.hashCode()));
               long end = System.nanoTime();
-              System.out.println("Was cached "+(end - start)/100000);
+              logger.info("Was cached "+(end - start)/100000);
               return tupleQueryResultHandler.getQueryResult();
             } catch(QueryResultParseException e){
               System.out.println("Wrong in cache timeout "+timeout);
@@ -1667,7 +1667,7 @@ public class FacetDevController {
     sparqlResultsJSONParser.parseQueryResult(
             new FileInputStream(location + "/facet/cache/" + query.hashCode()));
       long end = System.nanoTime();
-      System.out.println("Was NOT cached "+(end - start)/100000);
+      logger.info("Was NOT cached "+(end - start)/100000);
       return tupleQueryResultHandler.getQueryResult();
     } catch(QueryEvaluationException e){
       System.out.println("To heavy timeout "+query+" --- "+timeout);
