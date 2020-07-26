@@ -1620,6 +1620,7 @@ public class FacetDevController {
   }
 
   public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache) throws Exception {
+    logger.info(query);
     long start = System.nanoTime();
     File dir = new File(location + "/facet/cache/");
     if (!dir.exists()) {
