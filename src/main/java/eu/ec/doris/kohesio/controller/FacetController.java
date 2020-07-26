@@ -568,7 +568,7 @@ public class FacetController {
 
     if (theme != null) {
       search +=
-              "?s0 <https://linkedopendata.eu/prop/direct/P1848> ?category. "
+              "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
                       + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
                       + theme
                       + "> . ";
@@ -576,7 +576,7 @@ public class FacetController {
 
     if (policyObjective != null) {
       search +=
-              "?s0 <https://linkedopendata.eu/prop/direct/P1848> ?category. "
+              "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
                       + "?category <https://linkedopendata.eu/prop/direct/P1849> <"
                       + policyObjective
                       + "> . ";
