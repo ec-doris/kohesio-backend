@@ -809,7 +809,7 @@ public class FacetDevController {
     if (theme != null) {
       search +=
               "?s0 <https://linkedopendata.eu/prop/direct/P1848> ?category. "
-                      + "?category <https://linkedopendata.eu/prop/direct/P302> <"
+                      + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
                       + theme
                       + "> . ";
     }
