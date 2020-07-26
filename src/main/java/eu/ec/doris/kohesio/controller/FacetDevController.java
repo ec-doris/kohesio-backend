@@ -816,7 +816,7 @@ public class FacetDevController {
 
     if (policyObjective != null) {
       search +=
-              "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+              "?s0 <https://linkedopendata.eu/prop/direct/P1848> ?category. "
                       + "?category <https://linkedopendata.eu/prop/direct/P1849> <"
                       + policyObjective
                       + "> . ";
