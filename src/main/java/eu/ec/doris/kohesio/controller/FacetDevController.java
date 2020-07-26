@@ -994,6 +994,7 @@ public class FacetDevController {
                     + "             FILTER((LANG(?regionUpper2Label)) = \"" + language + "\") }  "
                     + "           OPTIONAL { ?regionUpper2 <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper3 . "
                     + "           ?regionUpper3 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper3Label . "
+                    + "           ?regionUpper2 <https://linkedopendata.eu/prop/direct/P32> ?coun ."
                     + "           FILTER((LANG(?regionUpper3Label)) = \"" + language + "\") }} "
                     + "} ";
     logger.info("Retrieving results");
