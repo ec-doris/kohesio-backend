@@ -920,7 +920,7 @@ public class FacetDevController {
                           @RequestParam(value = "language", defaultValue = "en") String language)
           throws Exception {
     String query =
-            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?budget ?euBudget ?cofinancingRate ?image ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
+            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?budget ?euBudget ?cofinancingRate ?image ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
                     + " VALUES ?s0 { <"
                     + id
                     + "> } "
@@ -976,9 +976,9 @@ public class FacetDevController {
                     + "\") } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P889> ?beneficiaryLink . "
                     + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel .} "
-                    + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID . "
-                    + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . "
-                    + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) .} }"
+                    + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID . } "
+                    + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
+                    + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  "
                     + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?regionId .} "
                     + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> . "
