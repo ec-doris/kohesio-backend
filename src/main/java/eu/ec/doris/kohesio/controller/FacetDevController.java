@@ -977,8 +977,8 @@ public class FacetDevController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P889> ?beneficiaryLink . "
                     + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel .} "
                     + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID . "
-                    + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) .}  }"
-
+                    + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . "
+                    + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) .} }"
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  "
                     + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?regionId .} "
                     + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> . "
@@ -1183,6 +1183,14 @@ public class FacetDevController {
             beneficary.put("wikidata", benID);
           } else {
             beneficary.put("wikidata", "");
+          }
+          if (querySolution.getBinding("beneficiaryWebsite") != null) {
+            String benID =
+                    ((Literal) querySolution.getBinding("beneficiaryWebsite").getValue())
+                            .stringValue();
+            beneficary.put("website", benID);
+          } else {
+            beneficary.put("website", "");
           }
           beneficiaries.add(beneficary);
         }
