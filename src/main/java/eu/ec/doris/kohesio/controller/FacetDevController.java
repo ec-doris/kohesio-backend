@@ -1186,8 +1186,7 @@ public class FacetDevController {
           }
           if (querySolution.getBinding("beneficiaryWebsite") != null) {
             String benID =
-                    ((Literal) querySolution.getBinding("beneficiaryWebsite").getValue())
-                            .stringValue();
+                    querySolution.getBinding("beneficiaryWebsite").getValue().stringValue();
             beneficary.put("website", benID);
           } else {
             beneficary.put("website", "");
