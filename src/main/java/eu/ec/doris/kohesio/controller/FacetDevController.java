@@ -665,7 +665,7 @@ public class FacetDevController {
                       + optional
                       + "} ";
       logger.info(query);
-      resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
 
       JSONArray resultList = new JSONArray();
       String previewsKey = "";
