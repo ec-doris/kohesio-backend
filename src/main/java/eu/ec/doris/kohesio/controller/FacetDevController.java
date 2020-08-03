@@ -607,7 +607,7 @@ public class FacetDevController {
                                             @RequestParam(value = "longitude", required = false) String longitude,
                                             @RequestParam(value = "region", required = false) String region,
                                             @RequestParam(value = "granularityRegion", required = false) String granularityRegion,
-                                            @RequestParam(value = "limit", defaultValue = "2000") Integer limit,
+                                            @RequestParam(value = "limit", required = false) Integer limit,
                                             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
                                             Principal principal)
           throws Exception {
@@ -623,11 +623,14 @@ public class FacetDevController {
     }
     String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + searchCount + "} ";
     System.out.println(query);
-    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 25);
     int numResults = 0;
-    if (resultSet.hasNext()) {
-      BindingSet querySolution = resultSet.next();
-      numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+    if (limit == null || limit > 2000) {
+      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 25);
+
+      if (resultSet.hasNext()) {
+        BindingSet querySolution = resultSet.next();
+        numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+      }
     }
     logger.info("Number of results {}",numResults);
     if (numResults<=2000) {
@@ -642,7 +645,9 @@ public class FacetDevController {
       }
       optional += "}";
 
-
+      if (limit != null){
+        limit = 2000;
+      }
 
       query =
               "select ?s0 ?label ?coordinates where { "
