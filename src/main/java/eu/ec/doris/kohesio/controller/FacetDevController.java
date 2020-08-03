@@ -748,7 +748,7 @@ public class FacetDevController {
                       +   " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region . "
                       + " } group by ?region ";
       logger.info(query);
-      resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
+      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
 
 
       HashMap<String, JSONObject> result = new HashMap();
