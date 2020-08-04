@@ -851,7 +851,7 @@ public class FacetDevController {
     if (budgetSmallerThen != null || budgetBiggerThen != null) {
       search += " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
       if (budgetBiggerThen != null) {
-        search += "FILTER( ?budget > " + budgetEUBiggerThen + ")";
+        search += "FILTER( ?budget > " + budgetBiggerThen + ")";
       }
       if (budgetSmallerThen != null) {
         search += "FILTER( ?budget < " + budgetSmallerThen + ")";
