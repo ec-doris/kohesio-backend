@@ -645,7 +645,7 @@ public class FacetDevController {
       }
       optional += "}";
 
-      if (limit != null){
+      if (limit == null){
         limit = 2000;
       }
 
