@@ -59,6 +59,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -214,6 +215,38 @@ public class FacetDevController {
         }
       }
     }
+  }
+
+  @GetMapping(value="facet/eu/statistics", produces = "application/json")
+  public JSONObject facetEuStatistics() throws Exception {
+    JSONObject statistics = new JSONObject();
+    String query = "SELECT (count(?s0) as ?c) where { "
+                    + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
+                    + "} ";
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      statistics.put("numberProjects", ((Literal)querySolution.getBinding("c").getValue()).intValue());
+    }
+    query = "SELECT (count(?s0) as ?c) where { "
+            + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> . "
+            + "} ";
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      statistics.put("numberBeneficiaries", ((Literal)querySolution.getBinding("c").getValue()).intValue());
+    }
+    query = "SELECT (sum(?o) as ?sum) where { "
+            + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
+            + "    ?s0  <https://linkedopendata.eu/prop/direct/P835>  ?o . "
+            + "} ";
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      DecimalFormat df2 = new DecimalFormat("#.##");
+      statistics.put("totalEuBudget", df2.format(((Literal)querySolution.getBinding("sum").getValue()).doubleValue()));
+    }
+    return statistics;
   }
 
   @GetMapping(value = "/facet/eu/regions", produces = "application/json")
