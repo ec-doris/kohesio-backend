@@ -512,7 +512,6 @@ public class FacetDevController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P147> ?image. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
@@ -760,7 +759,7 @@ public class FacetDevController {
   }
 
   @GetMapping(value = "/facet/eu/search/project/map/point", produces = "application/json")
-  public ResponseEntity euSearchProjectMap(
+  public ResponseEntity euSearchProjectMapPoint(
           @RequestParam(value = "language", defaultValue = "en") String language,
           @RequestParam(value = "keywords", required = false) String keywords, //
           @RequestParam(value = "country", required = false) String country,
@@ -829,6 +828,73 @@ public class FacetDevController {
     String name="";
     String geoJson="";
     List<String> narrower = new ArrayList<String>();
+  }
+
+  @GetMapping(value = "/facet/eu/search/project/image", produces = "application/json")
+  public ResponseEntity euSearchProjectImage(
+          @RequestParam(value = "language", defaultValue = "en") String language,
+          @RequestParam(value = "keywords", required = false) String keywords, //
+          @RequestParam(value = "country", required = false) String country,
+          @RequestParam(value = "theme", required = false) String theme,
+          @RequestParam(value = "fund", required = false) String fund,
+          @RequestParam(value = "program", required = false) String program,
+          @RequestParam(value = "categoryOfIntervention", required = false)
+                  String categoryOfIntervention,
+          @RequestParam(value = "policyObjective", required = false) String policyObjective,
+          @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
+          @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
+          @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
+          @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+          @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
+          @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
+          @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
+          @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+          @RequestParam(value = "latitude", required = false) String latitude,
+          @RequestParam(value = "longitude", required = false) String longitude,
+          @RequestParam(value = "region", required = false) String region,
+          @RequestParam(value = "limit", defaultValue = "10") Integer limit,
+          @RequestParam(value = "offset", defaultValue = "0") Integer offset,
+          Principal principal)
+          throws Exception {
+    logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, null);
+    String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
+
+    //computing the number of results
+    String searchCount = search;
+    searchCount += " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . ";
+    String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + searchCount + "} ";
+    TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 25);
+    int numResults = 0;
+    if (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+    }
+    logger.info("Number of results {}", numResults);
+
+      query =
+              "SELECT ?s0 ?image where { "
+                      + search
+                      + " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. "
+                      + " } limit "
+                      + limit
+                      + " offset "
+                      + offset ;
+      logger.info(query);
+      resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+
+      JSONArray resultList = new JSONArray();
+      Set<String> images = new HashSet<>();
+      while (resultSet.hasNext()) {
+        BindingSet querySolution = resultSet.next();
+        JSONObject item = new JSONObject();
+        item.put("item", querySolution.getBinding("s0").getValue().stringValue());
+        item.put("image", querySolution.getBinding("image").getValue().stringValue());
+        resultList.add(item);
+      }
+      JSONObject result = new JSONObject();
+      result.put("list", resultList);
+      result.put("numberResults", numResults);
+      return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
   }
 
 
