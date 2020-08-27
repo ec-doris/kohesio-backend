@@ -692,7 +692,7 @@ public class FacetDevController {
                       + optional
                       + "} ";
       logger.info(query);
-      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 20);
 
       JSONArray resultList = new JSONArray();
       Set<String> coordinates = new HashSet<>();
