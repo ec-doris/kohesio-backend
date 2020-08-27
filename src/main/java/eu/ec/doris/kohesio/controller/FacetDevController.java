@@ -655,6 +655,7 @@ public class FacetDevController {
     String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + searchCount + "} ";
     System.out.println(query);
     int numResults = 0;
+    System.out.println("Limit "+limit);
     if (limit == null || limit > 2000) {
       TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 25);
 
@@ -1719,9 +1720,11 @@ public class FacetDevController {
 
   void recursiveMap(String granularityRegion) throws Exception {
     System.out.println("Resolving for "+granularityRegion);
-    ResponseEntity responseEntity = euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,null,null,null,granularityRegion,2000,0,null);
+    ResponseEntity responseEntity = euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,null,null,null,granularityRegion,null,0,null);
+    System.out.println("Hello world "+responseEntity.getBody());
     if (responseEntity.getBody() instanceof JSONArray){
       for (Object element : (JSONArray)responseEntity.getBody()){
+        System.out.println("Hello world "+((JSONObject)element).get("region").toString());
         if (!((JSONObject)element).get("region").toString().equals(granularityRegion)) {
           recursiveMap(((JSONObject) element).get("region").toString());
         }
@@ -1793,7 +1796,7 @@ public class FacetDevController {
     sparqlResultsJSONParser.parseQueryResult(
             new FileInputStream(location + "/facet/cache/" + query.hashCode()));
       long end = System.nanoTime();
-      logger.info("Was NOT cached "+(end - start)/100000);
+      logger.info("Was NOT cached "+(end - start)/1000000);
       return tupleQueryResultHandler.getQueryResult();
     } catch(QueryEvaluationException e){
       System.out.println("To heavy timeout "+query+" --- "+timeout);
