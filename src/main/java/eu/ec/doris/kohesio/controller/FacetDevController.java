@@ -1080,7 +1080,7 @@ public class FacetDevController {
                     + language
                     + "\") }"
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category.  "
-                    + "           ?category <https://linkedopendata.eu/prop/direct/P302> ?objective."
+                    + "           ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective."
                     + "           ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. "
                     + "           ?objective <http://www.w3.org/2000/01/rdf-schema#label> ?objectiveLabel. "
                     + "           FILTER((LANG(?objectiveLabel)) = \""
