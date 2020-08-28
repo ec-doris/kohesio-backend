@@ -423,7 +423,7 @@ public class FacetDevController {
             ""
                     + "select ?to ?toLabel ?id where { "
                     + " ?to <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q236700> . "
-                    + " ?instance <https://linkedopendata.eu/prop/direct/P1105>  ?id . "
+                    + " ?to <https://linkedopendata.eu/prop/direct/P1105>  ?id . "
                     + " ?to rdfs:label ?toLabel . "
                     + " FILTER (lang(?toLabel)=\""
                     + language
