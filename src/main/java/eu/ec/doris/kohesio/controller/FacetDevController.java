@@ -421,13 +421,14 @@ public class FacetDevController {
     String user = "Max";
     String query =
             ""
-                    + "select ?to ?toLabel where { "
+                    + "select ?to ?toLabel ?id where { "
                     + " ?to <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q236700> . "
+                    + " ?instance <https://linkedopendata.eu/prop/direct/P1105>  ?id . "
                     + " ?to rdfs:label ?toLabel . "
                     + " FILTER (lang(?toLabel)=\""
                     + language
                     + "\")"
-                    + "} order by ?toLabel ";
+                    + "} order by ?id ";
 
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
@@ -435,7 +436,7 @@ public class FacetDevController {
       BindingSet querySolution = resultSet.next();
       JSONObject element = new JSONObject();
       element.put("instance", querySolution.getBinding("to").toString());
-      element.put("instanceLabel", querySolution.getBinding("toLabel").getValue().stringValue());
+      element.put("instanceLabel", querySolution.getBinding("id").getValue().stringValue()+" - "+querySolution.getBinding("toLabel").getValue().stringValue());
       result.add(element);
     }
     return result;
