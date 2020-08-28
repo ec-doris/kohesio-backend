@@ -518,7 +518,7 @@ public class FacetDevController {
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                     + "} ";
     System.out.println(query);
-    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 20);
 
     JSONArray resultList = new JSONArray();
     String previewsKey = "";
