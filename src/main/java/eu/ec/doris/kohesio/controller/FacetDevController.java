@@ -565,8 +565,15 @@ public class FacetDevController {
         }
         previewsKey = querySolution.getBinding("s0").getValue().stringValue();
       }
-      if (querySolution.getBinding("snippet") != null)
-        snippet.add(((Literal) querySolution.getBinding("snippet").getValue()).getLabel());
+      if (querySolution.getBinding("snippet") != null){
+        String s = ((Literal) querySolution.getBinding("snippet").getValue()).getLabel();
+        if (!s.endsWith(".")){
+          s += "...";
+        }
+        snippet.add(s);
+      }
+
+
       if (querySolution.getBinding("label") != null)
         label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
       if (querySolution.getBinding("description") != null)
