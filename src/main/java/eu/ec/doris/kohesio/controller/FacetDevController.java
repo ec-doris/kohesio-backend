@@ -1060,7 +1060,7 @@ public class FacetDevController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P837> ?cofinancingRate. } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?image . }"
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1746> ?video . }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1360> ?sou . "
