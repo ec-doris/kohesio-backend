@@ -1044,7 +1044,7 @@ public class FacetDevController {
                           @RequestParam(value = "language", defaultValue = "en") String language)
           throws Exception {
     String query =
-            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?budget ?euBudget ?cofinancingRate ?image ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
+            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
                     + " VALUES ?s0 { <"
                     + id
                     + "> } "
@@ -1060,8 +1060,10 @@ public class FacetDevController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P837> ?cofinancingRate. } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P147> ?image. } "
-                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
+                    + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
+//                    + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
+                    + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1746> ?video . }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1360> ?sou . "
@@ -1265,11 +1267,22 @@ public class FacetDevController {
 
       if (querySolution.getBinding("image") != null) {
         JSONArray images = (JSONArray) result.get("images");
+        JSONObject image = new JSONObject();
         String im = querySolution.getBinding("image").getValue().stringValue();
-        if (!images.contains(im)) {
-          images.add(im);
-          result.put("images", images);
+        boolean found = false;
+        for (Object i : images){
+          if (((String)i).equals(im) && found == false){
+            found = true;
+          }
         }
+        if (found==false) {
+          image.put("image",im);
+          if (querySolution.getBinding("imageCopyright") != null) {
+            image.put("imageCopyright",querySolution.getBinding("imageCopyright").getValue().stringValue());
+          }
+        }
+        images.add(image);
+        result.put("images", images);
       }
 
       if (querySolution.getBinding("video") != null) {
