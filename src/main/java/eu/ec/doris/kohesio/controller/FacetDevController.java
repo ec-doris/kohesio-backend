@@ -1271,7 +1271,7 @@ public class FacetDevController {
         String im = querySolution.getBinding("image").getValue().stringValue();
         boolean found = false;
         for (Object i : images){
-          if (((JSONObject)i).toString().equals(im) && found == false){
+          if (((JSONObject)i).get("image").toString().equals(im) && found == false){
             found = true;
           }
         }
@@ -1280,8 +1280,8 @@ public class FacetDevController {
           if (querySolution.getBinding("imageCopyright") != null) {
             image.put("imageCopyright",querySolution.getBinding("imageCopyright").getValue().stringValue());
           }
+          images.add(image);
         }
-        images.add(image);
         result.put("images", images);
       }
 
