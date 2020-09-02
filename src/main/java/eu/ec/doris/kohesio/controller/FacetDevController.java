@@ -1271,7 +1271,7 @@ public class FacetDevController {
         String im = querySolution.getBinding("image").getValue().stringValue();
         boolean found = false;
         for (Object i : images){
-          if (((String)i).equals(im) && found == false){
+          if (((JSONObject)i).toString().equals(im) && found == false){
             found = true;
           }
         }
