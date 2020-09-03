@@ -76,7 +76,7 @@ import javax.servlet.http.HttpServletResponse;
 @RestController
 @RequestMapping("/api/dev")
 public class FacetDevController {
-  private static final Logger logger = LoggerFactory.getLogger(FacetController.class);
+  private static final Logger logger = LoggerFactory.getLogger(FacetDevController.class);
 
   @Value("${kohesio.directory}")
   String location;
