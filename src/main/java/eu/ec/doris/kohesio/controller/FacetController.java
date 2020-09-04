@@ -680,7 +680,7 @@ public class FacetController {
       String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
 
       // not performing
-      if (granularityRegion != null) {
+      if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q20")) {
         optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
       }
 
