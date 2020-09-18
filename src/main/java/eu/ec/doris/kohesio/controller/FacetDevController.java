@@ -22,6 +22,7 @@ import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryResults;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.query.TupleQueryResultHandler;
+import org.eclipse.rdf4j.query.algebra.Str;
 import org.eclipse.rdf4j.query.impl.TupleQueryResultBuilder;
 import org.eclipse.rdf4j.query.resultio.QueryResultParseException;
 import org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONParser;
@@ -442,6 +443,7 @@ public class FacetDevController {
     return result;
   }
 
+
   @GetMapping(value = "/facet/eu/search/project", produces = "application/json")
   public ResponseEntity euSearchProject( //
                                          @RequestParam(value = "language", defaultValue = "en") String language,
@@ -461,6 +463,12 @@ public class FacetDevController {
                                          @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
                                          @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
                                          @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+
+                                         @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
+                                         @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
+                                         @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+                                         @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+
                                          @RequestParam(value = "latitude", required = false) String latitude,
                                          @RequestParam(value = "longitude", required = false) String longitude,
                                          @RequestParam(value = "region", required = false) String region,
@@ -482,23 +490,58 @@ public class FacetDevController {
       numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
     }
 
+    String orderQuery = "";
+
+    String orderBy = "";
+    if(orderStartDate != null){
+      orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .";
+      if(orderStartDate){
+        orderBy = "order by desc(?startTime)";
+      }else{
+        orderBy = "order by asc(?startTime)";
+      }
+    }
+    if(orderEndDate != null){
+      orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
+      if(orderEndDate){
+        orderBy = "order by desc(?endTime)";
+      }else{
+        orderBy = "order by asc(?endTime)";
+      }
+    }
+    if(orderEuBudget != null){
+      orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
+      if(orderEuBudget){
+        orderBy = "order by desc(?euBudget)";
+      }else{
+        orderBy = "order by asc(?euBudget)";
+      }
+    }
+    if(orderTotalBudget != null){
+      orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. ";
+      if(orderTotalBudget){
+        orderBy = "order by desc(?totalBudget)";
+      }else{
+        orderBy = "order by asc(?totalBudget)";
+      }
+    }
     if (search.equals(
             "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
       search += " { SELECT ?s0 ?snippet where { " +
               "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
-              "      ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . " +
+              "      ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . "+
               "    } " +
               "  } UNION { SELECT ?s0 ?snippet where { " +
               "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ." +
               "    } " +
               "    }";
     }
-
+    search += " "+orderQuery;
     query =
-            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
+            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
                     + " { SELECT ?s0 ?snippet where { "
                     + search
-                    + " } limit "
+                    + " } "+orderBy+" limit "
                     + limit
                     + " offset "
                     + offset
@@ -514,12 +557,13 @@ public class FacetDevController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
+                    + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                     + "} ";
     System.out.println(query);
-    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 20);
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
 
     JSONArray resultList = new JSONArray();
     String previewsKey = "";
@@ -529,6 +573,7 @@ public class FacetDevController {
     Set<String> startTime = new HashSet<>();
     Set<String> endTime = new HashSet<>();
     Set<String> euBudget = new HashSet<>();
+    Set<String> totalBudget = new HashSet<>();
     Set<String> image = new HashSet<>();
     Set<String> coordinates = new HashSet<>();
     Set<String> objectiveId = new HashSet<>();
@@ -548,6 +593,7 @@ public class FacetDevController {
                           startTime,
                           endTime,
                           euBudget,
+                          totalBudget,
                           image,
                           coordinates,
                           objectiveId,
@@ -558,6 +604,7 @@ public class FacetDevController {
           startTime = new HashSet<>();
           endTime = new HashSet<>();
           euBudget = new HashSet<>();
+          totalBudget = new HashSet<>();
           image = new HashSet<>();
           coordinates = new HashSet<>();
           objectiveId = new HashSet<>();
@@ -586,6 +633,9 @@ public class FacetDevController {
                 ((Literal) querySolution.getBinding("endTime").getValue()).getLabel().split("T")[0]);
       if (querySolution.getBinding("euBudget") != null)
         euBudget.add(((Literal) querySolution.getBinding("euBudget").getValue()).getLabel());
+      if (querySolution.getBinding("totalBudget") != null)
+        totalBudget.add(((Literal) querySolution.getBinding("totalBudget").getValue()).getLabel());
+
       if (querySolution.getBinding("image") != null) {
         image.add(querySolution.getBinding("image").getValue().stringValue());
       }
@@ -612,6 +662,7 @@ public class FacetDevController {
                       startTime,
                       endTime,
                       euBudget,
+                      totalBudget,
                       image,
                       coordinates,
                       objectiveId,
@@ -1854,6 +1905,7 @@ public class FacetDevController {
           Set<String> startTime,
           Set<String> endTime,
           Set<String> euBudget,
+          Set<String> totalBudget,
           Set<String> image,
           Set<String> coordinates,
           Set<String> objectiveId,
@@ -1886,6 +1938,9 @@ public class FacetDevController {
     euBudgets.addAll(new ArrayList<String>(euBudget));
     element.put("euBudgets", euBudgets);
 
+    JSONArray totalBudgets = new JSONArray();
+    totalBudgets.addAll(new ArrayList<String>(totalBudget));
+    element.put("totalBudgets",totalBudget);
     JSONArray images = new JSONArray();
     images.addAll(new ArrayList<String>(image));
     element.put("images", images);
