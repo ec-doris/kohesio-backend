@@ -37,7 +37,7 @@ public class SwaggerConfig {
   private ApiInfo apiInfo() {
     return new ApiInfo(
         "Kohesio: Api Documentation",
-        "APIs provided by QAnswer. Note: most APIs are secured",
+        "APIs provided by Kohesio. Note: most APIs are secured",
         "1.0",
         "",
         null,
