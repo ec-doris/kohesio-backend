@@ -1406,6 +1406,22 @@ public class FacetDevController {
         result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
                 .stringValue());
       }
+      if (result.get("region")!=null){
+        String regionText = (String)result.get("region");
+        if (!((String)result.get("region")).equals(((String)result.get("regionUpper1")))){
+          regionText += ", "+(String)result.get("regionUpper1");
+        }
+        if (!((String)result.get("regionUpper1")).equals(((String)result.get("regionUpper2")))){
+          regionText += ", "+(String)result.get("regionUpper2");
+        }
+        if (!((String)result.get("regionUpper2")).equals(((String)result.get("regionUpper3")))){
+          regionText += ", "+(String)result.get("regionUpper3");
+        }
+        result.put("regionText",regionText);
+      } else {
+        result.put("regionText",(String)result.get("countryLabel"));
+      }
+
       if (querySolution.getBinding("regionId") != null && result.get("geoJson").equals("")) {
         query =
                 "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
