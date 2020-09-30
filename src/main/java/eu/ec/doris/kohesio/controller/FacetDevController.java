@@ -61,15 +61,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -969,6 +961,13 @@ public class FacetDevController {
                                Integer offset) throws IOException {
     String search = "";
     if (keywords != null) {
+      String[] words = keywords.split(" ");
+      StringBuilder keywordsBuilder = new StringBuilder();
+      for (int i = 0; i < words.length - 1; i++) {
+        keywordsBuilder.append(words[i]).append(" AND ");
+      }
+      keywordsBuilder.append(words[words.length-1]);
+      keywords = keywordsBuilder.toString();
       search +=
               "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                       + "<http://www.openrdf.org/contrib/lucenesail#query> \""
