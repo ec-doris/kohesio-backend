@@ -488,33 +488,33 @@ public class FacetDevController {
     if(orderStartDate != null){
       orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .";
       if(orderStartDate){
-        orderBy = "order by desc(?startTime)";
-      }else{
         orderBy = "order by asc(?startTime)";
+      }else{
+        orderBy = "order by desc(?startTime)";
       }
     }
     if(orderEndDate != null){
       orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
       if(orderEndDate){
-        orderBy = "order by desc(?endTime)";
-      }else{
         orderBy = "order by asc(?endTime)";
+      }else{
+        orderBy = "order by desc(?endTime)";
       }
     }
     if(orderEuBudget != null){
       orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
       if(orderEuBudget){
-        orderBy = "order by desc(?euBudget)";
-      }else{
         orderBy = "order by asc(?euBudget)";
+      }else{
+        orderBy = "order by desc(?euBudget)";
       }
     }
     if(orderTotalBudget != null){
       orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. ";
       if(orderTotalBudget){
-        orderBy = "order by desc(?totalBudget)";
-      }else{
         orderBy = "order by asc(?totalBudget)";
+      }else{
+        orderBy = "order by desc(?totalBudget)";
       }
     }
     if (search.equals(
