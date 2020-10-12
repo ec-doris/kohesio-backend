@@ -1779,6 +1779,30 @@ public class FacetDevController {
             "https://linkedopendata.eu/entity/Q12",
             null
     };
+
+
+    int[] offset = {15,30,45,60,75};
+    for (String country : countries) {
+      for (int o : offset) {
+        Boolean[] orderStartDate = {null, true, false};
+        for (Boolean b : orderStartDate){
+          euSearchProject(null, null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, null, 15, o, null);
+        }
+        Boolean[] orderEndDate = {null, true, false};
+        for (Boolean b : orderEndDate){
+          euSearchProject(null, null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, 15, o, null);
+        }
+        Boolean[] orderEuBudget = {null, true, false};
+        for (Boolean b : orderEuBudget){
+          euSearchProject(null, null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, 15, o, null);
+        }
+        Boolean[] orderTotalBudget = {null, true, false};
+        for (Boolean b : orderTotalBudget) {
+          euSearchProject(null, null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, 15, o, null);
+        }
+      }
+    }
+
     for (String country : countries) {
       euSearchBeneficiaries("en", null, country, null, null, null, null,null,null);
     }
