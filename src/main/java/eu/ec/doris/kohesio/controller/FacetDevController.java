@@ -1787,19 +1787,19 @@ public class FacetDevController {
       for (int o : offset) {
         Boolean[] orderStartDate = {null, true, false};
         for (Boolean b : orderStartDate){
-          euSearchProject(null, null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, null, 15, o, null);
+          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, null, 15, o, null);
         }
         Boolean[] orderEndDate = {null, true, false};
         for (Boolean b : orderEndDate){
-          euSearchProject(null, null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, 15, o, null);
+          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, 15, o, null);
         }
         Boolean[] orderEuBudget = {null, true, false};
         for (Boolean b : orderEuBudget){
-          euSearchProject(null, null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, 15, o, null);
+          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, 15, o, null);
         }
         Boolean[] orderTotalBudget = {null, true, false};
         for (Boolean b : orderTotalBudget) {
-          euSearchProject(null, null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, 15, o, null);
+          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, 15, o, null);
         }
       }
     }
