@@ -257,6 +257,7 @@ public class FacetDevController {
 
     while ((row = csvReader.readLine()) != null) {
       String[] data = row.split(";");
+      System.out.println();
       if (country.equals("https://linkedopendata.eu/entity/Q2") && data[0].equals("IE")
               || country.equals("https://linkedopendata.eu/entity/Q15") && data[0].equals("IT")
               || country.equals("https://linkedopendata.eu/entity/Q13") && data[0].equals("PL")
@@ -1780,8 +1781,6 @@ public class FacetDevController {
             "https://linkedopendata.eu/entity/Q12",
     };
 
-
-
     for (String country : countries) {
       int[] offset = {0,15,30,45,60,75,90};
       for (int o : offset) {
@@ -1808,31 +1807,33 @@ public class FacetDevController {
       euSearchBeneficiaries("en", null, country, null, null, null, null,null,null);
     }
     for (String country : countries) {
-      JSONArray regions = facetEuRegions(country, "en");
-      for (Object region : regions) {
-        regions.add(null);
-        JSONArray funds = facetEuFunds("en");
-        funds.add(null);
-        for (Object fund : funds) {
-          JSONArray programs = facetEuPrograms("en",country);
-          programs.add(null);
-          for (Object program : programs) {
-            String r = null;
-            if (region!=null){
-              r = ((JSONObject) region).get("region").toString();
-            }
-            String f = null;
-            if (fund!=null){
-              f = ((JSONObject) fund).get("instance").toString();
-            }
-            String p = null;
-            if (program!=null){
-              p = ((JSONObject) program).get("instance").toString();
-            }
-            System.out.println("euSearchBeneficiaries");
-            euSearchBeneficiaries(
+      if (country!=null) {
+        JSONArray regions = facetEuRegions(country, "en");
+        for (Object region : regions) {
+          regions.add(null);
+          JSONArray funds = facetEuFunds("en");
+          funds.add(null);
+          for (Object fund : funds) {
+            JSONArray programs = facetEuPrograms("en", country);
+            programs.add(null);
+            for (Object program : programs) {
+              String r = null;
+              if (region != null) {
+                r = ((JSONObject) region).get("region").toString();
+              }
+              String f = null;
+              if (fund != null) {
+                f = ((JSONObject) fund).get("instance").toString();
+              }
+              String p = null;
+              if (program != null) {
+                p = ((JSONObject) program).get("instance").toString();
+              }
+              System.out.println("euSearchBeneficiaries");
+              euSearchBeneficiaries(
                       "en", null, country, r, null, null, f, p, null);
-            System.out.println("Done");
+              System.out.println("Done");
+            }
           }
         }
       }
