@@ -1771,13 +1771,13 @@ public class FacetDevController {
     recursiveMap(null);
     System.out.println("end recoursive");
     String[] countries = {
+            null,
             "https://linkedopendata.eu/entity/Q15",
             "https://linkedopendata.eu/entity/Q2",
             "https://linkedopendata.eu/entity/Q25",
             "https://linkedopendata.eu/entity/Q20",
             "https://linkedopendata.eu/entity/Q13",
             "https://linkedopendata.eu/entity/Q12",
-            null
     };
 
 
