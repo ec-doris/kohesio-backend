@@ -1781,7 +1781,7 @@ public class FacetDevController {
     };
 
 
-    int[] offset = {15,30,45,60,75};
+    int[] offset = {0,15,30,45,60,75};
     for (String country : countries) {
       for (int o : offset) {
         Boolean[] orderStartDate = {null, true, false};
