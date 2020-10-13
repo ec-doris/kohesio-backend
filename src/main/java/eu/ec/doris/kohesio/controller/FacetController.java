@@ -22,6 +22,7 @@ import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryResults;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.query.TupleQueryResultHandler;
+import org.eclipse.rdf4j.query.algebra.Str;
 import org.eclipse.rdf4j.query.impl.TupleQueryResultBuilder;
 import org.eclipse.rdf4j.query.resultio.QueryResultParseException;
 import org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONParser;
@@ -60,15 +61,7 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -264,6 +257,7 @@ public class FacetController {
 
     while ((row = csvReader.readLine()) != null) {
       String[] data = row.split(";");
+      System.out.println();
       if (country.equals("https://linkedopendata.eu/entity/Q2") && data[0].equals("IE")
               || country.equals("https://linkedopendata.eu/entity/Q15") && data[0].equals("IT")
               || country.equals("https://linkedopendata.eu/entity/Q13") && data[0].equals("PL")
@@ -442,6 +436,7 @@ public class FacetController {
     return result;
   }
 
+
   @GetMapping(value = "/facet/eu/search/project", produces = "application/json")
   public ResponseEntity euSearchProject( //
                                          @RequestParam(value = "language", defaultValue = "en") String language,
@@ -461,6 +456,12 @@ public class FacetController {
                                          @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
                                          @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
                                          @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+
+                                         @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
+                                         @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
+                                         @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+                                         @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+
                                          @RequestParam(value = "latitude", required = false) String latitude,
                                          @RequestParam(value = "longitude", required = false) String longitude,
                                          @RequestParam(value = "region", required = false) String region,
@@ -482,23 +483,58 @@ public class FacetController {
       numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
     }
 
+    String orderQuery = "";
+
+    String orderBy = "";
+    if(orderStartDate != null){
+      orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .";
+      if(orderStartDate){
+        orderBy = "order by asc(?startTime)";
+      }else{
+        orderBy = "order by desc(?startTime)";
+      }
+    }
+    if(orderEndDate != null){
+      orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
+      if(orderEndDate){
+        orderBy = "order by asc(?endTime)";
+      }else{
+        orderBy = "order by desc(?endTime)";
+      }
+    }
+    if(orderEuBudget != null){
+      orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
+      if(orderEuBudget){
+        orderBy = "order by asc(?euBudget)";
+      }else{
+        orderBy = "order by desc(?euBudget)";
+      }
+    }
+    if(orderTotalBudget != null){
+      orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. ";
+      if(orderTotalBudget){
+        orderBy = "order by asc(?totalBudget)";
+      }else{
+        orderBy = "order by desc(?totalBudget)";
+      }
+    }
     if (search.equals(
             "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
       search += " { SELECT ?s0 ?snippet where { " +
               "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
-              "      ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . " +
+              "      ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . "+
               "    } " +
               "  } UNION { SELECT ?s0 ?snippet where { " +
               "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ." +
               "    } " +
               "    }";
     }
-
+    search += " "+orderQuery;
     query =
-            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
+            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
                     + " { SELECT ?s0 ?snippet where { "
                     + search
-                    + " } limit "
+                    + " } "+orderBy+" limit "
                     + limit
                     + " offset "
                     + offset
@@ -514,12 +550,13 @@ public class FacetController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
+                    + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                     + "} ";
     System.out.println(query);
-    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 20);
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
 
     JSONArray resultList = new JSONArray();
     String previewsKey = "";
@@ -529,6 +566,7 @@ public class FacetController {
     Set<String> startTime = new HashSet<>();
     Set<String> endTime = new HashSet<>();
     Set<String> euBudget = new HashSet<>();
+    Set<String> totalBudget = new HashSet<>();
     Set<String> image = new HashSet<>();
     Set<String> coordinates = new HashSet<>();
     Set<String> objectiveId = new HashSet<>();
@@ -548,6 +586,7 @@ public class FacetController {
                           startTime,
                           endTime,
                           euBudget,
+                          totalBudget,
                           image,
                           coordinates,
                           objectiveId,
@@ -558,6 +597,7 @@ public class FacetController {
           startTime = new HashSet<>();
           endTime = new HashSet<>();
           euBudget = new HashSet<>();
+          totalBudget = new HashSet<>();
           image = new HashSet<>();
           coordinates = new HashSet<>();
           objectiveId = new HashSet<>();
@@ -586,6 +626,9 @@ public class FacetController {
                 ((Literal) querySolution.getBinding("endTime").getValue()).getLabel().split("T")[0]);
       if (querySolution.getBinding("euBudget") != null)
         euBudget.add(((Literal) querySolution.getBinding("euBudget").getValue()).getLabel());
+      if (querySolution.getBinding("totalBudget") != null)
+        totalBudget.add(((Literal) querySolution.getBinding("totalBudget").getValue()).getLabel());
+
       if (querySolution.getBinding("image") != null) {
         image.add(querySolution.getBinding("image").getValue().stringValue());
       }
@@ -612,6 +655,7 @@ public class FacetController {
                       startTime,
                       endTime,
                       euBudget,
+                      totalBudget,
                       image,
                       coordinates,
                       objectiveId,
@@ -680,7 +724,7 @@ public class FacetController {
       String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
 
       // not performing
-      if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q20")) {
+      if (granularityRegion != null) {
         optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
       }
 
@@ -918,12 +962,20 @@ public class FacetController {
                                Integer offset) throws IOException {
     String search = "";
     if (keywords != null) {
+      if(!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT") ) {
+        String[] words = keywords.split(" ");
+        StringBuilder keywordsBuilder = new StringBuilder();
+        for (int i = 0; i < words.length - 1; i++) {
+          keywordsBuilder.append(words[i]).append(" AND ");
+        }
+        keywordsBuilder.append(words[words.length - 1]);
+        keywords = keywordsBuilder.toString();
+      }
       search +=
               "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                       + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                       + keywords.replace("\"", "\\\"")
-                      + "\" ; "
-                      + "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet ] . ";
+                      + "\" ] .";
     }
 
     if (country != null) {
@@ -1355,6 +1407,22 @@ public class FacetController {
         result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
                 .stringValue());
       }
+      if (result.get("region")!=null){
+        String regionText = (String)result.get("region");
+        if (!((String)result.get("region")).equals(((String)result.get("regionUpper1")))){
+          regionText += ", "+(String)result.get("regionUpper1");
+        }
+        if (!((String)result.get("regionUpper1")).equals(((String)result.get("regionUpper2")))){
+          regionText += ", "+(String)result.get("regionUpper2");
+        }
+        if (!((String)result.get("regionUpper2")).equals(((String)result.get("regionUpper3")))){
+          regionText += ", "+(String)result.get("regionUpper3");
+        }
+        result.put("regionText",regionText);
+      } else {
+        result.put("regionText",(String)result.get("countryLabel"));
+      }
+
       if (querySolution.getBinding("regionId") != null && result.get("geoJson").equals("")) {
         query =
                 "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
@@ -1704,43 +1772,68 @@ public class FacetController {
     recursiveMap(null);
     System.out.println("end recoursive");
     String[] countries = {
+            null,
             "https://linkedopendata.eu/entity/Q15",
             "https://linkedopendata.eu/entity/Q2",
             "https://linkedopendata.eu/entity/Q25",
             "https://linkedopendata.eu/entity/Q20",
             "https://linkedopendata.eu/entity/Q13",
             "https://linkedopendata.eu/entity/Q12",
-            null
     };
+
+    for (String country : countries) {
+      int[] offset = {0,15,30,45,60,75,90,105,120,135,150};
+      for (int o : offset) {
+        Boolean[] orderStartDate = {null, true, false};
+        for (Boolean b : orderStartDate){
+          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, null, 15, o, null);
+        }
+        Boolean[] orderEndDate = {null, true, false};
+        for (Boolean b : orderEndDate){
+          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, 15, o, null);
+        }
+        Boolean[] orderEuBudget = {null, true, false};
+        for (Boolean b : orderEuBudget){
+          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, 15, o, null);
+        }
+        Boolean[] orderTotalBudget = {null, true, false};
+        for (Boolean b : orderTotalBudget) {
+          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, 15, o, null);
+        }
+      }
+    }
+
     for (String country : countries) {
       euSearchBeneficiaries("en", null, country, null, null, null, null,null,null);
     }
     for (String country : countries) {
-      JSONArray regions = facetEuRegions(country, "en");
-      for (Object region : regions) {
-        regions.add(null);
-        JSONArray funds = facetEuFunds("en");
-        funds.add(null);
-        for (Object fund : funds) {
-          JSONArray programs = facetEuPrograms("en",country);
-          programs.add(null);
-          for (Object program : programs) {
-            String r = null;
-            if (region!=null){
-              r = ((JSONObject) region).get("region").toString();
+      if (country!=null) {
+        JSONArray regions = facetEuRegions(country, "en");
+        for (Object region : regions) {
+          regions.add(null);
+          JSONArray funds = facetEuFunds("en");
+          funds.add(null);
+          for (Object fund : funds) {
+            JSONArray programs = facetEuPrograms("en", country);
+            programs.add(null);
+            for (Object program : programs) {
+              String r = null;
+              if (region != null) {
+                r = ((JSONObject) region).get("region").toString();
+              }
+              String f = null;
+              if (fund != null) {
+                f = ((JSONObject) fund).get("instance").toString();
+              }
+              String p = null;
+              if (program != null) {
+                p = ((JSONObject) program).get("instance").toString();
+              }
+              System.out.println("euSearchBeneficiaries");
+              euSearchBeneficiaries(
+                      "en", null, country, r, null, null, f, p, null);
+              System.out.println("Done");
             }
-            String f = null;
-            if (fund!=null){
-              f = ((JSONObject) fund).get("instance").toString();
-            }
-            String p = null;
-            if (program!=null){
-              p = ((JSONObject) program).get("instance").toString();
-            }
-            System.out.println("euSearchBeneficiaries");
-            euSearchBeneficiaries(
-                    "en", null, country, r, null, null, f, p, null);
-            System.out.println("Done");
           }
         }
       }
@@ -1828,7 +1921,7 @@ public class FacetController {
       logger.info("Was NOT cached "+(end - start)/1000000);
       return tupleQueryResultHandler.getQueryResult();
     } catch(QueryEvaluationException e){
-      System.out.println("To heavy timeout "+query+" --- "+timeout);
+      logger.error("Malformed query ["+query+"]");
     } catch (QueryResultParseException e){
       System.out.println("To heavy timeout "+query+" --- "+timeout);
     }
@@ -1854,6 +1947,7 @@ public class FacetController {
           Set<String> startTime,
           Set<String> endTime,
           Set<String> euBudget,
+          Set<String> totalBudget,
           Set<String> image,
           Set<String> coordinates,
           Set<String> objectiveId,
@@ -1886,6 +1980,9 @@ public class FacetController {
     euBudgets.addAll(new ArrayList<String>(euBudget));
     element.put("euBudgets", euBudgets);
 
+    JSONArray totalBudgets = new JSONArray();
+    totalBudgets.addAll(new ArrayList<String>(totalBudget));
+    element.put("totalBudgets",totalBudget);
     JSONArray images = new JSONArray();
     images.addAll(new ArrayList<String>(image));
     element.put("images", images);
