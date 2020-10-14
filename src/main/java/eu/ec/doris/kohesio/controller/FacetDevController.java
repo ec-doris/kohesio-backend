@@ -195,9 +195,16 @@ public class FacetDevController {
 //        if (nutsRegion.get(key).type.equals("nuts1")){
 //          geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
 //        }
+
+        //this is a hack and should be removed
+        String search = nutsRegion.get(key).uri;
+        if (nutsRegion.get(key).uri.equals("https://linkedopendata.eu/entity/Q2616107")){
+          search = "https://linkedopendata.eu/entity/Q3532";
+        }
+
         String query =
                 "SELECT ?regionGeo where {" +
-                        "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
+                        "?nut <http://nuts.de/linkedopendata> <" + search+ "> . " +
                         geometry +
                         " }";
         logger.info(query);
