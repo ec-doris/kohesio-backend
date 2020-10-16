@@ -246,6 +246,54 @@ public class FacetController {
       DecimalFormat df2 = new DecimalFormat("#.##");
       statistics.put("totalEuBudget", df2.format(((Literal) querySolution.getBinding("sum").getValue()).doubleValue()));
     }
+
+    JSONObject themes = new JSONObject();
+    query = "SELECT (COUNT(?s0) as ?c ) WHERE {" +
+            "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. " +
+            "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236692> .   " +
+            " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
+            "}";
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      themes.put("lowCarbonEconomy", ((Literal) querySolution.getBinding("c").getValue()).doubleValue());
+    }
+
+    query = "SELECT (COUNT(?s0) as ?c ) WHERE {" +
+            "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. " +
+            "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236693> .   " +
+            " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
+            "}";
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      themes.put("climateChangeAdaptation", ((Literal) querySolution.getBinding("c").getValue()).intValue());
+    }
+
+    query = "SELECT (COUNT(?s0) as ?c ) WHERE {" +
+            "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. " +
+            "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236694> .   " +
+            " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
+            "}";
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      themes.put("enviromentProtection", ((Literal) querySolution.getBinding("c").getValue()).intValue());
+    }
+
+    query = "SELECT (COUNT(?s0) as ?c ) WHERE {" +
+            "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category." +
+            " ?category <https://linkedopendata.eu/prop/direct/P1849> <https://linkedopendata.eu/entity/Q2547987> . " +
+            "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
+            "}";
+    resultSet = executeAndCacheQuery(sparqlEndpoint, query, 10);
+    while (resultSet.hasNext()) {
+      BindingSet querySolution = resultSet.next();
+      themes.put("greenerAndCarbonFreeEurope", ((Literal) querySolution.getBinding("c").getValue()).intValue());
+    }
+
+    statistics.put("themes", themes);
+
     return statistics;
   }
 
