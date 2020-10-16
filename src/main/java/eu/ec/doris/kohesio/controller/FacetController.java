@@ -1567,11 +1567,11 @@ public class FacetController {
     }
 
     if (country != null) {
-      search += "?project <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+      search += "?beneficiary <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
     }
 
     if (region != null) {
-      search += "?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . ";
+      search += "?project <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . ";
     }
 
     if (latitude != null && longitude != null) {
