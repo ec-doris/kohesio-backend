@@ -838,31 +838,38 @@ public class FacetDevController {
       TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
 
 
-      HashMap<String, JSONObject> result = new HashMap();
+      HashMap<String, JSONObject> subRegions = new HashMap();
       for (String r : nutsRegion.get(granularityRegion).narrower) {
         JSONObject element = new JSONObject();
         element.put("region", r);
         element.put("regionLabel", nutsRegion.get(r).name);
         element.put("geoJson", nutsRegion.get(r).geoJson);
         element.put("count", 0);
-        result.put(r, element);
+        subRegions.put(r, element);
       }
 
       while (resultSet.hasNext()) {
         BindingSet querySolution = resultSet.next();
         //System.out.println(querySolution.getBinding("region").getValue().stringValue()+"---"+((Literal) querySolution.getBinding("c").getValue()).intValue());
-        if (result.containsKey(querySolution.getBinding("region").getValue().stringValue())) {
-          JSONObject element = result.get(querySolution.getBinding("region").getValue().stringValue());
+        if (subRegions.containsKey(querySolution.getBinding("region").getValue().stringValue())) {
+          JSONObject element = subRegions.get(querySolution.getBinding("region").getValue().stringValue());
           element.put("count", ((Literal) querySolution.getBinding("c").getValue()).intValue());
-          result.put(querySolution.getBinding("region").getValue().stringValue(), element);
+          subRegions.put(querySolution.getBinding("region").getValue().stringValue(), element);
         }
       }
 
       JSONArray resultList = new JSONArray();
-      for (String key : result.keySet()) {
-        resultList.add(result.get(key));
+      for (String key : subRegions.keySet()) {
+        resultList.add(subRegions.get(key));
       }
-      return new ResponseEntity<JSONArray>((JSONArray) resultList, HttpStatus.OK);
+
+      JSONObject result = new JSONObject();
+      result.put("region", granularityRegion);
+      result.put("regionLabel", nutsRegion.get(granularityRegion).name);
+      result.put("geoJson", nutsRegion.get(granularityRegion).geoJson);
+      result.put("subregions", resultList);
+
+      return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
     }
   }
 
