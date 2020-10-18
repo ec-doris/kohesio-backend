@@ -747,10 +747,14 @@ public class FacetDevController {
           @RequestParam(value = "granularityRegion", required = false) String granularityRegion,
           @RequestParam(value = "limit", required = false) Integer limit,
           @RequestParam(value = "offset", defaultValue = "0") Integer offset,
+          Integer timeout,
           Principal principal)
           throws Exception {
     logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
     initialize(language);
+    if (timeout==null){
+      timeout = 50;
+    }
     System.out.println("filterProject ");
     String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
 
@@ -764,7 +768,7 @@ public class FacetDevController {
     int numResults = 0;
     System.out.println("Limit "+limit);
     if (limit == null || limit > 2000) {
-      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 25);
+      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
       if (resultSet.hasNext()) {
         BindingSet querySolution = resultSet.next();
@@ -799,7 +803,7 @@ public class FacetDevController {
                       + optional
                       + "} ";
       logger.info(query);
-      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 50);
+      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
       JSONArray resultList = new JSONArray();
       Set<String> coordinates = new HashSet<>();
@@ -1905,7 +1909,7 @@ public class FacetDevController {
 
   void recursiveMap(String granularityRegion) throws Exception {
     System.out.println("Resolving for "+granularityRegion);
-    ResponseEntity responseEntity = euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,null,null,null,granularityRegion,null,0,null);
+    ResponseEntity responseEntity = euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,null,null,null,granularityRegion,null,0,400,null);
     System.out.println("Hello world "+responseEntity.getBody());
     if (responseEntity.getBody() instanceof JSONArray){
       for (Object element : (JSONArray)responseEntity.getBody()){
@@ -1996,7 +2000,7 @@ public class FacetDevController {
     String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
     System.out.println(ip);
     GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-    ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,coordinates2.getLatitude(),coordinates2.getLongitude(),null,null,2000,0,null);
+    ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,coordinates2.getLatitude(),coordinates2.getLongitude(),null,null,2000,0,400,null);
     JSONObject mod = result.getBody();
     mod.put("coordinates",coordinates2.getLatitude()+","+coordinates2.getLongitude());
     return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
