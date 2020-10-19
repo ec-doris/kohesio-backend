@@ -1047,7 +1047,7 @@ public class FacetDevController {
                       + "\" ] .";
     }
 
-    if (country != null) {
+    if (country != null && region == null) {
       search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
     }
 
