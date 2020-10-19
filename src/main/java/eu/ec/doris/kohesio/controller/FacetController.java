@@ -784,7 +784,10 @@ public class FacetController {
 
       // not performing
       if (granularityRegion != null) {
-        optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
+        optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . ";
+        if (!(country!= null && granularityRegion.equals(country))) {
+          optional+= "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
+        }
       }
 
       if (limit == null) {
