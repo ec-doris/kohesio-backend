@@ -756,6 +756,11 @@ public class FacetDevController {
       timeout = 50;
     }
     System.out.println("filterProject ");
+
+    //simplify the query
+    if (granularityRegion!=null){
+      country = null;
+    }
     String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
 
     //computing the number of results
