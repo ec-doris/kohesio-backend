@@ -42,6 +42,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ResourceUtils;
+import org.springframework.util.SocketUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -330,6 +331,69 @@ public class FacetDevController {
     Collections.sort(jsonValues, new Comparator<JSONObject>() {
       //You can change "Name" with "ID" if you want to sort by ID
       private static final String KEY_NAME = "name";
+
+      @Override
+      public int compare(JSONObject a, JSONObject b) {
+        String valA = new String();
+        String valB = new String();
+        valA = (String) a.get(KEY_NAME);
+        valB = (String) b.get(KEY_NAME);
+        return valA.compareTo(valB);
+        //if you want to change the sort order, simply use the following:
+        //return -valA.compareTo(valB);
+      }
+    });
+
+    JSONArray result = new JSONArray();
+    for (int i = 0; i < jsonValues.size(); i++) {
+      result.add(jsonValues.get(i));
+    }
+
+    return result;
+  }
+
+
+  @GetMapping(value = "/facet/eu/countries", produces = "application/json")
+  public JSONArray facetEuCountries(
+                                   @RequestParam(value = "language", defaultValue = "en") String language)
+          throws Exception {
+    List<JSONObject> jsonValues = new ArrayList<JSONObject>();
+    JSONObject element = new JSONObject();
+    element.put("instance", "https://linkedopendata.eu/entity/Q2");
+    jsonValues.add(element);
+    element = new JSONObject();
+    element.put("instance", "https://linkedopendata.eu/entity/Q15");
+    jsonValues.add(element);
+    element = new JSONObject();
+    element.put("instance", "https://linkedopendata.eu/entity/Q13");
+    jsonValues.add(element);
+    element = new JSONObject();
+    element.put("instance", "https://linkedopendata.eu/entity/Q25");
+    jsonValues.add(element);
+    element = new JSONObject();
+    element.put("instance", "https://linkedopendata.eu/entity/Q20");
+    jsonValues.add(element);
+    element = new JSONObject();
+    element.put("instance", "https://linkedopendata.eu/entity/Q12");
+    jsonValues.add(element);
+
+    for (int i = 0; i < jsonValues.size(); i++) {
+      String query = "select ?instanceLabel where { "
+                      + " <"+jsonValues.get(i).get("instance")+ "> rdfs:label ?instanceLabel . "
+              + " FILTER (lang(?instanceLabel)=\""
+              + language
+              + "\")"
+              + "}";
+      TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 2);
+      while (resultSet.hasNext()) {
+        BindingSet querySolution = resultSet.next();
+        jsonValues.get(i).put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
+      }
+    }
+
+    Collections.sort(jsonValues, new Comparator<JSONObject>() {
+      //You can change "Name" with "ID" if you want to sort by ID
+      private static final String KEY_NAME = "instanceLabel";
 
       @Override
       public int compare(JSONObject a, JSONObject b) {
@@ -791,7 +855,15 @@ public class FacetDevController {
       // not performing
       if (granularityRegion != null) {
         optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . ";
-        if (!(country!= null && granularityRegion.equals(country))) {
+        //check if granularity region is a country, if yes the filter is not needed
+        boolean isCountry = false;
+        for (Object jsonObject : facetEuCountries("en")){
+          JSONObject o = (JSONObject) jsonObject;
+          if (granularityRegion.equals(o.get("instance"))){
+            isCountry = true;
+          }
+        }
+        if (isCountry == false) {
           optional+= "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
         }
       }
