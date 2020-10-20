@@ -68,7 +68,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @RestController
-@RequestMapping("/api/dev")
+@RequestMapping("/api/")
 public class FacetController {
   private static final Logger logger = LoggerFactory.getLogger(FacetController.class);
 
