@@ -1957,8 +1957,8 @@ public class FacetDevController {
     for (String country : countries) {
       if (country!=null) {
         JSONArray regions = facetEuRegions(country, "en");
+        regions.add(null);
         for (Object region : regions) {
-          regions.add(null);
           JSONArray funds = facetEuFunds("en");
           funds.add(null);
           for (Object fund : funds) {
