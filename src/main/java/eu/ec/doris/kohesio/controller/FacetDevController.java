@@ -1992,15 +1992,14 @@ public class FacetDevController {
     System.out.println("Resolving for "+granularityRegion);
     ResponseEntity responseEntity = euSearchProjectMap("en", null, null, null, null, null, null,null,null,null,null,null,null,null,null,null,null,null,null,granularityRegion,null,0,400,null);
     System.out.println("Hello world "+responseEntity.getBody());
-    if (responseEntity.getBody() instanceof JSONArray){
-      for (Object element : (JSONArray)responseEntity.getBody()){
+    if (((JSONObject)responseEntity.getBody()).get("subregions") instanceof JSONArray){
+      for (Object element : (JSONArray)((JSONObject)responseEntity.getBody()).get("subregions")){
         System.out.println("Hello world "+((JSONObject)element).get("region").toString());
         if (!((JSONObject)element).get("region").toString().equals(granularityRegion)) {
           recursiveMap(((JSONObject) element).get("region").toString());
         }
       }
     }
-
   }
 
   @PostMapping(value = "/facet/eu/cache/clean", produces = "application/json")
