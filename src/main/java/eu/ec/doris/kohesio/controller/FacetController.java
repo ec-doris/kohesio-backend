@@ -1931,7 +1931,8 @@ public class FacetController {
     };
 
     for (String country : countries) {
-      int[] offset = {0,15,30,45,60,75,90,105,120,135,150};
+      //int[] offset = {0,15,30,45,60,75,90,105,120,135,150};
+      int[] offset = {0,15};
       for (int o : offset) {
         Boolean[] orderStartDate = {null, true, false};
         for (Boolean b : orderStartDate){
@@ -1981,7 +1982,7 @@ public class FacetController {
               System.out.println("euSearchBeneficiaries");
               euSearchBeneficiaries(
                       "en", null, country, r, null, null, f, p, null);
-              euSearchProjectMap("en", null, country, null, f, p, null,null,null,null,null,null,null,null,null,null,null,null,r,r,null,0,400,null);
+              //euSearchProjectMap("en", null, country, null, f, p, null,null,null,null,null,null,null,null,null,null,null,null,r,r,null,0,400,null);
               System.out.println("Done");
             }
           }
