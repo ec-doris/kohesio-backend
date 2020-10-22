@@ -1982,7 +1982,7 @@ public class FacetController {
               System.out.println("euSearchBeneficiaries");
               euSearchBeneficiaries(
                       "en", null, country, r, null, null, f, p, null);
-              //euSearchProjectMap("en", null, country, null, f, p, null,null,null,null,null,null,null,null,null,null,null,null,r,r,null,0,400,null);
+              euSearchProjectMap("en", null, country, null, f, p, null,null,null,null,null,null,null,null,null,null,null,null,r,r,null,0,400,null);
               System.out.println("Done");
             }
           }
