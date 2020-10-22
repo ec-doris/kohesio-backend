@@ -54,6 +54,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -2014,7 +2015,7 @@ public class FacetDevController {
     return this.executeAndCacheQuery(sparqlEndpoint, query, timeout, true);
   }
 
-  public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache) throws Exception {
+  public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache) {
     logger.info(query);
     long start = System.nanoTime();
     File dir = new File(location + "/facet/cache/");
@@ -2024,24 +2025,22 @@ public class FacetDevController {
     // check if the query is cached
     if (dir.exists() && cache == true) {
       File[] files = dir.listFiles();
-      if (files != null) {
-        for (File file : files) {
-          if (Integer.parseInt(file.getName()) == query.hashCode()) {
-            System.out.println(query.hashCode());
-            SPARQLResultsJSONParser sparqlResultsJSONParser = new SPARQLResultsJSONParser();
-            TupleQueryResultBuilder tupleQueryResultHandler = new TupleQueryResultBuilder();
-            sparqlResultsJSONParser.setQueryResultHandler(tupleQueryResultHandler);
-            try {
-              sparqlResultsJSONParser.parseQueryResult(
-                      new FileInputStream(location + "/facet/cache/" + query.hashCode()));
-              long end = System.nanoTime();
-              logger.info("Was cached "+(end - start)/100000);
-              return tupleQueryResultHandler.getQueryResult();
-            } catch(QueryResultParseException e){
-              System.out.println("Wrong in cache timeout "+timeout);
-            }
-          }
-        }
+      System.out.println(query.hashCode());
+      SPARQLResultsJSONParser sparqlResultsJSONParser = new SPARQLResultsJSONParser();
+      TupleQueryResultBuilder tupleQueryResultHandler = new TupleQueryResultBuilder();
+      sparqlResultsJSONParser.setQueryResultHandler(tupleQueryResultHandler);
+      try {
+        sparqlResultsJSONParser.parseQueryResult(
+                new FileInputStream(location + "/facet/cache/" + query.hashCode()));
+        long end = System.nanoTime();
+        logger.info("Was cached "+(end - start)/100000);
+        return tupleQueryResultHandler.getQueryResult();
+      } catch(QueryResultParseException e){
+        System.out.println("Wrong in cache timeout "+timeout);
+      } catch (FileNotFoundException e) {
+        System.out.println("Could not find file it was probably not cached");
+      } catch (IOException e) {
+        e.printStackTrace();
       }
     }
     // execute and cache the query if not found before
@@ -2071,6 +2070,10 @@ public class FacetDevController {
       logger.error("Malformed query ["+query+"]");
     } catch (QueryResultParseException e){
       System.out.println("To heavy timeout "+query+" --- "+timeout);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
     }
     return null;
   }
