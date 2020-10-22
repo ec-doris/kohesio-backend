@@ -2026,7 +2026,6 @@ public class FacetController {
     }
     // check if the query is cached
     if (dir.exists() && cache == true) {
-      File[] files = dir.listFiles();
       System.out.println(query.hashCode());
       SPARQLResultsJSONParser sparqlResultsJSONParser = new SPARQLResultsJSONParser();
       TupleQueryResultBuilder tupleQueryResultHandler = new TupleQueryResultBuilder();
