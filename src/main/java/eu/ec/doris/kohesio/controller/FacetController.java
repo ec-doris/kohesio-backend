@@ -1302,7 +1302,7 @@ public class FacetController {
                     + "\") } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P889> ?beneficiaryLink . "
                     + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
-                    + "             FILTER(LANG(?beneficiaryLabel) = \"" + language + "\" || LANG(?regionLabel) = \"en\" || LANG(?regionLabel) = \"fr\" || LANG(?regionLabel) = \"it\" || LANG(?regionLabel) = \"pl\" || LANG(?regionLabel) = \"cs\" || LANG(?regionLabel) = \"da\" )}"
+                    + "             FILTER(LANG(?beneficiaryLabel) = \"" + language + "\" || LANG(?beneficiaryLabel) = \"en\" || LANG(?beneficiaryLabel) = \"fr\" || LANG(?beneficiaryLabel) = \"it\" || LANG(?beneficiaryLabel) = \"pl\" || LANG(?beneficiaryLabel) = \"cs\" || LANG(?beneficiaryLabel) = \"da\" )}"
                     + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID .  "
                     + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
                     + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
