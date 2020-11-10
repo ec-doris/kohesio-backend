@@ -678,7 +678,7 @@ public class FacetDevController {
     System.out.println(query);
     resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
 
-    JSONArray resultList = new JSONArray();
+    ArrayList<Project> resultList = new ArrayList<Project>();
     String previewsKey = "";
     Set<String> snippet = new HashSet<>();
     Set<String> label = new HashSet<>();
@@ -697,20 +697,21 @@ public class FacetDevController {
       String currentKey = querySolution.getBinding("s0").getValue().stringValue();
       if (!previewsKey.equals(currentKey)) {
         if (!previewsKey.equals("")) {
-          resultList.add(
-                  toJson(
-                          previewsKey,
-                          snippet,
-                          label,
-                          description,
-                          startTime,
-                          endTime,
-                          euBudget,
-                          totalBudget,
-                          image,
-                          coordinates,
-                          objectiveId,
-                          countrycode));
+          Project project = new Project();
+          project.setItem(previewsKey.replace("https://linkedopendata.eu/entity/", ""));
+          project.setLink(previewsKey);
+          project.setSnippet(new ArrayList<String>(snippet));
+          project.setLabels(new ArrayList<String>(label));
+          project.setDescriptions(new ArrayList<String>(description));
+          project.setStartTimes(new ArrayList<String>(startTime));
+          project.setEndTimes(new ArrayList<String>(endTime));
+          project.setEuBudgets(new ArrayList<String>(euBudget));
+          project.setTotalBudgets(new ArrayList<String>(totalBudget));
+          project.setImages(new ArrayList<String>(image));
+          project.setCoordinates(new ArrayList<String>(coordinates));
+          project.setObjectiveIds(new ArrayList<String>(objectiveId));
+          project.setCountrycode(new ArrayList<String>(countrycode));
+          resultList.add(project);
           snippet = new HashSet<>();
           label = new HashSet<>();
           description = new HashSet<>();
@@ -745,9 +746,12 @@ public class FacetDevController {
         endTime.add(
                 ((Literal) querySolution.getBinding("endTime").getValue()).getLabel().split("T")[0]);
       if (querySolution.getBinding("euBudget") != null)
-        euBudget.add(((Literal) querySolution.getBinding("euBudget").getValue()).getLabel());
+        euBudget.add(
+                String.valueOf(
+                        Precision.round(((Literal) querySolution.getBinding("euBudget").getValue()).doubleValue(),2)));
       if (querySolution.getBinding("totalBudget") != null)
-        totalBudget.add(((Literal) querySolution.getBinding("totalBudget").getValue()).getLabel());
+        totalBudget.add(String.valueOf(
+                Precision.round(((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue(),2)));
 
       if (querySolution.getBinding("image") != null) {
         image.add(querySolution.getBinding("image").getValue().stringValue());
@@ -766,26 +770,186 @@ public class FacetDevController {
         countrycode.add(((Literal) querySolution.getBinding("countrycode").getValue()).getLabel());
     }
     if (hasEntry) {
-      resultList.add(
-              toJson(
-                      previewsKey,
-                      snippet,
-                      label,
-                      description,
-                      startTime,
-                      endTime,
-                      euBudget,
-                      totalBudget,
-                      image,
-                      coordinates,
-                      objectiveId,
-                      countrycode));
+      Project project = new Project();
+      project.setItem(previewsKey.replace("https://linkedopendata.eu/entity/", ""));
+      project.setLink(previewsKey);
+      project.setSnippet(new ArrayList<String>(snippet));
+      project.setLabels(new ArrayList<String>(label));
+      project.setDescriptions(new ArrayList<String>(description));
+      project.setStartTimes(new ArrayList<String>(startTime));
+      project.setEndTimes(new ArrayList<String>(endTime));
+      project.setEuBudgets(new ArrayList<String>(euBudget));
+      project.setTotalBudgets(new ArrayList<String>(totalBudget));
+      project.setImages(new ArrayList<String>(image));
+      project.setCoordinates(new ArrayList<String>(coordinates));
+      project.setObjectiveIds(new ArrayList<String>(objectiveId));
+      project.setCountrycode(new ArrayList<String>(countrycode));
+      resultList.add(project);
     }
-    JSONObject result = new JSONObject();
-    result.put("list", resultList);
-    result.put("numberResults", numResults);
-    return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
+    ProjectList projectList = new ProjectList();
+    projectList.setList(resultList);
+    projectList.setNumberResults(numResults);
+    return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
   }
+
+  @GetMapping(value = "/facet/eu/search/project/csv", produces = "application/json")
+  public void euSearchProjectCSV( //
+                                  @RequestParam(value = "language", defaultValue = "en") String language,
+                                  @RequestParam(value = "keywords", required = false) String keywords, //
+                                  @RequestParam(value = "country", required = false) String country,
+                                  @RequestParam(value = "theme", required = false) String theme,
+                                  @RequestParam(value = "fund", required = false) String fund,
+                                  @RequestParam(value = "program", required = false) String program,
+                                  @RequestParam(value = "categoryOfIntervention", required = false)
+                                            String categoryOfIntervention,
+                                  @RequestParam(value = "policyObjective", required = false) String policyObjective,
+                                  @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
+                                  @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
+                                  @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
+                                  @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                  @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
+                                  @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
+                                  @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
+                                  @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+
+                                  @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
+                                  @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
+                                  @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+                                  @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+
+                                  @RequestParam(value = "latitude", required = false) String latitude,
+                                  @RequestParam(value = "longitude", required = false) String longitude,
+                                  @RequestParam(value = "region", required = false) String region,
+                                  @RequestParam(value = "limit", defaultValue = "200") int limit,
+                                  @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                  Principal principal,
+                                  @Context HttpServletResponse response)
+          throws Exception {
+    ProjectList projectList =
+            (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter,endDateBefore,endDateAfter, orderStartDate,orderEndDate, orderEuBudget, orderTotalBudget,latitude, longitude,region,Math.max(limit,1000),0, principal).getBody();
+    String filename = "project_export.csv";
+    try {
+      response.setContentType("text/csv");
+      response.setCharacterEncoding("UTF-8");
+      response.setHeader(
+              HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
+      CSVPrinter csvPrinter =
+              new CSVPrinter(
+                      response.getWriter(),
+                      CSVFormat.DEFAULT.withHeader(
+                              "ID", "PROJECT NAME", "TOTAL BUDGET", "AMOUNT EU SUPPORT", "START DATE", "END DATE", "COUNTRY"));
+      for (Project project : projectList.getList()) {
+        System.out.println(project.getItem());
+        csvPrinter.printRecord(
+                Arrays.asList(
+                        String.join("|",project.getItem()),
+                        String.join("|",project.getLabels()),
+                        String.join("|",project.getTotalBudgets()),
+                        String.join("|",project.getEuBudgets()),
+                        String.join("|",project.getStartTimes()),
+                        String.join("|",project.getEndTimes()),
+                        String.join("|",project.getCountrycode())
+                )
+        );
+      }
+
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @GetMapping(value = "/facet/eu/search/project/excel", produces = "application/json")
+  public ResponseEntity<byte[]> euSearchProjectExcel( //
+                                                      @RequestParam(value = "language", defaultValue = "en") String language,
+                                                      @RequestParam(value = "keywords", required = false) String keywords, //
+                                                      @RequestParam(value = "country", required = false) String country,
+                                                      @RequestParam(value = "theme", required = false) String theme,
+                                                      @RequestParam(value = "fund", required = false) String fund,
+                                                      @RequestParam(value = "program", required = false) String program,
+                                                      @RequestParam(value = "categoryOfIntervention", required = false)
+                                          String categoryOfIntervention,
+                                                      @RequestParam(value = "policyObjective", required = false) String policyObjective,
+                                                      @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
+                                                      @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
+                                                      @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
+                                                      @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                                      @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
+                                                      @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
+                                                      @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
+                                                      @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+
+                                                      @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
+                                                      @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
+                                                      @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+                                                      @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+
+                                                      @RequestParam(value = "latitude", required = false) String latitude,
+                                                      @RequestParam(value = "longitude", required = false) String longitude,
+                                                      @RequestParam(value = "region", required = false) String region,
+                                                      @RequestParam(value = "limit", defaultValue = "200") int limit,
+                                                      @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                                      Principal principal,
+                                                      @Context HttpServletResponse response)
+          throws Exception {
+    ProjectList projectList =
+            (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter,endDateBefore,endDateAfter, orderStartDate,orderEndDate, orderEuBudget, orderTotalBudget,latitude, longitude,region,Math.max(limit,1000),0, principal).getBody();
+      XSSFWorkbook hwb = new XSSFWorkbook();
+      XSSFSheet sheet = hwb.createSheet("beneficiary_export");
+      int rowNumber = 0;
+      XSSFRow row = sheet.createRow(rowNumber);
+      XSSFCell cell = row.createCell(0);
+      cell.setCellValue("ID");
+      cell = row.createCell(1);
+      cell.setCellValue("PROJECT NAME");
+      cell = row.createCell(2);
+      cell.setCellValue("TOTAL BUDGET");
+      cell = row.createCell(3);
+      cell.setCellValue("AMOUNT EU SUPPORT");
+      cell = row.createCell(4);
+      cell.setCellValue("START DATE");
+      cell = row.createCell(5);
+      cell.setCellValue("END DATE");
+      cell = row.createCell(6);
+      cell.setCellValue("COUNTRY");
+
+      for (Project project : projectList.getList()) {
+        rowNumber++;
+        row = sheet.createRow(rowNumber);
+        cell = row.createCell(0);
+        cell.setCellValue(project.getItem());
+        cell = row.createCell(1);
+        cell.setCellValue(String.join("|",project.getLabels()));
+        cell = row.createCell(2);
+        cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+        cell.setCellValue(Double.parseDouble(project.getTotalBudgets().get(0)));
+        cell = row.createCell(3);
+        cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+        cell.setCellValue(Double.parseDouble(project.getEuBudgets().get(0)));
+        cell = row.createCell(4);
+        if (project.getStartTimes().size()>0){
+          cell.setCellValue(project.getStartTimes().get(0));
+        }
+        cell = row.createCell(5);
+        if (project.getEndTimes().size()>0) {
+          cell.setCellValue(project.getEndTimes().get(0));
+        }
+        cell = row.createCell(6);
+        cell.setCellValue(String.join("|",project.getCountrycode()));
+
+      }
+      ByteArrayOutputStream fileOut = new ByteArrayOutputStream();
+      hwb.write(fileOut);
+      fileOut.close();
+      HttpHeaders headers = new HttpHeaders();
+      headers.set("Content-Type", "application/vnd.ms-excel");
+      headers.set("Content-Disposition", "attachment; filename=\"beneficiary_export.xls\"");
+      return new ResponseEntity<byte[]>(fileOut.toByteArray(), headers, HttpStatus.OK);
+  }
+
+
+
+
+
 
   @GetMapping(value = "/facet/eu/search/project/map", produces = "application/json")
   public ResponseEntity euSearchProjectMap(
@@ -1302,7 +1466,7 @@ public class FacetDevController {
                     + "\") } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P889> ?beneficiaryLink . "
                     + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
-                    + "             FILTER(LANG(?beneficiaryLabel) = \"" + language + "\" || LANG(?regionLabel) = \"en\" || LANG(?regionLabel) = \"fr\" || LANG(?regionLabel) = \"it\" || LANG(?regionLabel) = \"pl\" || LANG(?regionLabel) = \"cs\" || LANG(?regionLabel) = \"da\" )}"
+                    + "             FILTER(LANG(?beneficiaryLabel) = \"" + language + "\" || LANG(?beneficiaryLabel) = \"en\" || LANG(?beneficiaryLabel) = \"fr\" || LANG(?beneficiaryLabel) = \"it\" || LANG(?beneficiaryLabel) = \"pl\" || LANG(?beneficiaryLabel) = \"cs\" || LANG(?beneficiaryLabel) = \"da\" )}"
                     + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID .  "
                     + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
                     + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
@@ -1878,7 +2042,6 @@ public class FacetDevController {
           throws Exception {
     List<Beneficiary> beneficiaryList =
             euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,principal);
-    String filename = "beneficiary_export.csv";
     XSSFWorkbook hwb = new XSSFWorkbook();
     XSSFSheet sheet = hwb.createSheet("beneficiary_export");
     int rowNumber = 0;
@@ -2150,4 +2313,146 @@ public class FacetDevController {
 
     return element;
   }
+
+  public class Project {
+    String link;
+    String item;
+    ArrayList<String> snippet;
+    ArrayList<String> labels;
+    ArrayList<String> descriptions;
+    ArrayList<String> startTimes;
+    ArrayList<String> endTimes;
+    ArrayList<String> euBudgets;
+    ArrayList<String> totalBudgets;
+    ArrayList<String> images;
+    ArrayList<String> coordinates;
+    ArrayList<String> objectiveIds;
+    ArrayList<String> countrycode;
+
+    public String getLink() {
+      return link;
+    }
+
+    public void setLink(String link) {
+      this.link = link;
+    }
+
+    public String getItem() {
+      return item;
+    }
+
+    public void setItem(String item) {
+      this.item = item;
+    }
+
+    public ArrayList<String> getSnippet() {
+      return snippet;
+    }
+
+    public void setSnippet(ArrayList<String> snippet) {
+      this.snippet = snippet;
+    }
+
+    public ArrayList<String> getLabels() {
+      return labels;
+    }
+
+    public void setLabels(ArrayList<String> labels) {
+      this.labels = labels;
+    }
+
+    public ArrayList<String> getDescriptions() {
+      return descriptions;
+    }
+
+    public void setDescriptions(ArrayList<String> descriptions) {
+      this.descriptions = descriptions;
+    }
+
+    public ArrayList<String> getStartTimes() {
+      return startTimes;
+    }
+
+    public void setStartTimes(ArrayList<String> startTimes) {
+      this.startTimes = startTimes;
+    }
+
+    public ArrayList<String> getEndTimes() {
+      return endTimes;
+    }
+
+    public void setEndTimes(ArrayList<String> endTimes) {
+      this.endTimes = endTimes;
+    }
+
+    public ArrayList<String> getEuBudgets() {
+      return euBudgets;
+    }
+
+    public void setEuBudgets(ArrayList<String> euBudgets) {
+      this.euBudgets = euBudgets;
+    }
+
+    public ArrayList<String> getTotalBudgets() {
+      return totalBudgets;
+    }
+
+    public void setTotalBudgets(ArrayList<String> totalBudgets) {
+      this.totalBudgets = totalBudgets;
+    }
+
+    public ArrayList<String> getImages() {
+      return images;
+    }
+
+    public void setImages(ArrayList<String> images) {
+      this.images = images;
+    }
+
+    public ArrayList<String> getCoordinates() {
+      return coordinates;
+    }
+
+    public void setCoordinates(ArrayList<String> coordinates) {
+      this.coordinates = coordinates;
+    }
+
+    public ArrayList<String> getObjectiveIds() {
+      return objectiveIds;
+    }
+
+    public void setObjectiveIds(ArrayList<String> objectiveIds) {
+      this.objectiveIds = objectiveIds;
+    }
+
+    public ArrayList<String> getCountrycode() {
+      return countrycode;
+    }
+
+    public void setCountrycode(ArrayList<String> countrycode) {
+      this.countrycode = countrycode;
+    }
+  }
+
+  public class ProjectList {
+    ArrayList<Project> list;
+    int numberResults;
+
+    public ArrayList<Project> getList() {
+      return list;
+    }
+
+    public void setList(ArrayList<Project> list) {
+      this.list = list;
+    }
+
+    public int getNumberResults() {
+      return numberResults;
+    }
+
+    public void setNumberResults(int numberResults) {
+      this.numberResults = numberResults;
+    }
+  }
+
 }
