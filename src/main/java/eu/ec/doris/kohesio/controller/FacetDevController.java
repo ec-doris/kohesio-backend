@@ -2042,17 +2042,17 @@ public class FacetDevController {
       Boolean[] orderEuBudget = {null, true, false};
       for (Boolean b : orderEuBudget){
         euSearchBeneficiaries("en", null, country, null, null, null, null,
-                null,b,false,false,1000,0,null);
+                null,b,false,false,1000,1,null);
       }
       Boolean[] orderTotalBudget = {null, true, false};
       for (Boolean b : orderTotalBudget) {
         euSearchBeneficiaries("en", null, country, null, null, null, null,
-                null,null,b,null,1000,0,null);
+                null,null,b,null,1000,1,null);
       }
       Boolean[] orderNumProjects = {null, true, false};
       for (Boolean b : orderNumProjects) {
         euSearchBeneficiaries("en", null, country, null, null, null, null,
-                null,null,null,b,1000,0,null);
+                null,null,null,b,1000,1,null);
       }
     }
     for (String country : countries) {
