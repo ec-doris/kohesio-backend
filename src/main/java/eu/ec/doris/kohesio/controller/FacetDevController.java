@@ -1740,6 +1740,7 @@ public class FacetDevController {
             "}";
     TupleQueryResult resultSet1 = executeAndCacheQuery(sparqlEndpoint, query1, 30);
     JSONObject result = new JSONObject();
+    result.put("item",id.replace("https://linkedopendata.eu/entity/",""));
     while (resultSet1.hasNext()){
       BindingSet querySolution = resultSet1.next();
       if (querySolution.getBinding("country") != null) {
