@@ -1403,9 +1403,9 @@ public class FacetDevController {
   }
 
   @GetMapping(value = "/facet/eu/project", produces = "application/json")
-  public JSONObject euId( //
-                          @RequestParam(value = "id") String id,
-                          @RequestParam(value = "language", defaultValue = "en") String language)
+  public JSONObject euProjectID( //
+                                 @RequestParam(value = "id") String id,
+                                 @RequestParam(value = "language", defaultValue = "en") String language)
           throws Exception {
     String query =
             "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
