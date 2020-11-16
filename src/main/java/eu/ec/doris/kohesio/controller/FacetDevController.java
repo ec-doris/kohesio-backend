@@ -591,6 +591,12 @@ public class FacetDevController {
           throws Exception {
     logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, region {}", language, keywords, country, theme, fund, region);
 
+    int inputOffset = offset;
+    int inputLimit = limit;
+    if(offset <= 1000){
+      offset = 0;
+      limit = 1000;
+    }
     String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
 
 
@@ -787,8 +793,10 @@ public class FacetDevController {
       resultList.add(project);
     }
     ProjectList projectList = new ProjectList();
-    projectList.setList(resultList);
     projectList.setNumberResults(numResults);
+    for (int i = inputOffset-1; i < inputOffset+inputLimit ; i++) {
+      projectList.getList().add(resultList.get(i));
+    }
     return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
   }
 
@@ -1847,20 +1855,168 @@ public class FacetDevController {
     }
     return nutsRegion;
   }
+  @GetMapping(value = "/facet/eu/beneficiary", produces = "application/json")
+  public JSONObject euBenfeciaryId(@RequestParam(value = "id") String id) throws Exception {
 
+    String query1 = "select ?s0 ?country ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates where {\n"
+            + " VALUES ?s0 { <"
+            + id
+            + "> } "+
+            "  ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . \n" +
+            "  ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country .  \n" +
+            "  FILTER((LANG(?beneficiaryLabel) = \"en\" && ?country = <https://linkedopendata.eu/entity/Q2> )\n" +
+            "          || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q20> )  \n" +
+            "              || (LANG(?beneficiaryLabel) = \"it\" && ?country = <https://linkedopendata.eu/entity/Q15> ) \n" +
+            "              || (LANG(?beneficiaryLabel) = \"pl\" && ?country = <https://linkedopendata.eu/entity/Q13> ) \n" +
+            "              || (LANG(?beneficiaryLabel) = \"cs\" && ?country = <https://linkedopendata.eu/entity/Q25> ) \n" +
+            "              || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) ) \n" +
+            "  OPTIONAL {  ?s0 <http://purl.org/dc/terms/description> ?description .  FILTER (lang(?description)=\"en\") }\n" +
+            "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P67> ?website .}\n" +
+            "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P147> ?image .}\n" +
+            "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P537> ?logo .}\n" +
+            "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .}\n" +
+            "}";
+
+    String query2 = "select ?s0 (sum(?euBudget) as ?totalEuBudget) (sum(?budget) as ?totalBudget) (count(?project) as ?numberProjects) (min(?startTime) as ?minStartTime) (max(?endTime) as ?maxEndTime) where {\n" +
+            " VALUES ?s0 { <"+
+            id +
+            "> } "+
+            "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
+            "  ?project <https://linkedopendata.eu/prop/direct/P474> ?budget .\n" +
+            "  ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .\n" +
+            "  ?project <https://linkedopendata.eu/prop/direct/P20> ?startTime .\n" +
+            "  ?project <https://linkedopendata.eu/prop/direct/P33> ?endTime .\n" +
+            "  \n" +
+            "} group by ?s0";
+
+    String query3 = "select ?project ?label ?euBudget ?budget ?startTime ?endTime  where {\n" +
+            " VALUES ?s0 { <"+
+            id +
+            "> } "+
+            "  ?project <http://www.w3.org/2000/01/rdf-schema#label> ?label .\n" +
+            "  FILTER (lang(?label)=\"en\") .\n" +
+            "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
+            "  ?project <https://linkedopendata.eu/prop/direct/P474> ?budget .\n" +
+            "  ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .\n" +
+            "  ?project <https://linkedopendata.eu/prop/direct/P20> ?startTime .\n" +
+            "  ?project <https://linkedopendata.eu/prop/direct/P33> ?endTime .\n" +
+            "}";
+    TupleQueryResult resultSet1 = executeAndCacheQuery(sparqlEndpoint, query1, 30);
+    JSONObject result = new JSONObject();
+    result.put("item",id.replace("https://linkedopendata.eu/entity/",""));
+    while (resultSet1.hasNext()){
+      BindingSet querySolution = resultSet1.next();
+      if (querySolution.getBinding("country") != null) {
+        result.put("country", querySolution.getBinding("country").getValue().stringValue());
+      }
+      if (querySolution.getBinding("beneficiaryLabel") != null) {
+        result.put("beneficiaryLabel", ((Literal)querySolution.getBinding("beneficiaryLabel").getValue()).getLabel());
+      }
+      if (querySolution.getBinding("description") != null) {
+        result.put("description", querySolution.getBinding("description").getValue().stringValue());
+      }
+      if (querySolution.getBinding("website") != null) {
+        result.put("website", querySolution.getBinding("website").getValue().stringValue());
+      }
+      if (querySolution.getBinding("description") != null) {
+        result.put("description", querySolution.getBinding("description").getValue().stringValue());
+      }
+      JSONArray images = new JSONArray();
+      if (querySolution.getBinding("image") != null) {
+        images.add(querySolution.getBinding("image").getValue().stringValue());
+      }
+      if (querySolution.getBinding("logo") != null) {
+        images.add(querySolution.getBinding("logo").getValue().stringValue());
+      }
+      result.put("images",images);
+    }
+    TupleQueryResult resultSet2 = executeAndCacheQuery(sparqlEndpoint, query2, 30);
+    while (resultSet2.hasNext()) {
+      BindingSet querySolution = resultSet2.next();
+      if (querySolution.getBinding("totalEuBudget") != null) {
+        result.put("totalEuBudget", ((Literal)querySolution.getBinding("totalEuBudget").getValue()).doubleValue());
+      }
+      if (querySolution.getBinding("totalBudget") != null) {
+        result.put("totalBudget", ((Literal)querySolution.getBinding("totalBudget").getValue()).doubleValue());
+      }
+      if (querySolution.getBinding("minStartTime") != null) {
+        result.put("minStartTime", querySolution.getBinding("minStartTime").getValue().stringValue().split("T")[0]);
+      }
+      if (querySolution.getBinding("maxEndTime") != null) {
+        result.put("maxEndTime", querySolution.getBinding("maxEndTime").getValue().stringValue().split("T")[0]);
+      }
+      if (querySolution.getBinding("numberProjects") != null) {
+        result.put("numberProjects", ((Literal)querySolution.getBinding("numberProjects").getValue()).intValue());
+      }
+    }
+    JSONArray projects = new JSONArray();
+    TupleQueryResult resultSet3 = executeAndCacheQuery(sparqlEndpoint, query3, 30);
+    if(resultSet3 != null) {
+      while (resultSet3.hasNext()){
+        JSONObject project = new JSONObject();
+        BindingSet querySolution = resultSet3.next();
+        if (querySolution.getBinding("project") != null) {
+          project.put("project", querySolution.getBinding("project").getValue().stringValue());
+        }
+        if (querySolution.getBinding("label") != null) {
+          project.put("label", ((Literal)querySolution.getBinding("label").getValue()).getLabel());
+        }
+        if (querySolution.getBinding("euBudget") != null) {
+          project.put("euBudget", ((Literal)querySolution.getBinding("euBudget").getValue()).doubleValue());
+        }
+        if (querySolution.getBinding("budget") != null) {
+          project.put("budget", ((Literal)querySolution.getBinding("budget").getValue()).doubleValue());
+        }
+        if (querySolution.getBinding("startTime") != null) {
+          project.put("startTime", querySolution.getBinding("startTime").getValue().stringValue().split("T")[0]);
+        }
+        if (querySolution.getBinding("endTime") != null) {
+          project.put("endTime", querySolution.getBinding("endTime").getValue().stringValue().split("T")[0]);
+        }
+        projects.add(project);
+      }
+    }
+    result.put("projects",projects);
+    return result;
+  }
   @GetMapping(value = "/facet/eu/search/beneficiaries", produces = "application/json")
-  public List euSearchBeneficiaries( //
-                                     @RequestParam(value = "language", defaultValue = "en") String language,
-                                     @RequestParam(value = "name", required = false) String keywords, //
-                                     @RequestParam(value = "country", required = false) String country, //
-                                     @RequestParam(value = "region", required = false) String region, //
-                                     @RequestParam(value = "latitude", required = false) String latitude, //
-                                     @RequestParam(value = "longitude", required = false) String longitude, //
-                                     @RequestParam(value = "fund", required = false) String fund, //
-                                     @RequestParam(value = "program", required = false) String program, //
-                                     Principal principal)
+  public ResponseEntity euSearchBeneficiaries( //
+                                                           @RequestParam(value = "language", defaultValue = "en") String language,
+                                                           @RequestParam(value = "name", required = false) String keywords, //
+                                                           @RequestParam(value = "country", required = false) String country, //
+                                                           @RequestParam(value = "region", required = false) String region, //
+                                                           @RequestParam(value = "latitude", required = false) String latitude, //
+                                                           @RequestParam(value = "longitude", required = false) String longitude, //
+                                                           @RequestParam(value = "fund", required = false) String fund, //
+                                                           @RequestParam(value = "program", required = false) String program, //
+
+                                                           @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+                                                           @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+                                                           @RequestParam(value = "orderNumProjects", required = false) Boolean orderNumProjects,
+                                                           @RequestParam(value = "limit", defaultValue = "200") int limit,
+                                                           @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                                           Principal principal)
           throws Exception {
     logger.info("Beneficiary search language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}",language,keywords, country,region,latitude,longitude,fund,program);
+
+    int inputOffset = offset;
+    int inputLimit = limit;
+    if(offset <= 1000){
+      offset = 0;
+      limit = 1000;
+    }
+
+    String queryCount = "select (COUNT(*) as ?c) where {\n" +
+            " ?s1  <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q196899> .\n" +
+            "}";
+    System.out.println(queryCount);
+    TupleQueryResult countResultSet = executeAndCacheQuery(sparqlEndpoint, queryCount, 25);
+    int numResults = 0;
+    if (countResultSet.hasNext()) {
+      BindingSet querySolution = countResultSet.next();
+      numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+    }
+
     String search = "";
     if (keywords != null) {
       search +=
@@ -1897,6 +2053,30 @@ public class FacetDevController {
       search += "?project <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
     }
 
+
+    String orderBy = "";
+
+    if(orderEuBudget != null){
+      if(orderEuBudget){
+        orderBy = "order by asc(?totalEuBudget)";
+      }else{
+        orderBy = "order by desc(?totalEuBudget)";
+      }
+    }
+    if(orderTotalBudget != null){
+      if(orderTotalBudget){
+        orderBy = "order by asc(?totalBudget)";
+      }else{
+        orderBy = "order by desc(?totalBudget)";
+      }
+    }
+    if(orderNumProjects != null){
+      if(orderNumProjects){
+        orderBy = "order by asc(?numberProjects)";
+      }else{
+        orderBy = "order by desc(?numberProjects)";
+      }
+    }
     String query =
             "select ?beneficiary ?beneficiaryLabel ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link where { "
                     + " { SELECT ?beneficiary (count(?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) where { "
@@ -1904,7 +2084,11 @@ public class FacetDevController {
                     + "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
                     + "   ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . "
                     + "   ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . "
-                    + " } group by ?beneficiary order by desc(?totalEuBudget) limit 500 } "
+                    + " } group by ?beneficiary " +
+                    orderBy +
+                    " limit "+limit +
+                    " offset "+offset +
+                    "} "
                     + " OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
                     + "            ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country .   "
                     + "             FILTER((LANG(?beneficiaryLabel) = \"en\" && ?country = <https://linkedopendata.eu/entity/Q2> ) "
@@ -1984,8 +2168,12 @@ public class FacetDevController {
         beneficiaries.add(beneficary);
       }
     }
-
-    return beneficiaries;
+    BeneficiaryList finalRes = new BeneficiaryList();
+    finalRes.setNumberResults(numResults);
+    for (int i = inputOffset-1; i < inputOffset+inputLimit ; i++) {
+      finalRes.getList().add(beneficiaries.get(i));
+    }
+    return new ResponseEntity<BeneficiaryList>(finalRes, HttpStatus.OK);
   }
 
   @GetMapping(value = "/facet/eu/search/beneficiaries/csv", produces = "application/json")
@@ -2001,8 +2189,11 @@ public class FacetDevController {
                                         Principal principal,
                                         @Context HttpServletResponse response)
           throws Exception {
+    // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
+    // by default it export 1000
     List<Beneficiary> beneficiaryList =
-            euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,principal);
+            (List<Beneficiary>)((JSONObject)euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,
+                    false,false,false,1000,0,principal).getBody()).get("list");
     String filename = "beneficiary_export.csv";
     try {
       response.setContentType("text/csv");
@@ -2040,8 +2231,10 @@ public class FacetDevController {
                                                             @RequestParam(value = "program", required = false) String program, //
                                                             Principal principal)
           throws Exception {
-    List<Beneficiary> beneficiaryList =
-            euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,principal);
+    // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
+    // by default it export 1000
+    BeneficiaryList beneficiaryList = ((BeneficiaryList)euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,false,false,false,1000,0,principal).getBody());
+    String filename = "beneficiary_export.csv";
     XSSFWorkbook hwb = new XSSFWorkbook();
     XSSFSheet sheet = hwb.createSheet("beneficiary_export");
     int rowNumber = 0;
@@ -2054,7 +2247,7 @@ public class FacetDevController {
     cell.setCellValue("AMOUNT EU SUPPORT");
     cell = row.createCell(3);
     cell.setCellValue("NUMBER OF PROJECTS");
-    for (Beneficiary beneficiary : beneficiaryList) {
+    for (Beneficiary beneficiary : beneficiaryList.getList()) {
       rowNumber++;
       row = sheet.createRow(rowNumber);
       cell = row.createCell(0);
@@ -2094,29 +2287,56 @@ public class FacetDevController {
     };
 
     for (String country : countries) {
-      int[] offset = {0,15,30,45,60,75,90,105,120,135,150};
-      for (int o : offset) {
         Boolean[] orderStartDate = {null, true, false};
         for (Boolean b : orderStartDate){
-          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, null, 15, o, null);
+          euSearchProject("en", null, country, null, null, null,
+                  null, null, null, null,
+                  null, null, null, null,
+                  null, null, b, null, null, null,
+                  null, null, null, 1000, 1, null);
         }
         Boolean[] orderEndDate = {null, true, false};
         for (Boolean b : orderEndDate){
-          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, null, 15, o, null);
+          euSearchProject("en", null, country, null, null, null,
+                  null, null, null, null,
+                  null, null, null, null,
+                  null, null, null, b, null, null,
+                  null, null, null, 1000, 1, null);
         }
         Boolean[] orderEuBudget = {null, true, false};
         for (Boolean b : orderEuBudget){
-          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, null, 15, o, null);
+          euSearchProject("en", null, country, null, null, null,
+                  null, null, null, null,
+                  null, null, null, null, null,
+                  null, null, null, b, null, null,
+                  null, null, 1000, 1, null);
         }
         Boolean[] orderTotalBudget = {null, true, false};
         for (Boolean b : orderTotalBudget) {
-          euSearchProject("en", null, country, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, b, null, null, null, 15, o, null);
+          euSearchProject("en", null, country, null, null, null,
+                  null, null, null, null,
+                  null, null, null, null, null,
+                  null, null, null, null, b, null, null,
+                  null, 1000, 1, null);
         }
-      }
     }
 
     for (String country : countries) {
-      euSearchBeneficiaries("en", null, country, null, null, null, null,null,null);
+      Boolean[] orderEuBudget = {null, true, false};
+      for (Boolean b : orderEuBudget){
+        euSearchBeneficiaries("en", null, country, null, null, null, null,
+                null,b,false,false,1000,1,null);
+      }
+      Boolean[] orderTotalBudget = {null, true, false};
+      for (Boolean b : orderTotalBudget) {
+        euSearchBeneficiaries("en", null, country, null, null, null, null,
+                null,null,b,null,1000,1,null);
+      }
+      Boolean[] orderNumProjects = {null, true, false};
+      for (Boolean b : orderNumProjects) {
+        euSearchBeneficiaries("en", null, country, null, null, null, null,
+                null,null,null,b,1000,1,null);
+      }
     }
     for (String country : countries) {
       if (country!=null) {
@@ -2142,7 +2362,7 @@ public class FacetDevController {
                 p = ((JSONObject) program).get("instance").toString();
               }
               euSearchBeneficiaries(
-                      "en", null, country, r, null, null, f, p, null);
+                      "en", null, country, r, null, null, f, p, false,false,false,0,0,null);
               euSearchProjectMap("en", null, country, null, f, p, null,null,null,null,null,null,null,null,null,null,null,null,r,r,null,0,400,null);
               System.out.println("Done");
             }
@@ -2435,7 +2655,7 @@ public class FacetDevController {
   }
 
   public class ProjectList {
-    ArrayList<Project> list;
+    ArrayList<Project> list = new ArrayList<Project>();
     int numberResults;
 
     public ArrayList<Project> getList() {
@@ -2443,6 +2663,27 @@ public class FacetDevController {
     }
 
     public void setList(ArrayList<Project> list) {
+      this.list = list;
+    }
+
+    public int getNumberResults() {
+      return numberResults;
+    }
+
+    public void setNumberResults(int numberResults) {
+      this.numberResults = numberResults;
+    }
+  }
+
+  public class BeneficiaryList {
+    ArrayList<Beneficiary> list = new ArrayList<Beneficiary>();
+    int numberResults;
+
+    public ArrayList<Beneficiary> getList() {
+      return list;
+    }
+
+    public void setList(ArrayList<Beneficiary> list) {
       this.list = list;
     }
 
