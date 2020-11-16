@@ -794,7 +794,7 @@ public class FacetDevController {
     }
     ProjectList projectList = new ProjectList();
     projectList.setNumberResults(numResults);
-    for (int i = inputOffset-1; i < inputOffset+inputLimit ; i++) {
+    for (int i = inputOffset; i < inputOffset+inputLimit ; i++) {
       projectList.getList().add(resultList.get(i));
     }
     return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
@@ -2170,7 +2170,7 @@ public class FacetDevController {
     }
     BeneficiaryList finalRes = new BeneficiaryList();
     finalRes.setNumberResults(numResults);
-    for (int i = inputOffset-1; i < inputOffset+inputLimit ; i++) {
+    for (int i = inputOffset; i < inputOffset+inputLimit ; i++) {
       finalRes.getList().add(beneficiaries.get(i));
     }
     return new ResponseEntity<BeneficiaryList>(finalRes, HttpStatus.OK);
