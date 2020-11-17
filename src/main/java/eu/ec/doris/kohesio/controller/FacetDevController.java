@@ -950,7 +950,7 @@ public class FacetDevController {
       fileOut.close();
       HttpHeaders headers = new HttpHeaders();
       headers.set("Content-Type", "application/vnd.ms-excel");
-      headers.set("Content-Disposition", "attachment; filename=\"beneficiary_export.xls\"");
+      headers.set("Content-Disposition", "attachment; filename=\"beneficiary_export.xlsx\"");
       return new ResponseEntity<byte[]>(fileOut.toByteArray(), headers, HttpStatus.OK);
   }
 
@@ -2234,7 +2234,6 @@ public class FacetDevController {
     // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
     // by default it export 1000
     BeneficiaryList beneficiaryList = ((BeneficiaryList)euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,false,false,false,1000,0,principal).getBody());
-    String filename = "beneficiary_export.csv";
     XSSFWorkbook hwb = new XSSFWorkbook();
     XSSFSheet sheet = hwb.createSheet("beneficiary_export");
     int rowNumber = 0;
@@ -2267,7 +2266,7 @@ public class FacetDevController {
     fileOut.close();
     HttpHeaders headers = new HttpHeaders();
     headers.set("Content-Type", "application/vnd.ms-excel");
-    headers.set("Content-Disposition", "attachment; filename=\"beneficiary_export.xls\"");
+    headers.set("Content-Disposition", "attachment; filename=\"beneficiary_export.xlsx\"");
     return new ResponseEntity<byte[]>(fileOut.toByteArray(), headers, HttpStatus.OK);
   }
 
