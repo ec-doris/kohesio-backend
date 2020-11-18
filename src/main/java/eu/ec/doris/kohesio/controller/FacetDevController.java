@@ -2200,9 +2200,7 @@ public class FacetDevController {
           throws Exception {
     // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
     // by default it export 1000
-    List<Beneficiary> beneficiaryList =
-            (List<Beneficiary>)((JSONObject)euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,
-                    false,false,false,1000,0,principal).getBody()).get("list");
+    BeneficiaryList beneficiaryList = ((BeneficiaryList)euSearchBeneficiaries(language, keywords, country, region, latitude, longitude,fund,program,false,false,false,1000,0,principal).getBody());
     String filename = "beneficiary_export.csv";
     try {
       response.setContentType("text/csv");
@@ -2214,7 +2212,7 @@ public class FacetDevController {
                       response.getWriter(),
                       CSVFormat.DEFAULT.withHeader(
                               "BENEFICIARY NAME", "TOTAL BUDGET", "AMOUNT EU SUPPORT", "NUMBER OF PROJECTS"));
-      for (Beneficiary beneficiary : beneficiaryList) {
+      for (Beneficiary beneficiary : beneficiaryList.getList()) {
         csvPrinter.printRecord(
                 Arrays.asList(
                         beneficiary.getLabel(),
