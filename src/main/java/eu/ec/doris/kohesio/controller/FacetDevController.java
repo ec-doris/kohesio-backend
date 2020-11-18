@@ -1416,7 +1416,7 @@ public class FacetDevController {
                                  @RequestParam(value = "language", defaultValue = "en") String language)
           throws Exception {
     String query =
-            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
+            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
                     + " VALUES ?s0 { <"
                     + id
                     + "> } "
@@ -1429,6 +1429,7 @@ public class FacetDevController {
                     + "\") } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P837> ?cofinancingRate. } "
@@ -1558,6 +1559,14 @@ public class FacetDevController {
                 "endTime",
                 ((Literal) querySolution.getBinding("endTime").getValue()).stringValue().split("T")[0]);
       }
+
+      if (querySolution.getBinding("endTime") == null && querySolution.getBinding("expectedEndTime") != null) {
+        result.put(
+                "endTime",
+                ((Literal) querySolution.getBinding("expectedEndTime").getValue()).stringValue().split("T")[0]);
+      }
+
+
 
       if (querySolution.getBinding("budget") != null) {
         result.put(
