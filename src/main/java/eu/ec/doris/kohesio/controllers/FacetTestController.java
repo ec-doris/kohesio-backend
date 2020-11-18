@@ -1,4 +1,4 @@
-package eu.ec.doris.kohesio.controller;
+package eu.ec.doris.kohesio.controllers;
 
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
