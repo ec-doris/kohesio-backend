@@ -793,7 +793,7 @@ public class FacetDevController {
         }
         ProjectList projectList = new ProjectList();
         projectList.setNumberResults(numResults);
-        for (int i = inputOffset; i < inputOffset + inputLimit; i++) {
+        for (int i = inputOffset; i < Math.min(resultList.size(),inputOffset + inputLimit); i++) {
             projectList.getList().add(resultList.get(i));
         }
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
