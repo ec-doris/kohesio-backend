@@ -2204,7 +2204,7 @@ public class FacetDevController {
         }
         BeneficiaryList finalRes = new BeneficiaryList();
         finalRes.setNumberResults(numResults);
-        for (int i = inputOffset; i < inputOffset + inputLimit; i++) {
+        for (int i = inputOffset; i < Math.min(beneficiaries.size(),inputOffset + inputLimit); i++) {
             finalRes.getList().add(beneficiaries.get(i));
         }
         return new ResponseEntity<BeneficiaryList>(finalRes, HttpStatus.OK);
