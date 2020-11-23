@@ -2040,7 +2040,7 @@ public class FacetDevController {
             limit = 1000;
         }
         String filterBenf = filterBeneficiary(language,keywords,country,region,latitude,longitude,fund,program);
-        String queryCount = "select (COUNT(?s0) as ?c) where {\n" +
+        String queryCount = "select (COUNT(*) as ?c) where {\n" +
                 filterBenf+
                 "}";
         System.out.println(queryCount);
@@ -2230,32 +2230,32 @@ public class FacetDevController {
                 keywords = keywordsBuilder.toString();
             }
             search +=
-                    "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
+                    "?beneficiary <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                             + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                             + keywords.replace("\"", "\\\"")
                             + "\" ] .";
         }
 
         if (country != null && region == null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+            search += "?beneficiary <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
         }
 
 
         if (fund != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1584> <" + fund + "> . ";
+            search += "?project <https://linkedopendata.eu/prop/direct/P1584> <" + fund + "> . ";
         }
 
         if (program != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
+            search += "?project <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
         }
 
         if (region != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . ";
+            search += "?project <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . ";
         }
 
         if (latitude != null && longitude != null) {
             search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
+                    "?project <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
                             + "FILTER ( <http://www.opengis.net/def/function/geosparql/distance>(\"POINT("
                             + longitude
                             + " "
@@ -2263,8 +2263,9 @@ public class FacetDevController {
                             + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)< 100000) . ";
         }
 
+        search += "   ?beneficiary <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> . ";
         search +=
-                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> . ";
+                "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary  . ";
         return search;
     }
     @GetMapping(value = "/facet/eu/search/beneficiaries/csv", produces = "application/json")
