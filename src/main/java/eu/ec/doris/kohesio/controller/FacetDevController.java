@@ -2039,18 +2039,6 @@ public class FacetDevController {
             offset = 0;
             limit = 1000;
         }
-        String filterBenf = filterBeneficiary(language,keywords,country,region,latitude,longitude,fund,program);
-        String queryCount = "select (COUNT(*) as ?c) where {\n" +
-                filterBenf+
-                "}";
-        System.out.println(queryCount);
-        TupleQueryResult countResultSet = executeAndCacheQuery(sparqlEndpoint, queryCount, 25);
-        int numResults = 0;
-        if (countResultSet.hasNext()) {
-            BindingSet querySolution = countResultSet.next();
-            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
-        }
-
         String search = "";
         if (keywords != null) {
             search +=
@@ -2087,6 +2075,23 @@ public class FacetDevController {
             search += "?project <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
         }
 
+        search = search+ "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
+                + "   ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . "
+                + "   ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
+
+        String queryCount = "select (count(?beneficiary) as ?c) where { " +
+                "{select ?beneficiary where {\n" +
+                search
+                + " } group by ?beneficiary }" +
+                "}";
+        System.out.println(queryCount);
+        TupleQueryResult countResultSet = executeAndCacheQuery(sparqlEndpoint, queryCount, 25);
+        int numResults = 0;
+        if (countResultSet.hasNext()) {
+            BindingSet querySolution = countResultSet.next();
+            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+            //System.out.println(querySolution.getBinding("beneficiary").getValue());
+        }
 
         String orderBy = "";
 
@@ -2115,10 +2120,7 @@ public class FacetDevController {
                 "select ?beneficiary ?beneficiaryLabel ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link where { "
                         + " { SELECT ?beneficiary (count(?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) where { "
                         + search
-                        + "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
-                        + "   ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . "
-                        + "   ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . "
-                        + " } group by ?beneficiary " +
+                        +"} group by ?beneficiary "+
                         orderBy +
                         " limit " + limit +
                         " offset " + offset +
@@ -2208,65 +2210,6 @@ public class FacetDevController {
             finalRes.getList().add(beneficiaries.get(i));
         }
         return new ResponseEntity<BeneficiaryList>(finalRes, HttpStatus.OK);
-    }
-    private String filterBeneficiary(String language,
-                                     String keywords, //
-                                     String country, //
-                                     String region, //
-                                     String latitude, //
-                                     String longitude, //
-                                     String fund, //
-                                     String program
-    ) throws IOException {
-        String search = "";
-        if (keywords != null) {
-            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
-                String[] words = keywords.split(" ");
-                StringBuilder keywordsBuilder = new StringBuilder();
-                for (int i = 0; i < words.length - 1; i++) {
-                    keywordsBuilder.append(words[i]).append(" AND ");
-                }
-                keywordsBuilder.append(words[words.length - 1]);
-                keywords = keywordsBuilder.toString();
-            }
-            search +=
-                    "?beneficiary <http://www.openrdf.org/contrib/lucenesail#matches> [ "
-                            + "<http://www.openrdf.org/contrib/lucenesail#query> \""
-                            + keywords.replace("\"", "\\\"")
-                            + "\" ] .";
-        }
-
-        if (country != null && region == null) {
-            search += "?beneficiary <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
-        }
-
-
-        if (fund != null) {
-            search += "?project <https://linkedopendata.eu/prop/direct/P1584> <" + fund + "> . ";
-        }
-
-        if (program != null) {
-            search += "?project <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
-        }
-
-        if (region != null) {
-            search += "?project <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . ";
-        }
-
-        if (latitude != null && longitude != null) {
-            search +=
-                    "?project <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                            + "FILTER ( <http://www.opengis.net/def/function/geosparql/distance>(\"POINT("
-                            + longitude
-                            + " "
-                            + latitude
-                            + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)< 100000) . ";
-        }
-
-        search += "   ?beneficiary <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> . ";
-        search +=
-                "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary  . ";
-        return search;
     }
     @GetMapping(value = "/facet/eu/search/beneficiaries/csv", produces = "application/json")
     public void euSearchBeneficiariesCSV( //
