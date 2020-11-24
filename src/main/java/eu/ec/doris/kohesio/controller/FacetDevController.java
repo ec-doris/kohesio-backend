@@ -2393,8 +2393,11 @@ public class FacetDevController {
                             if (program != null) {
                                 p = ((JSONObject) program).get("instance").toString();
                             }
-                            euSearchBeneficiaries(
-                                    "en", null, country, r, null, null, f, p, false, false, false, 1000, 0, null);
+                            Boolean[] orderEuBudget = {null, true, false};
+                            for (Boolean b : orderEuBudget) {
+                                euSearchBeneficiaries(
+                                        "en", null, country, r, null, null, f, p, b, null, null, 1000, 0, null);
+                            }
                             euSearchProjectMap("en", null, country, null, f, p, null, null, null, null, null, null, null, null, null, null, null, null, r, r, null, 0, 400, null);
                             System.out.println("Done");
                         }
