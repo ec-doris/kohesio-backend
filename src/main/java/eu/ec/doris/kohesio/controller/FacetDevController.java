@@ -2024,7 +2024,7 @@ public class FacetDevController {
                                                  @RequestParam(value = "fund", required = false) String fund, //
                                                  @RequestParam(value = "program", required = false) String program, //
 
-                                                 @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+                                                 @RequestParam(value = "orderEuBudget", defaultValue = "true") Boolean orderEuBudget,
                                                  @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
                                                  @RequestParam(value = "orderNumProjects", required = false) Boolean orderNumProjects,
                                                  @RequestParam(value = "limit", defaultValue = "200") int limit,
