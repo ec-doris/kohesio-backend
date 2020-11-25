@@ -1747,7 +1747,7 @@ public class FacetDevController {
                     result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
                             .stringValue());
                 }
-                if (result.get("region") != null) {
+                if (result.get("region") != "") {
                     String regionText = (String) result.get("region");
                     if (!((String) result.get("region")).equals(((String) result.get("regionUpper1")))) {
                         regionText += ", " + (String) result.get("regionUpper1");
@@ -1760,6 +1760,7 @@ public class FacetDevController {
                     }
                     result.put("regionText", regionText);
                 } else {
+
                     result.put("regionText", (String) result.get("countryLabel"));
                 }
 
