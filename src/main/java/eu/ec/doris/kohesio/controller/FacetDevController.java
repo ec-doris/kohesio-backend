@@ -2041,6 +2041,15 @@ public class FacetDevController {
         }
         String search = "";
         if (keywords != null) {
+            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
+                String[] words = keywords.split(" ");
+                StringBuilder keywordsBuilder = new StringBuilder();
+                for (int i = 0; i < words.length - 1; i++) {
+                    keywordsBuilder.append(words[i]).append(" AND ");
+                }
+                keywordsBuilder.append(words[words.length - 1]);
+                keywords = keywordsBuilder.toString();
+            }
             search +=
                     "?beneficiary <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                             + "<http://www.openrdf.org/contrib/lucenesail#query> \""
