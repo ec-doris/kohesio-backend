@@ -608,6 +608,7 @@ public class FacetDevController {
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
 
+
         String orderQuery = "";
 
         String orderBy = "";
@@ -656,7 +657,7 @@ public class FacetDevController {
         }
         search += " " + orderQuery;
         query =
-                "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
+                "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
                         + " { SELECT ?s0 ?snippet where { "
                         + search
                         + " } " + orderBy + " limit "
@@ -671,6 +672,7 @@ public class FacetDevController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
                         + language
                         + "\") } "
+                        + "OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
@@ -750,6 +752,9 @@ public class FacetDevController {
             if (querySolution.getBinding("endTime") != null)
                 endTime.add(
                         ((Literal) querySolution.getBinding("endTime").getValue()).getLabel().split("T")[0]);
+            if (querySolution.getBinding("endTime") == null && querySolution.getBinding("expectedEndTime") != null) {
+                endTime.add(((Literal) querySolution.getBinding("expectedEndTime").getValue()).stringValue().split("T")[0]);
+            }
             if (querySolution.getBinding("euBudget") != null)
                 euBudget.add(
                         String.valueOf(
