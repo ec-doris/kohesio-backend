@@ -1422,7 +1422,7 @@ public class FacetDevController {
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
         } else {
             String query =
-                    "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
+                    "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
                             + " VALUES ?s0 { <"
                             + id
                             + "> } "
@@ -1480,8 +1480,9 @@ public class FacetDevController {
                             + language
                             + "\") } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P889> ?beneficiaryLink . "
-                            + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
-                            + "             FILTER(LANG(?beneficiaryLabel) = \"" + language + "\" || LANG(?beneficiaryLabel) = \"en\" || LANG(?beneficiaryLabel) = \"fr\" || LANG(?beneficiaryLabel) = \"it\" || LANG(?beneficiaryLabel) = \"pl\" || LANG(?beneficiaryLabel) = \"cs\" || LANG(?beneficiaryLabel) = \"da\" )}"
+                            + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabelRight . "
+                            + "             FILTER(LANG(?beneficiaryLabelRight) = \"" + language + "\" }"
+                            + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . }"
                             + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID .  "
                             + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
                             + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
@@ -1698,7 +1699,11 @@ public class FacetDevController {
                     if (found == false) {
                         JSONObject beneficary = new JSONObject();
                         beneficary.put("link", ben);
-                        if (querySolution.getBinding("beneficiaryLabel") != null) {
+                        if (querySolution.getBinding("beneficiaryLabelRight") != null) {
+                            String label =
+                                    ((Literal) querySolution.getBinding("beneficiaryLabelRight").getValue()).stringValue();
+                            beneficary.put("beneficiaryLabel", label);
+                        } else if (querySolution.getBinding("beneficiaryLabel") != null){
                             String label =
                                     ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).stringValue();
                             beneficary.put("beneficiaryLabel", label);
