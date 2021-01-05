@@ -1939,7 +1939,7 @@ public class FacetDevController {
                     "  ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .\n" +
                     "  ?project <https://linkedopendata.eu/prop/direct/P20> ?startTime .\n" +
                     "  ?project <https://linkedopendata.eu/prop/direct/P33> ?endTime .\n" +
-                    "}";
+                    "} order by DESC(?euBudget) ";
             TupleQueryResult resultSet1 = executeAndCacheQuery(publicSparqlEndpoint, query1, 30);
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
