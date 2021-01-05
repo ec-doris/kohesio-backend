@@ -89,7 +89,7 @@ public class FacetDevController {
 
     HashMap<String, Nut> nutsRegion = null;
 
-    private static DecimalFormat df2 = new DecimalFormat("#.00");
+    private static DecimalFormat df2 = new DecimalFormat("0.00");
 
     // Set this to allow browser requests from other websites
     @ModelAttribute
