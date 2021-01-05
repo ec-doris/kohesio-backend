@@ -1923,10 +1923,10 @@ public class FacetDevController {
                     id +
                     "> } " +
                     "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
-                    "  ?project <https://linkedopendata.eu/prop/direct/P474> ?budget .\n" +
-                    "  ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .\n" +
-                    "  ?project <https://linkedopendata.eu/prop/direct/P20> ?startTime .\n" +
-                    "  ?project <https://linkedopendata.eu/prop/direct/P33> ?endTime .\n" +
+                    "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
+                    "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . }\n" +
+                    "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . }\n" +
+                    "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
                     "  \n" +
                     "} group by ?s0";
 
@@ -1935,12 +1935,12 @@ public class FacetDevController {
                     id +
                     "> } " +
                     "  ?project <http://www.w3.org/2000/01/rdf-schema#label> ?label .\n" +
-                    "  FILTER (lang(?label)=\"en\") .\n" +
+                    "  FILTER (lang(?label)=\""+language+"\") .\n" +
                     "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
-                    "  ?project <https://linkedopendata.eu/prop/direct/P474> ?budget .\n" +
-                    "  ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .\n" +
-                    "  ?project <https://linkedopendata.eu/prop/direct/P20> ?startTime .\n" +
-                    "  ?project <https://linkedopendata.eu/prop/direct/P33> ?endTime .\n" +
+                    "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
+                    "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
+                    "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . } \n" +
+                    "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
                     "} order by DESC(?euBudget) ";
             TupleQueryResult resultSet1 = executeAndCacheQuery(publicSparqlEndpoint, query1, 30);
             JSONObject result = new JSONObject();
