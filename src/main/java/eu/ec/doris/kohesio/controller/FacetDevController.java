@@ -1895,12 +1895,13 @@ public class FacetDevController {
             result.put("message", "Bad Request - beneficiary ID not found");
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
         } else {
-            String query1 = "select ?s0 ?country ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates where {\n"
+            String query1 = "select ?s0 ?country ?countryCode ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates where {\n"
                     + " VALUES ?s0 { <"
                     + id
                     + "> } " +
                     "  ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . \n" +
                     "  ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country .  \n" +
+                    "   ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . \n "+
                     "  FILTER((LANG(?beneficiaryLabel) = \"en\" && ?country = <https://linkedopendata.eu/entity/Q2> )\n" +
                     "          || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q20> )  \n" +
                     "              || (LANG(?beneficiaryLabel) = \"it\" && ?country = <https://linkedopendata.eu/entity/Q15> ) \n" +
@@ -1946,17 +1947,26 @@ public class FacetDevController {
                 if (querySolution.getBinding("country") != null) {
                     result.put("country", querySolution.getBinding("country").getValue().stringValue());
                 }
+                if (querySolution.getBinding("countryCode") != null) {
+                    result.put("countryCode", querySolution.getBinding("countryCode").getValue().stringValue());
+                }
                 if (querySolution.getBinding("beneficiaryLabel") != null) {
                     result.put("beneficiaryLabel", ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).getLabel());
                 }
                 if (querySolution.getBinding("description") != null) {
                     result.put("description", querySolution.getBinding("description").getValue().stringValue());
+                } else {
+                    result.put("description", "");
                 }
                 if (querySolution.getBinding("website") != null) {
                     result.put("website", querySolution.getBinding("website").getValue().stringValue());
+                } else {
+                    result.put("website", "");
                 }
-                if (querySolution.getBinding("description") != null) {
-                    result.put("description", querySolution.getBinding("description").getValue().stringValue());
+                if (querySolution.getBinding("coordinates") != null) {
+                    result.put("coordinates", querySolution.getBinding("coordinates").getValue().stringValue());
+                } else {
+                    result.put("coordinates", "");
                 }
                 JSONArray images = new JSONArray();
                 if (querySolution.getBinding("image") != null) {
