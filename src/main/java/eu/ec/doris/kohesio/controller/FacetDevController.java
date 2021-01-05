@@ -89,6 +89,8 @@ public class FacetDevController {
 
     HashMap<String, Nut> nutsRegion = null;
 
+    private static DecimalFormat df2 = new DecimalFormat("#.##");
+
     // Set this to allow browser requests from other websites
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
@@ -1982,10 +1984,10 @@ public class FacetDevController {
             while (resultSet2.hasNext()) {
                 BindingSet querySolution = resultSet2.next();
                 if (querySolution.getBinding("totalEuBudget") != null) {
-                    result.put("totalEuBudget", ((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue());
+                    result.put("totalEuBudget", df2.format(((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue()));
                 }
                 if (querySolution.getBinding("totalBudget") != null) {
-                    result.put("totalBudget", ((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue());
+                    result.put("totalBudget", df2.format(((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue()));
                 }
                 if (querySolution.getBinding("minStartTime") != null) {
                     result.put("minStartTime", querySolution.getBinding("minStartTime").getValue().stringValue().split("T")[0]);
@@ -2010,10 +2012,10 @@ public class FacetDevController {
                         project.put("label", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
                     }
                     if (querySolution.getBinding("euBudget") != null) {
-                        project.put("euBudget", ((Literal) querySolution.getBinding("euBudget").getValue()).doubleValue());
+                        project.put("euBudget", df2.format(((Literal) querySolution.getBinding("euBudget").getValue()).doubleValue()));
                     }
                     if (querySolution.getBinding("budget") != null) {
-                        project.put("budget", ((Literal) querySolution.getBinding("budget").getValue()).doubleValue());
+                        project.put("budget", df2.format(((Literal) querySolution.getBinding("budget").getValue()).doubleValue()));
                     }
                     if (querySolution.getBinding("startTime") != null) {
                         project.put("startTime", querySolution.getBinding("startTime").getValue().stringValue().split("T")[0]);
