@@ -1882,7 +1882,8 @@ public class FacetDevController {
     }
 
     @GetMapping(value = "/facet/eu/beneficiary", produces = "application/json")
-    public ResponseEntity euBenfeciaryId(@RequestParam(value = "id") String id) throws Exception {
+    public ResponseEntity euBenfeciaryId(@RequestParam(value = "id") String id,
+                                         @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
 
         String publicSparqlEndpoint = "https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql";
         String queryCheck = "ask {\n" +
@@ -1908,7 +1909,7 @@ public class FacetDevController {
                     "              || (LANG(?beneficiaryLabel) = \"pl\" && ?country = <https://linkedopendata.eu/entity/Q13> ) \n" +
                     "              || (LANG(?beneficiaryLabel) = \"cs\" && ?country = <https://linkedopendata.eu/entity/Q25> ) \n" +
                     "              || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) ) \n" +
-                    "  OPTIONAL {  ?s0 <http://purl.org/dc/terms/description> ?description .  FILTER (lang(?description)=\"en\") }\n" +
+                    "  OPTIONAL {  ?s0 <http://schema.org/description> ?description .  FILTER (lang(?description)=\""+language+"\") }\n" +
                     "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P67> ?website .}\n" +
                     "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P147> ?image .}\n" +
                     "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P537> ?logo .}\n" +
