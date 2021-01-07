@@ -39,4 +39,4 @@ jobs:
       - name: rsync over ssh
         run: rsync target/kohesio-backend-1.0-SNAPSHOT.jar  ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }}:/home/ec2-user
       - name: run java jar
-        run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }} 'kill -9 `pidof java` && nohup java -jar kohesio-backend-1.0-SNAPSHOT.jar & > log_server '
+        run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }} 'pkill -f kohesio-backend-1.0-SNAPSHOT.jar && nohup java -jar kohesio-backend-1.0-SNAPSHOT.jar > log_server &'
