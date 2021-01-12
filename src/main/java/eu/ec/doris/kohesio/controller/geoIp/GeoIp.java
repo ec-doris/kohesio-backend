@@ -4,6 +4,7 @@ import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import com.maxmind.geoip2.model.CityResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
@@ -21,9 +22,8 @@ public class GeoIp {
 
     DatabaseReader dbReader;
 
-    GeoIp() throws IOException {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        InputStream input = loader.getResourceAsStream("GeoLite2/GeoLite2-City.mmdb");
+    GeoIp(@Value("${geoLite.path}") String geoLitePath) throws IOException {
+        InputStream input = new FileInputStream(new File(geoLitePath+"/GeoLite2-City.mmdb"));
         dbReader = new DatabaseReader.Builder(input)
                 .build();
     }
