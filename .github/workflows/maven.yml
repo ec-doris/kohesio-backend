@@ -40,5 +40,7 @@ jobs:
         run: scp target/kohesio-backend-1.0-SNAPSHOT.jar  ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }}:/home/ubuntu/kohesio-backend-CI
       - name: copy using rsync the config file
         run: scp src/main/resources/config/application-server.properties  ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }}:/home/ubuntu/kohesio-backend-CI
+      - name: kill old process
+        run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }} pkill -f /home/ubuntu/kohesio-backend-CI/kohesio-backend-1.0-SNAPSHOT.jar
       - name: run java jar
         run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }} "java -Dfile.encoding=UTF-8 -Dspring.config.location=file:///home/ubuntu/kohesio-backend-CI/application-server.properties -jar /home/ubuntu/kohesio-backend-CI/kohesio-backend-1.0-SNAPSHOT.jar  >> /home/ubuntu/kohesio-backend-CI/log 2>&1 &"
