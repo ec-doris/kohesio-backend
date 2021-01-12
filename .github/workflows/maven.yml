@@ -36,7 +36,9 @@ jobs:
           java-version: 11
       - name: Build with Maven
         run: mvn -B package --file pom.xml
-      - name: rsync over ssh
-        run: rsync target/kohesio-backend-1.0-SNAPSHOT.jar  ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }}:/home/ec2-user
+      - name: copy using rsync the packed jar
+        run: rsync target/kohesio-backend-1.0-SNAPSHOT.jar  ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }}:/home/ubuntu/kohesio-backend-CI
+      - name: copy using rsync the config file
+        run: rsync src/main/resources/config/application-server.properties  ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }}:/home/ubuntu/kohesio-backend-CI
       - name: run java jar
-        run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }} 'pkill -f kohesio-backend-1.0-SNAPSHOT.jar && java -jar kohesio-backend-1.0-SNAPSHOT.jar > log_server &'
+        run: ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER_ME }}@${{ secrets.HOST_IP_ME }} 'pkill -f kohesio-backend-1.0-SNAPSHOT.jar && java -Dfile.encoding=UTF-8 -Dspring.config.location=file:///home/ubuntu/kohesio-backend-CI/application-server.properties -jar kohesio-backend-1.0-SNAPSHOT.jar  >> log 2>&1 &'
