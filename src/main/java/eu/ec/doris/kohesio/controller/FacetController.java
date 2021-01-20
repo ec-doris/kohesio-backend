@@ -89,6 +89,8 @@ public class FacetController {
 
   HashMap<String, Nut> nutsRegion = null;
 
+  private static DecimalFormat df2 = new DecimalFormat("0.00");
+
   // Set this to allow browser requests from other websites
   @ModelAttribute
   public void setVaryResponseHeader(HttpServletResponse response) {
@@ -602,6 +604,7 @@ public class FacetController {
       numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
     }
 
+
     String orderQuery = "";
 
     String orderBy = "";
@@ -650,7 +653,7 @@ public class FacetController {
     }
     search += " " + orderQuery;
     query =
-            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
+            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
                     + " { SELECT ?s0 ?snippet where { "
                     + search
                     + " } " + orderBy + " limit "
@@ -665,6 +668,7 @@ public class FacetController {
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
                     + language
                     + "\") } "
+                    + "OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
@@ -744,6 +748,9 @@ public class FacetController {
       if (querySolution.getBinding("endTime") != null)
         endTime.add(
                 ((Literal) querySolution.getBinding("endTime").getValue()).getLabel().split("T")[0]);
+      if (querySolution.getBinding("endTime") == null && querySolution.getBinding("expectedEndTime") != null) {
+        endTime.add(((Literal) querySolution.getBinding("expectedEndTime").getValue()).stringValue().split("T")[0]);
+      }
       if (querySolution.getBinding("euBudget") != null)
         euBudget.add(
                 String.valueOf(
@@ -786,7 +793,6 @@ public class FacetController {
       resultList.add(project);
     }
     ProjectList projectList = new ProjectList();
-    projectList.setNumberResults(numResults);
     for (int i = inputOffset; i < Math.min(resultList.size(),inputOffset + inputLimit); i++) {
       projectList.getList().add(resultList.get(i));
     }
@@ -1417,7 +1423,7 @@ public class FacetController {
       return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
     } else {
       String query =
-              "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
+              "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
                       + " VALUES ?s0 { <"
                       + id
                       + "> } "
@@ -1475,8 +1481,9 @@ public class FacetController {
                       + language
                       + "\") } "
                       + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P889> ?beneficiaryLink . "
-                      + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
-                      + "             FILTER(LANG(?beneficiaryLabel) = \"" + language + "\" || LANG(?beneficiaryLabel) = \"en\" || LANG(?beneficiaryLabel) = \"fr\" || LANG(?beneficiaryLabel) = \"it\" || LANG(?beneficiaryLabel) = \"pl\" || LANG(?beneficiaryLabel) = \"cs\" || LANG(?beneficiaryLabel) = \"da\" )}"
+                      + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabelRight . "
+                      + "             FILTER(LANG(?beneficiaryLabelRight) = \"" + language + "\" ) } "
+                      + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . }"
                       + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID .  "
                       + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
                       + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
@@ -1693,7 +1700,11 @@ public class FacetController {
           if (found == false) {
             JSONObject beneficary = new JSONObject();
             beneficary.put("link", ben);
-            if (querySolution.getBinding("beneficiaryLabel") != null) {
+            if (querySolution.getBinding("beneficiaryLabelRight") != null) {
+              String label =
+                      ((Literal) querySolution.getBinding("beneficiaryLabelRight").getValue()).stringValue();
+              beneficary.put("beneficiaryLabel", label);
+            } else if (querySolution.getBinding("beneficiaryLabel") != null){
               String label =
                       ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).stringValue();
               beneficary.put("beneficiaryLabel", label);
@@ -1754,6 +1765,7 @@ public class FacetController {
           }
           result.put("regionText", regionText);
         } else {
+
           result.put("regionText", (String) result.get("countryLabel"));
         }
 
@@ -1871,7 +1883,8 @@ public class FacetController {
   }
 
   @GetMapping(value = "/facet/eu/beneficiary", produces = "application/json")
-  public ResponseEntity euBenfeciaryId(@RequestParam(value = "id") String id) throws Exception {
+  public ResponseEntity euBenfeciaryId(@RequestParam(value = "id") String id,
+                                       @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
 
     String publicSparqlEndpoint = "https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql";
     String queryCheck = "ask {\n" +
@@ -1884,19 +1897,20 @@ public class FacetController {
       result.put("message", "Bad Request - beneficiary ID not found");
       return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
     } else {
-      String query1 = "select ?s0 ?country ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates where {\n"
+      String query1 = "select ?s0 ?country ?countryCode ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates where {\n"
               + " VALUES ?s0 { <"
               + id
               + "> } " +
               "  ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . \n" +
               "  ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country .  \n" +
+              "   ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . \n "+
               "  FILTER((LANG(?beneficiaryLabel) = \"en\" && ?country = <https://linkedopendata.eu/entity/Q2> )\n" +
               "          || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q20> )  \n" +
               "              || (LANG(?beneficiaryLabel) = \"it\" && ?country = <https://linkedopendata.eu/entity/Q15> ) \n" +
               "              || (LANG(?beneficiaryLabel) = \"pl\" && ?country = <https://linkedopendata.eu/entity/Q13> ) \n" +
               "              || (LANG(?beneficiaryLabel) = \"cs\" && ?country = <https://linkedopendata.eu/entity/Q25> ) \n" +
               "              || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) ) \n" +
-              "  OPTIONAL {  ?s0 <http://purl.org/dc/terms/description> ?description .  FILTER (lang(?description)=\"en\") }\n" +
+              "  OPTIONAL {  ?s0 <http://schema.org/description> ?description .  FILTER (lang(?description)=\""+language+"\") }\n" +
               "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P67> ?website .}\n" +
               "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P147> ?image .}\n" +
               "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P537> ?logo .}\n" +
@@ -1908,10 +1922,10 @@ public class FacetController {
               id +
               "> } " +
               "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
-              "  ?project <https://linkedopendata.eu/prop/direct/P474> ?budget .\n" +
-              "  ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .\n" +
-              "  ?project <https://linkedopendata.eu/prop/direct/P20> ?startTime .\n" +
-              "  ?project <https://linkedopendata.eu/prop/direct/P33> ?endTime .\n" +
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . }\n" +
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . }\n" +
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
               "  \n" +
               "} group by ?s0";
 
@@ -1920,13 +1934,13 @@ public class FacetController {
               id +
               "> } " +
               "  ?project <http://www.w3.org/2000/01/rdf-schema#label> ?label .\n" +
-              "  FILTER (lang(?label)=\"en\") .\n" +
+              "  FILTER (lang(?label)=\""+language+"\") .\n" +
               "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
-              "  ?project <https://linkedopendata.eu/prop/direct/P474> ?budget .\n" +
-              "  ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .\n" +
-              "  ?project <https://linkedopendata.eu/prop/direct/P20> ?startTime .\n" +
-              "  ?project <https://linkedopendata.eu/prop/direct/P33> ?endTime .\n" +
-              "}";
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . } \n" +
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
+              "} order by DESC(?euBudget) limit 100 ";
       TupleQueryResult resultSet1 = executeAndCacheQuery(publicSparqlEndpoint, query1, 30);
       JSONObject result = new JSONObject();
       result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
@@ -1935,17 +1949,26 @@ public class FacetController {
         if (querySolution.getBinding("country") != null) {
           result.put("country", querySolution.getBinding("country").getValue().stringValue());
         }
+        if (querySolution.getBinding("countryCode") != null) {
+          result.put("countryCode", querySolution.getBinding("countryCode").getValue().stringValue());
+        }
         if (querySolution.getBinding("beneficiaryLabel") != null) {
           result.put("beneficiaryLabel", ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).getLabel());
         }
         if (querySolution.getBinding("description") != null) {
           result.put("description", querySolution.getBinding("description").getValue().stringValue());
+        } else {
+          result.put("description", "");
         }
         if (querySolution.getBinding("website") != null) {
           result.put("website", querySolution.getBinding("website").getValue().stringValue());
+        } else {
+          result.put("website", "");
         }
-        if (querySolution.getBinding("description") != null) {
-          result.put("description", querySolution.getBinding("description").getValue().stringValue());
+        if (querySolution.getBinding("coordinates") != null) {
+          result.put("coordinates", querySolution.getBinding("coordinates").getValue().stringValue());
+        } else {
+          result.put("coordinates", "");
         }
         JSONArray images = new JSONArray();
         if (querySolution.getBinding("image") != null) {
@@ -1960,10 +1983,10 @@ public class FacetController {
       while (resultSet2.hasNext()) {
         BindingSet querySolution = resultSet2.next();
         if (querySolution.getBinding("totalEuBudget") != null) {
-          result.put("totalEuBudget", ((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue());
+          result.put("totalEuBudget", df2.format(((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue()));
         }
         if (querySolution.getBinding("totalBudget") != null) {
-          result.put("totalBudget", ((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue());
+          result.put("totalBudget", df2.format(((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue()));
         }
         if (querySolution.getBinding("minStartTime") != null) {
           result.put("minStartTime", querySolution.getBinding("minStartTime").getValue().stringValue().split("T")[0]);
@@ -1988,10 +2011,10 @@ public class FacetController {
             project.put("label", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
           }
           if (querySolution.getBinding("euBudget") != null) {
-            project.put("euBudget", ((Literal) querySolution.getBinding("euBudget").getValue()).doubleValue());
+            project.put("euBudget", df2.format(((Literal) querySolution.getBinding("euBudget").getValue()).doubleValue()));
           }
           if (querySolution.getBinding("budget") != null) {
-            project.put("budget", ((Literal) querySolution.getBinding("budget").getValue()).doubleValue());
+            project.put("budget", df2.format(((Literal) querySolution.getBinding("budget").getValue()).doubleValue()));
           }
           if (querySolution.getBinding("startTime") != null) {
             project.put("startTime", querySolution.getBinding("startTime").getValue().stringValue().split("T")[0]);
@@ -2035,6 +2058,15 @@ public class FacetController {
     }
     String search = "";
     if (keywords != null) {
+      if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
+        String[] words = keywords.split(" ");
+        StringBuilder keywordsBuilder = new StringBuilder();
+        for (int i = 0; i < words.length - 1; i++) {
+          keywordsBuilder.append(words[i]).append(" AND ");
+        }
+        keywordsBuilder.append(words[words.length - 1]);
+        keywords = keywordsBuilder.toString();
+      }
       search +=
               "?beneficiary <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                       + "<http://www.openrdf.org/contrib/lucenesail#query> \""
