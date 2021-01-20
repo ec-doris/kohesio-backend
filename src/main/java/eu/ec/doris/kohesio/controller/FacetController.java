@@ -2398,13 +2398,19 @@ public class FacetController {
       }
     }
     for (String country : countries) {
-        JSONArray regions = facetEuRegions(country, "en");
-        regions.add(null);
+      JSONArray regions = new JSONArray();
+        if(country != null) {
+          regions = facetEuRegions(country, "en");
+        }
+      regions.add(null);
         for (Object region : regions) {
           JSONArray funds = facetEuFunds("en");
           funds.add(null);
           for (Object fund : funds) {
-            JSONArray programs = facetEuPrograms("en", country);
+            JSONArray programs = new JSONArray();
+            if(country != null) {
+              programs = facetEuPrograms("en", country);
+            }
             programs.add(null);
             for (Object program : programs) {
               String r = null;
