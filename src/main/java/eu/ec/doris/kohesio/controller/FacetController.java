@@ -384,6 +384,7 @@ public class FacetController {
       while (resultSet.hasNext()) {
         BindingSet querySolution = resultSet.next();
         jsonValues.get(i).put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
+        System.out.println(querySolution.getBinding("instanceLabel").getValue().stringValue());
       }
     }
 
@@ -2332,7 +2333,7 @@ public class FacetController {
   @PostMapping(value = "/facet/eu/cache/generate", produces = "application/json")
   public void generateCache() throws Exception {
     System.out.println("Start recoursive");
-    recursiveMap(null);
+    //recursiveMap(null);
     System.out.println("end recoursive");
     String[] countries = {
             null,
@@ -2397,7 +2398,6 @@ public class FacetController {
       }
     }
     for (String country : countries) {
-      if (country != null) {
         JSONArray regions = facetEuRegions(country, "en");
         regions.add(null);
         for (Object region : regions) {
@@ -2424,12 +2424,25 @@ public class FacetController {
                 euSearchBeneficiaries(
                         "en", null, country, r, null, null, f, p, b, null, null, 1000, 0, null);
               }
-              euSearchProjectMap("en", null, country, null, f, p, null, null, null, null, null, null, null, null, null, null, null, null, r, r, null, 0, 400, null);
+              JSONArray policies = facetPolicyObjective("en");
+              for (Object policy: policies) {
+                String polic = null;
+                if(policy != null)
+                  polic = ((JSONObject) policy).get("instance").toString();
+                euSearchProject("en", null, country, null, null, null,
+                null, polic, null, null,
+                null, null, null, null, null,
+                null, null, null, null, null, null, null,
+                null, 1000, 1, null);
+                euSearchProjectMap("en", null, country, null, f, p, null,
+                        polic, null, null, null,
+                        null, null, null, null,
+                        null, null, null, r, r, null, 0, 400, null);
+              }
               System.out.println("Done");
             }
           }
         }
-      }
     }
   }
 
