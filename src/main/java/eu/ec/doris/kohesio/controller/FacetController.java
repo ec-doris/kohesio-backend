@@ -384,6 +384,7 @@ public class FacetController {
       while (resultSet.hasNext()) {
         BindingSet querySolution = resultSet.next();
         jsonValues.get(i).put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
+
       }
     }
 
@@ -796,6 +797,7 @@ public class FacetController {
     for (int i = inputOffset; i < Math.min(resultList.size(),inputOffset + inputLimit); i++) {
       projectList.getList().add(resultList.get(i));
     }
+    projectList.setNumberResults(numResults);
     return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
   }
 
@@ -2332,7 +2334,7 @@ public class FacetController {
   @PostMapping(value = "/facet/eu/cache/generate", produces = "application/json")
   public void generateCache() throws Exception {
     System.out.println("Start recoursive");
-    recursiveMap(null);
+    //recursiveMap(null);
     System.out.println("end recoursive");
     String[] countries = {
             null,
@@ -2344,67 +2346,72 @@ public class FacetController {
             "https://linkedopendata.eu/entity/Q12",
     };
 
-    for (String country : countries) {
-      Boolean[] orderStartDate = {null, true, false};
-      for (Boolean b : orderStartDate) {
-        euSearchProject("en", null, country, null, null, null,
-                null, null, null, null,
-                null, null, null, null,
-                null, null, b, null, null, null,
-                null, null, null, 1000, 1, null);
-      }
-      Boolean[] orderEndDate = {null, true, false};
-      for (Boolean b : orderEndDate) {
-        euSearchProject("en", null, country, null, null, null,
-                null, null, null, null,
-                null, null, null, null,
-                null, null, null, b, null, null,
-                null, null, null, 1000, 1, null);
-      }
-      Boolean[] orderEuBudget = {null, true, false};
-      for (Boolean b : orderEuBudget) {
-        euSearchProject("en", null, country, null, null, null,
-                null, null, null, null,
-                null, null, null, null, null,
-                null, null, null, b, null, null,
-                null, null, 1000, 1, null);
-      }
-      Boolean[] orderTotalBudget = {null, true, false};
-      for (Boolean b : orderTotalBudget) {
-        euSearchProject("en", null, country, null, null, null,
-                null, null, null, null,
-                null, null, null, null, null,
-                null, null, null, null, b, null, null,
-                null, 1000, 1, null);
-      }
-    }
+//    for (String country : countries) {
+//      Boolean[] orderStartDate = {null, true, false};
+//      for (Boolean b : orderStartDate) {
+//        euSearchProject("en", null, country, null, null, null,
+//                null, null, null, null,
+//                null, null, null, null,
+//                null, null, b, null, null, null,
+//                null, null, null, 1000, 1, null);
+//      }
+//      Boolean[] orderEndDate = {null, true, false};
+//      for (Boolean b : orderEndDate) {
+//        euSearchProject("en", null, country, null, null, null,
+//                null, null, null, null,
+//                null, null, null, null,
+//                null, null, null, b, null, null,
+//                null, null, null, 1000, 1, null);
+//      }
+//      Boolean[] orderEuBudget = {null, true, false};
+//      for (Boolean b : orderEuBudget) {
+//        euSearchProject("en", null, country, null, null, null,
+//                null, null, null, null,
+//                null, null, null, null, null,
+//                null, null, null, b, null, null,
+//                null, null, 1000, 1, null);
+//      }
+//      Boolean[] orderTotalBudget = {null, true, false};
+//      for (Boolean b : orderTotalBudget) {
+//        euSearchProject("en", null, country, null, null, null,
+//                null, null, null, null,
+//                null, null, null, null, null,
+//                null, null, null, null, b, null, null,
+//                null, 1000, 1, null);
+//      }
+//    }
 
+//    for (String country : countries) {
+//      Boolean[] orderEuBudget = {null, true, false};
+//      for (Boolean b : orderEuBudget) {
+//        euSearchBeneficiaries("en", null, country, null, null, null, null,
+//                null, b, false, false, 1000, 1, null);
+//      }
+//      Boolean[] orderTotalBudget = {null, true, false};
+//      for (Boolean b : orderTotalBudget) {
+//        euSearchBeneficiaries("en", null, country, null, null, null, null,
+//                null, null, b, null, 1000, 1, null);
+//      }
+//      Boolean[] orderNumProjects = {null, true, false};
+//      for (Boolean b : orderNumProjects) {
+//        euSearchBeneficiaries("en", null, country, null, null, null, null,
+//                null, null, null, b, 1000, 1, null);
+//      }
+//    }
     for (String country : countries) {
-      Boolean[] orderEuBudget = {null, true, false};
-      for (Boolean b : orderEuBudget) {
-        euSearchBeneficiaries("en", null, country, null, null, null, null,
-                null, b, false, false, 1000, 1, null);
-      }
-      Boolean[] orderTotalBudget = {null, true, false};
-      for (Boolean b : orderTotalBudget) {
-        euSearchBeneficiaries("en", null, country, null, null, null, null,
-                null, null, b, null, 1000, 1, null);
-      }
-      Boolean[] orderNumProjects = {null, true, false};
-      for (Boolean b : orderNumProjects) {
-        euSearchBeneficiaries("en", null, country, null, null, null, null,
-                null, null, null, b, 1000, 1, null);
-      }
-    }
-    for (String country : countries) {
-      if (country != null) {
-        JSONArray regions = facetEuRegions(country, "en");
-        regions.add(null);
+      JSONArray regions = new JSONArray();
+        if(country != null) {
+          regions = facetEuRegions(country, "en");
+        }
+      regions.add(null);
         for (Object region : regions) {
           JSONArray funds = facetEuFunds("en");
           funds.add(null);
           for (Object fund : funds) {
-            JSONArray programs = facetEuPrograms("en", country);
+            JSONArray programs = new JSONArray();
+            if(country != null) {
+              programs = facetEuPrograms("en", country);
+            }
             programs.add(null);
             for (Object program : programs) {
               String r = null;
@@ -2420,16 +2427,29 @@ public class FacetController {
                 p = ((JSONObject) program).get("instance").toString();
               }
               Boolean[] orderEuBudget = {null, true, false};
-              for (Boolean b : orderEuBudget) {
-                euSearchBeneficiaries(
-                        "en", null, country, r, null, null, f, p, b, null, null, 1000, 0, null);
+//              for (Boolean b : orderEuBudget) {
+//                euSearchBeneficiaries(
+//                        "en", null, country, r, null, null, f, p, b, null, null, 1000, 0, null);
+//              }
+              JSONArray policies = facetPolicyObjective("en");
+              for (Object policy: policies) {
+                String polic = null;
+                if(policy != null)
+                  polic = ((JSONObject) policy).get("instance").toString();
+//                euSearchProject("en", null, country, null, null, null,
+//                null, polic, null, null,
+//                null, null, null, null, null,
+//                null, null, null, null, null, null, null,
+//                null, 1000, 1, null);
+                euSearchProjectMap("en", null, country, null, f, p, null,
+                        polic, null, null, null,
+                        null, null, null, null,
+                        null, null, null, r, r, null, 0, 400, null);
               }
-              euSearchProjectMap("en", null, country, null, f, p, null, null, null, null, null, null, null, null, null, null, null, null, r, r, null, 0, 400, null);
               System.out.println("Done");
             }
           }
         }
-      }
     }
   }
 
