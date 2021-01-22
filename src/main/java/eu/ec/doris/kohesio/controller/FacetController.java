@@ -589,7 +589,7 @@ public class FacetController {
 
     int inputOffset = offset;
     int inputLimit = limit;
-    if (offset <= 1000) {
+    if (offset <= 990) {
       offset = 0;
       limit = 1000;
     }
@@ -794,8 +794,12 @@ public class FacetController {
       resultList.add(project);
     }
     ProjectList projectList = new ProjectList();
-    for (int i = inputOffset; i < Math.min(resultList.size(),inputOffset + inputLimit); i++) {
-      projectList.getList().add(resultList.get(i));
+    if(offset <= 990) {
+      for (int i = inputOffset; i < Math.min(resultList.size(), inputOffset + inputLimit); i++) {
+        projectList.getList().add(resultList.get(i));
+      }
+    }else{
+      projectList.setList(resultList);
     }
     projectList.setNumberResults(numResults);
     return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
@@ -2054,7 +2058,7 @@ public class FacetController {
 
     int inputOffset = offset;
     int inputLimit = limit;
-    if (offset <= 1000) {
+    if (offset <= 990) {
       offset = 0;
       limit = 1000;
     }
@@ -2169,7 +2173,7 @@ public class FacetController {
     logger.info(query);
     TupleQueryResult resultSet = executeAndCacheQuery(sparqlEndpoint, query, 30);
 
-    List<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
+    ArrayList<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
     if (resultSet != null) {
       Beneficiary beneficary = new Beneficiary();
       String previewsKey = "";
@@ -2234,8 +2238,12 @@ public class FacetController {
     }
     BeneficiaryList finalRes = new BeneficiaryList();
     finalRes.setNumberResults(numResults);
-    for (int i = inputOffset; i < Math.min(beneficiaries.size(),inputOffset + inputLimit); i++) {
-      finalRes.getList().add(beneficiaries.get(i));
+    if(offset <= 990) {
+      for (int i = inputOffset; i < Math.min(beneficiaries.size(), inputOffset + inputLimit); i++) {
+        finalRes.getList().add(beneficiaries.get(i));
+      }
+    }else{
+      finalRes.setList(beneficiaries);
     }
     return new ResponseEntity<BeneficiaryList>(finalRes, HttpStatus.OK);
   }
