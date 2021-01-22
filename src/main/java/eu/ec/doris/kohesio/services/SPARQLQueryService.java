@@ -1,6 +1,10 @@
 package eu.ec.doris.kohesio.services;
 
 import org.eclipse.rdf4j.query.*;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
+import org.eclipse.rdf4j.query.QueryResults;
+import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.query.TupleQueryResultHandler;
 import org.eclipse.rdf4j.query.impl.TupleQueryResultBuilder;
 import org.eclipse.rdf4j.query.resultio.QueryResultParseException;
 import org.eclipse.rdf4j.query.resultio.sparqljson.SPARQLResultsJSONParser;
@@ -57,6 +61,7 @@ public class SPARQLQueryService {
         // execute and cache the query if not found before
         Map<String, String> additionalHttpHeaders = new HashMap();
         additionalHttpHeaders.put("timeout", String.valueOf(timeout));
+
         SPARQLRepository repo = new SPARQLRepository(sparqlEndpoint);
         repo.setAdditionalHttpHeaders(additionalHttpHeaders);
 
@@ -75,12 +80,12 @@ public class SPARQLQueryService {
             sparqlResultsJSONParser.parseQueryResult(
                     new FileInputStream(location + "/facet/cache/" + query.hashCode()));
             long end = System.nanoTime();
-            logger.info("Was NOT cached " + (end - start) / 1000000);
+            logger.info("Was NOT cached "+(end - start)/1000000);
             return tupleQueryResultHandler.getQueryResult();
-        } catch (QueryEvaluationException e) {
-            logger.error("Malformed query [" + query + "]");
-        } catch (QueryResultParseException e) {
-            System.out.println("To heavy timeout " + query + " --- " + timeout);
+        } catch(QueryEvaluationException e){
+            logger.error("Malformed query ["+query+"]");
+        } catch (QueryResultParseException e){
+            System.out.println("To heavy timeout "+query+" --- "+timeout);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -88,7 +93,6 @@ public class SPARQLQueryService {
         }
         return null;
     }
-
     public boolean executeBooleanQuery(String sparqlEndpoint, String query, int timeout) {
         Map<String, String> additionalHttpHeaders = new HashMap();
         additionalHttpHeaders.put("timeout", String.valueOf(timeout));

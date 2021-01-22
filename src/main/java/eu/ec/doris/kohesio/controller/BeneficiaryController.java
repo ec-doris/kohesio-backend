@@ -1,7 +1,7 @@
 package eu.ec.doris.kohesio.controller;
 
-import eu.ec.doris.kohesio.controller.payload.Beneficiary;
-import eu.ec.doris.kohesio.controller.payload.BeneficiaryList;
+import eu.ec.doris.kohesio.payload.Beneficiary;
+import eu.ec.doris.kohesio.payload.BeneficiaryList;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;

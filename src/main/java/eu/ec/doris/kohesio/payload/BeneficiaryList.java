@@ -1,4 +1,4 @@
-package eu.ec.doris.kohesio.controller.payload;
+package eu.ec.doris.kohesio.payload;
 
 import java.util.ArrayList;
 

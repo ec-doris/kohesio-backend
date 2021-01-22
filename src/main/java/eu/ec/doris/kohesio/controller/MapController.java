@@ -1,9 +1,10 @@
 package eu.ec.doris.kohesio.controller;
 
-import eu.ec.doris.kohesio.controller.geoIp.GeoIp;
-import eu.ec.doris.kohesio.controller.geoIp.HttpReqRespUtils;
-import eu.ec.doris.kohesio.controller.payload.Nut;
-import eu.ec.doris.kohesio.controller.payload.NutsRegion;
+import eu.ec.doris.kohesio.geoIp.GeoIp;
+import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
+import eu.ec.doris.kohesio.payload.Nut;
+import eu.ec.doris.kohesio.payload.NutsRegion;
+import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;

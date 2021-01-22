@@ -1,36 +1,36 @@
 package eu.ec.doris.kohesio.controller;
 
-import eu.ec.doris.kohesio.controller.geoIp.GeoIp;
-import eu.ec.doris.kohesio.controller.geoIp.HttpReqRespUtils;
+
+import eu.ec.doris.kohesio.geoIp.GeoIp;
+import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.BufferedReader;
-import java.io.File;
+
 import java.io.InputStream;
 import java.io.InputStreamReader;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;

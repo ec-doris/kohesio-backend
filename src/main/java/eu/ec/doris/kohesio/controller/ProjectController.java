@@ -1,8 +1,8 @@
 package eu.ec.doris.kohesio.controller;
 
-import eu.ec.doris.kohesio.controller.payload.NutsRegion;
-import eu.ec.doris.kohesio.controller.payload.Project;
-import eu.ec.doris.kohesio.controller.payload.ProjectList;
+import eu.ec.doris.kohesio.payload.NutsRegion;
+import eu.ec.doris.kohesio.payload.Project;
+import eu.ec.doris.kohesio.payload.ProjectList;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;

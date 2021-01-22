@@ -1,4 +1,4 @@
-package eu.ec.doris.kohesio.controller.config;
+package eu.ec.doris.kohesio.config;
 
 import com.google.common.base.Predicates;
 
