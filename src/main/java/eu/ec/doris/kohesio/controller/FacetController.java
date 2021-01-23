@@ -56,6 +56,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
@@ -1997,7 +1998,8 @@ public class FacetController {
           String wikipedia =  querySolution.getBinding("wikipedia").getValue().stringValue();
           result.put("wikipedia", wikipedia);
           // if wikipedia link extract the description from wikipedia
-          String url = "https://" + language + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&origin=*&explaintext=&titles=" + URLEncoder.encode(wikipedia.replace("https://" + language + ".wikipedia.org/wiki/", ""), StandardCharsets.UTF_8.toString());
+          String url = "https://" + language + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&origin=*&explaintext=&titles=" + URLDecoder.decode(wikipedia.replace("https://" + language + ".wikipedia.org/wiki/", ""), StandardCharsets.UTF_8.toString());
+
           System.out.println(url);
           RestTemplate restTemplate = new RestTemplate();
           ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
@@ -2005,7 +2007,9 @@ public class FacetController {
             System.out.println(response.getBody());
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(response.getBody());
-            result.put("description", root.findValue("extract")+" (from Wikipedia)");
+            if (root.findValue("extract")!=null){
+              result.put("description", root.findValue("extract")+" (from Wikipedia)");
+            }
           }
         } else {
           result.put("wikipedia", "");
