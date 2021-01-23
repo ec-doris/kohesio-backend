@@ -1,5 +1,8 @@
 package eu.ec.doris.kohesio.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eu.ec.doris.kohesio.controller.geoIp.GeoIp;
 import eu.ec.doris.kohesio.controller.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.controller.payload.Beneficiary;
@@ -42,6 +45,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -52,6 +56,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -1895,11 +1901,18 @@ public class FacetController {
 
     boolean resultAsk = executeBooleanQuery(publicSparqlEndpoint, queryCheck, 2);
     if (!resultAsk) {
-      JSONObject result = new JSONObject();
-      result.put("message", "Bad Request - beneficiary ID not found");
-      return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
-    } else {
-      String query1 = "select ?s0 ?country ?countryCode ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates where {\n"
+      String queryCheckRedirect = " select ?redirect where { "+
+              " <https://linkedopendata.eu/entity/Q257756> <http://www.w3.org/2002/07/owl#sameAs> ?redirect } ";
+      TupleQueryResult resultSet1 = executeAndCacheQuery(publicSparqlEndpoint, queryCheckRedirect, 3);
+      if (resultSet1.hasNext()){
+        return euBenfeciaryId(resultSet1.next().getBinding("redirect").getValue().stringValue(),language);
+      } else {
+        JSONObject result = new JSONObject();
+        result.put("message", "Bad Request - beneficiary ID not found");
+        return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
+      }
+    }
+      String query1 = "select ?s0 ?country ?countryCode ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates ?wikipedia where {\n"
               + " VALUES ?s0 { <"
               + id
               + "> } " +
@@ -1917,6 +1930,10 @@ public class FacetController {
               "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P147> ?image .}\n" +
               "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P537> ?logo .}\n" +
               "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .}\n" +
+              "  OPTIONAL{ " +
+              "      ?wikipedia schema:about ?s0 ; " +
+              "                 schema:inLanguage \"" + language + "\" ;" +
+              "                 schema:isPartOf <https://" + language + ".wikipedia.org/> ." + "}\n " +
               "}";
 
       String query2 = "select ?s0 (sum(?euBudget) as ?totalEuBudget) (sum(?budget) as ?totalBudget) (count(?project) as ?numberProjects) (min(?startTime) as ?minStartTime) (max(?endTime) as ?maxEndTime) where {\n" +
@@ -1971,6 +1988,23 @@ public class FacetController {
           result.put("coordinates", querySolution.getBinding("coordinates").getValue().stringValue());
         } else {
           result.put("coordinates", "");
+        }
+        if (querySolution.getBinding("wikipedia") != null) {
+          String wikipedia =  querySolution.getBinding("wikipedia").getValue().stringValue();
+          result.put("wikipedia", wikipedia);
+          // if wikipedia link extract the description from wikipedia
+          String url = "https://" + language + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&origin=*&explaintext=&titles=" + URLEncoder.encode(wikipedia.replace("https://" + language + ".wikipedia.org/wiki/", ""), StandardCharsets.UTF_8.toString());
+          System.out.println(url);
+          RestTemplate restTemplate = new RestTemplate();
+          ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+          if (response.getStatusCode().equals(HttpStatus.OK)){
+            System.out.println(response.getBody());
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(response.getBody());
+            result.put("description", root.findValue("extract")+" (from Wikipedia)");
+          }
+        } else {
+          result.put("wikipedia", "");
         }
         JSONArray images = new JSONArray();
         if (querySolution.getBinding("image") != null) {
@@ -2029,7 +2063,7 @@ public class FacetController {
       }
       result.put("projects", projects);
       return new ResponseEntity(result, HttpStatus.OK);
-    }
+
   }
 
   @GetMapping(value = "/facet/eu/search/beneficiaries", produces = "application/json")
