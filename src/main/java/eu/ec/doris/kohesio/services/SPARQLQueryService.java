@@ -25,7 +25,7 @@ public class SPARQLQueryService {
     private static final Logger logger = LoggerFactory.getLogger(SPARQLQueryService.class);
 
     @Value("${kohesio.directory}")
-    String location = "cache_dir";
+    String location;
 
     public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout) throws Exception {
         return this.executeAndCacheQuery(sparqlEndpoint, query, timeout, true);
