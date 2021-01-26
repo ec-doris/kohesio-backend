@@ -14,12 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@Service
 public class SPARQLQueryService {
 
     private static final Logger logger = LoggerFactory.getLogger(SPARQLQueryService.class);

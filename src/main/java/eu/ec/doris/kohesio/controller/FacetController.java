@@ -40,7 +40,8 @@ import javax.servlet.http.HttpServletResponse;
 public class FacetController {
   private static final Logger logger = LoggerFactory.getLogger(FacetController.class);
 
-  private static final SPARQLQueryService sparqlQueryService = new SPARQLQueryService();
+  @Autowired
+  SPARQLQueryService sparqlQueryService;
 
   @Value("${kohesio.directory}")
   String location;

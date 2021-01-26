@@ -32,7 +32,9 @@ public class MapController {
 
     private static final Logger logger = LoggerFactory.getLogger(MapController.class);
 
-    private static final SPARQLQueryService sparqlQueryService = new SPARQLQueryService();
+    @Autowired
+    SPARQLQueryService sparqlQueryService;
+
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
 

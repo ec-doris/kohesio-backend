@@ -21,6 +21,7 @@ import org.json.simple.JSONObject;
 import org.mapstruct.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -46,7 +47,8 @@ import java.util.List;
 public class BeneficiaryController {
     private static final Logger logger = LoggerFactory.getLogger(BeneficiaryController.class);
 
-    private static final SPARQLQueryService sparqlQueryService = new SPARQLQueryService();
+    @Autowired
+    SPARQLQueryService sparqlQueryService;
 
     private static DecimalFormat df2 = new DecimalFormat("0.00");
 

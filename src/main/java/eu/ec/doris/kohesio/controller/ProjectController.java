@@ -20,6 +20,7 @@ import org.json.simple.JSONObject;
 import org.mapstruct.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -42,7 +43,9 @@ public class ProjectController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProjectController.class);
 
-    private static final SPARQLQueryService sparqlQueryService = new SPARQLQueryService();
+    @Autowired
+    SPARQLQueryService sparqlQueryService;
+
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
 
