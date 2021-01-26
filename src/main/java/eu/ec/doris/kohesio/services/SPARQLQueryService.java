@@ -35,6 +35,8 @@ public class SPARQLQueryService {
         logger.info(query);
         long start = System.nanoTime();
         File dir = new File(location + "/facet/cache/");
+
+        System.out.println("The directory of cache: "+dir.getAbsolutePath());
         if (!dir.exists()) {
             dir.mkdirs();
         }
