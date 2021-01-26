@@ -1,4 +1,4 @@
-package eu.ec.doris.kohesio.controller.geoIp;
+package eu.ec.doris.kohesio.geoIp;
 
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
@@ -7,15 +7,12 @@ import com.maxmind.geoip2.model.CityResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
-import org.springframework.util.SocketUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 @Component
 public class GeoIp {
