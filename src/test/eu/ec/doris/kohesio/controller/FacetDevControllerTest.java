@@ -25,10 +25,10 @@ public class FacetDevControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    @Test
-    void contextLoads() {
-        assertThat(facetController).isNotNull();
-    }
+//    @Test
+//    void contextLoads() {
+//        assertThat(facetController).isNotNull();
+//    }
 
 //    @Test
 //    public void greetingTest() throws Exception {
