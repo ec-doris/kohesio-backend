@@ -1954,7 +1954,7 @@ public class FacetController {
               "  \n" +
               "} group by ?s0";
 
-      String query3 = "select ?project ?label ?euBudget ?budget ?startTime ?endTime  where {\n" +
+      String query3 = "select ?project ?label ?euBudget ?budget ?startTime ?endTime ?fundLabel where {\n" +
               " VALUES ?s0 { <" +
               id +
               "> } " +
@@ -1965,6 +1965,8 @@ public class FacetController {
               "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
               "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . } \n" +
               "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
+              "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n " +
               "} order by DESC(?euBudget) limit 100 ";
       TupleQueryResult resultSet1 = executeAndCacheQuery(publicSparqlEndpoint, query1, 30);
       JSONObject result = new JSONObject();
@@ -2060,6 +2062,9 @@ public class FacetController {
           }
           if (querySolution.getBinding("budget") != null) {
             project.put("budget", df2.format(((Literal) querySolution.getBinding("budget").getValue()).doubleValue()));
+          }
+          if (querySolution.getBinding("fundLabel") != null) {
+            project.put("fundLabel", ((Literal) querySolution.getBinding("fundLabel").getValue()).getLabel());
           }
           if (querySolution.getBinding("startTime") != null) {
             project.put("startTime", querySolution.getBinding("startTime").getValue().stringValue().split("T")[0]);
