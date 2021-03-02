@@ -1950,6 +1950,7 @@ public class FacetController {
               "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . }\n" +
               "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . }\n" +
               "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
+              "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P838> ?endTime . } \n" +
               "  \n" +
               "} group by ?s0";
 
