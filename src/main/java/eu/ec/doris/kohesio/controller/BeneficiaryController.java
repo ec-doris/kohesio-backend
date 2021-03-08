@@ -411,19 +411,32 @@ public class BeneficiaryController {
                 }
 
                 if (querySolution.getBinding("totalEuBudget") != null) {
-                    beneficary.setEuBudget(
-                            String.valueOf(
-                                    Precision.round(
-                                            ((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue(),
-                                            2)));
+
+                    double val = ((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue();
+                    if(val != 0) {
+                        beneficary.setEuBudget(
+                                String.valueOf(
+                                        Precision.round(
+                                                val,
+                                                2)));
+                    }
+                    else{
+                        beneficary.setEuBudget("");
+                    }
                 }
 
                 if (querySolution.getBinding("totalBudget") != null) {
-                    beneficary.setBudget(
-                            String.valueOf(
-                                    Precision.round(
-                                            ((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue(),
-                                            2)));
+                    double val = ((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue();
+                    if(val != 0 ) {
+                        beneficary.setBudget(
+                                String.valueOf(
+                                        Precision.round(
+                                                val,
+                                                2)));
+                    }else{
+                        // meaning that there is no budgets for associated projects  ( sum(budgets) = 0  and budgets= [] )
+                        beneficary.setBudget("");
+                    }
                 }
 
                 if (querySolution.getBinding("link") != null) {
