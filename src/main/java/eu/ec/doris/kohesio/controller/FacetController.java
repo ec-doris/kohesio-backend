@@ -257,15 +257,21 @@ public class FacetController {
 
     String query =
             ""
-                    + "select ?instance ?instanceLabel ?id where { "
+                    + "select ?instance ?instanceLabel ?id ?areaOfIntervention ?areaOfInterventionLabel ?areaOfInterventionId where { "
                     + " ?instance <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q200769> . "
                     + " ?instance <https://linkedopendata.eu/prop/direct/P869>  ?id . "
+                    + " ?instance <https://linkedopendata.eu/prop/direct/P178453>  ?areaOfIntervention . "
+                    + " ?areaOfIntervention <https://linkedopendata.eu/prop/direct/P178454> ?areaOfInterventionId . "
+                    + " ?areaOfIntervention rdfs:label ?areaOfInterventionLabel . "
+                    + " FILTER (lang(?areaOfInterventionLabel)=\""
+                    + language
+                    + "\")"
                     + " ?instance rdfs:label ?instanceLabel . "
                     + " FILTER (lang(?instanceLabel)=\""
                     + language
                     + "\")"
                     + "} order by ?id";
-    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2);
     JSONArray result = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
@@ -273,6 +279,9 @@ public class FacetController {
       element.put("instance", querySolution.getBinding("instance").toString());
       element.put(
               "instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + querySolution.getBinding("instanceLabel").getValue().stringValue());
+      element.put("areaOfIntervention", querySolution.getBinding("areaOfIntervention").toString());
+      element.put("areaOfInterventionLabel", querySolution.getBinding("areaOfInterventionLabel").toString());
+      element.put("areaOfInterventionId", querySolution.getBinding("areaOfInterventionId").toString());
       result.add(element);
     }
     return result;
