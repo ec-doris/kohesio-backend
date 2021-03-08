@@ -309,8 +309,8 @@ public class BeneficiaryController {
         }
 
         search = search+ "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
-                + "   ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . "
-                + "   ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
+                + "   optional { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
+                + "   optional { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
 
         String queryCount = "select (count(?beneficiary) as ?c) where { " +
                 "{select ?beneficiary where {\n" +
