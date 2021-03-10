@@ -172,7 +172,8 @@ public class BeneficiaryController {
                     ObjectMapper mapper = new ObjectMapper();
                     JsonNode root = mapper.readTree(response.getBody());
                     if (root.findValue("extract")!=null){
-                        result.put("description", root.findValue("extract")+" (from Wikipedia)");
+                        String desc = root.findValue("extract").textValue();
+                        result.put("description", desc+" (from Wikipedia)");
                     }
                 }
             } else {
