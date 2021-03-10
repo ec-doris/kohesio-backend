@@ -748,9 +748,11 @@ public class ProjectController {
         logger.info("Number of results {}", numResults);
 
         query =
-                "SELECT ?s0 ?image where { "
+                "SELECT ?s0 ?image ?title where { "
                         + search
                         + " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. "
+                        + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?title. "
+
                         + " } limit "
                         + limit
                         + " offset "
@@ -765,6 +767,8 @@ public class ProjectController {
             JSONObject item = new JSONObject();
             item.put("item", querySolution.getBinding("s0").getValue().stringValue());
             item.put("image", querySolution.getBinding("image").getValue().stringValue());
+            item.put("title", querySolution.getBinding("title").getValue().stringValue());
+
             resultList.add(item);
         }
         JSONObject result = new JSONObject();
