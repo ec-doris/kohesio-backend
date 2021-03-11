@@ -737,8 +737,12 @@ public class ProjectController {
 
         //computing the number of results
         String searchCount = search;
-        searchCount += " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . ";
-        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + searchCount + "} ";
+        searchCount += " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?title. ";
+        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + searchCount
+                + " FILTER((LANG(?title)) = \""
+                + language
+                + "\") "
+                +"} ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 25);
         int numResults = 0;
         if (resultSet.hasNext()) {
@@ -752,7 +756,9 @@ public class ProjectController {
                         + search
                         + " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. "
                         + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?title. "
-
+                        + " FILTER((LANG(?title)) = \""
+                        + language
+                        + "\") "
                         + " } limit "
                         + limit
                         + " offset "
