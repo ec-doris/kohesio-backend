@@ -88,7 +88,7 @@ public class Beneficiary {
     }
 
     public void computeCofinancingRate(){
-        if (budget!= null && euBudget != null){
+        if (budget!= null && euBudget != null && !budget.equals("") && !euBudget.equals("")){
             cofinancingRate = Double.toString(Precision.round(Double.parseDouble(euBudget) / Double.parseDouble(budget) * 100,2));
         }
     }
