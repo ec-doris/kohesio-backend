@@ -278,10 +278,14 @@ public class FacetController {
       BindingSet querySolution = resultSet.next();
       JSONObject element = new JSONObject();
       element.put("instance", querySolution.getBinding("instance").toString());
+      String label = querySolution.getBinding("instanceLabel").getValue().stringValue();
+      if (label.length()>=200){
+        label = label.substring(0,200)+" ...";
+      }
       element.put(
-              "instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + querySolution.getBinding("instanceLabel").getValue().stringValue());
+              "instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + label);
       element.put("areaOfIntervention", querySolution.getBinding("areaOfIntervention").toString());
-      element.put("areaOfInterventionLabel", querySolution.getBinding("areaOfInterventionLabel").toString());
+      element.put("areaOfInterventionLabel", querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue());
       element.put("areaOfInterventionId", querySolution.getBinding("areaOfInterventionId").toString());
       result.add(element);
     }
