@@ -10,6 +10,6 @@ RUN mvn -f /home/app/pom.xml clean package
 # Package stage
 #
 FROM openjdk:11-jre-slim
-COPY --from=build /home/app/target/kohesio-backend-1.0-SNAPSHOT.jar /usr/local/lib/kohesio-backend.jar
+COPY --from=build /home/app/target/kohesio-backend-*-SNAPSHOT.jar /usr/local/lib/kohesio-backend.jar
 EXPOSE 5678
 ENTRYPOINT ["java","-jar","/usr/local/lib/kohesio-backend.jar"]
