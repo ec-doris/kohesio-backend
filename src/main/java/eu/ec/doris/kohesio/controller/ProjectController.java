@@ -1,5 +1,7 @@
 package eu.ec.doris.kohesio.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.ec.doris.kohesio.payload.NutsRegion;
 import eu.ec.doris.kohesio.payload.Project;
 import eu.ec.doris.kohesio.payload.ProjectList;
@@ -26,15 +28,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -552,6 +553,24 @@ public class ProjectController {
                     "    } " +
                     "    }";
         }
+        if(keywords != null && country == null && theme == null && fund == null && program == null && categoryOfIntervention == null
+        && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
+                budgetEUSmallerThen == null && startDateBefore == null &&
+                startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
+            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords);
+            if(projectsURIs.size() > 0) {
+                search = "";
+                search += "VALUES ?s0 {";
+                for (String uri : projectsURIs) {
+                    String uriStr = "<"+uri+">";
+                    search+= uriStr+" ";
+                }
+                search+="}";
+            }else{
+                System.out.println("Semantic search API returned empty result!!");
+            }
+            //search = "";
+        }
         search += " " + orderQuery;
         query =
                 "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
@@ -704,6 +723,33 @@ public class ProjectController {
         projectList.setNumberResults(numResults);
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
+
+    private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords) {
+        ArrayList<String> listProjectURIs = new ArrayList<>();
+        try {
+            String url = "http://54.74.15.102:5000/search?text=" + URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
+            System.out.println(url);
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            if (response.getStatusCode().equals(HttpStatus.OK)) {
+                System.out.println(response.getBody());
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode root = mapper.readTree(response.getBody());
+                if(root.findValue("results") != null){
+                    JsonNode results = root.findValue("results");
+                    for (int i = 0; i < results.size(); i++) {
+                        listProjectURIs.add(results.get(i).textValue());
+                    }
+                }
+            }else{
+                System.err.println("Error in HTTP request!");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return listProjectURIs;
+    }
+
 
 
     @GetMapping(value = "/facet/eu/search/project/image", produces = "application/json")
