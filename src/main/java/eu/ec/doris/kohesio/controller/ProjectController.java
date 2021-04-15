@@ -569,6 +569,7 @@ public class ProjectController {
             }else{
                 System.out.println("Semantic search API returned empty result!!");
             }
+            numResults = projectsURIs.size();
             //search = "";
         }
         search += " " + orderQuery;
