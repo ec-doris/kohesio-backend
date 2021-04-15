@@ -53,6 +53,9 @@ public class ProjectController {
     @Value("${kohesio.sparqlEndpointNuts}")
     String getSparqlEndpointNuts;
 
+    @Value("${kohesio.directory}")
+    String cacheDirectory;
+
     // Set this to allow browser requests from other websites
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
@@ -557,7 +560,9 @@ public class ProjectController {
         && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
                 budgetEUSmallerThen == null && startDateBefore == null &&
                 startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
-            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords);
+
+            // pass cache = false in order to stop caching the semantic search results
+            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords,true);
             if(projectsURIs.size() > 0) {
                 search = "";
                 search += "VALUES ?s0 {";
@@ -725,33 +730,64 @@ public class ProjectController {
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
 
-    private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords) {
+    private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords,boolean cache) {
+        String url = null;
+        try {
+            url = "http://54.74.15.102:5000/search?text=" + URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        String path = cacheDirectory+"/facet/semantic-search";
+        File dir = new File(path);
+
+        System.out.println("The directory of cache: "+dir.getAbsolutePath());
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        String query = url;
+        if(dir.exists() && cache){
+            try {
+                ArrayList<String> projectsURIs = new ArrayList<>();
+                Scanner input = new Scanner(new File(path+"/"+query.hashCode()));
+                while (input.hasNext()){
+                    String projectURI  = input.next();
+                    projectsURIs.add(projectURI);
+                }
+                return projectsURIs;
+            } catch (FileNotFoundException e) {
+                logger.error("Could not find cache file, probably not cahced");
+            }
+        }
+
         ArrayList<String> listProjectURIs = new ArrayList<>();
         try {
-            String url = "http://54.74.15.102:5000/search?text=" + URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
             System.out.println(url);
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             if (response.getStatusCode().equals(HttpStatus.OK)) {
+                FileOutputStream out = new FileOutputStream(path+"/"+ query.hashCode());
                 System.out.println(response.getBody());
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.getBody());
-                if(root.findValue("results") != null){
+                if (root.findValue("results") != null) {
                     JsonNode results = root.findValue("results");
                     for (int i = 0; i < results.size(); i++) {
-                        listProjectURIs.add(results.get(i).textValue());
+                        String projectURI = results.get(i).textValue();
+                        listProjectURIs.add(projectURI);
+                        projectURI+="\n";
+                        out.write(projectURI.getBytes());
                     }
                 }
-            }else{
+                out.close();
+            } else {
                 System.err.println("Error in HTTP request!");
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return listProjectURIs;
     }
-
-
 
     @GetMapping(value = "/facet/eu/search/project/image", produces = "application/json")
     public ResponseEntity euSearchProjectImage(
