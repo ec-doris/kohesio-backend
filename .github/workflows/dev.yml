@@ -26,6 +26,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Setup SSH
         run: |
+          mkdir -p ~/.ssh/
           echo "$SSH_PRIVATE_KEY" > ../secret-key.pem
           chmod 400 ../secret-key.pem
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
