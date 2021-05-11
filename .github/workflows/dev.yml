@@ -26,8 +26,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: Setup SSH
         run: |
+          mkdir -p ~/.ssh/
           echo "$SSH_PRIVATE_KEY" > ../secret-key.pem
-          chmod 400 secret-key.pem
+          chmod 400 ../secret-key.pem
           echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
         shell: bash
         env:
@@ -47,12 +48,12 @@ jobs:
       - name: Build with Maven
         run: mvn -P dev -B package --file pom.xml
       - name: copy using scp the packed jar
-        run: scp -i secret-key.pem target/kohesio-backend-1.0-SNAPSHOT-dev.jar  ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST_IP }}:/home/ubuntu/kohesio-backend-CI-dev/
+        run: scp -i ${{ github.workspace }}/../secret-key.pem target/kohesio-backend-1.0-SNAPSHOT-dev.jar  ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST_IP }}:/home/ubuntu/kohesio-backend-CI-dev/
       - name: copy using scp the config file
-        run: scp -i secret-key.pem src/main/resources/config/application-server-dev.properties ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST_IP }}:/home/ubuntu/kohesio-backend-CI-dev/
+        run: scp -i ${{ github.workspace }}/../secret-key.pem src/main/resources/config/application-server-dev.properties ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST_IP }}:/home/ubuntu/kohesio-backend-CI-dev/
       - name: kill old process
-        run: ssh -i secret-key.pem -o StrictHostKeyChecking=no ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST_IP }} 'pkill -f /home/ubuntu/kohesio-backend-CI-dev/kohesio-backend-1.0-SNAPSHOT-dev.jar' || true
+        run: ssh -i ${{ github.workspace }}/../secret-key.pem -o StrictHostKeyChecking=no ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST_IP }} 'pkill -f /home/ubuntu/kohesio-backend-CI-dev/kohesio-backend-1.0-SNAPSHOT-dev.jar' || true
       - name: run java jar
-        run: ssh -i secret-key.pem -o StrictHostKeyChecking=no ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST_IP }} "java -Dfile.encoding=UTF-8 -Dspring.config.location=file:///home/ubuntu/kohesio-backend-CI-dev/application-server-dev.properties -jar /home/ubuntu/kohesio-backend-CI-dev/kohesio-backend-1.0-SNAPSHOT-dev.jar  >> /home/ubuntu/kohesio-backend-CI-dev/log 2>&1 &"
+        run: ssh -i ${{ github.workspace }}/../secret-key.pem -o StrictHostKeyChecking=no ${{ secrets.DEV_USER }}@${{ secrets.DEV_HOST_IP }} "java -Dfile.encoding=UTF-8 -Dspring.config.location=file:///home/ubuntu/kohesio-backend-CI-dev/application-server-dev.properties -jar /home/ubuntu/kohesio-backend-CI-dev/kohesio-backend-1.0-SNAPSHOT-dev.jar  >> /home/ubuntu/kohesio-backend-CI-dev/log 2>&1 &"
       - name: clean ssh config
-        run: rm secret-key.pem
+        run: rm ${{ github.workspace }}/../secret-key.pem
