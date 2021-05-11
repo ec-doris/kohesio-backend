@@ -24,7 +24,7 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - name: Install SSH key
+      - name: Setup SSH
         run: |
           echo "$SSH_PRIVATE_KEY" > ../secret-key.pem
           chmod 400 secret-key.pem
