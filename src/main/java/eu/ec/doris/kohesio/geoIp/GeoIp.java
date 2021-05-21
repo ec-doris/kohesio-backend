@@ -20,9 +20,12 @@ public class GeoIp {
     DatabaseReader dbReader;
 
     GeoIp(@Value("${geoLite.path}") String geoLitePath) throws IOException {
-        InputStream input = new FileInputStream(new File(geoLitePath+"/GeoLite2-City.mmdb"));
-        dbReader = new DatabaseReader.Builder(input)
-                .build();
+        File geoIpFile = new File(geoLitePath+"/GeoLite2-City.mmdb");
+        if(geoIpFile.exists()) {
+            InputStream input = new FileInputStream(geoIpFile);
+            dbReader = new DatabaseReader.Builder(input)
+                    .build();
+        }
     }
 
     public Coordinates compute(String ip) throws IOException, GeoIp2Exception {

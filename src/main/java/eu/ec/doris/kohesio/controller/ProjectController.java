@@ -1,5 +1,7 @@
 package eu.ec.doris.kohesio.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.ec.doris.kohesio.payload.NutsRegion;
 import eu.ec.doris.kohesio.payload.Project;
 import eu.ec.doris.kohesio.payload.ProjectList;
@@ -26,15 +28,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -51,6 +52,9 @@ public class ProjectController {
 
     @Value("${kohesio.sparqlEndpointNuts}")
     String getSparqlEndpointNuts;
+
+    @Value("${kohesio.directory}")
+    String cacheDirectory;
 
     // Set this to allow browser requests from other websites
     @ModelAttribute
@@ -552,6 +556,27 @@ public class ProjectController {
                     "    } " +
                     "    }";
         }
+        if(keywords != null && country == null && theme == null && fund == null && program == null && categoryOfIntervention == null
+        && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
+                budgetEUSmallerThen == null && startDateBefore == null &&
+                startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
+
+            // pass cache = false in order to stop caching the semantic search results
+            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords,true);
+            if(projectsURIs.size() > 0) {
+                search = "";
+                search += "VALUES ?s0 {";
+                for (String uri : projectsURIs) {
+                    String uriStr = "<"+uri+">";
+                    search+= uriStr+" ";
+                }
+                search+="}";
+            }else{
+                System.out.println("Semantic search API returned empty result!!");
+            }
+            numResults = projectsURIs.size();
+            //search = "";
+        }
         search += " " + orderQuery;
         query =
                 "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
@@ -705,6 +730,64 @@ public class ProjectController {
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
 
+    private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords,boolean cache) {
+        String url = null;
+        try {
+            url = "http://54.74.15.102:5000/search?text=" + URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        String path = cacheDirectory+"/facet/semantic-search";
+        File dir = new File(path);
+
+        System.out.println("The directory of cache: "+dir.getAbsolutePath());
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+        String query = url;
+        if(dir.exists() && cache){
+            try {
+                ArrayList<String> projectsURIs = new ArrayList<>();
+                Scanner input = new Scanner(new File(path+"/"+query.hashCode()));
+                while (input.hasNext()){
+                    String projectURI  = input.next();
+                    projectsURIs.add(projectURI);
+                }
+                return projectsURIs;
+            } catch (FileNotFoundException e) {
+                logger.error("Could not find cache file, probably not cahced");
+            }
+        }
+
+        ArrayList<String> listProjectURIs = new ArrayList<>();
+        try {
+            System.out.println(url);
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            if (response.getStatusCode().equals(HttpStatus.OK)) {
+                FileOutputStream out = new FileOutputStream(path+"/"+ query.hashCode());
+                System.out.println(response.getBody());
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode root = mapper.readTree(response.getBody());
+                if (root.findValue("results") != null) {
+                    JsonNode results = root.findValue("results");
+                    for (int i = 0; i < results.size(); i++) {
+                        String projectURI = results.get(i).textValue();
+                        listProjectURIs.add(projectURI);
+                        projectURI+="\n";
+                        out.write(projectURI.getBytes());
+                    }
+                }
+                out.close();
+            } else {
+                System.err.println("Error in HTTP request!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return listProjectURIs;
+    }
 
     @GetMapping(value = "/facet/eu/search/project/image", produces = "application/json")
     public ResponseEntity euSearchProjectImage(
