@@ -47,6 +47,9 @@ public class MapController {
     @Autowired
     GeoIp geoIp;
 
+    @Autowired
+    FacetController facetController;
+
     HashMap<String, Nut> nutsRegion = null;
 
     @ModelAttribute
@@ -244,7 +247,7 @@ public class MapController {
                 optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . ";
                 //check if granularity region is a country, if yes the filter is not needed
                 boolean isCountry = false;
-                for (Object jsonObject : facetEuCountries("en")) {
+                for (Object jsonObject : facetController.facetEuCountries("en")) {
                     JSONObject o = (JSONObject) jsonObject;
                     if (granularityRegion.equals(o.get("instance"))) {
                         isCountry = true;
@@ -345,68 +348,6 @@ public class MapController {
         }
     }
 
-    @GetMapping(value = "/facet/eu/countries", produces = "application/json")
-    public JSONArray facetEuCountries(
-            @RequestParam(value = "language", defaultValue = "en") String language)
-            throws Exception {
-        List<JSONObject> jsonValues = new ArrayList<JSONObject>();
-        JSONObject element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q2");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q15");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q13");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q25");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q20");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q12");
-        jsonValues.add(element);
-
-        for (int i = 0; i < jsonValues.size(); i++) {
-            String query = "select ?instanceLabel where { "
-                    + " <" + jsonValues.get(i).get("instance") + "> rdfs:label ?instanceLabel . "
-                    + " FILTER (lang(?instanceLabel)=\""
-                    + language
-                    + "\")"
-                    + "}";
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
-            while (resultSet.hasNext()) {
-                BindingSet querySolution = resultSet.next();
-                jsonValues.get(i).put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
-
-            }
-        }
-
-        Collections.sort(jsonValues, new Comparator<JSONObject>() {
-            //You can change "Name" with "ID" if you want to sort by ID
-            private static final String KEY_NAME = "instanceLabel";
-
-            @Override
-            public int compare(JSONObject a, JSONObject b) {
-                String valA = new String();
-                String valB = new String();
-                valA = (String) a.get(KEY_NAME);
-                valB = (String) b.get(KEY_NAME);
-                return valA.compareTo(valB);
-                //if you want to change the sort order, simply use the following:
-                //return -valA.compareTo(valB);
-            }
-        });
-
-        JSONArray result = new JSONArray();
-        for (int i = 0; i < jsonValues.size(); i++) {
-            result.add(jsonValues.get(i));
-        }
-
-        return result;
-    }
     @GetMapping(value = "/facet/eu/search/project/map/point", produces = "application/json")
     public ResponseEntity euSearchProjectMapPoint(
             @RequestParam(value = "language", defaultValue = "en") String language,
