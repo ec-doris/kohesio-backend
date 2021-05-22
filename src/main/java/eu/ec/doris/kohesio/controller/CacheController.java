@@ -13,12 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.util.ArrayList;
 
 
 @RestController
 @RequestMapping("/api")
-
-
 public class CacheController {
 
     @Value("${kohesio.directory}")
@@ -44,16 +43,12 @@ public class CacheController {
         System.out.println("Start recoursive");
         recursiveMap(null);
         System.out.println("end recoursive");
-        String[] countries = {
-                null,
-                "https://linkedopendata.eu/entity/Q15",
-                "https://linkedopendata.eu/entity/Q2",
-                "https://linkedopendata.eu/entity/Q25",
-                "https://linkedopendata.eu/entity/Q20",
-                "https://linkedopendata.eu/entity/Q13",
-                "https://linkedopendata.eu/entity/Q12",
-        };
-
+        ArrayList<String> countries = new ArrayList<>();
+        countries.add(null);
+        for (Object jsonObject : facetController.facetEuCountries("en")) {
+            JSONObject o = (JSONObject) jsonObject;
+            countries.add(o.get("instance").toString());
+        }
         for (String country : countries) {
             Boolean[] orderStartDate = {null, true, false};
             for (Boolean b : orderStartDate) {
@@ -88,7 +83,6 @@ public class CacheController {
                         null, 1000, 1, null);
             }
         }
-
         for (String country : countries) {
             Boolean[] orderEuBudget = {null, true, false};
             for (Boolean b : orderEuBudget) {
