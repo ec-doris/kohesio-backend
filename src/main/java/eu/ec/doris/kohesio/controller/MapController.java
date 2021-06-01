@@ -109,7 +109,7 @@ public class MapController {
                     nutsRegion.put(key, nut);
                 }
             }
-            //retriving the narrower concept
+            //retrieving the narrower concept
             for (String key : nutsRegion.keySet()) {
                 String query = "";
                 if (nutsRegion.get(key).type.equals("continent")) {
@@ -170,6 +170,33 @@ public class MapController {
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
+                }
+            }
+            // skipping regions that are statistical only
+            gran = new ArrayList<String>();
+            gran.add("nuts2");
+            gran.add("nuts1");
+            gran.add("country");
+            for (String g : gran) {
+                for (String key : nutsRegion.keySet()) {
+                    if (nutsRegion.get(key).type.equals(g)) {
+                        List<String> nonStatisticalNuts = new ArrayList<>();
+                        for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
+                            String query =
+                                    "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2727537> . }";
+                            logger.info(query);
+                            boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 10);
+                            if (resultSet) {
+                                for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
+                                    System.out.println(childNut);
+                                    nonStatisticalNuts.add(childNut);
+                                }
+                            } else {
+                                nonStatisticalNuts.add(nutsCheckStatistical);
+                            }
+                        }
+                        nutsRegion.get(key).narrower = nonStatisticalNuts;
+                    }
                 }
             }
         }
