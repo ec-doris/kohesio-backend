@@ -58,6 +58,10 @@ public class MapController {
     }
 
 
+    public void clear(){
+        nutsRegion = null;
+    }
+
     void initialize(String language) throws Exception {
         if (nutsRegion == null) {
             nutsRegion = new HashMap<String, Nut>();
@@ -137,9 +141,11 @@ public class MapController {
                 }
                 if (query.equals("") == false) {
                     TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+                    System.out.println(resultSet.hasNext());
                     while (resultSet.hasNext()) {
                         BindingSet querySolution = resultSet.next();
                         if (querySolution.getBinding("region2") != null) {
+                            System.out.println(querySolution.getBinding("region2").getValue().stringValue());
                             if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
                                 nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
                             }
@@ -172,6 +178,16 @@ public class MapController {
                     nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
                 }
             }
+
+            System.out.println("PRINT");
+            for (String key : nutsRegion.keySet()) {
+                System.out.println("MAIN "+key);
+                    for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
+                        System.out.println("----> "+nutsCheckStatistical);
+                    }
+            }
+
+
             // skipping regions that are statistical only
             gran = new ArrayList<String>();
             gran.add("nuts2");
@@ -188,7 +204,6 @@ public class MapController {
                             boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 10);
                             if (resultSet) {
                                 for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
-                                    System.out.println(childNut);
                                     nonStatisticalNuts.add(childNut);
                                 }
                             } else {
@@ -197,6 +212,14 @@ public class MapController {
                         }
                         nutsRegion.get(key).narrower = nonStatisticalNuts;
                     }
+                }
+            }
+
+            System.out.println("PRINT2222222222222222222222222222222222222222222222");
+            for (String key : nutsRegion.keySet()) {
+                System.out.println("MAIN "+key);
+                for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
+                    System.out.println("----> "+nutsCheckStatistical);
                 }
             }
         }

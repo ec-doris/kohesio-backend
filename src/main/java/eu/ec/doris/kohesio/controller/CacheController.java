@@ -162,6 +162,7 @@ public class CacheController {
         if (dir.exists()) {
             FileUtils.cleanDirectory(dir);
         }
+        mapController.clear();
     }
 
     void recursiveMap(String granularityRegion) throws Exception {
