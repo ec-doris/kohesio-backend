@@ -4,6 +4,7 @@ package eu.ec.doris.kohesio.controller;
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 
+import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
@@ -31,6 +32,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -64,6 +66,157 @@ public class FacetController {
         response.setHeader("Access-Control-Allow-Origin", "*");
     }
 
+    HashMap<String, Nut> nutsRegion = null;
+
+    public void clear(){
+        nutsRegion = null;
+    }
+
+    void initialize(String language) throws Exception {
+        if (nutsRegion == null) {
+            nutsRegion = new HashMap<String, Nut>();
+            //computing nuts information
+            List<String> gran = new ArrayList<String>();
+            gran.add("continent");
+            gran.add("country");
+            gran.add("nuts1");
+            gran.add("nuts2");
+            gran.add("nuts3");
+            for (String g : gran) {
+                String filter = "";
+                if (g.equals("continent")) {
+                    filter = " VALUES ?region { <https://linkedopendata.eu/entity/Q1> } . ?region <https://linkedopendata.eu/prop/direct/P104>  ?region2 .";
+                }
+                if (g.equals("country")) {
+                    filter = " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104>  ?region . ";
+                }
+                if (g.equals("nuts1")) {
+                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> .";
+                }
+                if (g.equals("nuts2")) {
+                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
+                }
+                if (g.equals("nuts3")) {
+                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> .";
+                }
+
+                String query =
+                        "SELECT ?region ?regionLabel where {" +
+                                filter +
+                                " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
+                                "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
+                                "}";
+                logger.info(query);
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+                while (resultSet.hasNext()) {
+                    BindingSet querySolution = resultSet.next();
+                    String key = querySolution.getBinding("region").getValue().stringValue();
+                    Nut nut = new Nut();
+                    nut.uri = key;
+                    nut.type = g;
+                    if (nutsRegion.get(key) != null) {
+                        nut = nutsRegion.get(key);
+                    }
+                    if (querySolution.getBinding("regionLabel") != null) {
+                        nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
+                    }
+                    nutsRegion.put(key, nut);
+                }
+            }
+            //retrieving the narrower concept
+            for (String key : nutsRegion.keySet()) {
+                String query = "";
+                if (nutsRegion.get(key).type.equals("continent")) {
+                    query =
+                            "SELECT ?region2 where {" +
+                                    " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?region2 . }";
+                }
+                if (nutsRegion.get(key).type.equals("country")) {
+                    query =
+                            "SELECT ?region2 where {" +
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . }";
+                }
+                if (nutsRegion.get(key).type.equals("nuts1")) {
+                    query =
+                            "SELECT ?region2 where {" +
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> . }";
+                }
+                if (nutsRegion.get(key).type.equals("nuts2")) {
+                    query =
+                            "SELECT ?region2 where {" +
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> . }";
+                }
+                if (query.equals("") == false) {
+                    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+                    System.out.println(resultSet.hasNext());
+                    while (resultSet.hasNext()) {
+                        BindingSet querySolution = resultSet.next();
+                        if (querySolution.getBinding("region2") != null) {
+                            System.out.println(querySolution.getBinding("region2").getValue().stringValue());
+                            if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
+                                nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
+                            }
+                        }
+                    }
+                }
+            }
+            //retriving the geoJson geometries
+            for (String key : nutsRegion.keySet()) {
+                String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
+                if (nutsRegion.get(key).type.equals("continent")) {
+                    geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
+                }
+                if (nutsRegion.get(key).type.equals("country")) {
+                    geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
+                }
+//        if (nutsRegion.get(key).type.equals("nuts1")){
+//          geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
+//        }
+
+                String query =
+                        "SELECT ?regionGeo where {" +
+                                "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
+                                geometry +
+                                " }";
+                logger.info(query);
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+                while (resultSet.hasNext()) {
+                    BindingSet querySolution = resultSet.next();
+                    nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
+                }
+            }
+
+            // skipping regions that are statistical only
+            gran = new ArrayList<String>();
+            gran.add("nuts2");
+            gran.add("nuts1");
+            gran.add("country");
+            for (String g : gran) {
+                for (String key : nutsRegion.keySet()) {
+                    if (nutsRegion.get(key).type.equals(g)) {
+                        List<String> nonStatisticalNuts = new ArrayList<>();
+                        for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
+                            String query =
+                                    "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2727537> . }";
+                            logger.info(query);
+                            boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 10);
+                            if (resultSet) {
+                                for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
+                                    nonStatisticalNuts.add(childNut);
+                                }
+                            } else {
+                                nonStatisticalNuts.add(nutsCheckStatistical);
+                            }
+                        }
+                        nutsRegion.get(key).narrower = nonStatisticalNuts;
+                    }
+                }
+            }
+        }
+    }
 
     @GetMapping(value = "facet/eu/statistics", produces = "application/json")
     public JSONObject facetEuStatistics() throws Exception {
@@ -225,30 +378,38 @@ public class FacetController {
                                      @RequestParam(value = "country", required = false) String country,
                                      @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
-        String row;
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        InputStream input = loader.getResourceAsStream("regions2.csv");
-        BufferedReader csvReader = new BufferedReader(new BufferedReader(new InputStreamReader(input, "UTF-8")));
-
+        initialize(language);
         List<JSONObject> jsonValues = new ArrayList<JSONObject>();
-
-
-        while ((row = csvReader.readLine()) != null) {
-            String[] data = row.split(";");
-            System.out.println();
-            if (country.equals("https://linkedopendata.eu/entity/Q2") && data[0].equals("IE")
-                    || country.equals("https://linkedopendata.eu/entity/Q15") && data[0].equals("IT")
-                    || country.equals("https://linkedopendata.eu/entity/Q13") && data[0].equals("PL")
-                    || country.equals("https://linkedopendata.eu/entity/Q25") && data[0].equals("CZ")
-                    || country.equals("https://linkedopendata.eu/entity/Q20") && data[0].equals("FR")
-                    || country.equals("https://linkedopendata.eu/entity/Q12") && data[0].equals("DK")) {
-                JSONObject element = new JSONObject();
-                element.put("region", data[6]);
-                element.put("name", data[3]);
-                jsonValues.add(element);
-            }
+        for (String region :nutsRegion.get(country).narrower){
+            JSONObject element = new JSONObject();
+            element.put("region", region);
+            element.put("name", nutsRegion.get(region).name);
+            jsonValues.add(element);
         }
-        csvReader.close();
+//        String row;
+//        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+//        InputStream input = loader.getResourceAsStream("regions2.csv");
+//        BufferedReader csvReader = new BufferedReader(new BufferedReader(new InputStreamReader(input, "UTF-8")));
+//
+//        List<JSONObject> jsonValues = new ArrayList<JSONObject>();
+//
+//
+//        while ((row = csvReader.readLine()) != null) {
+//            String[] data = row.split(";");
+//            System.out.println();
+//            if (country.equals("https://linkedopendata.eu/entity/Q2") && data[0].equals("IE")
+//                    || country.equals("https://linkedopendata.eu/entity/Q15") && data[0].equals("IT")
+//                    || country.equals("https://linkedopendata.eu/entity/Q13") && data[0].equals("PL")
+//                    || country.equals("https://linkedopendata.eu/entity/Q25") && data[0].equals("CZ")
+//                    || country.equals("https://linkedopendata.eu/entity/Q20") && data[0].equals("FR")
+//                    || country.equals("https://linkedopendata.eu/entity/Q12") && data[0].equals("DK")) {
+//                JSONObject element = new JSONObject();
+//                element.put("region", data[6]);
+//                element.put("name", data[3]);
+//                jsonValues.add(element);
+//            }
+//        }
+//        csvReader.close();
 
         Collections.sort(jsonValues, new Comparator<JSONObject>() {
             //You can change "Name" with "ID" if you want to sort by ID

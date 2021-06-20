@@ -50,7 +50,7 @@ public class MapController {
     @Autowired
     FacetController facetController;
 
-    HashMap<String, Nut> nutsRegion = null;
+
 
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
@@ -58,172 +58,7 @@ public class MapController {
     }
 
 
-    public void clear(){
-        nutsRegion = null;
-    }
 
-    void initialize(String language) throws Exception {
-        if (nutsRegion == null) {
-            nutsRegion = new HashMap<String, Nut>();
-            //computing nuts information
-            List<String> gran = new ArrayList<String>();
-            gran.add("continent");
-            gran.add("country");
-            gran.add("nuts1");
-            gran.add("nuts2");
-            gran.add("nuts3");
-            for (String g : gran) {
-                String filter = "";
-                if (g.equals("continent")) {
-                    filter = " VALUES ?region { <https://linkedopendata.eu/entity/Q1> } . ?region <https://linkedopendata.eu/prop/direct/P104>  ?region2 .";
-                }
-                if (g.equals("country")) {
-                    filter = " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104>  ?region . ";
-                }
-                if (g.equals("nuts1")) {
-                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> .";
-                }
-                if (g.equals("nuts2")) {
-                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
-                }
-                if (g.equals("nuts3")) {
-                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> .";
-                }
-
-                String query =
-                        "SELECT ?region ?regionLabel where {" +
-                                filter +
-                                " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
-                                "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
-                                "}";
-                logger.info(query);
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
-                while (resultSet.hasNext()) {
-                    BindingSet querySolution = resultSet.next();
-                    String key = querySolution.getBinding("region").getValue().stringValue();
-                    Nut nut = new Nut();
-                    nut.uri = key;
-                    nut.type = g;
-                    if (nutsRegion.get(key) != null) {
-                        nut = nutsRegion.get(key);
-                    }
-                    if (querySolution.getBinding("regionLabel") != null) {
-                        nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
-                    }
-                    nutsRegion.put(key, nut);
-                }
-            }
-            //retrieving the narrower concept
-            for (String key : nutsRegion.keySet()) {
-                String query = "";
-                if (nutsRegion.get(key).type.equals("continent")) {
-                    query =
-                            "SELECT ?region2 where {" +
-                                    " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?region2 . }";
-                }
-                if (nutsRegion.get(key).type.equals("country")) {
-                    query =
-                            "SELECT ?region2 where {" +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . }";
-                }
-                if (nutsRegion.get(key).type.equals("nuts1")) {
-                    query =
-                            "SELECT ?region2 where {" +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> . }";
-                }
-                if (nutsRegion.get(key).type.equals("nuts2")) {
-                    query =
-                            "SELECT ?region2 where {" +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> . }";
-                }
-                if (query.equals("") == false) {
-                    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
-                    System.out.println(resultSet.hasNext());
-                    while (resultSet.hasNext()) {
-                        BindingSet querySolution = resultSet.next();
-                        if (querySolution.getBinding("region2") != null) {
-                            System.out.println(querySolution.getBinding("region2").getValue().stringValue());
-                            if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
-                                nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
-                            }
-                        }
-                    }
-                }
-            }
-            //retriving the geoJson geometries
-            for (String key : nutsRegion.keySet()) {
-                String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
-                if (nutsRegion.get(key).type.equals("continent")) {
-                    geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
-                }
-                if (nutsRegion.get(key).type.equals("country")) {
-                    geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
-                }
-//        if (nutsRegion.get(key).type.equals("nuts1")){
-//          geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
-//        }
-
-                String query =
-                        "SELECT ?regionGeo where {" +
-                                "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
-                                geometry +
-                                " }";
-                logger.info(query);
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
-                while (resultSet.hasNext()) {
-                    BindingSet querySolution = resultSet.next();
-                    nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
-                }
-            }
-
-            System.out.println("PRINT");
-            for (String key : nutsRegion.keySet()) {
-                System.out.println("MAIN "+key);
-                    for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
-                        System.out.println("----> "+nutsCheckStatistical);
-                    }
-            }
-
-
-            // skipping regions that are statistical only
-            gran = new ArrayList<String>();
-            gran.add("nuts2");
-            gran.add("nuts1");
-            gran.add("country");
-            for (String g : gran) {
-                for (String key : nutsRegion.keySet()) {
-                    if (nutsRegion.get(key).type.equals(g)) {
-                        List<String> nonStatisticalNuts = new ArrayList<>();
-                        for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
-                            String query =
-                                    "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2727537> . }";
-                            logger.info(query);
-                            boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 10);
-                            if (resultSet) {
-                                for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
-                                    nonStatisticalNuts.add(childNut);
-                                }
-                            } else {
-                                nonStatisticalNuts.add(nutsCheckStatistical);
-                            }
-                        }
-                        nutsRegion.get(key).narrower = nonStatisticalNuts;
-                    }
-                }
-            }
-
-            System.out.println("PRINT2222222222222222222222222222222222222222222222");
-            for (String key : nutsRegion.keySet()) {
-                System.out.println("MAIN "+key);
-                for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
-                    System.out.println("----> "+nutsCheckStatistical);
-                }
-            }
-        }
-    }
 
 
     @GetMapping(value = "/facet/eu/search/project/map", produces = "application/json")
@@ -255,7 +90,7 @@ public class MapController {
             Principal principal)
             throws Exception {
         logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
-        initialize(language);
+        facetController.initialize(language);
         if (timeout == null) {
             timeout = 50;
         }
@@ -286,7 +121,7 @@ public class MapController {
             }
         }
         logger.info("Number of results {}", numResults);
-        if (numResults <= 2000 || (granularityRegion != null && nutsRegion.get(granularityRegion).narrower.size() == 0)) {
+        if (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0)) {
             if (granularityRegion != null) {
                 search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
             }
@@ -340,11 +175,11 @@ public class MapController {
             JSONObject result = new JSONObject();
             result.put("list", resultList);
             if (granularityRegion != null) {
-                result.put("geoJson", nutsRegion.get(granularityRegion).geoJson);
+                result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
             } else if (country != null && region == null) {
-                result.put("geoJson", nutsRegion.get(country).geoJson);
+                result.put("geoJson", facetController.nutsRegion.get(country).geoJson);
             } else if (country != null && region != null) {
-                result.put("geoJson", nutsRegion.get(region).geoJson);
+                result.put("geoJson", facetController.nutsRegion.get(region).geoJson);
             } else {
                 result.put("geoJson", "");
             }
@@ -364,11 +199,11 @@ public class MapController {
 
 
             HashMap<String, JSONObject> subRegions = new HashMap();
-            for (String r : nutsRegion.get(granularityRegion).narrower) {
+            for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
-                element.put("regionLabel", nutsRegion.get(r).name);
-                element.put("geoJson", nutsRegion.get(r).geoJson);
+                element.put("regionLabel", facetController.nutsRegion.get(r).name);
+                element.put("geoJson", facetController.nutsRegion.get(r).geoJson);
                 element.put("count", 0);
                 subRegions.put(r, element);
             }
@@ -390,8 +225,8 @@ public class MapController {
 
             JSONObject result = new JSONObject();
             result.put("region", granularityRegion);
-            result.put("regionLabel", nutsRegion.get(granularityRegion).name);
-            result.put("geoJson", nutsRegion.get(granularityRegion).geoJson);
+            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name);
+            result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
             result.put("subregions", resultList);
 
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
@@ -427,7 +262,7 @@ public class MapController {
             Principal principal)
             throws Exception {
         logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
-        initialize(language);
+        facetController.initialize(language);
         System.out.println("filterProject ");
         String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
 
