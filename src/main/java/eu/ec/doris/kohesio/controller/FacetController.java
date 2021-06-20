@@ -168,6 +168,18 @@ public class FacetController {
         element = new JSONObject();
         element.put("instance", "https://linkedopendata.eu/entity/Q12");
         jsonValues.add(element);
+        element = new JSONObject();
+        element.put("instance", "https://linkedopendata.eu/entity/Q31");
+        jsonValues.add(element);
+        element = new JSONObject();
+        element.put("instance", "https://linkedopendata.eu/entity/Q30");
+        jsonValues.add(element);
+        element = new JSONObject();
+        element.put("instance", "https://linkedopendata.eu/entity/Q28");
+        jsonValues.add(element);
+        element = new JSONObject();
+        element.put("instance", "https://linkedopendata.eu/entity/Q11");
+        jsonValues.add(element);
 
         for (int i = 0; i < jsonValues.size(); i++) {
             String query = "select ?instanceLabel where { "
