@@ -345,6 +345,14 @@ public class FacetController {
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 jsonValues.get(i).put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
+            }
+            query = "select ?instanceImage where { "
+                    + " <" + jsonValues.get(i).get("instance") + "> <https://linkedopendata.eu/prop/direct/P21> ?instanceImage . "
+                    + "}";
+            resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+            while (resultSet.hasNext()) {
+                BindingSet querySolution = resultSet.next();
+                jsonValues.get(i).put("instanceImage", querySolution.getBinding("instanceImage").getValue().stringValue());
 
             }
         }
