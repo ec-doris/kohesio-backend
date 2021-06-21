@@ -556,27 +556,27 @@ public class ProjectController {
                     "    } " +
                     "    }";
         }
-        if(keywords != null && country == null && theme == null && fund == null && program == null && categoryOfIntervention == null
-        && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
-                budgetEUSmallerThen == null && startDateBefore == null &&
-                startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
-
-            // pass cache = false in order to stop caching the semantic search results
-            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords,true);
-            if(projectsURIs.size() > 0) {
-                search = "";
-                search += "VALUES ?s0 {";
-                for (String uri : projectsURIs) {
-                    String uriStr = "<"+uri+">";
-                    search+= uriStr+" ";
-                }
-                search+="}";
-            }else{
-                System.out.println("Semantic search API returned empty result!!");
-            }
-            numResults = projectsURIs.size();
-            //search = "";
-        }
+//        if(keywords != null && country == null && theme == null && fund == null && program == null && categoryOfIntervention == null
+//        && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
+//                budgetEUSmallerThen == null && startDateBefore == null &&
+//                startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
+//
+//            // pass cache = false in order to stop caching the semantic search results
+//            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords,true);
+//            if(projectsURIs.size() > 0) {
+//                search = "";
+//                search += "VALUES ?s0 {";
+//                for (String uri : projectsURIs) {
+//                    String uriStr = "<"+uri+">";
+//                    search+= uriStr+" ";
+//                }
+//                search+="}";
+//            }else{
+//                System.out.println("Semantic search API returned empty result!!");
+//            }
+//            numResults = projectsURIs.size();
+//            //search = "";
+//        }
         search += " " + orderQuery;
         query =
                 "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
