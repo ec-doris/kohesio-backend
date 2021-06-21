@@ -50,16 +50,10 @@ public class MapController {
     @Autowired
     FacetController facetController;
 
-
-
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
         response.setHeader("Access-Control-Allow-Origin", "*");
     }
-
-
-
-
 
     @GetMapping(value = "/facet/eu/search/project/map", produces = "application/json")
     public ResponseEntity euSearchProjectMap(
@@ -187,13 +181,18 @@ public class MapController {
         } else {
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
+                query =
+                        "SELECT ?region (count(?s0) as ?c) where { "
+                                + search
+                                + " ?s0 <https://linkedopendata.eu/prop/direct/P32> ?region . "
+                                + " } group by ?region ";
+            } else {
+                query =
+                        "SELECT ?region (count(?s0) as ?c) where { "
+                                + search
+                                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region . "
+                                + " } group by ?region ";
             }
-
-            query =
-                    "SELECT ?region (count(?s0) as ?c) where { "
-                            + search
-                            + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region . "
-                            + " } group by ?region ";
             logger.info(query);
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
 
