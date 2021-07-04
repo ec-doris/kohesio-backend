@@ -195,7 +195,7 @@ public class MapController {
         }
 
         if (limit == null) {
-            limit = 2000;
+            limit = 1000;
         }
 
         String query =
