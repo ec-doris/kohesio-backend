@@ -180,6 +180,7 @@ public class MapController {
     }
 
     ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, Integer limit, Integer offset, int timeout) throws Exception {
+        logger.info("granularityRegion {}, limit {}",granularityRegion,limit);
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
         if (granularityRegion != null) {
