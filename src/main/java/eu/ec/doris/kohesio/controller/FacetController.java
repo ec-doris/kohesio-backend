@@ -303,45 +303,25 @@ public class FacetController {
             @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
         List<JSONObject> jsonValues = new ArrayList<JSONObject>();
-        JSONObject element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q2");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q15");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q13");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q25");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q20");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q12");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q31");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q30");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q28");
-        jsonValues.add(element);
-        element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q11");
-        jsonValues.add(element);
+        String query ="SELECT DISTINCT ?country WHERE { 	" +
+                " ?s1  <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q196788> . 	 " +
+                "?s1  <https://linkedopendata.eu/prop/direct/P32>  ?country .  }";
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            JSONObject element = new JSONObject();
+            element.put("instance", querySolution.getBinding("country").getValue().stringValue());
+            jsonValues.add(element);
+        }
 
         for (int i = 0; i < jsonValues.size(); i++) {
-            String query = "select ?instanceLabel where { "
+            query = "select ?instanceLabel where { "
                     + " <" + jsonValues.get(i).get("instance") + "> rdfs:label ?instanceLabel . "
                     + " FILTER (lang(?instanceLabel)=\""
                     + language
                     + "\")"
                     + "}";
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+            resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 jsonValues.get(i).put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
