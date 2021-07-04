@@ -517,7 +517,7 @@ public class MapController {
         }
 
         if (granularityRegion != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + ">";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . ";
         }
 
         if (latitude != null && longitude != null) {
