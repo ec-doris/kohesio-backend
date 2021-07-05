@@ -508,21 +508,46 @@ public class FacetController {
                     + "} order by ?id";
     TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2);
     JSONArray result = new JSONArray();
+    String areaOfIntervention = "";
+    String areaOfInterventionLabel = "";
+    String areaOfInterventionId = "";
+    JSONArray subset = new JSONArray();
     while (resultSet.hasNext()) {
       BindingSet querySolution = resultSet.next();
       JSONObject element = new JSONObject();
-      element.put("instance", querySolution.getBinding("instance").toString());
+      element.put("instance", querySolution.getBinding("instance").getValue().toString());
       String label = querySolution.getBinding("instanceLabel").getValue().stringValue();
       if (label.length()>=200){
         label = label.substring(0,200)+" ...";
       }
       element.put(
               "instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + label);
-      element.put("areaOfIntervention", querySolution.getBinding("areaOfIntervention").toString());
-      element.put("areaOfInterventionLabel", querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue());
-      element.put("areaOfInterventionId", querySolution.getBinding("areaOfInterventionId").toString());
-      result.add(element);
+      if (areaOfIntervention.equals("")){
+          areaOfIntervention = querySolution.getBinding("areaOfIntervention").getValue().toString();
+          areaOfInterventionLabel =  querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue();
+          areaOfInterventionId = querySolution.getBinding("areaOfInterventionId").getValue().toString();
+      }
+      if (areaOfIntervention.equals(querySolution.getBinding("areaOfIntervention").getValue().toString())){
+          subset.add(element);
+      } else {
+          JSONObject newElement = new JSONObject();
+          newElement.put("areaOfIntervention", areaOfIntervention);
+          newElement.put("areaOfInterventionLabel",areaOfInterventionLabel);
+          newElement.put("areaOfInterventionId",areaOfInterventionId);
+          newElement.put("options",subset);
+          areaOfIntervention = querySolution.getBinding("areaOfIntervention").getValue().toString();
+          areaOfInterventionLabel =  querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue();
+          areaOfInterventionId = querySolution.getBinding("areaOfInterventionId").getValue().toString();
+          subset = new JSONArray();
+          result.add(newElement);
+      }
     }
+  JSONObject newElement = new JSONObject();
+  newElement.put("areaOfIntervention", areaOfIntervention);
+  newElement.put("areaOfInterventionLabel",areaOfInterventionLabel);
+  newElement.put("areaOfInterventionId",areaOfInterventionId);
+  newElement.put("options",subset);
+  result.add(newElement);
     return result;
   }
 
