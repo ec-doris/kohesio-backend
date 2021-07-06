@@ -530,6 +530,7 @@ public class FacetController {
       if (areaOfIntervention.equals(querySolution.getBinding("areaOfIntervention").getValue().toString())){
           subset.add(element);
       } else {
+          subset.add(element);
           JSONObject newElement = new JSONObject();
           newElement.put("areaOfIntervention", areaOfIntervention);
           newElement.put("areaOfInterventionLabel",areaOfInterventionLabel);
