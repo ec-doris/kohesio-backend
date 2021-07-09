@@ -608,7 +608,7 @@ public class ProjectController {
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                         + "} ";
         System.out.println(query);
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 50);
 
         ArrayList<Project> resultList = new ArrayList<Project>();
         String previewsKey = "";
