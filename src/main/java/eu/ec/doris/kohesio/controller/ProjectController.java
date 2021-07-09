@@ -505,7 +505,7 @@ public class ProjectController {
 
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
         System.out.println(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 25);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 50);
         int numResults = 0;
         if (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
