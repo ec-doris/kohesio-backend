@@ -420,7 +420,7 @@ public class ProjectController {
                     if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2")))) {
                         regionText += ", " + (String) result.get("regionUpper2");
                     }
-                    if (!((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
+                    if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
                         regionText += ", " + (String) result.get("regionUpper3");
                     }
                     result.put("regionText", regionText);
