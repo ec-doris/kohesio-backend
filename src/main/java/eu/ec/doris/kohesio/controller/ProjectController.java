@@ -490,9 +490,13 @@ public class ProjectController {
                                            @RequestParam(value = "region", required = false) String region,
                                            @RequestParam(value = "limit", defaultValue = "200") int limit,
                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                           Integer timeout,
                                            Principal principal)
             throws Exception {
-        logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, region {}", language, keywords, country, theme, fund, region);
+        if (timeout==null){
+            timeout = 20;
+        }
+        logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, region {}, timeout {}", language, keywords, country, theme, fund, region, timeout);
 
         int inputOffset = offset;
         int inputLimit = limit;
@@ -505,7 +509,7 @@ public class ProjectController {
 
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
         System.out.println(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 50);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
         int numResults = 0;
         if (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -608,7 +612,7 @@ public class ProjectController {
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                         + "} ";
         System.out.println(query);
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 50);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
         ArrayList<Project> resultList = new ArrayList<Project>();
         String previewsKey = "";
@@ -1145,7 +1149,7 @@ public class ProjectController {
         }
 
         if (region != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . ";
+            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . ";
         }
 
         if (latitude != null && longitude != null) {

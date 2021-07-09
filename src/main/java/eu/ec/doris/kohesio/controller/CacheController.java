@@ -52,52 +52,81 @@ public class CacheController {
         for (String country : countries) {
             Boolean[] orderStartDate = {null, true, false};
             for (Boolean b : orderStartDate) {
-                projectController.euSearchProject("en", null, country, null, null, null,
-                        null, null, null, null,
-                        null, null, null, null,
-                        null, null, b, null, null, null,
-                        null, null, null, 1000, 1, null);
+                try {
+                    projectController.euSearchProject("en", null, country, null, null, null,
+                            null, null, null, null,
+                            null, null, null, null,
+                            null, null, b, null, null, null,
+                            null, null, null, 1000, 1, 50,null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
             Boolean[] orderEndDate = {null, true, false};
             for (Boolean b : orderEndDate) {
+                try {
                 projectController.euSearchProject("en", null, country, null, null, null,
                         null, null, null, null,
                         null, null, null, null,
                         null, null, null, b, null, null,
-                        null, null, null, 1000, 1, null);
+                        null, null, null, 1000, 1, 50,null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
             Boolean[] orderEuBudget = {null, true, false};
             for (Boolean b : orderEuBudget) {
+                try{
                 projectController.euSearchProject("en", null, country, null, null, null,
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, b, null, null,
-                        null, null, 1000, 1, null);
+                        null, null, 1000, 1, 50,null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
             Boolean[] orderTotalBudget = {null, true, false};
             for (Boolean b : orderTotalBudget) {
+                try{
                 projectController.euSearchProject("en", null, country, null, null, null,
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, null, b, null, null,
-                        null, 1000, 1, null);
+                        null, 1000, 1, 50,null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
         }
         for (String country : countries) {
+
             Boolean[] orderEuBudget = {null, true, false};
             for (Boolean b : orderEuBudget) {
+                try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
                         null, b, false, false, 1000, 1, null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
             Boolean[] orderTotalBudget = {null, true, false};
             for (Boolean b : orderTotalBudget) {
+                try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
                         null, null, b, null, 1000, 1, null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
             Boolean[] orderNumProjects = {null, true, false};
             for (Boolean b : orderNumProjects) {
+                try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
                         null, null, null, b, 1000, 1, null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
             }
         }
         for (String country : countries) {
@@ -142,7 +171,7 @@ public class CacheController {
                                     null, polic, null, null,
                                     null, null, null, null, null,
                                     null, null, null, null, null, null, null,
-                                    null, 1000, 1, null);
+                                    null, 1000, 1,50, null);
                             mapController.euSearchProjectMap("en", null, country, null, f, p, null,
                                     polic, null, null, null,
                                     null, null, null, null,
