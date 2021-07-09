@@ -908,7 +908,7 @@ public class ProjectController {
                                                         @Context HttpServletResponse response)
             throws Exception {
         ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, principal).getBody();
+                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, 30, principal).getBody();
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("beneficiary_export");
         int rowNumber = 0;
@@ -996,7 +996,7 @@ public class ProjectController {
                                     @Context HttpServletResponse response)
             throws Exception {
         ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, principal).getBody();
+                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, 20, principal).getBody();
         String filename = "project_export.csv";
         try {
             response.setContentType("text/csv");
