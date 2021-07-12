@@ -435,6 +435,10 @@ public class ProjectController {
                 }else{
                     // replace with country code because there is no nuts
                     regionId = querySolution.getBinding("countryCode").getValue().stringValue();
+                    if(regionId.equals("GR")){
+                        // exception for Greece to use EL as nuts code and not GR
+                        regionId = "EL";
+                    }
                 }
                 if (regionId != null && result.get("geoJson").equals("")) {
                     query =
