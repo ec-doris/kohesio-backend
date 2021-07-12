@@ -431,7 +431,7 @@ public class ProjectController {
                 }
                 String regionId = "";
                 if(querySolution.getBinding("regionId") != null){
-                    regionId = ((Literal)querySolution.getBinding("regionId")).stringValue();
+                    regionId = ((Literal)querySolution.getBinding("regionId").getValue()).stringValue();
                 }else{
                     // replace with country code because there is no nuts
                     regionId = querySolution.getBinding("countryCode").getValue().stringValue();
