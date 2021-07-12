@@ -497,9 +497,13 @@ public class ProjectController {
                                            @RequestParam(value = "region", required = false) String region,
                                            @RequestParam(value = "limit", defaultValue = "200") int limit,
                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                           Integer timeout,
                                            Principal principal)
             throws Exception {
-        logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, region {}", language, keywords, country, theme, fund, region);
+        if (timeout==null){
+            timeout = 20;
+        }
+        logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, region {}, timeout {}", language, keywords, country, theme, fund, region, timeout);
 
         int inputOffset = offset;
         int inputLimit = limit;
@@ -512,7 +516,7 @@ public class ProjectController {
 
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
         System.out.println(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 25);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
         int numResults = 0;
         if (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -615,7 +619,7 @@ public class ProjectController {
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                         + "} ";
         System.out.println(query);
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
         ArrayList<Project> resultList = new ArrayList<Project>();
         String previewsKey = "";
@@ -911,7 +915,7 @@ public class ProjectController {
                                                         @Context HttpServletResponse response)
             throws Exception {
         ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, principal).getBody();
+                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, 30, principal).getBody();
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("beneficiary_export");
         int rowNumber = 0;
@@ -999,7 +1003,7 @@ public class ProjectController {
                                     @Context HttpServletResponse response)
             throws Exception {
         ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, principal).getBody();
+                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, 20, principal).getBody();
         String filename = "project_export.csv";
         try {
             response.setContentType("text/csv");
@@ -1152,7 +1156,7 @@ public class ProjectController {
         }
 
         if (region != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . ";
+            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . ";
         }
 
         if (latitude != null && longitude != null) {
