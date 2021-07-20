@@ -15,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.query.Binding;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.json.simple.JSONArray;
@@ -428,15 +429,25 @@ public class ProjectController {
 
                     result.put("regionText", (String) result.get("countryLabel"));
                 }
-
-                if (querySolution.getBinding("regionId") != null && result.get("geoJson").equals("")) {
+                String regionId = "";
+                if(querySolution.getBinding("regionId") != null){
+                    regionId = ((Literal)querySolution.getBinding("regionId").getValue()).stringValue();
+                }else{
+                    // replace with country code because there is no nuts
+                    regionId = querySolution.getBinding("countryCode").getValue().stringValue();
+                    if(regionId.equals("GR")){
+                        // exception for Greece to use EL as nuts code and not GR
+                        regionId = "EL";
+                    }
+                }
+                if (regionId != null && result.get("geoJson").equals("")) {
                     query =
                             "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
                                     + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
                                     + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
                                     + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
                                     + "SELECT ?id ?geoJson  WHERE { "
-                                    + "?s <http://nuts.de/id> \'" + ((Literal) querySolution.getBinding("regionId").getValue()).stringValue() + "\' . "
+                                    + "?s <http://nuts.de/id> \'" + regionId + "\' . "
                                     + "?s <http://nuts.de/geoJson> ?geoJson . "
 
                                     + "}";
