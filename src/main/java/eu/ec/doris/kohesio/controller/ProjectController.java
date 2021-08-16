@@ -2,6 +2,7 @@ package eu.ec.doris.kohesio.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import eu.ec.doris.kohesio.payload.NutsRegion;
 import eu.ec.doris.kohesio.payload.Project;
 import eu.ec.doris.kohesio.payload.ProjectList;
@@ -574,27 +575,27 @@ public class ProjectController {
                     "    } " +
                     "    }";
         }
-//        if(keywords != null && country == null && theme == null && fund == null && program == null && categoryOfIntervention == null
-//        && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
-//                budgetEUSmallerThen == null && startDateBefore == null &&
-//                startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
-//
-//            // pass cache = false in order to stop caching the semantic search results
-//            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords,true);
-//            if(projectsURIs.size() > 0) {
-//                search = "";
-//                search += "VALUES ?s0 {";
-//                for (String uri : projectsURIs) {
-//                    String uriStr = "<"+uri+">";
-//                    search+= uriStr+" ";
-//                }
-//                search+="}";
-//            }else{
-//                System.out.println("Semantic search API returned empty result!!");
-//            }
-//            numResults = projectsURIs.size();
-//            //search = "";
-//        }
+        if(keywords != null && country == null && theme == null && fund == null && program == null && categoryOfIntervention == null
+        && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
+                budgetEUSmallerThen == null && startDateBefore == null &&
+                startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
+
+            // pass cache = false in order to stop caching the semantic search results
+            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords,false,200);
+            if(projectsURIs.size() > 0) {
+                search = "";
+                search += "VALUES ?s0 {";
+                for (String uri : projectsURIs) {
+                    String uriStr = "<"+uri+">";
+                    search+= uriStr+" ";
+                }
+                search+="}";
+            }else{
+                System.out.println("Semantic search API returned empty result!!");
+            }
+            numResults = projectsURIs.size();
+            //search = "";
+        }
         search += " " + orderQuery;
         query =
                 "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
@@ -748,10 +749,10 @@ public class ProjectController {
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
 
-    private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords,boolean cache) {
+    private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords,boolean cache,int nhits) {
         String url = null;
         try {
-            url = "http://54.74.15.102:5000/search?text=" + URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
+            url = "http://kohesio-search.eu-west-1.elasticbeanstalk.com/search?query=" + URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString())+"&n_hits="+nhits;
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -780,22 +781,18 @@ public class ProjectController {
 
         ArrayList<String> listProjectURIs = new ArrayList<>();
         try {
-            System.out.println(url);
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             if (response.getStatusCode().equals(HttpStatus.OK)) {
                 FileOutputStream out = new FileOutputStream(path+"/"+ query.hashCode());
-                System.out.println(response.getBody());
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.getBody());
-                if (root.findValue("results") != null) {
-                    JsonNode results = root.findValue("results");
-                    for (int i = 0; i < results.size(); i++) {
-                        String projectURI = results.get(i).textValue();
-                        listProjectURIs.add(projectURI);
-                        projectURI+="\n";
-                        out.write(projectURI.getBytes());
-                    }
+                ArrayNode results = (ArrayNode) root;
+                for (int i = 0; i < results.size(); i++) {
+                    String projectURI = results.get(i).get("uri").textValue();
+                    listProjectURIs.add(projectURI);
+                    projectURI+="\n";
+                    out.write(projectURI.getBytes());
                 }
                 out.close();
             } else {
