@@ -521,9 +521,10 @@ public class ProjectController {
 
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
         System.out.println(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
         int numResults = 0;
-        if (resultSet.hasNext()) {
+
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+        if (resultSet != null && resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
@@ -751,11 +752,8 @@ public class ProjectController {
 
     private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords,boolean cache,int nhits) {
         String url = null;
-        try {
-            url = "http://kohesio-search.eu-west-1.elasticbeanstalk.com/search?query=" + URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString())+"&n_hits="+nhits;
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        //String encoded = URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
+        url = "http://kohesio-search.eu-west-1.elasticbeanstalk.com/search?query=" + keywords+"&n_hits="+nhits;
 
         String path = cacheDirectory+"/facet/semantic-search";
         File dir = new File(path);
