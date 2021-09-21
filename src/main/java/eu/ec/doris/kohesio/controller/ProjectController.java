@@ -3,9 +3,8 @@ package eu.ec.doris.kohesio.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import eu.ec.doris.kohesio.payload.NutsRegion;
-import eu.ec.doris.kohesio.payload.Project;
-import eu.ec.doris.kohesio.payload.ProjectList;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.ec.doris.kohesio.payload.*;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -518,17 +517,7 @@ public class ProjectController {
         }
         String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
 
-
-        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
-        System.out.println(query);
         int numResults = 0;
-
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
-        if (resultSet != null && resultSet.hasNext()) {
-            BindingSet querySolution = resultSet.next();
-            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
-        }
-
 
         String orderQuery = "";
 
@@ -576,27 +565,19 @@ public class ProjectController {
                     "    } " +
                     "    }";
         }
-        if(keywords != null && country == null && theme == null && fund == null && program == null && categoryOfIntervention == null
-        && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
-                budgetEUSmallerThen == null && startDateBefore == null &&
-                startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
 
-            // pass cache = false in order to stop caching the semantic search results
-            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords,false,200);
-            if(projectsURIs.size() > 0) {
-                search = "";
-                search += "VALUES ?s0 {";
-                for (String uri : projectsURIs) {
-                    String uriStr = "<"+uri+">";
-                    search+= uriStr+" ";
-                }
-                search+="}";
-            }else{
-                System.out.println("Semantic search API returned empty result!!");
-            }
-            numResults = projectsURIs.size();
-            //search = "";
+        // pass cache = false in order to stop caching the semantic search results
+
+        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
+        System.out.println(query);
+        // count the results with the applied filters
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+        if (resultSet != null && resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
+        //search = "";
+
         search += " " + orderQuery;
         query =
                 "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
@@ -749,11 +730,37 @@ public class ProjectController {
         projectList.setNumberResults(numResults);
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
-
-    private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords,boolean cache,int nhits) {
+    /*
+    Query the similarity API and get a list of similar words
+     */
+    private ArrayList<SimilarWord> getSimilarWords(String text){
+        String url = "http://similarity.cnect.eu:3000/similarity?text="+text;
+        ArrayList<SimilarWord> similarWords = new ArrayList<>();
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            if (response.getStatusCode().equals(HttpStatus.OK)) {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode root = mapper.readTree(response.getBody());
+                ObjectNode result = (ObjectNode) root;
+                ArrayNode hits = (ArrayNode) result.get("similar");
+                for (int i = 0; i < hits.size(); i++) {
+                    String word = hits.get(i).get("word").textValue();
+                    double score  = hits.get(i).get("score").doubleValue();
+                    similarWords.add(new SimilarWord(word.replace("_"," "),score));
+                }
+            } else {
+                System.err.println("Error in HTTP request!");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return similarWords;
+    }
+    private SemanticSearchResult getProjectsURIsfromSemanticSearch(String keywords,boolean cache,int offset,int limit) {
         String url = null;
         //String encoded = URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
-        url = "http://kohesio-search.eu-west-1.elasticbeanstalk.com/search?query=" + keywords+"&n_hits="+nhits;
+        url = "http://kohesio-search-dev.eu-west-1.elasticbeanstalk.com/search?query=" + keywords+"&page="+offset+"&page_size="+limit;
 
         String path = cacheDirectory+"/facet/semantic-search";
         File dir = new File(path);
@@ -763,43 +770,49 @@ public class ProjectController {
             dir.mkdirs();
         }
         String query = url;
-        if(dir.exists() && cache){
-            try {
-                ArrayList<String> projectsURIs = new ArrayList<>();
-                Scanner input = new Scanner(new File(path+"/"+query.hashCode()));
-                while (input.hasNext()){
-                    String projectURI  = input.next();
-                    projectsURIs.add(projectURI);
-                }
-                return projectsURIs;
-            } catch (FileNotFoundException e) {
-                logger.error("Could not find cache file, probably not cahced");
-            }
-        }
+//        if(dir.exists() && cache){
+//            try {
+//                ArrayList<String> projectsURIs = new ArrayList<>();
+//                Scanner input = new Scanner(new File(path+"/"+query.hashCode()));
+//                while (input.hasNext()){
+//                    String projectURI  = input.next();
+//                    projectsURIs.add(projectURI);
+//                }
+//                return projectsURIs;
+//            } catch (FileNotFoundException e) {
+//                logger.error("Could not find cache file, probably not cahced");
+//            }
+//        }
 
         ArrayList<String> listProjectURIs = new ArrayList<>();
+        int numberOfResult = 0;
         try {
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             if (response.getStatusCode().equals(HttpStatus.OK)) {
-                FileOutputStream out = new FileOutputStream(path+"/"+ query.hashCode());
+//                FileOutputStream out = new FileOutputStream(path+"/"+ query.hashCode());
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.getBody());
-                ArrayNode results = (ArrayNode) root;
-                for (int i = 0; i < results.size(); i++) {
-                    String projectURI = results.get(i).get("uri").textValue();
+                ObjectNode result = (ObjectNode) root;
+                numberOfResult = ((JsonNode)result.get("total_hits")).intValue();
+                ArrayNode hits = (ArrayNode) result.get("hits");
+                for (int i = 0; i < hits.size(); i++) {
+                    String projectURI = hits.get(i).get("uri").textValue();
                     listProjectURIs.add(projectURI);
                     projectURI+="\n";
-                    out.write(projectURI.getBytes());
+//                    out.write(projectURI.getBytes());
                 }
-                out.close();
+//                out.close();
             } else {
                 System.err.println("Error in HTTP request!");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return listProjectURIs;
+        SemanticSearchResult result = new SemanticSearchResult();
+        result.setNumberOfResults(numberOfResult);
+        result.setProjectsURIs(listProjectURIs);
+        return result;
     }
 
     @GetMapping(value = "/facet/eu/search/project/image", produces = "application/json")
@@ -1045,22 +1058,57 @@ public class ProjectController {
                                  Integer offset) throws IOException {
         String search = "";
         if (keywords != null) {
-            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
-                String[] words = keywords.split(" ");
-                StringBuilder keywordsBuilder = new StringBuilder();
-                for (int i = 0; i < words.length - 1; i++) {
+//            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
+//                String[] words = keywords.split(" ");
+//                StringBuilder keywordsBuilder = new StringBuilder();
+//                for (int i = 0; i < words.length - 1; i++) {
+//                    keywordsBuilder.append(words[i]).append(" AND ");
+//                }
+//                keywordsBuilder.append(words[words.length - 1]);
+//                keywords = keywordsBuilder.toString();
+//            }
+            String[] words = keywords.split(" ");
+            StringBuilder keywordsBuilder = new StringBuilder();
+            keywordsBuilder.append("(");
+            for (int i = 0; i < words.length; i++) {
+                if(i < words.length -1){
                     keywordsBuilder.append(words[i]).append(" AND ");
+                }else{
+                    keywordsBuilder.append(words[i]);
                 }
-                keywordsBuilder.append(words[words.length - 1]);
-                keywords = keywordsBuilder.toString();
             }
+
+            keywordsBuilder.append(")").append(" OR \"").append(keywords).append("\"^2");
+
+            ArrayList<SimilarWord> similarWords = getSimilarWords(keywords);
+            for (SimilarWord word: similarWords) {
+                keywordsBuilder.append(" OR \"").append(word.getWord()).append("\"^").append(word.getScore());
+            }
+            String newQuery = keywordsBuilder.toString();
+
             search +=
                     "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                             + "<http://www.openrdf.org/contrib/lucenesail#query> \""
-                            + keywords.replace("\"", "\\\"")
+                            + newQuery.replace("\"", "\\\"")
                             + "\" ] .";
-        }
 
+        }
+//        if(keywords != null) {
+//            SemanticSearchResult semanticSearchResult = getProjectsURIsfromSemanticSearch(keywords, false, 0, 5000);
+//            ArrayList<String> projectsURIs = semanticSearchResult.getProjectsURIs();
+//            if (projectsURIs.size() > 0) {
+//                //search = "";
+//                search += "VALUES ?s0 {";
+//                for (String uri : projectsURIs) {
+//                    String uriStr = "<" + uri + ">";
+//                    search += uriStr + " ";
+//                }
+//                search += "}";
+//                //numResults = semanticSearchResult.getNumberOfResults();
+//            } else {
+//                System.out.println("Semantic search API returned empty result!!");
+//            }
+//        }
         if (country != null && region == null) {
             search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
         }

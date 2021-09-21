@@ -267,6 +267,7 @@ public class BeneficiaryController {
                                                  @RequestParam(value = "longitude", required = false) String longitude, //
                                                  @RequestParam(value = "fund", required = false) String fund, //
                                                  @RequestParam(value = "program", required = false) String program, //
+                                                 @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
 
                                                  @RequestParam(value = "orderEuBudget", defaultValue = "false") Boolean orderEuBudget,
                                                  @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
@@ -332,6 +333,15 @@ public class BeneficiaryController {
                 + "   optional { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
                 + "   optional { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
 
+        if(beneficiaryType != null){
+            if(beneficiaryType.equals("private")){
+                search += "?beneficiary <https://linkedopendata.eu/prop/P35> ?blank_class . "
+                + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630487> .";
+            }else if(beneficiaryType.equals("public")){
+                search += "?beneficiary <https://linkedopendata.eu/prop/P35> ?blank_class . "
+                        + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630486> .";
+            }
+        }
         String queryCount = "select (count(?beneficiary) as ?c) where { " +
                 "{select ?beneficiary where {\n" +
                 search
@@ -506,12 +516,14 @@ public class BeneficiaryController {
                                           @RequestParam(value = "longitude", required = false) String longitude, //
                                           @RequestParam(value = "fund", required = false) String fund, //
                                           @RequestParam(value = "program", required = false) String program, //
+                                          @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
+
                                           Principal principal,
                                           @Context HttpServletResponse response)
             throws Exception {
         // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
         // by default it export 1000
-        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program, false, false, false, 1000, 0, principal).getBody());
+        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program,beneficiaryType, false, false, false, 1000, 0, principal).getBody());
         String filename = "beneficiary_export.csv";
         try {
             response.setContentType("text/csv");
@@ -547,11 +559,13 @@ public class BeneficiaryController {
                                                               @RequestParam(value = "longitude", required = false) String longitude, //
                                                               @RequestParam(value = "fund", required = false) String fund, //
                                                               @RequestParam(value = "program", required = false) String program, //
+                                                              @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
+
                                                               Principal principal)
             throws Exception {
         // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
         // by default it export 1000
-        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program, false, false, false, 1000, 0, principal).getBody());
+        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program, beneficiaryType,false, false, false, 1000, 0, principal).getBody());
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("beneficiary_export");
         int rowNumber = 0;
