@@ -519,11 +519,15 @@ public class ProjectController {
 
         int inputOffset = offset;
         int inputLimit = limit;
-        if (offset < 1000) {
-            offset = 0;
-            limit = 1000;
-            if(keywords != null){
+        if(keywords != null){
+            if(offset < 100) {
+                offset = 0;
                 limit = 100;
+            }
+        }else{
+            if (offset < 1000) {
+                offset = 0;
+                limit = 1000;
             }
         }
         String search = filtersGenerator.filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
