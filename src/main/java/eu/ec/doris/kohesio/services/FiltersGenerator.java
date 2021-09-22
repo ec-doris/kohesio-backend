@@ -48,7 +48,7 @@ public class FiltersGenerator {
                     "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                             + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                             + expanedQuery.replace("\"", "\\\"")
-                            + "\" ] .";
+                            + "\"; <http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet"+ "] .";
 
         }
 //        if(keywords != null) {
