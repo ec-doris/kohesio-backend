@@ -596,7 +596,7 @@ public class ProjectController {
         search += " " + orderQuery;
         query =
                 "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
-                        + " { SELECT ?s0 ?snippet where { "
+                        + " { SELECT ?s0 ?description where { "
                         + search
                         + " } " + orderBy + " limit "
                         + limit
