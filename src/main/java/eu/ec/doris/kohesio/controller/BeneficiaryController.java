@@ -143,6 +143,18 @@ public class BeneficiaryController {
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
                 "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n " +
                 "} order by DESC(?euBudget) limit 100 ";
+
+        String query4 = "select ?fundLabel (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) where {\n" +
+                " VALUES ?s0 { <" +
+                id +
+                "> }   \n" +
+                "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
+                "    OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
+                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
+                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
+                "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n" +
+                " } group by ?fundLabel";
+
         TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(publicSparqlEndpoint, query1, 30);
         JSONObject result = new JSONObject();
         result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
@@ -253,6 +265,27 @@ public class BeneficiaryController {
                 projects.add(project);
             }
         }
+        JSONArray budgetsPerFund = new JSONArray();
+        TupleQueryResult resultSet4 = sparqlQueryService.executeAndCacheQuery(publicSparqlEndpoint, query4, 30);
+        if (resultSet4 != null) {
+            while (resultSet4.hasNext()) {
+                JSONObject budgetPerFund = new JSONObject();
+                BindingSet querySolution = resultSet4.next();
+                if (querySolution.getBinding("totalEuBudget") != null) {
+                    budgetPerFund.put("totalEuBudget", df2.format(((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue()));
+                }
+                if (querySolution.getBinding("totalBudget") != null) {
+                    budgetPerFund.put("totalBudget", df2.format(((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue()));
+                }
+                if (querySolution.getBinding("fundLabel") != null) {
+                    budgetPerFund.put("fundLabel", ((Literal) querySolution.getBinding("fundLabel").getValue()).getLabel());
+                }else{
+                    budgetPerFund.put("fundLabel", "n/a");
+                }
+                budgetsPerFund.add(budgetPerFund);
+            }
+        }
+        result.put("budgetsPerFund",budgetsPerFund);
         result.put("projects", projects);
         return new ResponseEntity(result, HttpStatus.OK);
 
