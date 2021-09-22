@@ -745,7 +745,7 @@ public class ProjectController {
                     String labelText = ((Literal) querySolution.getBinding("label").getValue()).getLabel();
                     textInput.append(labelText);
                 }
-                textInput.append("\n");
+                textInput.append("<br/>");
 
                 if (querySolution.getBinding("description") != null) {
                     String descriptionText = ((Literal) querySolution.getBinding("description").getValue()).getLabel();
