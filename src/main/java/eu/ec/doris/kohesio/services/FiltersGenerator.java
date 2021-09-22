@@ -43,11 +43,11 @@ public class FiltersGenerator {
 //                keywords = keywordsBuilder.toString();
 //            }
 
-            String expanedQuery = similarityService.expandQuery(keywords);
+
             search +=
                     "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                             + "<http://www.openrdf.org/contrib/lucenesail#query> \""
-                            + expanedQuery.replace("\"", "\\\"")
+                            + keywords.replace("\"", "\\\"")
                             + "\"; " +
 //                            "<http://www.openrdf.org/contrib/lucenesail#snippet> ?description"+
                             "] .";

@@ -11,6 +11,7 @@ import eu.ec.doris.kohesio.services.SimilarityService;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.math3.util.Precision;
+import org.apache.lucene.search.Query;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -39,6 +40,20 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.*;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.highlight.Formatter;
+import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
+import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
+import org.eclipse.rdf4j.sail.lucene.SearchFields;
 
 @RestController
 @RequestMapping("/api")
@@ -530,7 +545,13 @@ public class ProjectController {
                 limit = 1000;
             }
         }
-        String search = filtersGenerator.filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
+        // expand the query keywords
+        String expandedQuery = null;
+        if(keywords != null) {
+            expandedQuery = similarityService.expandQuery(keywords);
+        }
+
+        String search = filtersGenerator.filterProject(expandedQuery, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
 
         int numResults = 0;
 
@@ -682,7 +703,7 @@ public class ProjectController {
 
             if (querySolution.getBinding("label") != null)
                 label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
-            if (querySolution.getBinding("description") != null)
+            if (querySolution.getBinding("description") != null && expandedQuery == null)
                 description.add(((Literal) querySolution.getBinding("description").getValue()).getLabel());
             if (querySolution.getBinding("startTime") != null)
                 startTime.add(
@@ -716,6 +737,21 @@ public class ProjectController {
                 objectiveId.add(((Literal) querySolution.getBinding("objectiveId").getValue()).getLabel());
             if (querySolution.getBinding("countrycode") != null)
                 countrycode.add(((Literal) querySolution.getBinding("countrycode").getValue()).getLabel());
+
+            // try to create the snippet based on the given expanded query
+            if(expandedQuery != null) {
+                StringBuilder textInput = new StringBuilder();
+                if (querySolution.getBinding("label") != null) {
+                    String labelText = ((Literal) querySolution.getBinding("label").getValue()).getLabel();
+                    textInput.append(labelText);
+                }
+                if (querySolution.getBinding("description") != null) {
+                    String descriptionText = ((Literal) querySolution.getBinding("description").getValue()).getLabel();
+                    textInput.append(descriptionText);
+                }
+                String snippetText = getSnippet(expandedQuery, textInput.toString());
+                description.add(snippetText);
+            }
         }
         if (hasEntry) {
             Project project = new Project();
@@ -748,7 +784,27 @@ public class ProjectController {
         projectList.setNumberResults(numResults);
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
+    private String getSnippet(String queryText,String text){
 
+        Query query = null;
+        String snippet = "";
+        try {
+            query = new QueryParser("title", new StandardAnalyzer()).parse(queryText);
+            Formatter formatter = new SimpleHTMLFormatter(SearchFields.HIGHLIGHTER_PRE_TAG,
+                    SearchFields.HIGHLIGHTER_POST_TAG);
+            Highlighter highlighter = new Highlighter(formatter, new QueryScorer(query));
+            Analyzer analyzer = new StandardAnalyzer();
+            TokenStream tokenStream = analyzer.tokenStream("test", new StringReader(text));
+            snippet = highlighter.getBestFragments(tokenStream, text, 2, "...");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (InvalidTokenOffsetsException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return snippet;
+    }
     private SemanticSearchResult getProjectsURIsfromSemanticSearch(String keywords,boolean cache,int offset,int limit) {
         String url = null;
         //String encoded = URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());

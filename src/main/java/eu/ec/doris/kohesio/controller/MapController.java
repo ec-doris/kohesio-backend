@@ -7,6 +7,7 @@ import eu.ec.doris.kohesio.payload.NutsRegion;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
+import eu.ec.doris.kohesio.services.SimilarityService;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
@@ -36,6 +37,9 @@ public class MapController {
 
     @Autowired
     SPARQLQueryService sparqlQueryService;
+
+    @Autowired
+    SimilarityService similarityService;
 
     @Autowired
     FiltersGenerator filtersGenerator;
@@ -100,7 +104,12 @@ public class MapController {
         if (granularityRegion != null) {
             c = null;
         }
-        String search = filtersGenerator.filterProject(keywords, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
+        // expand the query keywords
+        String expandedQuery = null;
+        if(keywords != null) {
+            expandedQuery = similarityService.expandQuery(keywords);
+        }
+        String search = filtersGenerator.filterProject(expandedQuery, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
 
         //computing the number of results
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
