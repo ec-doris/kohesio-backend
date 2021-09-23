@@ -144,16 +144,15 @@ public class BeneficiaryController {
                 "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n " +
                 "} order by DESC(?euBudget) limit 100 ";
 
-        String query4 = "select ?fundLabel (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) where {\n" +
+        String query4 = "select ?fundLabel (sum(?euBudget) as ?totalEuBudget) where {\n" +
                 " VALUES ?s0 { <" +
                 id +
                 "> }   \n" +
                 "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
-                "    OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
                 "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n" +
-                " } group by ?fundLabel";
+                " } group by ?fundLabel order by desc(?totalEuBudget)";
 
         TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(publicSparqlEndpoint, query1, 30);
         JSONObject result = new JSONObject();
@@ -274,13 +273,10 @@ public class BeneficiaryController {
                 if (querySolution.getBinding("totalEuBudget") != null) {
                     budgetPerFund.put("totalEuBudget", df2.format(((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue()));
                 }
-                if (querySolution.getBinding("totalBudget") != null) {
-                    budgetPerFund.put("totalBudget", df2.format(((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue()));
-                }
                 if (querySolution.getBinding("fundLabel") != null) {
                     budgetPerFund.put("fundLabel", ((Literal) querySolution.getBinding("fundLabel").getValue()).getLabel());
                 }else{
-                    budgetPerFund.put("fundLabel", "n/a");
+                    budgetPerFund.put("fundLabel", "Other funds");
                 }
                 budgetsPerFund.add(budgetPerFund);
             }
