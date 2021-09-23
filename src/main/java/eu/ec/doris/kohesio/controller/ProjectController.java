@@ -548,11 +548,13 @@ public class ProjectController {
         }
         // expand the query keywords
         ExpandedQuery expandedQuery = null;
+        String expandedQueryText = null;
         if(keywords != null) {
             expandedQuery = similarityService.expandQuery(keywords);
+            expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQuery.getExpandedQuery(), country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
 
         int numResults = 0;
 
@@ -905,11 +907,13 @@ public class ProjectController {
 
         // expand the query keywords
         ExpandedQuery expandedQuery = null;
+        String expandedQueryText = null;
         if(keywords != null) {
             expandedQuery = similarityService.expandQuery(keywords);
+            expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQuery.getExpandedQuery(), country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null, limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
