@@ -761,8 +761,10 @@ public class ProjectController {
                 // replace the description with the snippet text
                 description.add(snippetText);
 
-                for(SimilarWord similarWord:expandedQuery.getKeywords()){
-                    similarWords.add(similarWord.getWord());
+                if(expandedQuery.getKeywords() != null){
+                    for(SimilarWord similarWord:expandedQuery.getKeywords()){
+                        similarWords.add(similarWord.getWord());
+                    }
                 }
             }
         }
