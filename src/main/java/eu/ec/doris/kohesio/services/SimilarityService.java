@@ -15,32 +15,47 @@ import java.util.ArrayList;
 @Service
 public class SimilarityService {
 
-    public String expandQuery(String query){
-        String[] words = query.split(" ");
-        StringBuilder keywordsBuilder = new StringBuilder();
-        keywordsBuilder.append("(");
-        for (int i = 0; i < words.length; i++) {
-            if(i < words.length -1){
-                keywordsBuilder.append(words[i]).append(" AND ");
-            }else{
-                keywordsBuilder.append(words[i]);
+    public ExpandedQuery expandQuery(String query){
+        // if the query contains any of the original patterns then we don't expand it and do a normal keyword search
+        String[] patterns = {" AND ", " OR ", "NOT ", "*", "\""};
+        boolean expand = true;
+        for(String pattern:patterns){
+            if(query.contains(pattern)){
+                expand = false;
+                break;
             }
         }
+        if(expand) {
+            String[] words = query.split(" ");
+            StringBuilder keywordsBuilder = new StringBuilder();
+            keywordsBuilder.append("(");
+            for (int i = 0; i < words.length; i++) {
+                if (i < words.length - 1) {
+                    keywordsBuilder.append(words[i]).append(" AND ");
+                } else {
+                    keywordsBuilder.append(words[i]);
+                }
+            }
 
-        keywordsBuilder.append(")").append(" OR \"").append(query).append("\"^2");
+            keywordsBuilder.append(")").append(" OR \"").append(query).append("\"^2");
 
-        ArrayList<SimilarWord> similarWords = getSimilarWords(query);
-        for (SimilarWord word: similarWords) {
-            keywordsBuilder.append(" OR \"").append(word.getWord()).append("\"^").append(word.getScore());
+            ArrayList<SimilarWord> similarWords = getSimilarWords(query, 10);
+            for (SimilarWord word : similarWords) {
+                keywordsBuilder.append(" OR \"").append(word.getWord()).append("\"^").append(word.getScore());
+            }
+            String expandedQuery = keywordsBuilder.toString();
+
+            return new ExpandedQuery().setExpandedQuery(expandedQuery).setKeywords(similarWords);
+        }else{
+            // else return the original query
+            return new ExpandedQuery().setExpandedQuery(query);
         }
-        String expandedQuery = keywordsBuilder.toString();
-        return expandedQuery;
     }
     /*
     Query the similarity API and get a list of similar words
      */
-    private ArrayList<SimilarWord> getSimilarWords(String text){
-        String url = "http://similarity.cnect.eu:3000/similarity?text="+text;
+    private ArrayList<SimilarWord> getSimilarWords(String text,int number){
+        String url = "http://similarity.cnect.eu:3000/similarity?text="+text+"&number="+number;
         ArrayList<SimilarWord> similarWords = new ArrayList<>();
         try {
             RestTemplate restTemplate = new RestTemplate();

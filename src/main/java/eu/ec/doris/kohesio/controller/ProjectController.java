@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import eu.ec.doris.kohesio.payload.*;
+import eu.ec.doris.kohesio.services.ExpandedQuery;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import eu.ec.doris.kohesio.services.SimilarityService;
@@ -546,12 +547,12 @@ public class ProjectController {
             }
         }
         // expand the query keywords
-        String expandedQuery = null;
+        ExpandedQuery expandedQuery = null;
         if(keywords != null) {
             expandedQuery = similarityService.expandQuery(keywords);
         }
 
-        String search = filtersGenerator.filterProject(expandedQuery, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
+        String search = filtersGenerator.filterProject(expandedQuery.getExpandedQuery(), country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
 
         int numResults = 0;
 
@@ -657,6 +658,8 @@ public class ProjectController {
         Set<String> coordinates = new HashSet<>();
         Set<String> objectiveId = new HashSet<>();
         Set<String> countrycode = new HashSet<>();
+        ArrayList<String> similarWords = new ArrayList<>();
+
         boolean hasEntry = resultSet.hasNext();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -689,6 +692,7 @@ public class ProjectController {
                     coordinates = new HashSet<>();
                     objectiveId = new HashSet<>();
                     countrycode = new HashSet<>();
+                    similarWords = new ArrayList<>();
                 }
                 previewsKey = querySolution.getBinding("s0").getValue().stringValue();
             }
@@ -751,8 +755,13 @@ public class ProjectController {
                     String descriptionText = ((Literal) querySolution.getBinding("description").getValue()).getLabel();
                     textInput.append(descriptionText);
                 }
-                String snippetText = getSnippet(expandedQuery, textInput.toString());
+                String snippetText = getSnippet(expandedQuery.getExpandedQuery(), textInput.toString());
+                // replace the description with the snippet text
                 description.add(snippetText);
+
+                for(SimilarWord similarWord:expandedQuery.getKeywords()){
+                    similarWords.add(similarWord.getWord());
+                }
             }
         }
         if (hasEntry) {
@@ -784,6 +793,7 @@ public class ProjectController {
             projectList.setList(resultList);
         }
         projectList.setNumberResults(numResults);
+        projectList.setSimilarWords(similarWords);
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
     private String getSnippet(String queryText,String text){
@@ -892,7 +902,14 @@ public class ProjectController {
             Principal principal)
             throws Exception {
         logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, null);
-        String search = filtersGenerator.filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null, limit, offset);
+
+        // expand the query keywords
+        ExpandedQuery expandedQuery = null;
+        if(keywords != null) {
+            expandedQuery = similarityService.expandQuery(keywords);
+        }
+
+        String search = filtersGenerator.filterProject(expandedQuery.getExpandedQuery(), country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
