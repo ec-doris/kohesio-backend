@@ -17,6 +17,7 @@ public class Project {
     ArrayList<String> objectiveIds;
     ArrayList<String> countrycode;
 
+
     public String getLink() {
         return link;
     }

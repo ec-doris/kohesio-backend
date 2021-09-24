@@ -3,13 +3,16 @@ package eu.ec.doris.kohesio.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import eu.ec.doris.kohesio.payload.NutsRegion;
-import eu.ec.doris.kohesio.payload.Project;
-import eu.ec.doris.kohesio.payload.ProjectList;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.ec.doris.kohesio.payload.*;
+import eu.ec.doris.kohesio.services.ExpandedQuery;
+import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
+import eu.ec.doris.kohesio.services.SimilarityService;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.math3.util.Precision;
+import org.apache.lucene.search.Query;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -39,6 +42,20 @@ import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.*;
 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.highlight.Formatter;
+import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
+import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
+import org.eclipse.rdf4j.sail.lucene.SearchFields;
+
 @RestController
 @RequestMapping("/api")
 
@@ -48,6 +65,12 @@ public class ProjectController {
 
     @Autowired
     SPARQLQueryService sparqlQueryService;
+
+    @Autowired
+    SimilarityService similarityService;
+
+    @Autowired
+    FiltersGenerator filtersGenerator;
 
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
@@ -512,23 +535,28 @@ public class ProjectController {
 
         int inputOffset = offset;
         int inputLimit = limit;
-        if (offset < 1000) {
-            offset = 0;
-            limit = 1000;
+        if(keywords != null){
+            if(offset < 100) {
+                offset = 0;
+                limit = 100;
+            }
+        }else{
+            if (offset < 1000) {
+                offset = 0;
+                limit = 1000;
+            }
         }
-        String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
+        // expand the query keywords
+        ExpandedQuery expandedQuery = null;
+        String expandedQueryText = null;
+        if(keywords != null) {
+            expandedQuery = similarityService.expandQuery(keywords);
+            expandedQueryText = expandedQuery.getExpandedQuery();
+        }
 
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
 
-        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
-        System.out.println(query);
         int numResults = 0;
-
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
-        if (resultSet != null && resultSet.hasNext()) {
-            BindingSet querySolution = resultSet.next();
-            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
-        }
-
 
         String orderQuery = "";
 
@@ -576,31 +604,23 @@ public class ProjectController {
                     "    } " +
                     "    }";
         }
-        if(keywords != null && country == null && theme == null && fund == null && program == null && categoryOfIntervention == null
-        && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
-                budgetEUSmallerThen == null && startDateBefore == null &&
-                startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
 
-            // pass cache = false in order to stop caching the semantic search results
-            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords,false,200);
-            if(projectsURIs.size() > 0) {
-                search = "";
-                search += "VALUES ?s0 {";
-                for (String uri : projectsURIs) {
-                    String uriStr = "<"+uri+">";
-                    search+= uriStr+" ";
-                }
-                search+="}";
-            }else{
-                System.out.println("Semantic search API returned empty result!!");
-            }
-            numResults = projectsURIs.size();
-            //search = "";
+        // pass cache = false in order to stop caching the semantic search results
+
+        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
+        System.out.println(query);
+        // count the results with the applied filters
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+        if (resultSet != null && resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
+        //search = "";
+
         search += " " + orderQuery;
         query =
                 "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
-                        + " { SELECT ?s0 ?snippet where { "
+                        + " { SELECT ?s0 ?description where { "
                         + search
                         + " } " + orderBy + " limit "
                         + limit
@@ -640,6 +660,8 @@ public class ProjectController {
         Set<String> coordinates = new HashSet<>();
         Set<String> objectiveId = new HashSet<>();
         Set<String> countrycode = new HashSet<>();
+        ArrayList<String> similarWords = new ArrayList<>();
+
         boolean hasEntry = resultSet.hasNext();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -672,6 +694,7 @@ public class ProjectController {
                     coordinates = new HashSet<>();
                     objectiveId = new HashSet<>();
                     countrycode = new HashSet<>();
+                    similarWords = new ArrayList<>();
                 }
                 previewsKey = querySolution.getBinding("s0").getValue().stringValue();
             }
@@ -686,7 +709,7 @@ public class ProjectController {
 
             if (querySolution.getBinding("label") != null)
                 label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
-            if (querySolution.getBinding("description") != null)
+            if (querySolution.getBinding("description") != null && expandedQuery == null)
                 description.add(((Literal) querySolution.getBinding("description").getValue()).getLabel());
             if (querySolution.getBinding("startTime") != null)
                 startTime.add(
@@ -720,6 +743,30 @@ public class ProjectController {
                 objectiveId.add(((Literal) querySolution.getBinding("objectiveId").getValue()).getLabel());
             if (querySolution.getBinding("countrycode") != null)
                 countrycode.add(((Literal) querySolution.getBinding("countrycode").getValue()).getLabel());
+
+            // try to create the snippet based on the given expanded query
+            if(expandedQuery != null) {
+                StringBuilder textInput = new StringBuilder();
+                if (querySolution.getBinding("label") != null) {
+                    String labelText = ((Literal) querySolution.getBinding("label").getValue()).getLabel();
+                    textInput.append(labelText);
+                }
+                textInput.append("<br/>");
+
+                if (querySolution.getBinding("description") != null) {
+                    String descriptionText = ((Literal) querySolution.getBinding("description").getValue()).getLabel();
+                    textInput.append(descriptionText);
+                }
+                String snippetText = getSnippet(expandedQuery.getExpandedQuery(), textInput.toString());
+                // replace the description with the snippet text
+                description.add(snippetText);
+
+                if(expandedQuery.getKeywords() != null){
+                    for(SimilarWord similarWord:expandedQuery.getKeywords()){
+                        similarWords.add(similarWord.getWord());
+                    }
+                }
+            }
         }
         if (hasEntry) {
             Project project = new Project();
@@ -739,7 +786,10 @@ public class ProjectController {
             resultList.add(project);
         }
         ProjectList projectList = new ProjectList();
-        if(offset <= 990) {
+        int upperLimit = 990;
+        if(keywords != null)
+            upperLimit = 90;
+        if(offset <= upperLimit) {
             for (int i = inputOffset; i < Math.min(resultList.size(), inputOffset + inputLimit); i++) {
                 projectList.getList().add(resultList.get(i));
             }
@@ -747,13 +797,34 @@ public class ProjectController {
             projectList.setList(resultList);
         }
         projectList.setNumberResults(numResults);
+        projectList.setSimilarWords(similarWords);
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
+    private String getSnippet(String queryText,String text){
 
-    private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords,boolean cache,int nhits) {
+        Query query = null;
+        String snippet = "";
+        try {
+            query = new QueryParser("title", new StandardAnalyzer()).parse(queryText);
+            Formatter formatter = new SimpleHTMLFormatter(SearchFields.HIGHLIGHTER_PRE_TAG,
+                    SearchFields.HIGHLIGHTER_POST_TAG);
+            Highlighter highlighter = new Highlighter(formatter, new QueryScorer(query));
+            Analyzer analyzer = new StandardAnalyzer();
+            TokenStream tokenStream = analyzer.tokenStream("test", new StringReader(text));
+            snippet = highlighter.getBestFragments(tokenStream, text, 2, "...");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (InvalidTokenOffsetsException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return snippet;
+    }
+    private SemanticSearchResult getProjectsURIsfromSemanticSearch(String keywords,boolean cache,int offset,int limit) {
         String url = null;
         //String encoded = URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
-        url = "http://kohesio-search.eu-west-1.elasticbeanstalk.com/search?query=" + keywords+"&n_hits="+nhits;
+        url = "http://kohesio-search-dev.eu-west-1.elasticbeanstalk.com/search?query=" + keywords+"&page="+offset+"&page_size="+limit;
 
         String path = cacheDirectory+"/facet/semantic-search";
         File dir = new File(path);
@@ -763,43 +834,49 @@ public class ProjectController {
             dir.mkdirs();
         }
         String query = url;
-        if(dir.exists() && cache){
-            try {
-                ArrayList<String> projectsURIs = new ArrayList<>();
-                Scanner input = new Scanner(new File(path+"/"+query.hashCode()));
-                while (input.hasNext()){
-                    String projectURI  = input.next();
-                    projectsURIs.add(projectURI);
-                }
-                return projectsURIs;
-            } catch (FileNotFoundException e) {
-                logger.error("Could not find cache file, probably not cahced");
-            }
-        }
+//        if(dir.exists() && cache){
+//            try {
+//                ArrayList<String> projectsURIs = new ArrayList<>();
+//                Scanner input = new Scanner(new File(path+"/"+query.hashCode()));
+//                while (input.hasNext()){
+//                    String projectURI  = input.next();
+//                    projectsURIs.add(projectURI);
+//                }
+//                return projectsURIs;
+//            } catch (FileNotFoundException e) {
+//                logger.error("Could not find cache file, probably not cahced");
+//            }
+//        }
 
         ArrayList<String> listProjectURIs = new ArrayList<>();
+        int numberOfResult = 0;
         try {
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             if (response.getStatusCode().equals(HttpStatus.OK)) {
-                FileOutputStream out = new FileOutputStream(path+"/"+ query.hashCode());
+//                FileOutputStream out = new FileOutputStream(path+"/"+ query.hashCode());
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.getBody());
-                ArrayNode results = (ArrayNode) root;
-                for (int i = 0; i < results.size(); i++) {
-                    String projectURI = results.get(i).get("uri").textValue();
+                ObjectNode result = (ObjectNode) root;
+                numberOfResult = ((JsonNode)result.get("total_hits")).intValue();
+                ArrayNode hits = (ArrayNode) result.get("hits");
+                for (int i = 0; i < hits.size(); i++) {
+                    String projectURI = hits.get(i).get("uri").textValue();
                     listProjectURIs.add(projectURI);
                     projectURI+="\n";
-                    out.write(projectURI.getBytes());
+//                    out.write(projectURI.getBytes());
                 }
-                out.close();
+//                out.close();
             } else {
                 System.err.println("Error in HTTP request!");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return listProjectURIs;
+        SemanticSearchResult result = new SemanticSearchResult();
+        result.setNumberOfResults(numberOfResult);
+        result.setProjectsURIs(listProjectURIs);
+        return result;
     }
 
     @GetMapping(value = "/facet/eu/search/project/image", produces = "application/json")
@@ -829,7 +906,16 @@ public class ProjectController {
             Principal principal)
             throws Exception {
         logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, null);
-        String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
+
+        // expand the query keywords
+        ExpandedQuery expandedQuery = null;
+        String expandedQueryText = null;
+        if(keywords != null) {
+            expandedQuery = similarityService.expandQuery(keywords);
+            expandedQueryText = expandedQuery.getExpandedQuery();
+        }
+
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
@@ -1034,142 +1120,5 @@ public class ProjectController {
         }
     }
 
-    private String filterProject(String keywords, String country, String theme, String fund, String program, String categoryOfIntervention,
-                                 String policyObjective, Integer budgetBiggerThen, Integer budgetSmallerThen, Integer budgetEUBiggerThen, Integer budgetEUSmallerThen, String startDateBefore, String startDateAfter,
-                                 String endDateBefore,
-                                 String endDateAfter,
-                                 String latitude,
-                                 String longitude,
-                                 String region,
-                                 Integer limit,
-                                 Integer offset) throws IOException {
-        String search = "";
-        if (keywords != null) {
-            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
-                String[] words = keywords.split(" ");
-                StringBuilder keywordsBuilder = new StringBuilder();
-                for (int i = 0; i < words.length - 1; i++) {
-                    keywordsBuilder.append(words[i]).append(" AND ");
-                }
-                keywordsBuilder.append(words[words.length - 1]);
-                keywords = keywordsBuilder.toString();
-            }
-            search +=
-                    "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
-                            + "<http://www.openrdf.org/contrib/lucenesail#query> \""
-                            + keywords.replace("\"", "\\\"")
-                            + "\" ] .";
-        }
 
-        if (country != null && region == null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
-        }
-
-        if (theme != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                            + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
-                            + theme
-                            + "> . ";
-        }
-
-        if (policyObjective != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                            + "?category <https://linkedopendata.eu/prop/direct/P1849> <"
-                            + policyObjective
-                            + "> . ";
-        }
-
-        if (fund != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1584> <" + fund + "> . ";
-        }
-
-        if (program != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
-        }
-
-        if (categoryOfIntervention != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention + "> . ";
-        }
-
-        if (budgetBiggerThen != null) {
-            search +=
-                    " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . "
-                            + "FILTER( ?budget > "
-                            + budgetBiggerThen
-                            + ")";
-        }
-
-        if (budgetSmallerThen != null || budgetBiggerThen != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
-            if (budgetBiggerThen != null) {
-                search += "FILTER( ?budget > " + budgetBiggerThen + ")";
-            }
-            if (budgetSmallerThen != null) {
-                search += "FILTER( ?budget < " + budgetSmallerThen + ")";
-            }
-        }
-
-        if (budgetEUBiggerThen != null || budgetEUSmallerThen != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P835> ?budgetEU . ";
-            if (budgetEUBiggerThen != null) {
-                search += "FILTER( ?budgetEU > " + budgetEUBiggerThen + ")";
-            }
-            if (budgetEUSmallerThen != null) {
-                search += "FILTER( ?budgetEU < " + budgetEUSmallerThen + ")";
-            }
-        }
-
-        if (startDateBefore != null || startDateAfter != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startDate . ";
-            if (startDateBefore != null) {
-                search +=
-                        "FILTER( ?startDate <= \""
-                                + startDateBefore
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-            if (startDateAfter != null) {
-                search +=
-                        "FILTER( ?startDate >= \""
-                                + startDateAfter
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-        }
-
-        if (endDateBefore != null || endDateAfter != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endDate . ";
-            if (endDateBefore != null) {
-                search +=
-                        "FILTER( ?endDate <= \""
-                                + endDateBefore
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-            if (endDateAfter != null) {
-                search +=
-                        "FILTER( ?endDate >= \""
-                                + endDateAfter
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-        }
-
-        if (region != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . ";
-        }
-
-        if (latitude != null && longitude != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                            + "FILTER ( <http://www.opengis.net/def/function/geosparql/distance>(\"POINT("
-                            + longitude
-                            + " "
-                            + latitude
-                            + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)< 100000) . ";
-        }
-
-        search +=
-                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
-        return search;
-    }
 }
