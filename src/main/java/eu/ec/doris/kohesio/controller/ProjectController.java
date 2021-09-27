@@ -105,7 +105,7 @@ public class ProjectController {
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
         } else {
             String query =
-                    "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
+                    "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
                             + " VALUES ?s0 { <"
                             + id
                             + "> } "
@@ -169,6 +169,7 @@ public class ProjectController {
                             + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID .  "
                             + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
                             + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
+                            + "        OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
                             + "         OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  "
                             + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?regionId .} "
                             + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P35> ?regionType . "
@@ -372,9 +373,9 @@ public class ProjectController {
                         result.put("videos", images);
                     }
                 }
-
+                JSONArray beneficiaries = (JSONArray) result.get("beneficiaries");
                 if (querySolution.getBinding("beneficiaryLink") != null) {
-                    JSONArray beneficiaries = (JSONArray) result.get("beneficiaries");
+
                     String ben = querySolution.getBinding("beneficiaryLink").getValue().stringValue();
                     boolean found = false;
                     for (int i = 0; i < beneficiaries.size(); i++) {
@@ -394,7 +395,11 @@ public class ProjectController {
                                     ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).stringValue();
                             beneficary.put("beneficiaryLabel", label);
                         } else {
-                            beneficary.put("beneficiaryLabel", "");
+                            if(querySolution.getBinding("beneficiaryString") != null)
+                                beneficary.put("beneficiaryLabel", querySolution.getBinding("beneficiaryString").getValue().stringValue());
+                            else{
+                                beneficary.put("beneficiaryLabel", "");
+                            }
                         }
                         if (querySolution.getBinding("beneficiaryWikidata") != null) {
                             String benID =
@@ -412,6 +417,21 @@ public class ProjectController {
                             beneficary.put("website", "");
                         }
                         beneficiaries.add(beneficary);
+                    }
+                }else{
+                    if(querySolution.getBinding("beneficiaryString") != null) {
+                        String ben = querySolution.getBinding("beneficiaryString").getValue().stringValue();
+                        boolean found = false;
+                        for (Object beneficiary : beneficiaries) {
+                            if (((JSONObject) beneficiary).get("beneficiaryLabel").equals(ben)) {
+                                found = true;
+                            }
+                        }
+                        if(!found) {
+                            JSONObject beneficiary = new JSONObject();
+                            beneficiary.put("beneficiaryLabel", querySolution.getBinding("beneficiaryString").getValue().stringValue());
+                            beneficiaries.add(beneficiary);
+                        }
                     }
                 }
 
