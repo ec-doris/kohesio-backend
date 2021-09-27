@@ -430,7 +430,10 @@ public class ProjectController {
                         if(!found) {
                             JSONObject beneficiary = new JSONObject();
                             beneficiary.put("beneficiaryLabel", querySolution.getBinding("beneficiaryString").getValue().stringValue());
+                            beneficiary.put("link", "#");
+
                             beneficiaries.add(beneficiary);
+
                         }
                     }
                 }
