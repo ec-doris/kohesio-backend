@@ -170,26 +170,60 @@ public class ProjectController {
                             + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
                             + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
                             + "        OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
-                            + "         OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  "
-                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?regionId . "
-                            + "             ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
-                            + "             FILTER((LANG(?regionLabel)) = \"" + language + "\") }"
-                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P35> ?regionType . "
-                            + "             FILTER( ?regionType = <https://linkedopendata.eu/entity/Q2576750>  || ?regionType = <https://linkedopendata.eu/entity/Q2576674> )"
-                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper1 .  "
-                            + "             ?regionUpper1 <https://linkedopendata.eu/prop/direct/P35>  ?regionType1 . "
-                            + "             FILTER(?regionType1 = <https://linkedopendata.eu/entity/Q2576674> || ?regionType1 = <https://linkedopendata.eu/entity/Q2576630>)"
-                            + "             ?regionUpper1 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper1Label . "
-                            + "             FILTER((LANG(?regionUpper1Label)) = \"" + language + "\") } "
-                            + "           OPTIONAL {?regionUpper1 <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper2 ."
-                            + "             ?regionUpper2 <https://linkedopendata.eu/prop/direct/P35> ?regionType2 . "
-                            + "             FILTER(?regionType2 = <https://linkedopendata.eu/entity/Q2576630> || ?regionType2 = <https://linkedopendata.eu/entity/Q510>)"
-                            + "             ?regionUpper2 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper2Label . "
-                            + "             FILTER((LANG(?regionUpper2Label)) = \"" + language + "\") }  "
-                            + "           OPTIONAL { ?regionUpper2 <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper3 . "
-                            + "           ?regionUpper3 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper3Label . "
-                            + "           ?regionUpper3 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> ."
-                            + "           FILTER((LANG(?regionUpper3Label)) = \"" + language + "\") } }} "
+
+
+                            +"OPTIONAL\n" +
+                                    "       { ?s0  wdt:P1845  ?region\n" +
+                                    "         OPTIONAL\n" +
+                                    "           { ?region  wdt:P192  ?regionId .\n" +
+                                    "                        ?region  <http://www.w3.org/2000/01/rdf-schema#label>  ?regionLabel\n" +
+                                    "                        FILTER ( lang(?regionLabel) = \"en\" )\n" +
+                                    "           }\n" +
+                                    "         OPTIONAL\n" +
+                                    "           { \n" +
+                                    "             \n" +
+                                    "             #?region  wdt:P35  ?regionType .\n" +
+                                    "              ?region p:P35 ?blank .\n" +
+                                    "              ?blank ps:P35 ?is_statistical_only .\n" +
+                                    "            \n" +
+                                    "             FILTER ( (( ?regionType = wd:Q2576750 ) || ( ?regionType = wd:Q2576674 )) && (?regionType != wd:Q2727537))\n" +
+                                    "           \n" +
+                                    "         OPTIONAL\n" +
+                                    "           { \n" +
+                                    "             \n" +
+                                    "             ?region   wdt:P1845  ?regionUpper1 .\n" +
+                                    "             #?regionUpper1 wdt:P35  ?regionType1 .\n" +
+                                    "            \n" +
+                                    "            ?regionUpper1 p:P35 ?blank_1 .\n" +
+                                    "             ?blank_1 ps:P35 ?regionType1 .\n" +
+                                    "            \n" +
+                                    "             FILTER ( (( ?regionType1 = wd:Q2576674 ) || ( ?regionType1 = wd:Q2576630 )) && (?regionType1 != wd:Q2727537) )\n" +
+                                    "             ?regionUpper1\n" +
+                                    "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper1Label\n" +
+                                    "             FILTER ( lang(?regionUpper1Label) = \""+language+"\" )\n" +
+                                    "           }\n" +
+                                    "         OPTIONAL\n" +
+                                    "           { ?regionUpper1\n" +
+                                    "                       wdt:P1845  ?regionUpper2 .\n" +
+                                    "             #?regionUpper2 wdt:P35  ?regionType2 .\n" +
+                                    "             ?regionUpper2 p:P35 ?blank_2 .\n" +
+                                    "             ?blank_2 ps:P35 ?regionType2 .\n" +
+                                    "            \n" +
+                                    "             FILTER ( (( ?regionType2 = wd:Q2576630 ) || ( ?regionType2 = wd:Q510 )) && (?regionType2 != wd:Q2727537) )\n" +
+                                    "             ?regionUpper2\n" +
+                                    "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper2Label\n" +
+                                    "             FILTER ( lang(?regionUpper2Label) = \""+language+"\" )\n" +
+                                    "           }\n" +
+                                    "         OPTIONAL\n" +
+                                    "           { ?regionUpper2\n" +
+                                    "                       wdt:P1845  ?regionUpper3 .\n" +
+                                    "             ?regionUpper3\n" +
+                                    "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper3Label ;\n" +
+                                    "                       wdt:P35  wd:Q510\n" +
+                                    "             FILTER ( lang(?regionUpper3Label) = \""+language+"\" )\n" +
+                                    "           }\n" +
+                                    "           }\n" +
+                                    "       }"
                             + "} ";
             logger.info("Retrieving results");
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2, false);
