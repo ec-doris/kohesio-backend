@@ -26,14 +26,14 @@ public class SimilarityService {
             }
         }
         if(expand) {
-            String[] words = query.split(" ");
+            String[] words = query.trim().split(" ");
             StringBuilder keywordsBuilder = new StringBuilder();
             keywordsBuilder.append("(");
             for (int i = 0; i < words.length; i++) {
                 if (i < words.length - 1) {
-                    keywordsBuilder.append(words[i]).append(" AND ");
+                    keywordsBuilder.append(words[i].trim()).append(" AND ");
                 } else {
-                    keywordsBuilder.append(words[i]);
+                    keywordsBuilder.append(words[i].trim());
                 }
             }
 
