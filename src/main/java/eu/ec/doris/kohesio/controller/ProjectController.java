@@ -171,11 +171,11 @@ public class ProjectController {
                             + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
                             + "        OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
                             + "         OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  "
-                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?regionId .} "
-                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P35> ?regionType . "
-                            + "             FILTER( ?regionType = <https://linkedopendata.eu/entity/Q2576750>  || ?regionType = <https://linkedopendata.eu/entity/Q2576674> )"
+                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?regionId . "
                             + "             ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
                             + "             FILTER((LANG(?regionLabel)) = \"" + language + "\") }"
+                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P35> ?regionType . "
+                            + "             FILTER( ?regionType = <https://linkedopendata.eu/entity/Q2576750>  || ?regionType = <https://linkedopendata.eu/entity/Q2576674> )"
                             + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper1 .  "
                             + "             ?regionUpper1 <https://linkedopendata.eu/prop/direct/P35>  ?regionType1 . "
                             + "             FILTER(?regionType1 = <https://linkedopendata.eu/entity/Q2576674> || ?regionType1 = <https://linkedopendata.eu/entity/Q2576630>)"
@@ -189,7 +189,7 @@ public class ProjectController {
                             + "           OPTIONAL { ?regionUpper2 <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper3 . "
                             + "           ?regionUpper3 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper3Label . "
                             + "           ?regionUpper3 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> ."
-                            + "           FILTER((LANG(?regionUpper3Label)) = \"" + language + "\") }} "
+                            + "           FILTER((LANG(?regionUpper3Label)) = \"" + language + "\") } }} "
                             + "} ";
             logger.info("Retrieving results");
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2, false);
