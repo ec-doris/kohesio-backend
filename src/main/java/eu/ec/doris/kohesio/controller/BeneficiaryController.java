@@ -104,6 +104,10 @@ public class BeneficiaryController {
                 "              || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"lv\" && ?country = <https://linkedopendata.eu/entity/Q24> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q16> ) \n" +
+                "              || (LANG(?beneficiaryLabel) = \"sk\" && ?country = <https://linkedopendata.eu/entity/Q26> ) " +
+                "              || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) " +
+                "              || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q9> ) " +
+                "              || (LANG(?beneficiaryLabel) = \"et\" && ?country = <https://linkedopendata.eu/entity/Q23> ) " +
                 "              || (LANG(?beneficiaryLabel) = \"pt\" && ?country = <https://linkedopendata.eu/entity/Q18> ) ) } \n" +
                 "  OPTIONAL {  ?s0 <http://schema.org/description> ?description .  FILTER (lang(?description)=\""+language+"\") }\n" +
                 "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P67> ?website .}\n" +
