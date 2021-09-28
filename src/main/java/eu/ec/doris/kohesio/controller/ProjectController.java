@@ -232,8 +232,9 @@ public class ProjectController {
                             "           { ?regionUpper2\n" +
                             "                       wdt:P1845  ?regionUpper3 .\n" +
                             "             ?regionUpper3\n" +
-                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper3Label ;\n" +
-                            "                       wdt:P35  wd:Q510\n" +
+                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper3Label .\n" +
+                            "             ?regionUpper3 p:P35 ?blank_country .\n" +
+                            "            ?blank_country ps:P35 wd:Q510 ." +
                             "             FILTER ( lang(?regionUpper3Label) = \"en\" )\n" +
                             "           }\n" +
                             "           }\n" +
