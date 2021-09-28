@@ -513,10 +513,10 @@ public class ProjectController {
                 }
                 if (result.get("region") != "") {
                     String regionText = (String) result.get("region");
-                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1")))) {
+                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1"))) && !result.get("regionUpper1").equals("")) {
                         regionText += ", " + (String) result.get("regionUpper1");
                     }
-                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2")))) {
+                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2"))) && !result.get("regionUpper2").equals("")) {
                         regionText += ", " + (String) result.get("regionUpper2");
                     }
                     if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
