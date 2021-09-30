@@ -105,7 +105,7 @@ public class CacheController {
             for (Boolean b : orderEuBudget) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null, b, false, false, 1000, 1, null);
+                        null,null, b, false, false, 1000, 1, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -114,7 +114,7 @@ public class CacheController {
             for (Boolean b : orderTotalBudget) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null, null, b, null, 1000, 1, null);
+                        null, null,null, b, null, 1000, 1, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -123,7 +123,7 @@ public class CacheController {
             for (Boolean b : orderNumProjects) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null, null, null, b, 1000, 1, null);
+                        null, null,null, null, b, 1000, 1, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -160,7 +160,7 @@ public class CacheController {
                         Boolean[] orderEuBudget = {null, true, false};
                         for (Boolean b : orderEuBudget) {
                             beneficiaryController.euSearchBeneficiaries(
-                                    "en", null, country, r, null, null, f, p, b, null, null, 1000, 0, null);
+                                    "en", null, country, r, null, null, f, p, null,b, null, null, 1000, 0, null);
                         }
                         JSONArray policies = facetController.facetPolicyObjective("en");
                         for (Object policy: policies) {

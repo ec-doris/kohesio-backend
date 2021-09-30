@@ -102,6 +102,12 @@ public class BeneficiaryController {
                 "              || (LANG(?beneficiaryLabel) = \"hr\" && ?country = <https://linkedopendata.eu/entity/Q30> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) \n" +
+                "              || (LANG(?beneficiaryLabel) = \"lv\" && ?country = <https://linkedopendata.eu/entity/Q24> ) \n" +
+                "              || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q16> ) \n" +
+                "              || (LANG(?beneficiaryLabel) = \"sk\" && ?country = <https://linkedopendata.eu/entity/Q26> ) " +
+                "              || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) " +
+                "              || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q9> ) " +
+                "              || (LANG(?beneficiaryLabel) = \"et\" && ?country = <https://linkedopendata.eu/entity/Q23> ) " +
                 "              || (LANG(?beneficiaryLabel) = \"pt\" && ?country = <https://linkedopendata.eu/entity/Q18> ) ) } \n" +
                 "  OPTIONAL {  ?s0 <http://schema.org/description> ?description .  FILTER (lang(?description)=\""+language+"\") }\n" +
                 "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P67> ?website .}\n" +
@@ -141,6 +147,17 @@ public class BeneficiaryController {
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
                 "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n " +
                 "} order by DESC(?euBudget) limit 100 ";
+
+        String query4 = "select ?fundLabel (sum(?euBudget) as ?totalEuBudget) where {\n" +
+                " VALUES ?s0 { <" +
+                id +
+                "> }   \n" +
+                "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
+                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
+                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
+                "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n" +
+                " } group by ?fundLabel order by desc(?totalEuBudget)";
+
         TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(publicSparqlEndpoint, query1, 30);
         JSONObject result = new JSONObject();
         result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
@@ -251,6 +268,24 @@ public class BeneficiaryController {
                 projects.add(project);
             }
         }
+        JSONArray budgetsPerFund = new JSONArray();
+        TupleQueryResult resultSet4 = sparqlQueryService.executeAndCacheQuery(publicSparqlEndpoint, query4, 30);
+        if (resultSet4 != null) {
+            while (resultSet4.hasNext()) {
+                JSONObject budgetPerFund = new JSONObject();
+                BindingSet querySolution = resultSet4.next();
+                if (querySolution.getBinding("totalEuBudget") != null) {
+                    budgetPerFund.put("totalEuBudget", df2.format(((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue()));
+                }
+                if (querySolution.getBinding("fundLabel") != null) {
+                    budgetPerFund.put("fundLabel", ((Literal) querySolution.getBinding("fundLabel").getValue()).getLabel());
+                }else{
+                    budgetPerFund.put("fundLabel", "Other funds");
+                }
+                budgetsPerFund.add(budgetPerFund);
+            }
+        }
+        result.put("budgetsPerFund",budgetsPerFund);
         result.put("projects", projects);
         return new ResponseEntity(result, HttpStatus.OK);
 
@@ -265,6 +300,7 @@ public class BeneficiaryController {
                                                  @RequestParam(value = "longitude", required = false) String longitude, //
                                                  @RequestParam(value = "fund", required = false) String fund, //
                                                  @RequestParam(value = "program", required = false) String program, //
+                                                 @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
 
                                                  @RequestParam(value = "orderEuBudget", defaultValue = "false") Boolean orderEuBudget,
                                                  @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
@@ -330,6 +366,15 @@ public class BeneficiaryController {
                 + "   optional { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
                 + "   optional { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
 
+        if(beneficiaryType != null){
+            if(beneficiaryType.equals("private")){
+                search += "?beneficiary <https://linkedopendata.eu/prop/P35> ?blank_class . "
+                + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630487> .";
+            }else if(beneficiaryType.equals("public")){
+                search += "?beneficiary <https://linkedopendata.eu/prop/P35> ?blank_class . "
+                        + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630486> .";
+            }
+        }
         String queryCount = "select (count(?beneficiary) as ?c) where { " +
                 "{select ?beneficiary where {\n" +
                 search
@@ -391,6 +436,12 @@ public class BeneficiaryController {
                         + "                 || (LANG(?beneficiaryLabel) = \"hr\" && ?country = <https://linkedopendata.eu/entity/Q30> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"pt\" && ?country = <https://linkedopendata.eu/entity/Q18> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"lv\" && ?country = <https://linkedopendata.eu/entity/Q24> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q16> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"sk\" && ?country = <https://linkedopendata.eu/entity/Q26> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q9> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"et\" && ?country = <https://linkedopendata.eu/entity/Q23> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) )  "
                         + " }"
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P1> ?link. } "
@@ -502,12 +553,14 @@ public class BeneficiaryController {
                                           @RequestParam(value = "longitude", required = false) String longitude, //
                                           @RequestParam(value = "fund", required = false) String fund, //
                                           @RequestParam(value = "program", required = false) String program, //
+                                          @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
+
                                           Principal principal,
                                           @Context HttpServletResponse response)
             throws Exception {
         // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
         // by default it export 1000
-        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program, false, false, false, 1000, 0, principal).getBody());
+        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program,beneficiaryType, false, false, false, 1000, 0, principal).getBody());
         String filename = "beneficiary_export.csv";
         try {
             response.setContentType("text/csv");
@@ -543,11 +596,13 @@ public class BeneficiaryController {
                                                               @RequestParam(value = "longitude", required = false) String longitude, //
                                                               @RequestParam(value = "fund", required = false) String fund, //
                                                               @RequestParam(value = "program", required = false) String program, //
+                                                              @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
+
                                                               Principal principal)
             throws Exception {
         // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
         // by default it export 1000
-        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program, false, false, false, 1000, 0, principal).getBody());
+        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program, beneficiaryType,false, false, false, 1000, 0, principal).getBody());
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("beneficiary_export");
         int rowNumber = 0;

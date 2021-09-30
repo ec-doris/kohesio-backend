@@ -2,13 +2,17 @@ package eu.ec.doris.kohesio.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.ec.doris.kohesio.payload.NutsRegion;
-import eu.ec.doris.kohesio.payload.Project;
-import eu.ec.doris.kohesio.payload.ProjectList;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import eu.ec.doris.kohesio.payload.*;
+import eu.ec.doris.kohesio.services.ExpandedQuery;
+import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
+import eu.ec.doris.kohesio.services.SimilarityService;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.math3.util.Precision;
+import org.apache.lucene.search.Query;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -38,6 +42,20 @@ import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.*;
 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.highlight.Formatter;
+import org.apache.lucene.search.highlight.Highlighter;
+import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
+import org.apache.lucene.search.highlight.QueryScorer;
+import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
+import org.eclipse.rdf4j.sail.lucene.SearchFields;
+
 @RestController
 @RequestMapping("/api")
 
@@ -47,6 +65,12 @@ public class ProjectController {
 
     @Autowired
     SPARQLQueryService sparqlQueryService;
+
+    @Autowired
+    SimilarityService similarityService;
+
+    @Autowired
+    FiltersGenerator filtersGenerator;
 
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
@@ -81,7 +105,10 @@ public class ProjectController {
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
         } else {
             String query =
-                    "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel ?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?source ?source2 ?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label where { "
+                    "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
+                            "?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
+                            " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
+                            "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 where { "
                             + " VALUES ?s0 { <"
                             + id
                             + "> } "
@@ -145,27 +172,76 @@ public class ProjectController {
                             + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID .  "
                             + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
                             + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
-                            + "         OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region .  "
-                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?regionId .} "
-                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P35> ?regionType . "
-                            + "             FILTER( ?regionType = <https://linkedopendata.eu/entity/Q2576750>  || ?regionType = <https://linkedopendata.eu/entity/Q2576674> )"
-                            + "             ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
-                            + "             FILTER((LANG(?regionLabel)) = \"" + language + "\") }"
-                            + "           OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper1 .  "
-                            + "             ?regionUpper1 <https://linkedopendata.eu/prop/direct/P35>  ?regionType1 . "
-                            + "             FILTER(?regionType1 = <https://linkedopendata.eu/entity/Q2576674> || ?regionType1 = <https://linkedopendata.eu/entity/Q2576630>)"
-                            + "             ?regionUpper1 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper1Label . "
-                            + "             FILTER((LANG(?regionUpper1Label)) = \"" + language + "\") } "
-                            + "           OPTIONAL {?regionUpper1 <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper2 ."
-                            + "             ?regionUpper2 <https://linkedopendata.eu/prop/direct/P35> ?regionType2 . "
-                            + "             FILTER(?regionType2 = <https://linkedopendata.eu/entity/Q2576630> || ?regionType2 = <https://linkedopendata.eu/entity/Q510>)"
-                            + "             ?regionUpper2 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper2Label . "
-                            + "             FILTER((LANG(?regionUpper2Label)) = \"" + language + "\") }  "
-                            + "           OPTIONAL { ?regionUpper2 <https://linkedopendata.eu/prop/direct/P1845> ?regionUpper3 . "
-                            + "           ?regionUpper3 <http://www.w3.org/2000/01/rdf-schema#label> ?regionUpper3Label . "
-                            + "           ?regionUpper3 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> ."
-                            + "           FILTER((LANG(?regionUpper3Label)) = \"" + language + "\") }} "
+                            + "        OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
+
+
+                            +"     OPTIONAL\n" +
+                            "       { ?s0  wdt:P1845  ?region\n" +
+                            "         OPTIONAL\n" +
+                            "           { ?region  wdt:P192  ?regionId .\n" +
+                            "                        ?region  <http://www.w3.org/2000/01/rdf-schema#label>  ?regionLabel\n" +
+                            "                        FILTER ( lang(?regionLabel) = \""+language+"\" )\n" +
+                            "           }\n" +
+                            "         OPTIONAL\n" +
+                            "           { \n" +
+                            "             \n" +
+                            "               ?region  wdt:P35  ?regionType .\n" +
+                            "             OPTIONAL {\n" +
+                            "                  ?region p:P35 ?blank .\n" +
+                            "                  ?blank ps:P35 ?is_statistical_only_0 .\n" +
+                            "                 filter(?is_statistical_only_0 = wd:Q2727537)\n" +
+                            "               }\n" +
+                            "            \n" +
+                            "             FILTER ( ( ?regionType = wd:Q2576750 ) || ( ?regionType = wd:Q2576674 ))\n" +
+                            "           \n" +
+                            "         OPTIONAL\n" +
+                            "           { \n" +
+                            "             \n" +
+                            "             ?region   wdt:P1845  ?regionUpper1 .\n" +
+                            "             ?regionUpper1 wdt:P35  ?regionType1 .\n" +
+                            "            \n" +
+                            "             OPTIONAL {\n" +
+                            "                ?regionUpper1 p:P35 ?blank_1 .\n" +
+                            "                 ?blank_1 ps:P35 ?is_statistical_only_1 .\n" +
+                            "                 filter(?is_statistical_only_1 = wd:Q2727537)\n" +
+                            "               }\n" +
+                            "            \n" +
+                            "             FILTER ( ( ?regionType1 = wd:Q2576674 ) || ( ?regionType1 = wd:Q2576630 ) )\n" +
+                            "             ?regionUpper1\n" +
+                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper1Label\n" +
+                            "             FILTER ( lang(?regionUpper1Label) = \""+language+"\" )\n" +
+                            "           }\n" +
+                            "         OPTIONAL\n" +
+                            "           { ?regionUpper1\n" +
+                            "                       wdt:P1845  ?regionUpper2 .\n" +
+                            "             ?regionUpper2 wdt:P35  ?regionType2 .\n" +
+                            "            \n" +
+                            "            OPTIONAL {\n" +
+                            "              \n" +
+                            "             ?regionUpper2 p:P35 ?blank_2 .\n" +
+                            "             ?blank_2 ps:P35 ?is_statistical_only_2 .\n" +
+                            "              filter(?is_statistical_only_2 = wd:Q2727537)\n" +
+                            "              }\n" +
+                            "            \n" +
+                            "             FILTER ( ( ?regionType2 = wd:Q2576630 ) || ( ?regionType2 = wd:Q510 ))\n" +
+                            "             ?regionUpper2\n" +
+                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper2Label\n" +
+                            "             FILTER ( lang(?regionUpper2Label) = \""+language+"\" )\n" +
+                            "           }\n" +
+                            "         OPTIONAL\n" +
+                            "           { ?regionUpper2\n" +
+                            "                       wdt:P1845  ?regionUpper3 .\n" +
+                            "             ?regionUpper3\n" +
+                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper3Label .\n" +
+                            "             ?regionUpper3 p:P35 ?blank_country .\n" +
+                            "            ?blank_country ps:P35 wd:Q510 ." +
+                            "             FILTER ( lang(?regionUpper3Label) = \"en\" )\n" +
+                            "           }\n" +
+                            "           }\n" +
+                            "       }"
                             + "} ";
+
+
             logger.info("Retrieving results");
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2, false);
             logger.info("Executed");
@@ -196,11 +272,14 @@ public class ProjectController {
             result.put("beneficiaries", new JSONArray());
             result.put("managingAuthorityLabel", "");
             result.put("region", "");
-            result.put("geoJson", "");
+            result.put("geoJson", new JSONArray());
             result.put("regionUpper1", "");
             result.put("regionUpper2", "");
             result.put("regionUpper3", "");
 
+            HashSet<String> regionIDs = new HashSet<>();
+            HashSet<String> coordinatesSet = new HashSet<>();
+            HashSet<String> regions = new HashSet<>();
 
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
@@ -313,7 +392,9 @@ public class ProjectController {
                 if (querySolution.getBinding("coordinates") != null) {
                     JSONArray coordinates = (JSONArray) result.get("coordinates");
                     String coo = ((Literal) querySolution.getBinding("coordinates").getValue()).stringValue();
-                    if (!coordinates.contains(coo.replace("Point(", "").replace(")", "").replace(" ", ","))) {
+                    //if (!coordinates.contains(coo.replace("Point(", "").replace(")", "").replace(" ", ","))) {
+                    if(!coordinatesSet.contains(coo)){
+                        coordinatesSet.add(coo);
                         coordinates.add(coo);
                         result.put("coordinates", coordinates);
                     }
@@ -348,9 +429,9 @@ public class ProjectController {
                         result.put("videos", images);
                     }
                 }
-
+                JSONArray beneficiaries = (JSONArray) result.get("beneficiaries");
                 if (querySolution.getBinding("beneficiaryLink") != null) {
-                    JSONArray beneficiaries = (JSONArray) result.get("beneficiaries");
+
                     String ben = querySolution.getBinding("beneficiaryLink").getValue().stringValue();
                     boolean found = false;
                     for (int i = 0; i < beneficiaries.size(); i++) {
@@ -370,7 +451,11 @@ public class ProjectController {
                                     ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).stringValue();
                             beneficary.put("beneficiaryLabel", label);
                         } else {
-                            beneficary.put("beneficiaryLabel", "");
+                            if(querySolution.getBinding("beneficiaryString") != null)
+                                beneficary.put("beneficiaryLabel", querySolution.getBinding("beneficiaryString").getValue().stringValue());
+                            else{
+                                beneficary.put("beneficiaryLabel", "");
+                            }
                         }
                         if (querySolution.getBinding("beneficiaryWikidata") != null) {
                             String benID =
@@ -389,6 +474,24 @@ public class ProjectController {
                         }
                         beneficiaries.add(beneficary);
                     }
+                }else{
+                    if(querySolution.getBinding("beneficiaryString") != null) {
+                        String ben = querySolution.getBinding("beneficiaryString").getValue().stringValue();
+                        boolean found = false;
+                        for (Object beneficiary : beneficiaries) {
+                            if (((JSONObject) beneficiary).get("beneficiaryLabel").equals(ben)) {
+                                found = true;
+                            }
+                        }
+                        if(!found) {
+                            JSONObject beneficiary = new JSONObject();
+                            beneficiary.put("beneficiaryLabel", querySolution.getBinding("beneficiaryString").getValue().stringValue());
+                            beneficiary.put("link", "");
+
+                            beneficiaries.add(beneficiary);
+
+                        }
+                    }
                 }
 
                 if (querySolution.getBinding("managingAuthorityLabel") != null) {
@@ -397,15 +500,15 @@ public class ProjectController {
                             ((Literal) querySolution.getBinding("managingAuthorityLabel").getValue())
                                     .stringValue());
                 }
-                if (querySolution.getBinding("regionLabel") != null) {
+                if (querySolution.getBinding("regionLabel") != null && querySolution.getBinding("is_statistical_only_0") == null) {
                     result.put("region", ((Literal) querySolution.getBinding("regionLabel").getValue())
                             .stringValue());
                 }
-                if (querySolution.getBinding("regionUpper1Label") != null) {
+                if (querySolution.getBinding("regionUpper1Label") != null && querySolution.getBinding("is_statistical_only_1") == null) {
                     result.put("regionUpper1", ((Literal) querySolution.getBinding("regionUpper1Label").getValue())
                             .stringValue());
                 }
-                if (querySolution.getBinding("regionUpper2Label") != null) {
+                if (querySolution.getBinding("regionUpper2Label") != null && querySolution.getBinding("is_statistical_only_2") == null) {
                     result.put("regionUpper2", ((Literal) querySolution.getBinding("regionUpper2Label").getValue())
                             .stringValue());
                 }
@@ -415,10 +518,10 @@ public class ProjectController {
                 }
                 if (result.get("region") != "") {
                     String regionText = (String) result.get("region");
-                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1")))) {
+                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1"))) && !result.get("regionUpper1").equals("")) {
                         regionText += ", " + (String) result.get("regionUpper1");
                     }
-                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2")))) {
+                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2"))) && !result.get("regionUpper2").equals("")) {
                         regionText += ", " + (String) result.get("regionUpper2");
                     }
                     if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
@@ -426,7 +529,6 @@ public class ProjectController {
                     }
                     result.put("regionText", regionText);
                 } else {
-
                     result.put("regionText", (String) result.get("countryLabel"));
                 }
                 String regionId = "";
@@ -440,32 +542,40 @@ public class ProjectController {
                         regionId = "EL";
                     }
                 }
-                if (regionId != null && result.get("geoJson").equals("")) {
-                    query =
-                            "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
-                                    + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-                                    + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-                                    + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
-                                    + "SELECT ?id ?geoJson  WHERE { "
-                                    + "?s <http://nuts.de/id> \'" + regionId + "\' . "
-                                    + "?s <http://nuts.de/geoJson> ?geoJson . "
+                if (regionId != null) {
+                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
+                    if(!regionIDs.contains(regionId)) {
+                        // check if the regioId has already been seen - could be that a project is contained in multipl geometries
+                        regionIDs.add(regionId);
+                        query =
+                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+                                        + "SELECT ?id ?geoJson  WHERE { "
+                                        + "?s <http://nuts.de/id> \'" + regionId + "\' . "
+                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
 
-                                    + "}";
-                    logger.info(query);
-                    logger.info("Retrieving nuts geometry");
-                    TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
-                    logger.info("Retrieved");
+                                        + "}";
+                        logger.info(query);
+                        logger.info("Retrieving nuts geometry");
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+                        logger.info("Retrieved");
 
-                    NutsRegion nutsRegion = new NutsRegion();
-                    while (resultSet2.hasNext()) {
-                        BindingSet querySolution2 = resultSet2.next();
-                        if (querySolution2.getBinding("geoJson") != null) {
-                            result.put("geoJson", ((Literal) querySolution2.getBinding("geoJson").getValue())
-                                    .stringValue());
+                        NutsRegion nutsRegion = new NutsRegion();
+                        while (resultSet2.hasNext()) {
+                            BindingSet querySolution2 = resultSet2.next();
+                            if (querySolution2.getBinding("geoJson") != null) {
+                                geoJsons.add(((Literal) querySolution2.getBinding("geoJson").getValue())
+                                        .stringValue());
+                            }
                         }
-
                     }
                 }
+            }
+            if(regionIDs.size() > 1){
+                // means multiple region - change regionText
+                result.put("regionText", "multiple locations, "+result.get("countryLabel"));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
@@ -511,22 +621,28 @@ public class ProjectController {
 
         int inputOffset = offset;
         int inputLimit = limit;
-        if (offset < 1000) {
-            offset = 0;
-            limit = 1000;
+        if(keywords != null){
+            if(offset < 100) {
+                offset = 0;
+                limit = 100;
+            }
+        }else{
+            if (offset < 1000) {
+                offset = 0;
+                limit = 1000;
+            }
         }
-        String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
+        // expand the query keywords
+        ExpandedQuery expandedQuery = null;
+        String expandedQueryText = null;
+        if(keywords != null) {
+            expandedQuery = similarityService.expandQuery(keywords);
+            expandedQueryText = expandedQuery.getExpandedQuery();
+        }
 
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
 
-        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
-        System.out.println(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
         int numResults = 0;
-        if (resultSet.hasNext()) {
-            BindingSet querySolution = resultSet.next();
-            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
-        }
-
 
         String orderQuery = "";
 
@@ -574,31 +690,23 @@ public class ProjectController {
                     "    } " +
                     "    }";
         }
-//        if(keywords != null && country == null && theme == null && fund == null && program == null && categoryOfIntervention == null
-//        && policyObjective == null && budgetBiggerThen == null && budgetSmallerThen == null && budgetEUBiggerThen == null &&
-//                budgetEUSmallerThen == null && startDateBefore == null &&
-//                startDateAfter == null && endDateBefore == null && endDateAfter == null && latitude == null && longitude == null && region == null){
-//
-//            // pass cache = false in order to stop caching the semantic search results
-//            ArrayList<String> projectsURIs = getProjectsURIsfromSemanticSearch(keywords,true);
-//            if(projectsURIs.size() > 0) {
-//                search = "";
-//                search += "VALUES ?s0 {";
-//                for (String uri : projectsURIs) {
-//                    String uriStr = "<"+uri+">";
-//                    search+= uriStr+" ";
-//                }
-//                search+="}";
-//            }else{
-//                System.out.println("Semantic search API returned empty result!!");
-//            }
-//            numResults = projectsURIs.size();
-//            //search = "";
-//        }
+
+        // pass cache = false in order to stop caching the semantic search results
+
+        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
+        System.out.println(query);
+        // count the results with the applied filters
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+        if (resultSet != null && resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+        }
+        //search = "";
+
         search += " " + orderQuery;
         query =
                 "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
-                        + " { SELECT ?s0 ?snippet where { "
+                        + " { SELECT ?s0 ?description where { "
                         + search
                         + " } " + orderBy + " limit "
                         + limit
@@ -638,6 +746,8 @@ public class ProjectController {
         Set<String> coordinates = new HashSet<>();
         Set<String> objectiveId = new HashSet<>();
         Set<String> countrycode = new HashSet<>();
+        ArrayList<String> similarWords = new ArrayList<>();
+
         boolean hasEntry = resultSet.hasNext();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -670,6 +780,7 @@ public class ProjectController {
                     coordinates = new HashSet<>();
                     objectiveId = new HashSet<>();
                     countrycode = new HashSet<>();
+                    similarWords = new ArrayList<>();
                 }
                 previewsKey = querySolution.getBinding("s0").getValue().stringValue();
             }
@@ -684,7 +795,7 @@ public class ProjectController {
 
             if (querySolution.getBinding("label") != null)
                 label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
-            if (querySolution.getBinding("description") != null)
+            if (querySolution.getBinding("description") != null && expandedQuery == null)
                 description.add(((Literal) querySolution.getBinding("description").getValue()).getLabel());
             if (querySolution.getBinding("startTime") != null)
                 startTime.add(
@@ -718,6 +829,30 @@ public class ProjectController {
                 objectiveId.add(((Literal) querySolution.getBinding("objectiveId").getValue()).getLabel());
             if (querySolution.getBinding("countrycode") != null)
                 countrycode.add(((Literal) querySolution.getBinding("countrycode").getValue()).getLabel());
+
+            // try to create the snippet based on the given expanded query
+            if(expandedQuery != null) {
+                StringBuilder textInput = new StringBuilder();
+                if (querySolution.getBinding("label") != null) {
+                    String labelText = ((Literal) querySolution.getBinding("label").getValue()).getLabel();
+                    textInput.append(labelText);
+                }
+                textInput.append("<br/>");
+
+                if (querySolution.getBinding("description") != null) {
+                    String descriptionText = ((Literal) querySolution.getBinding("description").getValue()).getLabel();
+                    textInput.append(descriptionText);
+                }
+                String snippetText = getSnippet(expandedQuery.getExpandedQuery(), textInput.toString());
+                // replace the description with the snippet text
+                description.add(snippetText);
+
+                if(expandedQuery.getKeywords() != null){
+                    for(SimilarWord similarWord:expandedQuery.getKeywords()){
+                        similarWords.add(similarWord.getWord());
+                    }
+                }
+            }
         }
         if (hasEntry) {
             Project project = new Project();
@@ -737,7 +872,10 @@ public class ProjectController {
             resultList.add(project);
         }
         ProjectList projectList = new ProjectList();
-        if(offset <= 990) {
+        int upperLimit = 990;
+        if(keywords != null)
+            upperLimit = 90;
+        if(offset <= upperLimit) {
             for (int i = inputOffset; i < Math.min(resultList.size(), inputOffset + inputLimit); i++) {
                 projectList.getList().add(resultList.get(i));
             }
@@ -745,16 +883,34 @@ public class ProjectController {
             projectList.setList(resultList);
         }
         projectList.setNumberResults(numResults);
+        projectList.setSimilarWords(similarWords);
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
+    private String getSnippet(String queryText,String text){
 
-    private ArrayList<String> getProjectsURIsfromSemanticSearch(String keywords,boolean cache) {
-        String url = null;
+        Query query = null;
+        String snippet = "";
         try {
-            url = "http://54.74.15.102:5000/search?text=" + URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
-        } catch (UnsupportedEncodingException e) {
+            query = new QueryParser("title", new StandardAnalyzer()).parse(queryText);
+            Formatter formatter = new SimpleHTMLFormatter(SearchFields.HIGHLIGHTER_PRE_TAG,
+                    SearchFields.HIGHLIGHTER_POST_TAG);
+            Highlighter highlighter = new Highlighter(formatter, new QueryScorer(query));
+            Analyzer analyzer = new StandardAnalyzer();
+            TokenStream tokenStream = analyzer.tokenStream("test", new StringReader(text));
+            snippet = highlighter.getBestFragments(tokenStream, text, 2, "...");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (InvalidTokenOffsetsException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
+        return snippet;
+    }
+    private SemanticSearchResult getProjectsURIsfromSemanticSearch(String keywords,boolean cache,int offset,int limit) {
+        String url = null;
+        //String encoded = URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
+        url = "http://kohesio-search-dev.eu-west-1.elasticbeanstalk.com/search?query=" + keywords+"&page="+offset+"&page_size="+limit;
 
         String path = cacheDirectory+"/facet/semantic-search";
         File dir = new File(path);
@@ -764,47 +920,49 @@ public class ProjectController {
             dir.mkdirs();
         }
         String query = url;
-        if(dir.exists() && cache){
-            try {
-                ArrayList<String> projectsURIs = new ArrayList<>();
-                Scanner input = new Scanner(new File(path+"/"+query.hashCode()));
-                while (input.hasNext()){
-                    String projectURI  = input.next();
-                    projectsURIs.add(projectURI);
-                }
-                return projectsURIs;
-            } catch (FileNotFoundException e) {
-                logger.error("Could not find cache file, probably not cahced");
-            }
-        }
+//        if(dir.exists() && cache){
+//            try {
+//                ArrayList<String> projectsURIs = new ArrayList<>();
+//                Scanner input = new Scanner(new File(path+"/"+query.hashCode()));
+//                while (input.hasNext()){
+//                    String projectURI  = input.next();
+//                    projectsURIs.add(projectURI);
+//                }
+//                return projectsURIs;
+//            } catch (FileNotFoundException e) {
+//                logger.error("Could not find cache file, probably not cahced");
+//            }
+//        }
 
         ArrayList<String> listProjectURIs = new ArrayList<>();
+        int numberOfResult = 0;
         try {
-            System.out.println(url);
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             if (response.getStatusCode().equals(HttpStatus.OK)) {
-                FileOutputStream out = new FileOutputStream(path+"/"+ query.hashCode());
-                System.out.println(response.getBody());
+//                FileOutputStream out = new FileOutputStream(path+"/"+ query.hashCode());
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.getBody());
-                if (root.findValue("results") != null) {
-                    JsonNode results = root.findValue("results");
-                    for (int i = 0; i < results.size(); i++) {
-                        String projectURI = results.get(i).textValue();
-                        listProjectURIs.add(projectURI);
-                        projectURI+="\n";
-                        out.write(projectURI.getBytes());
-                    }
+                ObjectNode result = (ObjectNode) root;
+                numberOfResult = ((JsonNode)result.get("total_hits")).intValue();
+                ArrayNode hits = (ArrayNode) result.get("hits");
+                for (int i = 0; i < hits.size(); i++) {
+                    String projectURI = hits.get(i).get("uri").textValue();
+                    listProjectURIs.add(projectURI);
+                    projectURI+="\n";
+//                    out.write(projectURI.getBytes());
                 }
-                out.close();
+//                out.close();
             } else {
                 System.err.println("Error in HTTP request!");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return listProjectURIs;
+        SemanticSearchResult result = new SemanticSearchResult();
+        result.setNumberOfResults(numberOfResult);
+        result.setProjectsURIs(listProjectURIs);
+        return result;
     }
 
     @GetMapping(value = "/facet/eu/search/project/image", produces = "application/json")
@@ -834,7 +992,16 @@ public class ProjectController {
             Principal principal)
             throws Exception {
         logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, null);
-        String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset);
+
+        // expand the query keywords
+        ExpandedQuery expandedQuery = null;
+        String expandedQueryText = null;
+        if(keywords != null) {
+            expandedQuery = similarityService.expandQuery(keywords);
+            expandedQueryText = expandedQuery.getExpandedQuery();
+        }
+
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
@@ -1039,142 +1206,5 @@ public class ProjectController {
         }
     }
 
-    private String filterProject(String keywords, String country, String theme, String fund, String program, String categoryOfIntervention,
-                                 String policyObjective, Integer budgetBiggerThen, Integer budgetSmallerThen, Integer budgetEUBiggerThen, Integer budgetEUSmallerThen, String startDateBefore, String startDateAfter,
-                                 String endDateBefore,
-                                 String endDateAfter,
-                                 String latitude,
-                                 String longitude,
-                                 String region,
-                                 Integer limit,
-                                 Integer offset) throws IOException {
-        String search = "";
-        if (keywords != null) {
-            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
-                String[] words = keywords.split(" ");
-                StringBuilder keywordsBuilder = new StringBuilder();
-                for (int i = 0; i < words.length - 1; i++) {
-                    keywordsBuilder.append(words[i]).append(" AND ");
-                }
-                keywordsBuilder.append(words[words.length - 1]);
-                keywords = keywordsBuilder.toString();
-            }
-            search +=
-                    "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
-                            + "<http://www.openrdf.org/contrib/lucenesail#query> \""
-                            + keywords.replace("\"", "\\\"")
-                            + "\" ] .";
-        }
 
-        if (country != null && region == null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
-        }
-
-        if (theme != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                            + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
-                            + theme
-                            + "> . ";
-        }
-
-        if (policyObjective != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                            + "?category <https://linkedopendata.eu/prop/direct/P1849> <"
-                            + policyObjective
-                            + "> . ";
-        }
-
-        if (fund != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1584> <" + fund + "> . ";
-        }
-
-        if (program != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
-        }
-
-        if (categoryOfIntervention != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention + "> . ";
-        }
-
-        if (budgetBiggerThen != null) {
-            search +=
-                    " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . "
-                            + "FILTER( ?budget > "
-                            + budgetBiggerThen
-                            + ")";
-        }
-
-        if (budgetSmallerThen != null || budgetBiggerThen != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
-            if (budgetBiggerThen != null) {
-                search += "FILTER( ?budget > " + budgetBiggerThen + ")";
-            }
-            if (budgetSmallerThen != null) {
-                search += "FILTER( ?budget < " + budgetSmallerThen + ")";
-            }
-        }
-
-        if (budgetEUBiggerThen != null || budgetEUSmallerThen != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P835> ?budgetEU . ";
-            if (budgetEUBiggerThen != null) {
-                search += "FILTER( ?budgetEU > " + budgetEUBiggerThen + ")";
-            }
-            if (budgetEUSmallerThen != null) {
-                search += "FILTER( ?budgetEU < " + budgetEUSmallerThen + ")";
-            }
-        }
-
-        if (startDateBefore != null || startDateAfter != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startDate . ";
-            if (startDateBefore != null) {
-                search +=
-                        "FILTER( ?startDate <= \""
-                                + startDateBefore
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-            if (startDateAfter != null) {
-                search +=
-                        "FILTER( ?startDate >= \""
-                                + startDateAfter
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-        }
-
-        if (endDateBefore != null || endDateAfter != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endDate . ";
-            if (endDateBefore != null) {
-                search +=
-                        "FILTER( ?endDate <= \""
-                                + endDateBefore
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-            if (endDateAfter != null) {
-                search +=
-                        "FILTER( ?endDate >= \""
-                                + endDateAfter
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-        }
-
-        if (region != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . ";
-        }
-
-        if (latitude != null && longitude != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                            + "FILTER ( <http://www.opengis.net/def/function/geosparql/distance>(\"POINT("
-                            + longitude
-                            + " "
-                            + latitude
-                            + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)< 100000) . ";
-        }
-
-        search +=
-                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
-        return search;
-    }
 }

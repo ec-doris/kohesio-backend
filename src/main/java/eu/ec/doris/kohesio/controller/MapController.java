@@ -5,7 +5,10 @@ import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.payload.NutsRegion;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
+import eu.ec.doris.kohesio.services.ExpandedQuery;
+import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
+import eu.ec.doris.kohesio.services.SimilarityService;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
@@ -35,6 +38,12 @@ public class MapController {
 
     @Autowired
     SPARQLQueryService sparqlQueryService;
+
+    @Autowired
+    SimilarityService similarityService;
+
+    @Autowired
+    FiltersGenerator filtersGenerator;
 
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
@@ -96,7 +105,14 @@ public class MapController {
         if (granularityRegion != null) {
             c = null;
         }
-        String search = filterProject(keywords, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
+        ExpandedQuery expandedQuery = null;
+        String expandedQueryText = null;
+        if(keywords != null) {
+            expandedQuery = similarityService.expandQuery(keywords);
+            expandedQueryText = expandedQuery.getExpandedQuery();
+        }
+
+        String search = filtersGenerator.filterProject(expandedQueryText, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
 
         //computing the number of results
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
@@ -266,7 +282,7 @@ public class MapController {
         logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
         facetController.initialize(language);
         System.out.println("filterProject ");
-        String search = filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
+        String search = filtersGenerator.filterProject(keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
 
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> \"Point(" + coordinate.replace(",", " ") + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral> . ";
         String query =
@@ -391,148 +407,148 @@ public class MapController {
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
     }
 
-    private String filterProject(String keywords, String country, String theme, String fund, String program, String categoryOfIntervention,
-                                 String policyObjective, Integer budgetBiggerThen, Integer budgetSmallerThen, Integer budgetEUBiggerThen, Integer budgetEUSmallerThen, String startDateBefore, String startDateAfter,
-                                 String endDateBefore,
-                                 String endDateAfter,
-                                 String latitude,
-                                 String longitude,
-                                 String region,
-                                 String granularityRegion,
-                                 Integer limit,
-                                 Integer offset) throws IOException {
-        String search = "";
-        if (keywords != null) {
-            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
-                String[] words = keywords.split(" ");
-                StringBuilder keywordsBuilder = new StringBuilder();
-                for (int i = 0; i < words.length - 1; i++) {
-                    keywordsBuilder.append(words[i]).append(" AND ");
-                }
-                keywordsBuilder.append(words[words.length - 1]);
-                keywords = keywordsBuilder.toString();
-            }
-            search +=
-                    "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
-                            + "<http://www.openrdf.org/contrib/lucenesail#query> \""
-                            + keywords.replace("\"", "\\\"")
-                            + "\" ] .";
-        }
-
-        if (country != null && region == null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
-        }
-
-        if (theme != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                            + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
-                            + theme
-                            + "> . ";
-        }
-
-        if (policyObjective != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                            + "?category <https://linkedopendata.eu/prop/direct/P1849> <"
-                            + policyObjective
-                            + "> . ";
-        }
-
-        if (fund != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1584> <" + fund + "> . ";
-        }
-
-        if (program != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
-        }
-
-        if (categoryOfIntervention != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention + "> . ";
-        }
-
-        if (budgetBiggerThen != null) {
-            search +=
-                    " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . "
-                            + "FILTER( ?budget > "
-                            + budgetBiggerThen
-                            + ")";
-        }
-
-        if (budgetSmallerThen != null || budgetBiggerThen != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
-            if (budgetBiggerThen != null) {
-                search += "FILTER( ?budget > " + budgetBiggerThen + ")";
-            }
-            if (budgetSmallerThen != null) {
-                search += "FILTER( ?budget < " + budgetSmallerThen + ")";
-            }
-        }
-
-        if (budgetEUBiggerThen != null || budgetEUSmallerThen != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P835> ?budgetEU . ";
-            if (budgetEUBiggerThen != null) {
-                search += "FILTER( ?budgetEU > " + budgetEUBiggerThen + ")";
-            }
-            if (budgetEUSmallerThen != null) {
-                search += "FILTER( ?budgetEU < " + budgetEUSmallerThen + ")";
-            }
-        }
-
-        if (startDateBefore != null || startDateAfter != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startDate . ";
-            if (startDateBefore != null) {
-                search +=
-                        "FILTER( ?startDate <= \""
-                                + startDateBefore
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-            if (startDateAfter != null) {
-                search +=
-                        "FILTER( ?startDate >= \""
-                                + startDateAfter
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-        }
-
-        if (endDateBefore != null || endDateAfter != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endDate . ";
-            if (endDateBefore != null) {
-                search +=
-                        "FILTER( ?endDate <= \""
-                                + endDateBefore
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-            if (endDateAfter != null) {
-                search +=
-                        "FILTER( ?endDate >= \""
-                                + endDateAfter
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
-            }
-        }
-
-        if (region != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . ";
-        }
-
-        if (granularityRegion != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . ";
-        }
-
-        if (latitude != null && longitude != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                            + "FILTER ( <http://www.opengis.net/def/function/geosparql/distance>(\"POINT("
-                            + longitude
-                            + " "
-                            + latitude
-                            + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)< 100000) . ";
-        }
-
-        search +=
-                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
-        return search;
-    }
+//    private String filterProject(String keywords, String country, String theme, String fund, String program, String categoryOfIntervention,
+//                                 String policyObjective, Integer budgetBiggerThen, Integer budgetSmallerThen, Integer budgetEUBiggerThen, Integer budgetEUSmallerThen, String startDateBefore, String startDateAfter,
+//                                 String endDateBefore,
+//                                 String endDateAfter,
+//                                 String latitude,
+//                                 String longitude,
+//                                 String region,
+//                                 String granularityRegion,
+//                                 Integer limit,
+//                                 Integer offset) throws IOException {
+//        String search = "";
+//        if (keywords != null) {
+//            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
+//                String[] words = keywords.split(" ");
+//                StringBuilder keywordsBuilder = new StringBuilder();
+//                for (int i = 0; i < words.length - 1; i++) {
+//                    keywordsBuilder.append(words[i]).append(" AND ");
+//                }
+//                keywordsBuilder.append(words[words.length - 1]);
+//                keywords = keywordsBuilder.toString();
+//            }
+//            search +=
+//                    "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
+//                            + "<http://www.openrdf.org/contrib/lucenesail#query> \""
+//                            + keywords.replace("\"", "\\\"")
+//                            + "\" ] .";
+//        }
+//
+//        if (country != null && region == null) {
+//            search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+//        }
+//
+//        if (theme != null) {
+//            search +=
+//                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+//                            + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
+//                            + theme
+//                            + "> . ";
+//        }
+//
+//        if (policyObjective != null) {
+//            search +=
+//                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+//                            + "?category <https://linkedopendata.eu/prop/direct/P1849> <"
+//                            + policyObjective
+//                            + "> . ";
+//        }
+//
+//        if (fund != null) {
+//            search += "?s0 <https://linkedopendata.eu/prop/direct/P1584> <" + fund + "> . ";
+//        }
+//
+//        if (program != null) {
+//            search += "?s0 <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
+//        }
+//
+//        if (categoryOfIntervention != null) {
+//            search +=
+//                    "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention + "> . ";
+//        }
+//
+//        if (budgetBiggerThen != null) {
+//            search +=
+//                    " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . "
+//                            + "FILTER( ?budget > "
+//                            + budgetBiggerThen
+//                            + ")";
+//        }
+//
+//        if (budgetSmallerThen != null || budgetBiggerThen != null) {
+//            search += " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
+//            if (budgetBiggerThen != null) {
+//                search += "FILTER( ?budget > " + budgetBiggerThen + ")";
+//            }
+//            if (budgetSmallerThen != null) {
+//                search += "FILTER( ?budget < " + budgetSmallerThen + ")";
+//            }
+//        }
+//
+//        if (budgetEUBiggerThen != null || budgetEUSmallerThen != null) {
+//            search += " ?s0 <https://linkedopendata.eu/prop/direct/P835> ?budgetEU . ";
+//            if (budgetEUBiggerThen != null) {
+//                search += "FILTER( ?budgetEU > " + budgetEUBiggerThen + ")";
+//            }
+//            if (budgetEUSmallerThen != null) {
+//                search += "FILTER( ?budgetEU < " + budgetEUSmallerThen + ")";
+//            }
+//        }
+//
+//        if (startDateBefore != null || startDateAfter != null) {
+//            search += " ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startDate . ";
+//            if (startDateBefore != null) {
+//                search +=
+//                        "FILTER( ?startDate <= \""
+//                                + startDateBefore
+//                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
+//            }
+//            if (startDateAfter != null) {
+//                search +=
+//                        "FILTER( ?startDate >= \""
+//                                + startDateAfter
+//                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
+//            }
+//        }
+//
+//        if (endDateBefore != null || endDateAfter != null) {
+//            search += " ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endDate . ";
+//            if (endDateBefore != null) {
+//                search +=
+//                        "FILTER( ?endDate <= \""
+//                                + endDateBefore
+//                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
+//            }
+//            if (endDateAfter != null) {
+//                search +=
+//                        "FILTER( ?endDate >= \""
+//                                + endDateAfter
+//                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
+//            }
+//        }
+//
+//        if (region != null) {
+//            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . ";
+//        }
+//
+//        if (granularityRegion != null) {
+//            search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . ";
+//        }
+//
+//        if (latitude != null && longitude != null) {
+//            search +=
+//                    "?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
+//                            + "FILTER ( <http://www.opengis.net/def/function/geosparql/distance>(\"POINT("
+//                            + longitude
+//                            + " "
+//                            + latitude
+//                            + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)< 100000) . ";
+//        }
+//
+//        search +=
+//                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
+//        return search;
+//    }
 
 }
