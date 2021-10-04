@@ -233,8 +233,9 @@ public class ProjectController {
                             "           { ?regionUpper2\n" +
                             "                       wdt:P1845  ?regionUpper3 .\n" +
                             "             ?regionUpper3\n" +
-                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper3Label ;\n" +
-                            "                       wdt:P35  wd:Q510\n" +
+                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper3Label .\n" +
+                            "             ?regionUpper3 p:P35 ?blank_country .\n" +
+                            "            ?blank_country ps:P35 wd:Q510 ." +
                             "             FILTER ( lang(?regionUpper3Label) = \"en\" )\n" +
                             "           }\n" +
                             "           }\n" +
@@ -272,11 +273,14 @@ public class ProjectController {
             result.put("beneficiaries", new JSONArray());
             result.put("managingAuthorityLabel", "");
             result.put("region", "");
-            result.put("geoJson", "");
+            result.put("geoJson", new JSONArray());
             result.put("regionUpper1", "");
             result.put("regionUpper2", "");
             result.put("regionUpper3", "");
 
+            HashSet<String> regionIDs = new HashSet<>();
+            HashSet<String> coordinatesSet = new HashSet<>();
+            HashSet<String> regions = new HashSet<>();
 
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
@@ -389,7 +393,9 @@ public class ProjectController {
                 if (querySolution.getBinding("coordinates") != null) {
                     JSONArray coordinates = (JSONArray) result.get("coordinates");
                     String coo = ((Literal) querySolution.getBinding("coordinates").getValue()).stringValue();
-                    if (!coordinates.contains(coo.replace("Point(", "").replace(")", "").replace(" ", ","))) {
+                    //if (!coordinates.contains(coo.replace("Point(", "").replace(")", "").replace(" ", ","))) {
+                    if(!coordinatesSet.contains(coo)){
+                        coordinatesSet.add(coo);
                         coordinates.add(coo);
                         result.put("coordinates", coordinates);
                     }
@@ -513,10 +519,10 @@ public class ProjectController {
                 }
                 if (result.get("region") != "") {
                     String regionText = (String) result.get("region");
-                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1")))) {
+                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1"))) && !result.get("regionUpper1").equals("")) {
                         regionText += ", " + (String) result.get("regionUpper1");
                     }
-                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2")))) {
+                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2"))) && !result.get("regionUpper2").equals("")) {
                         regionText += ", " + (String) result.get("regionUpper2");
                     }
                     if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
@@ -524,7 +530,6 @@ public class ProjectController {
                     }
                     result.put("regionText", regionText);
                 } else {
-
                     result.put("regionText", (String) result.get("countryLabel"));
                 }
                 String regionId = "";
@@ -538,32 +543,40 @@ public class ProjectController {
                         regionId = "EL";
                     }
                 }
-                if (regionId != null && result.get("geoJson").equals("")) {
-                    query =
-                            "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
-                                    + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-                                    + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-                                    + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
-                                    + "SELECT ?id ?geoJson  WHERE { "
-                                    + "?s <http://nuts.de/id> \'" + regionId + "\' . "
-                                    + "?s <http://nuts.de/geoJson> ?geoJson . "
+                if (regionId != null) {
+                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
+                    if(!regionIDs.contains(regionId)) {
+                        // check if the regioId has already been seen - could be that a project is contained in multipl geometries
+                        regionIDs.add(regionId);
+                        query =
+                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+                                        + "SELECT ?id ?geoJson  WHERE { "
+                                        + "?s <http://nuts.de/id> \'" + regionId + "\' . "
+                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
 
-                                    + "}";
-                    logger.info(query);
-                    logger.info("Retrieving nuts geometry");
-                    TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
-                    logger.info("Retrieved");
+                                        + "}";
+                        logger.info(query);
+                        logger.info("Retrieving nuts geometry");
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+                        logger.info("Retrieved");
 
-                    NutsRegion nutsRegion = new NutsRegion();
-                    while (resultSet2.hasNext()) {
-                        BindingSet querySolution2 = resultSet2.next();
-                        if (querySolution2.getBinding("geoJson") != null) {
-                            result.put("geoJson", ((Literal) querySolution2.getBinding("geoJson").getValue())
-                                    .stringValue());
+                        NutsRegion nutsRegion = new NutsRegion();
+                        while (resultSet2.hasNext()) {
+                            BindingSet querySolution2 = resultSet2.next();
+                            if (querySolution2.getBinding("geoJson") != null) {
+                                geoJsons.add(((Literal) querySolution2.getBinding("geoJson").getValue())
+                                        .stringValue());
+                            }
                         }
-
                     }
                 }
+            }
+            if(regionIDs.size() > 1){
+                // means multiple region - change regionText
+                result.put("regionText", "multiple locations, "+result.get("countryLabel"));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
