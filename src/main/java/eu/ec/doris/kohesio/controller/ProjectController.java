@@ -848,11 +848,6 @@ public class ProjectController {
                 // replace the description with the snippet text
                 description.add(snippetText);
 
-                if(expandedQuery.getKeywords() != null){
-                    for(SimilarWord similarWord:expandedQuery.getKeywords()){
-                        similarWords.add(similarWord.getWord());
-                    }
-                }
             }
         }
         if (hasEntry) {
@@ -884,6 +879,12 @@ public class ProjectController {
             projectList.setList(resultList);
         }
         projectList.setNumberResults(numResults);
+
+        if(expandedQuery.getKeywords() != null){
+            for(SimilarWord similarWord:expandedQuery.getKeywords()){
+                similarWords.add(similarWord.getWord());
+            }
+        }
         projectList.setSimilarWords(similarWords);
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
