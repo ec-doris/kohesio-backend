@@ -880,7 +880,7 @@ public class ProjectController {
         }
         projectList.setNumberResults(numResults);
 
-        if(expandedQuery.getKeywords() != null){
+        if(expandedQuery != null && expandedQuery.getKeywords() != null){
             for(SimilarWord similarWord:expandedQuery.getKeywords()){
                 similarWords.add(similarWord.getWord());
             }
