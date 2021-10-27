@@ -111,16 +111,21 @@ public class FacetController {
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     String key = querySolution.getBinding("region").getValue().stringValue();
-                    Nut nut = new Nut();
-                    nut.uri = key;
-                    nut.type.add(g);
-                    if (nutsRegion.get(key) != null) {
-                        nut = nutsRegion.get(key);
+                    if (nutsRegion.containsKey(key)){
+                        Nut nut = nutsRegion.get(key);
+                        nut.type.add(g);
+                    } else {
+                        Nut nut = new Nut();
+                        nut.uri = key;
+                        nut.type.add(g);
+                        if (nutsRegion.get(key) != null) {
+                            nut = nutsRegion.get(key);
+                        }
+                        if (querySolution.getBinding("regionLabel") != null) {
+                            nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
+                        }
+                        nutsRegion.put(key, nut);
                     }
-                    if (querySolution.getBinding("regionLabel") != null) {
-                        nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
-                    }
-                    nutsRegion.put(key, nut);
                 }
             }
             //retrieving the narrower concept
