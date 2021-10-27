@@ -141,8 +141,6 @@ public class FacetController {
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . " +
-                                    " FILTER NOT EXISTS {?region2 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576674> } .   " +
-                                    " FILTER NOT EXISTS {?region2 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } .   " +
                                     " }";
                 }
                 if (nutsRegion.get(key).type.contains("nuts1")) {
@@ -150,7 +148,6 @@ public class FacetController {
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> . " +
-                                    " FILTER NOT EXISTS {?region2 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } .   " +
                                     "}";
                 }
                 if (nutsRegion.get(key).type.contains("nuts2")) {
@@ -166,17 +163,11 @@ public class FacetController {
                         BindingSet querySolution = resultSet.next();
                         if (querySolution.getBinding("region2") != null) {
                             System.out.println(querySolution.getBinding("region2").getValue().stringValue());
-//                            if (querySolution.getBinding("region2").getValue().stringValue().equals(key)){
-//                                if (nutsRegion.get(key).type.equals("nuts1")){
-//                                    nutsRegion.get(key).type = "nuts2";
-//                                } else if (nutsRegion.get(key).type.equals("nuts2")){
-//                                    nutsRegion.get(key).type = "nuts3";
-//                                }
-//                            } else {
+                            if (!querySolution.getBinding("region2").getValue().stringValue().equals(key)){
                                 if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
                                     nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
                                 }
-//                            }
+                            }
                         }
                     }
                 }
