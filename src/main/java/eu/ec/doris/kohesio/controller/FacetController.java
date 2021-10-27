@@ -91,13 +91,10 @@ public class FacetController {
                     filter = " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104>  ?region . ";
                 }
                 if (g.equals("nuts1")) {
-                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . "+
-                             " FILTER NOT EXIST {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576674> } . " +
-                             " FILTER NOT EXIST {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } . ";
+                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . ";
                 }
                 if (g.equals("nuts2")) {
-                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> ."+
-                             " FILTER NOT EXIST {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } . ";
+                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
                 }
                 if (g.equals("nuts3")) {
                     filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> .";
@@ -138,13 +135,18 @@ public class FacetController {
                     query =
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . }";
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . " +
+                                    " FILTER NOT EXIST {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576674> } .   " +
+                                    " FILTER NOT EXIST {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } .   " +
+                                    " }";
                 }
                 if (nutsRegion.get(key).type.equals("nuts1")) {
                     query =
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> . }";
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> . " +
+                                    " FILTER NOT EXIST {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } .   " +
+                                    "}";
                 }
                 if (nutsRegion.get(key).type.equals("nuts2")) {
                     query =
