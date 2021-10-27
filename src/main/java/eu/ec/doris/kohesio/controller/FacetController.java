@@ -113,7 +113,7 @@ public class FacetController {
                     String key = querySolution.getBinding("region").getValue().stringValue();
                     Nut nut = new Nut();
                     nut.uri = key;
-                    nut.type = g;
+                    nut.type.add(g);
                     if (nutsRegion.get(key) != null) {
                         nut = nutsRegion.get(key);
                     }
@@ -126,29 +126,29 @@ public class FacetController {
             //retrieving the narrower concept
             for (String key : nutsRegion.keySet()) {
                 String query = "";
-                if (nutsRegion.get(key).type.equals("continent")) {
+                if (nutsRegion.get(key).type.contains("continent")) {
                     query =
                             "SELECT ?region2 where {" +
                                     " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?region2 . }";
                 }
-                if (nutsRegion.get(key).type.equals("country")) {
+                if (nutsRegion.get(key).type.contains("country")) {
                     query =
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . " +
-                                    " FILTER NOT EXIST {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576674> } .   " +
-                                    " FILTER NOT EXIST {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } .   " +
+                                    " FILTER NOT EXIST {?region2 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576674> } .   " +
+                                    " FILTER NOT EXIST {?region2 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } .   " +
                                     " }";
                 }
-                if (nutsRegion.get(key).type.equals("nuts1")) {
+                if (nutsRegion.get(key).type.contains("nuts1")) {
                     query =
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> . " +
-                                    " FILTER NOT EXIST {?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } .   " +
+                                    " FILTER NOT EXIST {?region2 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2576750> } .   " +
                                     "}";
                 }
-                if (nutsRegion.get(key).type.equals("nuts2")) {
+                if (nutsRegion.get(key).type.contains("nuts2")) {
                     query =
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
@@ -179,10 +179,10 @@ public class FacetController {
             //retriving the geoJson geometries
             for (String key : nutsRegion.keySet()) {
                 String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
-                if (nutsRegion.get(key).type.equals("continent")) {
+                if (nutsRegion.get(key).type.contains("continent")) {
                     geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
                 }
-                if (nutsRegion.get(key).type.equals("country")) {
+                if (nutsRegion.get(key).type.contains("country")) {
                     geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
                 }
 //        if (nutsRegion.get(key).type.equals("nuts1")){
@@ -209,7 +209,7 @@ public class FacetController {
             gran.add("country");
             for (String g : gran) {
                 for (String key : nutsRegion.keySet()) {
-                    if (nutsRegion.get(key).type.equals(g)) {
+                    if (nutsRegion.get(key).type.contains(g)) {
                         List<String> nonStatisticalNuts = new ArrayList<>();
                         for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
                             String query =
