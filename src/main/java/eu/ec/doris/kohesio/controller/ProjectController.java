@@ -622,16 +622,23 @@ public class ProjectController {
 
         int inputOffset = offset;
         int inputLimit = limit;
-        if(keywords != null){
-            if(offset < 100) {
-                offset = 0;
-                limit = 100;
+        if(offset != Integer.MIN_VALUE) {
+            // if not special offset then cache the and optimize the limits..
+            if (keywords != null) {
+                // in case of keywords, optimize to 100 projects for performance issues
+                if (offset < 100) {
+                    offset = 0;
+                    limit = 100;
+                }
+            } else {
+                if (offset < 1000) {
+                    offset = 0;
+                    limit = 1000;
+                }
             }
         }else{
-            if (offset < 1000) {
-                offset = 0;
-                limit = 1000;
-            }
+            offset = 0;
+            inputOffset = 0;
         }
         // expand the query keywords
         ExpandedQuery expandedQuery = null;
@@ -848,11 +855,6 @@ public class ProjectController {
                 // replace the description with the snippet text
                 description.add(snippetText);
 
-                if(expandedQuery.getKeywords() != null){
-                    for(SimilarWord similarWord:expandedQuery.getKeywords()){
-                        similarWords.add(similarWord.getWord());
-                    }
-                }
             }
         }
         if (hasEntry) {
@@ -884,6 +886,12 @@ public class ProjectController {
             projectList.setList(resultList);
         }
         projectList.setNumberResults(numResults);
+
+        if(expandedQuery != null && expandedQuery.getKeywords() != null){
+            for(SimilarWord similarWord:expandedQuery.getKeywords()){
+                similarWords.add(similarWord.getWord());
+            }
+        }
         projectList.setSimilarWords(similarWords);
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
@@ -1086,8 +1094,14 @@ public class ProjectController {
                                                         Principal principal,
                                                         @Context HttpServletResponse response)
             throws Exception {
-        ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, 30, principal).getBody();
+        int SPECIAL_OFFSET = Integer.MIN_VALUE;
+        int MAX_LIMIT = 1000;
+        // pass a special_offset to skip the caching and query up to the given limit or 10k projects
+        ProjectList projectList = (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
+                categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
+                budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate,
+                orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, MAX_LIMIT),
+                SPECIAL_OFFSET, 30, principal).getBody();
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("beneficiary_export");
         int rowNumber = 0;
@@ -1116,10 +1130,12 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getLabels()));
             cell = row.createCell(2);
             cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-            cell.setCellValue(Double.parseDouble(project.getTotalBudgets().get(0)));
+            if(project.getTotalBudgets().size() > 0)
+                cell.setCellValue(Double.parseDouble(project.getTotalBudgets().get(0)));
             cell = row.createCell(3);
             cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-            cell.setCellValue(Double.parseDouble(project.getEuBudgets().get(0)));
+            if(project.getEuBudgets().size() > 0)
+                cell.setCellValue(Double.parseDouble(project.getEuBudgets().get(0)));
             cell = row.createCell(4);
             if (project.getStartTimes().size() > 0) {
                 cell.setCellValue(project.getStartTimes().get(0));
@@ -1174,8 +1190,15 @@ public class ProjectController {
                                     Principal principal,
                                     @Context HttpServletResponse response)
             throws Exception {
+        int SPECIAL_OFFSET = Integer.MIN_VALUE;
+        int MAX_LIMIT = 1000;
+        // pass a special_offset to skip the caching and query up to the given limit or 10k projects
         ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, 20, principal).getBody();
+                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
+                        categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen,
+                        budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
+                        endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude,
+                        longitude, region, Math.max(limit, MAX_LIMIT), SPECIAL_OFFSET, 20, principal).getBody();
         String filename = "project_export.csv";
         try {
             response.setContentType("text/csv");
