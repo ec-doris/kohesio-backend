@@ -156,8 +156,16 @@ public class FacetController {
                         BindingSet querySolution = resultSet.next();
                         if (querySolution.getBinding("region2") != null) {
                             System.out.println(querySolution.getBinding("region2").getValue().stringValue());
-                            if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
-                                nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
+                            if (querySolution.getBinding("region2").getValue().stringValue().equals(key)){
+                                if (nutsRegion.get(key).type.equals("nuts1")){
+                                    nutsRegion.get(key).type = "nuts2";
+                                } else if (nutsRegion.get(key).type.equals("nuts2")){
+                                    nutsRegion.get(key).type = "nuts3";
+                                }
+                            } else {
+                                if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
+                                    nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
+                                }
                             }
                         }
                     }
@@ -194,27 +202,27 @@ public class FacetController {
             gran.add("nuts2");
             gran.add("nuts1");
             gran.add("country");
-            for (String g : gran) {
-                for (String key : nutsRegion.keySet()) {
-                    if (nutsRegion.get(key).type.equals(g)) {
-                        List<String> nonStatisticalNuts = new ArrayList<>();
-                        for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
-                            String query =
-                                    "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2727537> . }";
-                            logger.info(query);
-                            boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 10);
-                            if (resultSet) {
-                                for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
-                                    nonStatisticalNuts.add(childNut);
-                                }
-                            } else {
-                                nonStatisticalNuts.add(nutsCheckStatistical);
-                            }
-                        }
-                        nutsRegion.get(key).narrower = nonStatisticalNuts;
-                    }
-                }
-            }
+//            for (String g : gran) {
+//                for (String key : nutsRegion.keySet()) {
+//                    if (nutsRegion.get(key).type.equals(g)) {
+//                        List<String> nonStatisticalNuts = new ArrayList<>();
+//                        for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
+//                            String query =
+//                                    "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2727537> . }";
+//                            logger.info(query);
+//                            boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 10);
+//                            if (resultSet) {
+//                                for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
+//                                    nonStatisticalNuts.add(childNut);
+//                                }
+//                            } else {
+//                                nonStatisticalNuts.add(nutsCheckStatistical);
+//                            }
+//                        }
+//                        nutsRegion.get(key).narrower = nonStatisticalNuts;
+//                    }
+//                }
+//            }
         }
     }
 
