@@ -98,6 +98,8 @@ public class BeneficiaryController {
                 "              || (LANG(?beneficiaryLabel) = \"cs\" && ?country = <https://linkedopendata.eu/entity/Q25> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"el\" && ?country = <https://linkedopendata.eu/entity/Q17> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"el\" && ?country = <https://linkedopendata.eu/entity/Q31> ) \n" +
+                "              || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q22> ) \n" +
+                "              || (LANG(?beneficiaryLabel) = \"es\" && ?country = <https://linkedopendata.eu/entity/Q7> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"sv\" && ?country = <https://linkedopendata.eu/entity/Q11> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"hr\" && ?country = <https://linkedopendata.eu/entity/Q30> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) \n" +
