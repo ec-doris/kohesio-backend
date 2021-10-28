@@ -434,6 +434,8 @@ public class BeneficiaryController {
                         + "                 || (LANG(?beneficiaryLabel) = \"cs\" && ?country = <https://linkedopendata.eu/entity/Q25> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"el\" && ?country = <https://linkedopendata.eu/entity/Q17> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"el\" && ?country = <https://linkedopendata.eu/entity/Q31> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q22> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"es\" && ?country = <https://linkedopendata.eu/entity/Q7> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"sv\" && ?country = <https://linkedopendata.eu/entity/Q11> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"hr\" && ?country = <https://linkedopendata.eu/entity/Q30> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) "
