@@ -98,7 +98,7 @@ public class ProjectController {
                 "}";
 
 
-        boolean resultAsk = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", queryCheck, 2);
+        boolean resultAsk = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, queryCheck, 2);
         if (!resultAsk) {
             JSONObject result = new JSONObject();
             result.put("message", "Bad Request - project ID not found");
@@ -244,7 +244,7 @@ public class ProjectController {
 
 
             logger.info("Retrieving results");
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2, false);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
             logger.info("Executed");
 
             JSONObject result = new JSONObject();
