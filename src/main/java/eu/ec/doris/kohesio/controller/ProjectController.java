@@ -107,6 +107,8 @@ public class ProjectController {
             String query =
                     "PREFIX wd: <https://linkedopendata.eu/entity/>\n" +
                             "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
+                            "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
+                            "PREFIX p: <https://linkedopendata.eu/prop/>\n"+
                             "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
                             "?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
