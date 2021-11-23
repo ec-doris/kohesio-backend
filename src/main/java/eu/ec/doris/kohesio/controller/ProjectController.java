@@ -105,7 +105,9 @@ public class ProjectController {
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
         } else {
             String query =
-                    "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
+                    "PREFIX wd: <https://linkedopendata.eu/entity/>\n" +
+                            "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
+                            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
                             "?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 where { "
