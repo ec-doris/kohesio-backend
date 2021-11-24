@@ -181,7 +181,7 @@ public class ProjectController {
 
 
                             +"     OPTIONAL\n" +
-                            "       { ?s0  wdt:P1845  ?region\n" +
+                            "       { ?s0  wdt:P1845  ?region . \n" +
                             "          ?region  wdt:P35  wd:Q2576750 . \n "+
                             "         OPTIONAL\n" +
                             "           { ?region  wdt:P192  ?regionId .\n" +
