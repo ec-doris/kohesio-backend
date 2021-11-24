@@ -64,7 +64,7 @@ public class BeneficiaryController {
     public ResponseEntity euBenfeciaryId(@RequestParam(value = "id") String id,
                                          @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
 
-        String publicSparqlEndpoint = "https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql";
+        String publicSparqlEndpoint = "http://localhost:4567/api/endpoint/commission/eu/sparql";
         String queryCheck = "ask {\n" +
                 " <" + id + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899>\n" +
                 "}";
