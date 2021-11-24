@@ -197,7 +197,7 @@ public class ProjectController {
                             "                 filter(?is_statistical_only_0 = wd:Q2727537)\n" +
                             "               }\n" +
                             "            \n" +
-                            "             FILTER ( ( ?regionType = wd:Q2576750 ) || ( ?regionType = wd:Q2576674 ))\n" +
+                            "             FILTER ( ( ?regionType = wd:Q2576750 ))\n" +
                             "           \n" +
                             "         OPTIONAL\n" +
                             "           { \n" +
@@ -211,7 +211,7 @@ public class ProjectController {
                             "                 filter(?is_statistical_only_1 = wd:Q2727537)\n" +
                             "               }\n" +
                             "            \n" +
-                            "             FILTER ( ( ?regionType1 = wd:Q2576674 ) || ( ?regionType1 = wd:Q2576630 ) )\n" +
+                            "             FILTER ( ( ?regionType1 = wd:Q2576674 ) )\n" +
                             "             ?regionUpper1\n" +
                             "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper1Label\n" +
                             "             FILTER ( lang(?regionUpper1Label) = \""+language+"\" )\n" +
@@ -228,7 +228,7 @@ public class ProjectController {
                             "              filter(?is_statistical_only_2 = wd:Q2727537)\n" +
                             "              }\n" +
                             "            \n" +
-                            "             FILTER ( ( ?regionType2 = wd:Q2576630 ) || ( ?regionType2 = wd:Q510 ))\n" +
+                            "             FILTER ( ( ?regionType2 = wd:Q2576630 ) )\n" +
                             "             ?regionUpper2\n" +
                             "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper2Label\n" +
                             "             FILTER ( lang(?regionUpper2Label) = \""+language+"\" )\n" +
@@ -560,7 +560,6 @@ public class ProjectController {
                                         + "SELECT ?id ?geoJson  WHERE { "
                                         + "?s <http://nuts.de/id> \'" + regionId + "\' . "
                                         + "?s <http://nuts.de/geoJson> ?geoJson . "
-
                                         + "}";
                         logger.info(query);
                         logger.info("Retrieving nuts geometry");
