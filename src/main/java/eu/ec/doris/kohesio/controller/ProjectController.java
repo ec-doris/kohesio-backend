@@ -533,6 +533,8 @@ public class ProjectController {
                     if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
                         regionText += ", " + (String) result.get("regionUpper3");
                     }
+                    regionText += ", " + (String) result.get("countryLabel");
+
                     result.put("regionText", regionText);
                 } else {
                     result.put("regionText", (String) result.get("countryLabel"));
