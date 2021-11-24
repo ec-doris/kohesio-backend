@@ -115,9 +115,9 @@ public class BeneficiaryController {
                 "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P537> ?logo .}\n" +
                 "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .}\n" +
                 "  OPTIONAL{ " +
-                "      ?wikipedia schema:about ?s0 ; " +
-                "                 schema:inLanguage \"" + language + "\" ;" +
-                "                 schema:isPartOf <https://" + language + ".wikipedia.org/> ." + "}\n " +
+                "      ?wikipedia <http://schema.org/about> ?s0 ; " +
+                "                 <http://schema.org/inLanguage> \"" + language + "\" ;" +
+                "                 <http://schema.org/isPartOf> <https://" + language + ".wikipedia.org/> ." + "}\n " +
                 "}";
 
         String query2 = "select ?s0 (sum(?euBudget) as ?totalEuBudget) (sum(?budget) as ?totalBudget) (count(?project) as ?numberProjects) (min(?startTime) as ?minStartTime) (max(?endTime) as ?maxEndTime) where {\n" +
