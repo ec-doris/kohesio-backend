@@ -98,14 +98,18 @@ public class ProjectController {
                 "}";
 
 
-        boolean resultAsk = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", queryCheck, 2);
+        boolean resultAsk = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, queryCheck, 2);
         if (!resultAsk) {
             JSONObject result = new JSONObject();
             result.put("message", "Bad Request - project ID not found");
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
         } else {
             String query =
-                    "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
+                    "PREFIX wd: <https://linkedopendata.eu/entity/>\n" +
+                            "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
+                            "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
+                            "PREFIX p: <https://linkedopendata.eu/prop/>\n"+
+                            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
                             "?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 where { "
@@ -244,7 +248,7 @@ public class ProjectController {
 
 
             logger.info("Retrieving results");
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2, false);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
             logger.info("Executed");
 
             JSONObject result = new JSONObject();
