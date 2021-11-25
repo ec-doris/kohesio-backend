@@ -71,16 +71,16 @@ public class BeneficiaryController {
 
         boolean resultAsk = sparqlQueryService.executeBooleanQuery(publicSparqlEndpoint, queryCheck, 2);
         if (!resultAsk) {
-            String queryCheckRedirect = " select ?redirect where { "+
-                    " <https://linkedopendata.eu/entity/Q257756> <http://www.w3.org/2002/07/owl#sameAs> ?redirect } ";
-            TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(publicSparqlEndpoint, queryCheckRedirect, 3);
-            if (resultSet1.hasNext()){
-                return euBenfeciaryId(resultSet1.next().getBinding("redirect").getValue().stringValue(),language);
-            } else {
+//            String queryCheckRedirect = " select ?redirect where { "+
+//                    " <https://linkedopendata.eu/entity/Q257756> <http://www.w3.org/2002/07/owl#sameAs> ?redirect } ";
+//            TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(publicSparqlEndpoint, queryCheckRedirect, 3);
+//            if (resultSet1.hasNext()){
+//                return euBenfeciaryId(resultSet1.next().getBinding("redirect").getValue().stringValue(),language);
+//            } else {
                 JSONObject result = new JSONObject();
                 result.put("message", "Bad Request - beneficiary ID not found");
                 return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
-            }
+//            }
         }
         String query1 = "select ?s0 ?country ?countryCode ?beneficiaryLabel_en ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates ?wikipedia where {\n"
                 + " VALUES ?s0 { <"

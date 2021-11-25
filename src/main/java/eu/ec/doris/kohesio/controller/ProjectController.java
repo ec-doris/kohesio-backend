@@ -533,7 +533,8 @@ public class ProjectController {
                     if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
                         regionText += ", " + (String) result.get("regionUpper3");
                     }
-                    regionText += ", " + (String) result.get("countryLabel");
+                    if(!result.get("countryLabel").equals(regionText))
+                        regionText += ", " + (String) result.get("countryLabel");
 
                     result.put("regionText", regionText);
                 } else {
@@ -552,9 +553,11 @@ public class ProjectController {
                 }
                 if (regionId != null) {
                     JSONArray geoJsons = (JSONArray) result.get("geoJson");
-                    if(!regionIDs.contains(regionId)) {
+                    String regionLabel = (String) result.get("region");
+                    if(!regionIDs.contains(regionId) && !regions.contains(regionLabel)) {
                         // check if the regioId has already been seen - could be that a project is contained in multipl geometries
                         regionIDs.add(regionId);
+                        regions.add(regionLabel);
                         query =
                                 "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
                                         + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
