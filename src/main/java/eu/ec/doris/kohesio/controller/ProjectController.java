@@ -98,14 +98,18 @@ public class ProjectController {
                 "}";
 
 
-        boolean resultAsk = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", queryCheck, 2);
+        boolean resultAsk = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, queryCheck, 2);
         if (!resultAsk) {
             JSONObject result = new JSONObject();
             result.put("message", "Bad Request - project ID not found");
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
         } else {
             String query =
-                    "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
+                    "PREFIX wd: <https://linkedopendata.eu/entity/>\n" +
+                            "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
+                            "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
+                            "PREFIX p: <https://linkedopendata.eu/prop/>\n"+
+                            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
                             "?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 where { "
@@ -177,74 +181,75 @@ public class ProjectController {
 
 
                             +"     OPTIONAL\n" +
-                            "       { ?s0  wdt:P1845  ?region\n" +
+                            "       { ?s0  wdt:P1845  ?region . \n" +
+                            "          ?region  wdt:P35  wd:Q2576750 . \n "+
                             "         OPTIONAL\n" +
                             "           { ?region  wdt:P192  ?regionId .\n" +
                             "                        ?region  <http://www.w3.org/2000/01/rdf-schema#label>  ?regionLabel\n" +
                             "                        FILTER ( lang(?regionLabel) = \""+language+"\" )\n" +
                             "           }\n" +
-                            "         OPTIONAL\n" +
-                            "           { \n" +
-                            "             \n" +
-                            "               ?region  wdt:P35  ?regionType .\n" +
-                            "             OPTIONAL {\n" +
-                            "                  ?region p:P35 ?blank .\n" +
-                            "                  ?blank ps:P35 ?is_statistical_only_0 .\n" +
-                            "                 filter(?is_statistical_only_0 = wd:Q2727537)\n" +
-                            "               }\n" +
-                            "            \n" +
-                            "             FILTER ( ( ?regionType = wd:Q2576750 ) || ( ?regionType = wd:Q2576674 ))\n" +
-                            "           \n" +
-                            "         OPTIONAL\n" +
-                            "           { \n" +
-                            "             \n" +
-                            "             ?region   wdt:P1845  ?regionUpper1 .\n" +
-                            "             ?regionUpper1 wdt:P35  ?regionType1 .\n" +
-                            "            \n" +
-                            "             OPTIONAL {\n" +
-                            "                ?regionUpper1 p:P35 ?blank_1 .\n" +
-                            "                 ?blank_1 ps:P35 ?is_statistical_only_1 .\n" +
-                            "                 filter(?is_statistical_only_1 = wd:Q2727537)\n" +
-                            "               }\n" +
-                            "            \n" +
-                            "             FILTER ( ( ?regionType1 = wd:Q2576674 ) || ( ?regionType1 = wd:Q2576630 ) )\n" +
-                            "             ?regionUpper1\n" +
-                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper1Label\n" +
-                            "             FILTER ( lang(?regionUpper1Label) = \""+language+"\" )\n" +
-                            "           }\n" +
-                            "         OPTIONAL\n" +
-                            "           { ?regionUpper1\n" +
-                            "                       wdt:P1845  ?regionUpper2 .\n" +
-                            "             ?regionUpper2 wdt:P35  ?regionType2 .\n" +
-                            "            \n" +
-                            "            OPTIONAL {\n" +
-                            "              \n" +
-                            "             ?regionUpper2 p:P35 ?blank_2 .\n" +
-                            "             ?blank_2 ps:P35 ?is_statistical_only_2 .\n" +
-                            "              filter(?is_statistical_only_2 = wd:Q2727537)\n" +
-                            "              }\n" +
-                            "            \n" +
-                            "             FILTER ( ( ?regionType2 = wd:Q2576630 ) || ( ?regionType2 = wd:Q510 ))\n" +
-                            "             ?regionUpper2\n" +
-                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper2Label\n" +
-                            "             FILTER ( lang(?regionUpper2Label) = \""+language+"\" )\n" +
-                            "           }\n" +
-                            "         OPTIONAL\n" +
-                            "           { ?regionUpper2\n" +
-                            "                       wdt:P1845  ?regionUpper3 .\n" +
-                            "             ?regionUpper3\n" +
-                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper3Label .\n" +
-                            "             ?regionUpper3 p:P35 ?blank_country .\n" +
-                            "            ?blank_country ps:P35 wd:Q510 ." +
-                            "             FILTER ( lang(?regionUpper3Label) = \"en\" )\n" +
-                            "           }\n" +
-                            "           }\n" +
+//                            "         OPTIONAL\n" +
+//                            "           { \n" +
+//                            "             \n" +
+//                            "               ?region  wdt:P35  ?regionType .\n" +
+//                            "             OPTIONAL {\n" +
+//                            "                  ?region p:P35 ?blank .\n" +
+//                            "                  ?blank ps:P35 ?is_statistical_only_0 .\n" +
+//                            "                 filter(?is_statistical_only_0 = wd:Q2727537)\n" +
+//                            "               }\n" +
+//                            "            \n" +
+//                            "             FILTER ( ( ?regionType = wd:Q2576750 ))\n" +
+//                            "           \n" +
+//                            "         OPTIONAL\n" +
+//                            "           { \n" +
+//                            "             \n" +
+//                            "             ?region   wdt:P1845  ?regionUpper1 .\n" +
+//                            "             ?regionUpper1 wdt:P35  ?regionType1 .\n" +
+//                            "            \n" +
+//                            "             OPTIONAL {\n" +
+//                            "                ?regionUpper1 p:P35 ?blank_1 .\n" +
+//                            "                 ?blank_1 ps:P35 ?is_statistical_only_1 .\n" +
+//                            "                 filter(?is_statistical_only_1 = wd:Q2727537)\n" +
+//                            "               }\n" +
+//                            "            \n" +
+//                            "             FILTER ( ( ?regionType1 = wd:Q2576674 ) )\n" +
+//                            "             ?regionUpper1\n" +
+//                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper1Label\n" +
+//                            "             FILTER ( lang(?regionUpper1Label) = \""+language+"\" )\n" +
+//                            "           }\n" +
+//                            "         OPTIONAL\n" +
+//                            "           { ?regionUpper1\n" +
+//                            "                       wdt:P1845  ?regionUpper2 .\n" +
+//                            "             ?regionUpper2 wdt:P35  ?regionType2 .\n" +
+//                            "            \n" +
+//                            "            OPTIONAL {\n" +
+//                            "              \n" +
+//                            "             ?regionUpper2 p:P35 ?blank_2 .\n" +
+//                            "             ?blank_2 ps:P35 ?is_statistical_only_2 .\n" +
+//                            "              filter(?is_statistical_only_2 = wd:Q2727537)\n" +
+//                            "              }\n" +
+//                            "            \n" +
+//                            "             FILTER ( ( ?regionType2 = wd:Q2576630 ) )\n" +
+//                            "             ?regionUpper2\n" +
+//                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper2Label\n" +
+//                            "             FILTER ( lang(?regionUpper2Label) = \""+language+"\" )\n" +
+//                            "           }\n" +
+//                            "         OPTIONAL\n" +
+//                            "           { ?regionUpper2\n" +
+//                            "                       wdt:P1845  ?regionUpper3 .\n" +
+//                            "             ?regionUpper3\n" +
+//                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper3Label .\n" +
+//                            "             ?regionUpper3 p:P35 ?blank_country .\n" +
+//                            "            ?blank_country ps:P35 wd:Q510 ." +
+//                            "             FILTER ( lang(?regionUpper3Label) = \"en\" )\n" +
+//                            "           }\n" +
+//                            "           }\n" +
                             "       }"
                             + "} ";
 
 
             logger.info("Retrieving results");
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2, false);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
             logger.info("Executed");
 
             JSONObject result = new JSONObject();
@@ -528,6 +533,8 @@ public class ProjectController {
                     if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
                         regionText += ", " + (String) result.get("regionUpper3");
                     }
+                    regionText += ", " + (String) result.get("countryLabel");
+
                     result.put("regionText", regionText);
                 } else {
                     result.put("regionText", (String) result.get("countryLabel"));
@@ -556,7 +563,6 @@ public class ProjectController {
                                         + "SELECT ?id ?geoJson  WHERE { "
                                         + "?s <http://nuts.de/id> \'" + regionId + "\' . "
                                         + "?s <http://nuts.de/geoJson> ?geoJson . "
-
                                         + "}";
                         logger.info(query);
                         logger.info("Retrieving nuts geometry");
