@@ -264,13 +264,13 @@ public class ProjectController {
             result.put("cofinancingRate", "");
             result.put("countryLabel", "");
             result.put("countryCode", "");
-            result.put("categoryLabel", "");
+            result.put("categoryLabels", new JSONArray());
             result.put("fundLabel", "");
             result.put("programmingPeriodLabel", "2014-2020");
             result.put("programLabel", "");
             result.put("programWebsite", "");
-            result.put("objectiveId", "");
-            result.put("objectiveLabel", "");
+            result.put("objectiveIds", new JSONArray());
+            result.put("objectiveLabels", new JSONArray());
             result.put("projectWebsite", "");
             result.put("coordinates", new JSONArray());
             result.put("images", new JSONArray());
@@ -286,6 +286,9 @@ public class ProjectController {
             HashSet<String> regionIDs = new HashSet<>();
             HashSet<String> coordinatesSet = new HashSet<>();
             HashSet<String> regions = new HashSet<>();
+            HashSet<String> interventionFieldsSet = new HashSet<>();
+            HashSet<String> objectiveLabels = new HashSet<>();
+            HashSet<String> objectiveIds = new HashSet<>();
 
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
@@ -356,9 +359,11 @@ public class ProjectController {
                 }
 
                 if (querySolution.getBinding("categoryLabel") != null) {
-                    result.put(
-                            "categoryLabel",
-                            ((Literal) querySolution.getBinding("categoryLabel").getValue()).stringValue());
+                    String interventionField = querySolution.getBinding("categoryLabel").getValue().stringValue();
+                    if(!interventionFieldsSet.contains(interventionField)){
+                        interventionFieldsSet.add(interventionField);
+                        result.put("categoryLabels",interventionFieldsSet);
+                    }
                 }
 
                 if (querySolution.getBinding("fundLabel") != null) {
@@ -374,15 +379,19 @@ public class ProjectController {
                 }
 
                 if (querySolution.getBinding("objectiveId") != null) {
-                    result.put(
-                            "objectiveId",
-                            ((Literal) querySolution.getBinding("objectiveId").getValue()).stringValue());
+                    String objectiveId = querySolution.getBinding("objectiveId").getValue().stringValue();
+                    if(!objectiveIds.contains(objectiveId)){
+                        objectiveIds.add(objectiveId);
+                        result.put("objectiveIds", objectiveIds);
+                    }
                 }
 
                 if (querySolution.getBinding("objectiveLabel") != null) {
-                    result.put(
-                            "objectiveLabel",
-                            ((Literal) querySolution.getBinding("objectiveLabel").getValue()).stringValue());
+                    String objectiveLabel = querySolution.getBinding("objectiveLabel").getValue().stringValue();
+                    if(!objectiveLabels.contains(objectiveLabel)){
+                        objectiveLabels.add(objectiveLabel);
+                        result.put("objectiveLabels", objectiveLabels);
+                    }
                 }
 
                 if (querySolution.getBinding("source") != null) {
