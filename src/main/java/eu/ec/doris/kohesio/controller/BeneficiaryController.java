@@ -62,7 +62,10 @@ public class BeneficiaryController {
 
     @GetMapping(value = "/facet/eu/beneficiary", produces = "application/json")
     public ResponseEntity euBenfeciaryId(@RequestParam(value = "id") String id,
-                                         @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
+                                         @RequestParam(value = "language", defaultValue = "en") String language,
+                                         @RequestParam(value = "page", defaultValue = "0") int page,
+                                         @RequestParam(value = "pageSize", defaultValue = "100") int pageSize
+    ) throws Exception {
 
 
         String queryCheck = "ask {\n" +
@@ -149,7 +152,7 @@ public class BeneficiaryController {
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
                 "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n " +
-                "} order by DESC(?euBudget) limit 100 ";
+                "} order by DESC(?euBudget) limit " + pageSize + "OFFSET " + pageSize * page;
 
         String query4 = "select ?fundLabel (sum(?euBudget) as ?totalEuBudget) where {\n" +
                 " VALUES ?s0 { <" +
