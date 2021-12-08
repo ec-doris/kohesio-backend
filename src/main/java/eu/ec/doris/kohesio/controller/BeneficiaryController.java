@@ -387,7 +387,7 @@ public class BeneficiaryController {
                 + " } group by ?beneficiary }" +
                 "}";
         System.out.println(queryCount);
-        TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 25);
+        TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 40);
         int numResults = 0;
         if (countResultSet.hasNext()) {
             BindingSet querySolution = countResultSet.next();
