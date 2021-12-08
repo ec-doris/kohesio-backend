@@ -458,7 +458,7 @@ public class BeneficiaryController {
                         + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
                         + "} ";
         logger.info(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 40);
 
         ArrayList<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
         if (resultSet != null) {
