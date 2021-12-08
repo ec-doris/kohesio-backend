@@ -388,7 +388,7 @@ public class BeneficiaryController {
                 + " } group by ?beneficiary }" +
                 "}";
         System.out.println(queryCount);
-        TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 25);
+        TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 40);
         int numResults = 0;
         if (countResultSet.hasNext()) {
             BindingSet querySolution = countResultSet.next();
@@ -459,7 +459,7 @@ public class BeneficiaryController {
                         + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
                         + "} ";
         logger.info(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 40);
 
         ArrayList<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
         if (resultSet != null) {
