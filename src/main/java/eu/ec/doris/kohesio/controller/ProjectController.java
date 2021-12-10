@@ -428,7 +428,7 @@ public class ProjectController {
                     if (found == false) {
                         image.put("image", im);
                         if (querySolution.getBinding("imageCopyright") != null) {
-                            image.put("imageCopyright", querySolution.getBinding("imageCopyright").getValue().stringValue());
+                            image.put("imageCopyright", "© "+querySolution.getBinding("imageCopyright").getValue().stringValue());
                         }
                         images.add(image);
                     }

@@ -146,7 +146,7 @@ public class MapController {
                                 + " } group by ?region ";
             }
             logger.info(query);
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
 
             HashMap<String, JSONObject> subRegions = new HashMap();
