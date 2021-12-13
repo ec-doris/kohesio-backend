@@ -751,6 +751,10 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
+                        + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
+                        + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
+                        + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
@@ -769,6 +773,7 @@ public class ProjectController {
         Set<String> euBudget = new HashSet<>();
         Set<String> totalBudget = new HashSet<>();
         Set<String> image = new HashSet<>();
+        Set<String> imageCopyright = new HashSet<>();
         Set<String> coordinates = new HashSet<>();
         Set<String> objectiveId = new HashSet<>();
         Set<String> countrycode = new HashSet<>();
@@ -843,6 +848,9 @@ public class ProjectController {
             if (querySolution.getBinding("image") != null) {
                 image.add(querySolution.getBinding("image").getValue().stringValue());
             }
+            if (querySolution.getBinding("imageCopyright") != null) {
+                imageCopyright.add("© "+querySolution.getBinding("imageCopyright").getValue().stringValue());
+            }
             if (querySolution.getBinding("coordinates") != null) {
                 coordinates.add(
                         ((Literal) querySolution.getBinding("coordinates").getValue())
@@ -887,6 +895,7 @@ public class ProjectController {
             project.setEuBudgets(new ArrayList<String>(euBudget));
             project.setTotalBudgets(new ArrayList<String>(totalBudget));
             project.setImages(new ArrayList<String>(image));
+            project.setCopyrightImages(new ArrayList<>(imageCopyright));
             project.setCoordinates(new ArrayList<String>(coordinates));
             project.setObjectiveIds(new ArrayList<String>(objectiveId));
             project.setCountrycode(new ArrayList<String>(countrycode));
