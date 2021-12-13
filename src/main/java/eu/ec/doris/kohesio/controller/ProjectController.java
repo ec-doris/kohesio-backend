@@ -1047,13 +1047,17 @@ public class ProjectController {
         logger.info("Number of results {}", numResults);
 
         query =
-                "SELECT ?s0 ?image ?title where { "
+                "SELECT ?s0 ?image ?imageCopyright ?title where { "
                         + search
                         + " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. "
                         + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?title. "
                         + " FILTER((LANG(?title)) = \""
                         + language
                         + "\") "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
+                        + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
+                        + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
+                        + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                         + " } limit "
                         + limit
                         + " offset "
@@ -1068,6 +1072,9 @@ public class ProjectController {
             JSONObject item = new JSONObject();
             item.put("item", querySolution.getBinding("s0").getValue().stringValue());
             item.put("image", querySolution.getBinding("image").getValue().stringValue());
+            if (querySolution.getBinding("imageCopyright") != null) {
+                item.put("imageCopyright", "© "+querySolution.getBinding("imageCopyright").getValue().stringValue());
+            }
             item.put("title", querySolution.getBinding("title").getValue().stringValue());
 
             resultList.add(item);
