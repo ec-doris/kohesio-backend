@@ -795,6 +795,7 @@ public class ProjectController {
                     project.setEuBudgets(new ArrayList<String>(euBudget));
                     project.setTotalBudgets(new ArrayList<String>(totalBudget));
                     project.setImages(new ArrayList<String>(image));
+                    project.setCopyrightImages(new ArrayList<>(imageCopyright));
                     project.setCoordinates(new ArrayList<String>(coordinates));
                     project.setObjectiveIds(new ArrayList<String>(objectiveId));
                     project.setCountrycode(new ArrayList<String>(countrycode));
