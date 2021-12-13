@@ -808,6 +808,7 @@ public class ProjectController {
                     euBudget = new HashSet<>();
                     totalBudget = new HashSet<>();
                     image = new HashSet<>();
+                    imageCopyright = new HashSet<>();
                     coordinates = new HashSet<>();
                     objectiveId = new HashSet<>();
                     countrycode = new HashSet<>();
