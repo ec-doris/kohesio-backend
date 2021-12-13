@@ -753,7 +753,6 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
                         + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
-                        + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
                         + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
