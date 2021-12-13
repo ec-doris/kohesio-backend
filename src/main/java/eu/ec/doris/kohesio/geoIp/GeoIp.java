@@ -31,10 +31,6 @@ public class GeoIp {
     public Coordinates compute(String ip) throws IOException, GeoIp2Exception {
         InetAddress ipAddress = InetAddress.getByName(ip);
         CityResponse response = dbReader.city(ipAddress);
-
-        System.out.println(response.getCity());
-        System.out.println(response.getCountry());
-
         String latitude =
                 response.getLocation().getLatitude().toString();
         String longitude =
