@@ -110,6 +110,7 @@ public class BeneficiaryController {
                 "              || (LANG(?beneficiaryLabel) = \"lv\" && ?country = <https://linkedopendata.eu/entity/Q24> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q16> ) \n" +
                 "              || (LANG(?beneficiaryLabel) = \"sk\" && ?country = <https://linkedopendata.eu/entity/Q26> ) " +
+                "              || (LANG(?beneficiaryLabel) = \"nl\" && ?country = <https://linkedopendata.eu/entity/Q19> ) " +
                 "              || (LANG(?beneficiaryLabel) = \"hu\" && ?country = <https://linkedopendata.eu/entity/Q3> ) " +
                 "              || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) " +
                 "              || (LANG(?beneficiaryLabel) = \"bg\" && ?country = <https://linkedopendata.eu/entity/Q29> ) " +
@@ -448,6 +449,7 @@ public class BeneficiaryController {
                         + "                 || (LANG(?beneficiaryLabel) = \"pt\" && ?country = <https://linkedopendata.eu/entity/Q18> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"lv\" && ?country = <https://linkedopendata.eu/entity/Q24> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q16> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"nl\" && ?country = <https://linkedopendata.eu/entity/Q19> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"bg\" && ?country = <https://linkedopendata.eu/entity/Q29> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"sk\" && ?country = <https://linkedopendata.eu/entity/Q26> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"hu\" && ?country = <https://linkedopendata.eu/entity/Q3> ) "
