@@ -264,13 +264,13 @@ public class ProjectController {
             result.put("cofinancingRate", "");
             result.put("countryLabel", "");
             result.put("countryCode", "");
-            result.put("categoryLabel", "");
+            result.put("categoryLabels", new JSONArray());
             result.put("fundLabel", "");
             result.put("programmingPeriodLabel", "2014-2020");
             result.put("programLabel", "");
             result.put("programWebsite", "");
-            result.put("objectiveId", "");
-            result.put("objectiveLabel", "");
+            result.put("objectiveIds", new JSONArray());
+            result.put("objectiveLabels", new JSONArray());
             result.put("projectWebsite", "");
             result.put("coordinates", new JSONArray());
             result.put("images", new JSONArray());
@@ -286,6 +286,9 @@ public class ProjectController {
             HashSet<String> regionIDs = new HashSet<>();
             HashSet<String> coordinatesSet = new HashSet<>();
             HashSet<String> regions = new HashSet<>();
+            HashSet<String> interventionFieldsSet = new HashSet<>();
+            HashSet<String> objectiveLabels = new HashSet<>();
+            HashSet<String> objectiveIds = new HashSet<>();
 
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
@@ -356,9 +359,11 @@ public class ProjectController {
                 }
 
                 if (querySolution.getBinding("categoryLabel") != null) {
-                    result.put(
-                            "categoryLabel",
-                            ((Literal) querySolution.getBinding("categoryLabel").getValue()).stringValue());
+                    String interventionField = querySolution.getBinding("categoryLabel").getValue().stringValue();
+                    if(!interventionFieldsSet.contains(interventionField)){
+                        interventionFieldsSet.add(interventionField);
+                        result.put("categoryLabels",interventionFieldsSet);
+                    }
                 }
 
                 if (querySolution.getBinding("fundLabel") != null) {
@@ -374,15 +379,19 @@ public class ProjectController {
                 }
 
                 if (querySolution.getBinding("objectiveId") != null) {
-                    result.put(
-                            "objectiveId",
-                            ((Literal) querySolution.getBinding("objectiveId").getValue()).stringValue());
+                    String objectiveId = querySolution.getBinding("objectiveId").getValue().stringValue();
+                    if(!objectiveIds.contains(objectiveId)){
+                        objectiveIds.add(objectiveId);
+                        result.put("objectiveIds", objectiveIds);
+                    }
                 }
 
                 if (querySolution.getBinding("objectiveLabel") != null) {
-                    result.put(
-                            "objectiveLabel",
-                            ((Literal) querySolution.getBinding("objectiveLabel").getValue()).stringValue());
+                    String objectiveLabel = querySolution.getBinding("objectiveLabel").getValue().stringValue();
+                    if(!objectiveLabels.contains(objectiveLabel)){
+                        objectiveLabels.add(objectiveLabel);
+                        result.put("objectiveLabels", objectiveLabels);
+                    }
                 }
 
                 if (querySolution.getBinding("source") != null) {
@@ -419,7 +428,7 @@ public class ProjectController {
                     if (found == false) {
                         image.put("image", im);
                         if (querySolution.getBinding("imageCopyright") != null) {
-                            image.put("imageCopyright", querySolution.getBinding("imageCopyright").getValue().stringValue());
+                            image.put("imageCopyright", "© "+querySolution.getBinding("imageCopyright").getValue().stringValue());
                         }
                         images.add(image);
                     }
@@ -533,7 +542,8 @@ public class ProjectController {
                     if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
                         regionText += ", " + (String) result.get("regionUpper3");
                     }
-                    regionText += ", " + (String) result.get("countryLabel");
+                    if(!result.get("countryLabel").equals(regionText))
+                        regionText += ", " + (String) result.get("countryLabel");
 
                     result.put("regionText", regionText);
                 } else {
@@ -552,9 +562,11 @@ public class ProjectController {
                 }
                 if (regionId != null) {
                     JSONArray geoJsons = (JSONArray) result.get("geoJson");
-                    if(!regionIDs.contains(regionId)) {
+                    String regionLabel = (String) result.get("region");
+                    if(!regionIDs.contains(regionId) && !regions.contains(regionLabel)) {
                         // check if the regioId has already been seen - could be that a project is contained in multipl geometries
                         regionIDs.add(regionId);
+                        regions.add(regionLabel);
                         query =
                                 "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
                                         + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
@@ -628,16 +640,23 @@ public class ProjectController {
 
         int inputOffset = offset;
         int inputLimit = limit;
-        if(keywords != null){
-            if(offset < 100) {
-                offset = 0;
-                limit = 100;
+        if(offset != Integer.MIN_VALUE) {
+            // if not special offset then cache the and optimize the limits..
+            if (keywords != null) {
+                // in case of keywords, optimize to 100 projects for performance issues
+                if (offset < 100) {
+                    offset = 0;
+                    limit = 100;
+                }
+            } else {
+                if (offset < 1000) {
+                    offset = 0;
+                    limit = 1000;
+                }
             }
         }else{
-            if (offset < 1000) {
-                offset = 0;
-                limit = 1000;
-            }
+            offset = 0;
+            inputOffset = 0;
         }
         // expand the query keywords
         ExpandedQuery expandedQuery = null;
@@ -712,7 +731,7 @@ public class ProjectController {
 
         search += " " + orderQuery;
         query =
-                "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?coordinates ?objectiveId ?countrycode where { "
+                "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode where { "
                         + " { SELECT ?s0 ?description where { "
                         + search
                         + " } " + orderBy + " limit "
@@ -732,6 +751,9 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
+                        + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
+                        + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
@@ -750,6 +772,7 @@ public class ProjectController {
         Set<String> euBudget = new HashSet<>();
         Set<String> totalBudget = new HashSet<>();
         Set<String> image = new HashSet<>();
+        Set<String> imageCopyright = new HashSet<>();
         Set<String> coordinates = new HashSet<>();
         Set<String> objectiveId = new HashSet<>();
         Set<String> countrycode = new HashSet<>();
@@ -772,6 +795,7 @@ public class ProjectController {
                     project.setEuBudgets(new ArrayList<String>(euBudget));
                     project.setTotalBudgets(new ArrayList<String>(totalBudget));
                     project.setImages(new ArrayList<String>(image));
+                    project.setCopyrightImages(new ArrayList<>(imageCopyright));
                     project.setCoordinates(new ArrayList<String>(coordinates));
                     project.setObjectiveIds(new ArrayList<String>(objectiveId));
                     project.setCountrycode(new ArrayList<String>(countrycode));
@@ -784,6 +808,7 @@ public class ProjectController {
                     euBudget = new HashSet<>();
                     totalBudget = new HashSet<>();
                     image = new HashSet<>();
+                    imageCopyright = new HashSet<>();
                     coordinates = new HashSet<>();
                     objectiveId = new HashSet<>();
                     countrycode = new HashSet<>();
@@ -823,6 +848,9 @@ public class ProjectController {
 
             if (querySolution.getBinding("image") != null) {
                 image.add(querySolution.getBinding("image").getValue().stringValue());
+            }
+            if (querySolution.getBinding("imageCopyright") != null) {
+                imageCopyright.add("© "+querySolution.getBinding("imageCopyright").getValue().stringValue());
             }
             if (querySolution.getBinding("coordinates") != null) {
                 coordinates.add(
@@ -868,6 +896,7 @@ public class ProjectController {
             project.setEuBudgets(new ArrayList<String>(euBudget));
             project.setTotalBudgets(new ArrayList<String>(totalBudget));
             project.setImages(new ArrayList<String>(image));
+            project.setCopyrightImages(new ArrayList<>(imageCopyright));
             project.setCoordinates(new ArrayList<String>(coordinates));
             project.setObjectiveIds(new ArrayList<String>(objectiveId));
             project.setCountrycode(new ArrayList<String>(countrycode));
@@ -1028,13 +1057,17 @@ public class ProjectController {
         logger.info("Number of results {}", numResults);
 
         query =
-                "SELECT ?s0 ?image ?title where { "
+                "SELECT ?s0 ?image ?imageCopyright ?title where { "
                         + search
                         + " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. "
                         + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?title. "
                         + " FILTER((LANG(?title)) = \""
                         + language
                         + "\") "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
+                        + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
+                        + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
+                        + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                         + " } limit "
                         + limit
                         + " offset "
@@ -1049,6 +1082,9 @@ public class ProjectController {
             JSONObject item = new JSONObject();
             item.put("item", querySolution.getBinding("s0").getValue().stringValue());
             item.put("image", querySolution.getBinding("image").getValue().stringValue());
+            if (querySolution.getBinding("imageCopyright") != null) {
+                item.put("imageCopyright", "© "+querySolution.getBinding("imageCopyright").getValue().stringValue());
+            }
             item.put("title", querySolution.getBinding("title").getValue().stringValue());
 
             resultList.add(item);
@@ -1093,8 +1129,14 @@ public class ProjectController {
                                                         Principal principal,
                                                         @Context HttpServletResponse response)
             throws Exception {
-        ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, 30, principal).getBody();
+        int SPECIAL_OFFSET = Integer.MIN_VALUE;
+        int MAX_LIMIT = 1000;
+        // pass a special_offset to skip the caching and query up to the given limit or 10k projects
+        ProjectList projectList = (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
+                categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
+                budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate,
+                orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, MAX_LIMIT),
+                SPECIAL_OFFSET, 30, principal).getBody();
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("beneficiary_export");
         int rowNumber = 0;
@@ -1123,10 +1165,12 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getLabels()));
             cell = row.createCell(2);
             cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-            cell.setCellValue(Double.parseDouble(project.getTotalBudgets().get(0)));
+            if(project.getTotalBudgets().size() > 0)
+                cell.setCellValue(Double.parseDouble(project.getTotalBudgets().get(0)));
             cell = row.createCell(3);
             cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-            cell.setCellValue(Double.parseDouble(project.getEuBudgets().get(0)));
+            if(project.getEuBudgets().size() > 0)
+                cell.setCellValue(Double.parseDouble(project.getEuBudgets().get(0)));
             cell = row.createCell(4);
             if (project.getStartTimes().size() > 0) {
                 cell.setCellValue(project.getStartTimes().get(0));
@@ -1181,8 +1225,15 @@ public class ProjectController {
                                     Principal principal,
                                     @Context HttpServletResponse response)
             throws Exception {
+        int SPECIAL_OFFSET = Integer.MIN_VALUE;
+        int MAX_LIMIT = 1000;
+        // pass a special_offset to skip the caching and query up to the given limit or 10k projects
         ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, 1000), 0, 20, principal).getBody();
+                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
+                        categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen,
+                        budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
+                        endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude,
+                        longitude, region, Math.max(limit, MAX_LIMIT), SPECIAL_OFFSET, 20, principal).getBody();
         String filename = "project_export.csv";
         try {
             response.setContentType("text/csv");

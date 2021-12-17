@@ -91,7 +91,7 @@ public class FacetController {
                     filter = " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104>  ?region . ";
                 }
                 if (g.equals("nuts1")) {
-                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> .";
+                    filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . ";
                 }
                 if (g.equals("nuts2")) {
                     filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> .";
@@ -107,57 +107,66 @@ public class FacetController {
                                 "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
                                 "}";
                 logger.info(query);
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     String key = querySolution.getBinding("region").getValue().stringValue();
-                    Nut nut = new Nut();
-                    nut.uri = key;
-                    nut.type = g;
-                    if (nutsRegion.get(key) != null) {
-                        nut = nutsRegion.get(key);
+                    if (nutsRegion.containsKey(key)){
+                        Nut nut = nutsRegion.get(key);
+                        nut.type.add(g);
+                    } else {
+                        Nut nut = new Nut();
+                        nut.uri = key;
+                        nut.type.add(g);
+                        if (nutsRegion.get(key) != null) {
+                            nut = nutsRegion.get(key);
+                        }
+                        if (querySolution.getBinding("regionLabel") != null) {
+                            nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
+                        }
+                        nutsRegion.put(key, nut);
                     }
-                    if (querySolution.getBinding("regionLabel") != null) {
-                        nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
-                    }
-                    nutsRegion.put(key, nut);
                 }
             }
             //retrieving the narrower concept
             for (String key : nutsRegion.keySet()) {
                 String query = "";
-                if (nutsRegion.get(key).type.equals("continent")) {
+                if (nutsRegion.get(key).type.contains("continent")) {
                     query =
                             "SELECT ?region2 where {" +
                                     " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?region2 . }";
                 }
-                if (nutsRegion.get(key).type.equals("country")) {
+                if (nutsRegion.get(key).type.contains("country")) {
                     query =
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . }";
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576630> . " +
+                                    " }";
                 }
-                if (nutsRegion.get(key).type.equals("nuts1")) {
+                if (nutsRegion.get(key).type.contains("nuts1")) {
                     query =
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> . }";
+                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576674> . " +
+                                    "}";
                 }
-                if (nutsRegion.get(key).type.equals("nuts2")) {
+                if (nutsRegion.get(key).type.contains("nuts2")) {
                     query =
                             "SELECT ?region2 where {" +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2576750> . }";
                 }
                 if (query.equals("") == false) {
-                    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+                    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
                     System.out.println(resultSet.hasNext());
                     while (resultSet.hasNext()) {
                         BindingSet querySolution = resultSet.next();
                         if (querySolution.getBinding("region2") != null) {
                             System.out.println(querySolution.getBinding("region2").getValue().stringValue());
-                            if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
-                                nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
+                            if (!querySolution.getBinding("region2").getValue().stringValue().equals(key)){
+                                if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
+                                    nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
+                                }
                             }
                         }
                     }
@@ -166,10 +175,10 @@ public class FacetController {
             //retriving the geoJson geometries
             for (String key : nutsRegion.keySet()) {
                 String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
-                if (nutsRegion.get(key).type.equals("continent")) {
+                if (nutsRegion.get(key).type.contains("continent")) {
                     geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
                 }
-                if (nutsRegion.get(key).type.equals("country")) {
+                if (nutsRegion.get(key).type.contains("country")) {
                     geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
                 }
 //        if (nutsRegion.get(key).type.equals("nuts1")){
@@ -182,7 +191,7 @@ public class FacetController {
                                 geometry +
                                 " }";
                 logger.info(query);
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
@@ -196,13 +205,13 @@ public class FacetController {
             gran.add("country");
             for (String g : gran) {
                 for (String key : nutsRegion.keySet()) {
-                    if (nutsRegion.get(key).type.equals(g)) {
+                    if (nutsRegion.get(key).type.contains(g)) {
                         List<String> nonStatisticalNuts = new ArrayList<>();
                         for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
                             String query =
                                     "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2727537> . }";
                             logger.info(query);
-                            boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 10);
+                            boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 20);
                             if (resultSet) {
                                 for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
                                     nonStatisticalNuts.add(childNut);
@@ -224,7 +233,7 @@ public class FacetController {
         String query = "SELECT (count(?s0) as ?c) where { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "} ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberProjects", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -232,7 +241,7 @@ public class FacetController {
         query = "SELECT (count(?s0) as ?c) where { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> . "
                 + "} ";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberBeneficiaries", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -241,7 +250,7 @@ public class FacetController {
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "    ?s0  <https://linkedopendata.eu/prop/direct/P835>  ?o . "
                 + "} ";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 40);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             DecimalFormat df2 = new DecimalFormat("#.##");
@@ -254,7 +263,7 @@ public class FacetController {
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236692> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 40);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("lowCarbonEconomy", ((Literal) querySolution.getBinding("c").getValue()).doubleValue());
@@ -265,7 +274,7 @@ public class FacetController {
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236693> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 40);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("climateChangeAdaptation", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -276,7 +285,7 @@ public class FacetController {
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236694> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 40);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("enviromentProtection", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -287,7 +296,7 @@ public class FacetController {
                 " ?category <https://linkedopendata.eu/prop/direct/P1849> <https://linkedopendata.eu/entity/Q2547987> . " +
                 "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 40);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("greenerAndCarbonFreeEurope", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -306,7 +315,7 @@ public class FacetController {
         String query ="SELECT DISTINCT ?country WHERE { 	" +
                 " ?s1  <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q196788> . 	 " +
                 "?s1  <https://linkedopendata.eu/prop/direct/P32>  ?country .  }";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();

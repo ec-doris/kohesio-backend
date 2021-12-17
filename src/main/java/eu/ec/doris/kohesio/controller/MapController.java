@@ -93,7 +93,7 @@ public class MapController {
             Integer timeout,
             Principal principal)
             throws Exception {
-        logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
+        logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion);
         facetController.initialize(language);
         if (timeout == null) {
             timeout = 70;
@@ -116,7 +116,6 @@ public class MapController {
 
         //computing the number of results
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
-        System.out.println(query);
         int numResults = 0;
         System.out.println("Limit " + limit);
         if (limit == null || limit > 2000) {
@@ -145,8 +144,7 @@ public class MapController {
                                 + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region . "
                                 + " } group by ?region ";
             }
-            logger.info(query);
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
 
             HashMap<String, JSONObject> subRegions = new HashMap();
@@ -407,7 +405,6 @@ public class MapController {
     @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
     public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
-        System.out.println(ip);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
         ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, 2000, 0, 400, null);
         JSONObject mod = result.getBody();

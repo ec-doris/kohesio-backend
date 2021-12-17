@@ -13,6 +13,7 @@ public class Project {
     ArrayList<String> euBudgets;
     ArrayList<String> totalBudgets;
     ArrayList<String> images;
+    ArrayList<String> copyrightImages;
     ArrayList<String> coordinates;
     ArrayList<String> objectiveIds;
     ArrayList<String> countrycode;
@@ -120,5 +121,13 @@ public class Project {
 
     public void setCountrycode(ArrayList<String> countrycode) {
         this.countrycode = countrycode;
+    }
+
+    public ArrayList<String> getCopyrightImages() {
+        return copyrightImages;
+    }
+
+    public void setCopyrightImages(ArrayList<String> copyrightImages) {
+        this.copyrightImages = copyrightImages;
     }
 }
