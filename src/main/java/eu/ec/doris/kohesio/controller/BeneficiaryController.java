@@ -456,7 +456,12 @@ public class BeneficiaryController {
                         + "                 || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q9> ) "
                         + "                 || (LANG(?beneficiaryLabel) = \"et\" && ?country = <https://linkedopendata.eu/entity/Q23> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) )  "
+                        + "                 || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) "
+                        + "                 || (LANG(?beneficiaryLabel) = \"sl\" && ?country = <https://linkedopendata.eu/entity/Q27> ) " +
+                        "                   || (LANG(?beneficiaryLabel) = \"fi\" && ?country = <https://linkedopendata.eu/entity/Q10> ) " +
+                        "                   || (LANG(?beneficiaryLabel) = \"lt\" && ?country = <https://linkedopendata.eu/entity/Q14> )" +
+
+                        " )"
                         + " }"
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P1> ?link. } "
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
