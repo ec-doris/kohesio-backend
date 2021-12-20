@@ -207,13 +207,15 @@ public class MapController {
                 optional += "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
             }
         }
+        // add info regio optional, to flag on the map
+        optional += "OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . }";
 
         if (limit == null) {
             limit = 1000;
         }
 
         String query =
-                "SELECT DISTINCT ?coordinates WHERE { "
+                "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
                         + " { SELECT ?s0 where { "
                         + search
                         + " } limit "
@@ -229,11 +231,17 @@ public class MapController {
         JSONArray resultList = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
-            resultList.add(((Literal) querySolution.getBinding("coordinates").getValue())
+            JSONObject point = new JSONObject();
+            point.put("coordinates",((Literal) querySolution.getBinding("coordinates").getValue())
                     .getLabel()
                     .replace("Point(", "")
                     .replace(")", "")
                     .replace(" ", ","));
+            if(querySolution.getBinding("infoRegioID") != null)
+                point.put("isInfoRegio",true);
+            else
+                point.put("isInfoRegio",false);
+            resultList.add(point);
         }
         JSONObject result = new JSONObject();
         result.put("list", resultList);
