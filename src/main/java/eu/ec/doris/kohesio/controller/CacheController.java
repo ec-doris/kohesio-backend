@@ -3,6 +3,8 @@ package eu.ec.doris.kohesio.controller;
 import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,7 @@ import java.util.ArrayList;
 @RestController
 @RequestMapping("/api")
 public class CacheController {
+    private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
 
     @Value("${kohesio.directory}")
     String location;
@@ -40,9 +43,9 @@ public class CacheController {
 
     @PostMapping(value = "/facet/eu/cache/generate", produces = "application/json")
     public void generateCache() throws Exception {
-        System.out.println("Start recoursive");
+        logger.debug("Start generating map recursively");
         recursiveMap(null);
-        System.out.println("end recoursive");
+        logger.debug("End recursive map");
         ArrayList<String> countries = new ArrayList<>();
         countries.add(null);
         for (Object jsonObject : facetController.facetEuCountries("en")) {
@@ -177,7 +180,7 @@ public class CacheController {
                                     null, null, null, null,
                                     null, null, null, r, r, null, 0, 400, null);
                         }
-                        System.out.println("Done");
+                        logger.info("End generating cache!");
                     }
                 }
             }
@@ -195,12 +198,12 @@ public class CacheController {
     }
 
     void recursiveMap(String granularityRegion) throws Exception {
-        System.out.println("Resolving for " + granularityRegion);
+        logger.debug("Resolving for region: " + granularityRegion);
         ResponseEntity responseEntity = mapController.euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, granularityRegion, null, 0, 400, null);
-        System.out.println("Hello world " + responseEntity.getBody());
+        logger.debug("Response result: " + responseEntity.getBody());
         if (((JSONObject) responseEntity.getBody()).get("subregions") instanceof JSONArray) {
             for (Object element : (JSONArray) ((JSONObject) responseEntity.getBody()).get("subregions")) {
-                System.out.println("Hello world " + ((JSONObject) element).get("region").toString());
+                logger.debug("Subregion: " + ((JSONObject) element).get("region").toString());
                 if (!((JSONObject) element).get("region").toString().equals(granularityRegion)) {
                     recursiveMap(((JSONObject) element).get("region").toString());
                 }

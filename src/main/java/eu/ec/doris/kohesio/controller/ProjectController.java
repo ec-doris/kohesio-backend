@@ -93,6 +93,8 @@ public class ProjectController {
                                        @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
 
+        logger.info("Project search by ID: id {}, language {}",id, language);
+
         String queryCheck = "ASK {\n" +
                 " <" + id + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> " +
                 "}";
@@ -248,9 +250,7 @@ public class ProjectController {
                             + "} ";
 
 
-            logger.info("Retrieving results");
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
-            logger.info("Executed");
 
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
@@ -576,10 +576,8 @@ public class ProjectController {
                                         + "?s <http://nuts.de/id> \'" + regionId + "\' . "
                                         + "?s <http://nuts.de/geoJson> ?geoJson . "
                                         + "}";
-                        logger.info(query);
-                        logger.info("Retrieving nuts geometry");
+                        logger.debug("Retrieving nuts geometry");
                         TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
-                        logger.info("Retrieved");
 
                         NutsRegion nutsRegion = new NutsRegion();
                         while (resultSet2.hasNext()) {
@@ -720,7 +718,6 @@ public class ProjectController {
         // pass cache = false in order to stop caching the semantic search results
 
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
-        System.out.println(query);
         // count the results with the applied filters
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
         if (resultSet != null && resultSet.hasNext()) {
@@ -759,7 +756,6 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                         + "} ";
-        System.out.println(query);
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
         ArrayList<Project> resultList = new ArrayList<Project>();
@@ -952,7 +948,6 @@ public class ProjectController {
         String path = cacheDirectory+"/facet/semantic-search";
         File dir = new File(path);
 
-        System.out.println("The directory of cache: "+dir.getAbsolutePath());
         if (!dir.exists()) {
             dir.mkdirs();
         }
@@ -991,7 +986,7 @@ public class ProjectController {
                 }
 //                out.close();
             } else {
-                System.err.println("Error in HTTP request!");
+                logger.error("Error in HTTP request!");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -1028,7 +1023,7 @@ public class ProjectController {
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
             Principal principal)
             throws Exception {
-        logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, null);
+        logger.info("Project image search: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, null);
 
         // expand the query keywords
         ExpandedQuery expandedQuery = null;
@@ -1054,7 +1049,7 @@ public class ProjectController {
             BindingSet querySolution = resultSet.next();
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
-        logger.info("Number of results {}", numResults);
+        logger.debug("Number of results {}", numResults);
 
         query =
                 "SELECT ?s0 ?image ?imageCopyright ?title where { "
@@ -1072,7 +1067,6 @@ public class ProjectController {
                         + limit
                         + " offset "
                         + offset;
-        logger.info(query);
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
 
         JSONArray resultList = new JSONArray();
@@ -1246,7 +1240,7 @@ public class ProjectController {
                             CSVFormat.DEFAULT.withHeader(
                                     "ID", "PROJECT NAME", "TOTAL BUDGET", "AMOUNT EU SUPPORT", "START DATE", "END DATE", "COUNTRY"));
             for (Project project : projectList.getList()) {
-                System.out.println(project.getItem());
+                logger.debug("Project: "+project.getItem());
                 csvPrinter.printRecord(
                         Arrays.asList(
                                 String.join("|", project.getItem()),

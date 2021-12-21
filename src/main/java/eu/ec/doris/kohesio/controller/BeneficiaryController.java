@@ -67,7 +67,7 @@ public class BeneficiaryController {
                                          @RequestParam(value = "pageSize", defaultValue = "100") int pageSize
     ) throws Exception {
 
-
+        logger.info("Beneficiary search by ID: id {}, language {}",id, language);
         String queryCheck = "ask {\n" +
                 " <" + id + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899>\n" +
                 "}";
@@ -203,11 +203,10 @@ public class BeneficiaryController {
                 result.put("wikipedia", wikipedia);
                 // if wikipedia link extract the description from wikipedia
                 String url = "https://" + language + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=&origin=*&explaintext=&titles=" + URLDecoder.decode(wikipedia.replace("https://" + language + ".wikipedia.org/wiki/", ""), StandardCharsets.UTF_8.toString());
-                System.out.println(url);
                 RestTemplate restTemplate = new RestTemplate();
                 ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
                 if (response.getStatusCode().equals(HttpStatus.OK)) {
-                    System.out.println(response.getBody());
+                    logger.debug(response.getBody());
                     ObjectMapper mapper = new ObjectMapper();
                     JsonNode root = mapper.readTree(response.getBody());
                     if (root.findValue("extract") != null) {
@@ -318,7 +317,7 @@ public class BeneficiaryController {
                                                  @RequestParam(value = "offset", defaultValue = "0") int offset,
                                                  Principal principal)
             throws Exception {
-        logger.info("Beneficiary search language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}", language, keywords, country, region, latitude, longitude, fund, program);
+        logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}", language, keywords, country, region, latitude, longitude, fund, program);
 
         int inputOffset = offset;
         int inputLimit = limit;
@@ -389,7 +388,7 @@ public class BeneficiaryController {
                 search
                 + " } group by ?beneficiary }" +
                 "}";
-        System.out.println(queryCount);
+        logger.debug(queryCount);
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 40);
         int numResults = 0;
         if (countResultSet.hasNext()) {
@@ -467,7 +466,7 @@ public class BeneficiaryController {
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
                         + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
                         + "} ";
-        logger.info(query);
+        logger.debug(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
 
         ArrayList<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
@@ -664,7 +663,7 @@ public class BeneficiaryController {
                                                 @RequestParam(value = "page", defaultValue = "0") int page,
                                                 @RequestParam(value = "pageSize", defaultValue = "100") int pageSize
     ) throws Exception {
-
+        logger.info("Beneficiary search projects by ID: id {}, language {}",id, language);
         String queryCheck = "ask { " +
                 "<" + id + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> " +
                 "}";

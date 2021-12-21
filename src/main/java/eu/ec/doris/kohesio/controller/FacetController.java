@@ -73,6 +73,7 @@ public class FacetController {
     }
 
     void initialize(String language) throws Exception {
+        logger.info("Initializing Facet Controller...");
         if (nutsRegion == null) {
             nutsRegion = new HashMap<String, Nut>();
             //computing nuts information
@@ -106,7 +107,6 @@ public class FacetController {
                                 " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
                                 "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
                                 "}";
-                logger.info(query);
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
@@ -158,11 +158,11 @@ public class FacetController {
                 }
                 if (query.equals("") == false) {
                     TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
-                    System.out.println(resultSet.hasNext());
+                    logger.debug("Is empty result set: "+resultSet.hasNext());
                     while (resultSet.hasNext()) {
                         BindingSet querySolution = resultSet.next();
                         if (querySolution.getBinding("region2") != null) {
-                            System.out.println(querySolution.getBinding("region2").getValue().stringValue());
+                            logger.debug(querySolution.getBinding("region2").getValue().stringValue());
                             if (!querySolution.getBinding("region2").getValue().stringValue().equals(key)){
                                 if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
                                     nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
@@ -190,7 +190,6 @@ public class FacetController {
                                 "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
                                 geometry +
                                 " }";
-                logger.info(query);
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
@@ -210,7 +209,6 @@ public class FacetController {
                         for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
                             String query =
                                     "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2727537> . }";
-                            logger.info(query);
                             boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 20);
                             if (resultSet) {
                                 for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
@@ -229,6 +227,7 @@ public class FacetController {
 
     @GetMapping(value = "facet/eu/statistics", produces = "application/json")
     public JSONObject facetEuStatistics() throws Exception {
+        logger.info("Get EU statistics");
         JSONObject statistics = new JSONObject();
         String query = "SELECT (count(?s0) as ?c) where { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
@@ -311,6 +310,7 @@ public class FacetController {
     public JSONArray facetEuCountries(
             @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
+        logger.info("Get list of countries");
         List<JSONObject> jsonValues = new ArrayList<JSONObject>();
         String query ="SELECT DISTINCT ?country WHERE { 	" +
                 " ?s1  <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q196788> . 	 " +
@@ -376,6 +376,7 @@ public class FacetController {
                                      @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
         initialize(language);
+        logger.info("Get EU regions");
         List<JSONObject> jsonValues = new ArrayList<JSONObject>();
         for (String region :nutsRegion.get(country).narrower){
             JSONObject element = new JSONObject();
@@ -447,6 +448,7 @@ public class FacetController {
     @GetMapping(value = "/facet/eu/funds", produces = "application/json")
     public JSONArray facetEuFunds( //
                                    @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
+        logger.info("Get list of EU funds");
         String query =
                 ""
                         + "select ?fund ?fundLabel ?id where { "
@@ -473,6 +475,7 @@ public class FacetController {
     @GetMapping(value = "/facet/eu/policy_objective", produces = "application/json")
     public JSONArray facetPolicyObjective( //
                                            @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
+        logger.info("Get list of policy objectives");
         String query =
                 ""
                         + "select ?fund ?fundLabel where { "
@@ -499,6 +502,7 @@ public class FacetController {
   public JSONArray facetEuCategoryOfIntervention( //
                                                   @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
 
+        logger.info("Get list of intervention field...");
     String query =
             ""
                     + "select ?instance ?instanceLabel ?id ?areaOfIntervention ?areaOfInterventionLabel ?areaOfInterventionId where { "
@@ -566,6 +570,7 @@ public class FacetController {
                                       @RequestParam(value = "language", defaultValue = "en") String language,
                                       @RequestParam(value = "country", required = false) String country)
             throws Exception {
+        logger.info("Get list of programs");
         String query =
                 ""
                         + "select ?program ?programLabel ?cci where { "
@@ -582,7 +587,6 @@ public class FacetController {
                         + language
                         + "\")"
                         + "} order by ?cci ";
-        System.out.println(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
@@ -599,8 +603,8 @@ public class FacetController {
     @GetMapping(value = "/facet/eu/thematic_objectives", produces = "application/json")
     public JSONArray facetEuThematicObjective( //
                                                @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
-        String kb = "eu";
-        String user = "Max";
+
+        logger.info("Get list of thematic objectives");
         String query =
                 ""
                         + "select ?to ?toLabel ?id where { "

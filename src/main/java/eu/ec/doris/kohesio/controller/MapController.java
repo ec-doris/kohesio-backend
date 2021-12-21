@@ -93,12 +93,11 @@ public class MapController {
             Integer timeout,
             Principal principal)
             throws Exception {
-        logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion);
+        logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion);
         facetController.initialize(language);
         if (timeout == null) {
             timeout = 70;
         }
-        System.out.println("filterProject ");
 
         //simplify the query
         String c = country;
@@ -117,7 +116,6 @@ public class MapController {
         //computing the number of results
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
         int numResults = 0;
-        System.out.println("Limit " + limit);
         if (limit == null || limit > 2000) {
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
@@ -126,7 +124,7 @@ public class MapController {
                 numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
             }
         }
-        logger.info("Number of results {}", numResults);
+        logger.debug("Number of results {}", numResults);
         if (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0)) {
             return mapReturnCoordinates(search, country, region, granularityRegion, limit, offset, timeout);
         } else {
@@ -190,7 +188,7 @@ public class MapController {
     }
 
     ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, Integer limit, Integer offset, int timeout) throws Exception {
-        logger.info("granularityRegion {}, limit {}",granularityRegion,limit);
+        logger.debug("granularityRegion {}, limit {}",granularityRegion,limit);
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
         if (granularityRegion != null) {
@@ -225,7 +223,6 @@ public class MapController {
                         + " } "
                         + optional
                         + "} ";
-        logger.info(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
         JSONArray resultList = new JSONArray();
@@ -285,9 +282,8 @@ public class MapController {
             @RequestParam(value = "coordinate", required = false) String coordinate,
             Principal principal)
             throws Exception {
-        logger.info("language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
+        logger.info("Search project map point: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
         facetController.initialize(language);
-        System.out.println("filterProject ");
 
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
@@ -310,8 +306,6 @@ public class MapController {
                         + language
                         + "\") } ."
                         + "} ";
-
-        logger.info(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
 
         JSONArray result = new JSONArray();
@@ -333,6 +327,7 @@ public class MapController {
                                        @RequestParam(value = "id") String id,
                                        @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
+        logger.info("Get coordinates by ID : id {}, language {}",id, language);
         String query =
                 "select ?s0 ?coordinates where { "
                         + " VALUES ?s0 { <"
@@ -340,7 +335,6 @@ public class MapController {
                         + "> } "
 
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } }";
-        System.out.println(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
 
         String coo = "";
@@ -373,7 +367,6 @@ public class MapController {
                         + "          ?contained3 rdfs:label ?label3 . "
                         + "          ?contained3 <http://nuts.de/id> ?id3 . }}} "
                         + "}";
-        logger.info(query);
         resultSet = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
 
         NutsRegion nutsRegion = new NutsRegion();
@@ -412,6 +405,7 @@ public class MapController {
 
     @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
     public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
+        logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
         ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, 2000, 0, 400, null);
