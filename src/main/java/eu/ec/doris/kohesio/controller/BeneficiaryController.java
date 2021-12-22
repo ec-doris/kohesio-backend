@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.ec.doris.kohesio.payload.Beneficiary;
 import eu.ec.doris.kohesio.payload.BeneficiaryList;
+import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -33,13 +34,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -49,6 +47,9 @@ public class BeneficiaryController {
 
     @Autowired
     SPARQLQueryService sparqlQueryService;
+
+    @Autowired
+    FiltersGenerator filtersGenerator;
 
     private static DecimalFormat df2 = new DecimalFormat("0.00");
 
@@ -85,6 +86,8 @@ public class BeneficiaryController {
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
 //            }
         }
+
+        String labelsFilter = getBeneficiaryLabelsFilter();
         String query1 = "select ?s0 ?country ?countryCode ?beneficiaryLabel_en ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates ?wikipedia where {\n"
                 + " VALUES ?s0 { <"
                 + id
@@ -94,29 +97,9 @@ public class BeneficiaryController {
                 "  OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel_en . \n" +
                 "  FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } \n" +
                 "  OPTIONAL { ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . \n" +
-                "  FILTER((LANG(?beneficiaryLabel) = \"en\" && ?country = <https://linkedopendata.eu/entity/Q2> )\n" +
-                "          || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q20> )  \n" +
-                "              || (LANG(?beneficiaryLabel) = \"it\" && ?country = <https://linkedopendata.eu/entity/Q15> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"pl\" && ?country = <https://linkedopendata.eu/entity/Q13> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"cs\" && ?country = <https://linkedopendata.eu/entity/Q25> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"el\" && ?country = <https://linkedopendata.eu/entity/Q17> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"el\" && ?country = <https://linkedopendata.eu/entity/Q31> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q22> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"es\" && ?country = <https://linkedopendata.eu/entity/Q7> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"sv\" && ?country = <https://linkedopendata.eu/entity/Q11> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"hr\" && ?country = <https://linkedopendata.eu/entity/Q30> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"lv\" && ?country = <https://linkedopendata.eu/entity/Q24> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q16> ) \n" +
-                "              || (LANG(?beneficiaryLabel) = \"sk\" && ?country = <https://linkedopendata.eu/entity/Q26> ) " +
-                "              || (LANG(?beneficiaryLabel) = \"nl\" && ?country = <https://linkedopendata.eu/entity/Q19> ) " +
-                "              || (LANG(?beneficiaryLabel) = \"hu\" && ?country = <https://linkedopendata.eu/entity/Q3> ) " +
-                "              || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) " +
-                "              || (LANG(?beneficiaryLabel) = \"bg\" && ?country = <https://linkedopendata.eu/entity/Q29> ) " +
-                "              || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q9> ) " +
-                "              || (LANG(?beneficiaryLabel) = \"et\" && ?country = <https://linkedopendata.eu/entity/Q23> ) " +
-                "              || (LANG(?beneficiaryLabel) = \"pt\" && ?country = <https://linkedopendata.eu/entity/Q18> ) ) } \n" +
+                labelsFilter+
+                " } \n" +
+
                 "  OPTIONAL {  ?s0 <http://schema.org/description> ?description .  FILTER (lang(?description)=\"" + language + "\") }\n" +
                 "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P67> ?website .}\n" +
                 "  OPTIONAL {  ?s0 <https://linkedopendata.eu/prop/direct/P147> ?image .}\n" +
@@ -420,6 +403,7 @@ public class BeneficiaryController {
                 orderBy = "order by desc(?numberProjects)";
             }
         }
+        String labelsFilter = getBeneficiaryLabelsFilter();
         String query =
                 "select ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link where { "
                         + " { SELECT ?beneficiary (count(?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) where { "
@@ -433,33 +417,7 @@ public class BeneficiaryController {
                         + "              FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } \n"
                         + " OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
                         + "            ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country .   "
-                        + "             FILTER((LANG(?beneficiaryLabel) = \"en\" && ?country = <https://linkedopendata.eu/entity/Q2> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q20> )  "
-                        + "                 || (LANG(?beneficiaryLabel) = \"it\" && ?country = <https://linkedopendata.eu/entity/Q15> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"pl\" && ?country = <https://linkedopendata.eu/entity/Q13> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"cs\" && ?country = <https://linkedopendata.eu/entity/Q25> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"el\" && ?country = <https://linkedopendata.eu/entity/Q17> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"el\" && ?country = <https://linkedopendata.eu/entity/Q31> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q22> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"es\" && ?country = <https://linkedopendata.eu/entity/Q7> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"sv\" && ?country = <https://linkedopendata.eu/entity/Q11> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"hr\" && ?country = <https://linkedopendata.eu/entity/Q30> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"pt\" && ?country = <https://linkedopendata.eu/entity/Q18> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"lv\" && ?country = <https://linkedopendata.eu/entity/Q24> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"de\" && ?country = <https://linkedopendata.eu/entity/Q16> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"nl\" && ?country = <https://linkedopendata.eu/entity/Q19> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"bg\" && ?country = <https://linkedopendata.eu/entity/Q29> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"sk\" && ?country = <https://linkedopendata.eu/entity/Q26> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"hu\" && ?country = <https://linkedopendata.eu/entity/Q3> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"ro\" && ?country = <https://linkedopendata.eu/entity/Q28> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"fr\" && ?country = <https://linkedopendata.eu/entity/Q9> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"et\" && ?country = <https://linkedopendata.eu/entity/Q23> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"da\" && ?country = <https://linkedopendata.eu/entity/Q12> ) "
-                        + "                 || (LANG(?beneficiaryLabel) = \"sl\" && ?country = <https://linkedopendata.eu/entity/Q27> ) " +
-                        "                   || (LANG(?beneficiaryLabel) = \"fi\" && ?country = <https://linkedopendata.eu/entity/Q10> ) " +
-                        "                   || (LANG(?beneficiaryLabel) = \"lt\" && ?country = <https://linkedopendata.eu/entity/Q14> )" +
-
+                        + labelsFilter+
                         " )"
                         + " }"
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P1> ?link. } "
@@ -724,5 +682,20 @@ public class BeneficiaryController {
         }
         result.put("projects", projects);
         return new ResponseEntity(result, HttpStatus.OK);
+    }
+    private String getBeneficiaryLabelsFilter(){
+        String labelsFilter = "FILTER(";
+        HashMap<String, String> countriesCodeMapping = filtersGenerator.getCountriesCodeMapping();
+        int count = 0;
+        for (Map.Entry<String, String> entry : countriesCodeMapping.entrySet()) {
+            String countryQID = entry.getKey();
+            String languageCode = entry.getValue();
+            labelsFilter += "(LANG(?beneficiaryLabel) = \""+languageCode+"\" && ?country = "+countryQID+" )";
+            if(count < countriesCodeMapping.size() -1)
+                labelsFilter+= "|| \n";
+            count++;
+        }
+        labelsFilter += ")";
+        return labelsFilter;
     }
 }
