@@ -228,17 +228,11 @@ public class MapController {
         JSONArray resultList = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
-            JSONObject point = new JSONObject();
-            point.put("coordinates",((Literal) querySolution.getBinding("coordinates").getValue())
+            resultList.add(((Literal) querySolution.getBinding("coordinates").getValue())
                     .getLabel()
                     .replace("Point(", "")
                     .replace(")", "")
                     .replace(" ", ","));
-            if(querySolution.getBinding("infoRegioID") != null)
-                point.put("isInfoRegio",true);
-            else
-                point.put("isInfoRegio",false);
-            resultList.add(point);
         }
         JSONObject result = new JSONObject();
         result.put("list", resultList);
@@ -251,6 +245,32 @@ public class MapController {
         } else {
             result.put("geoJson", "");
         }
+//        JSONArray resultList = new JSONArray();
+//        while (resultSet.hasNext()) {
+//            BindingSet querySolution = resultSet.next();
+//            JSONObject point = new JSONObject();
+//            point.put("coordinates",((Literal) querySolution.getBinding("coordinates").getValue())
+//                    .getLabel()
+//                    .replace("Point(", "")
+//                    .replace(")", "")
+//                    .replace(" ", ","));
+//            if(querySolution.getBinding("infoRegioID") != null)
+//                point.put("isInfoRegio",true);
+//            else
+//                point.put("isInfoRegio",false);
+//            resultList.add(point);
+//        }
+//        JSONObject result = new JSONObject();
+//        result.put("list", resultList);
+//        if (granularityRegion != null) {
+//            result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
+//        } else if (country != null && region == null) {
+//            result.put("geoJson", facetController.nutsRegion.get(country).geoJson);
+//        } else if (country != null && region != null) {
+//            result.put("geoJson", facetController.nutsRegion.get(region).geoJson);
+//        } else {
+//            result.put("geoJson", "");
+//        }
         return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
     }
 
