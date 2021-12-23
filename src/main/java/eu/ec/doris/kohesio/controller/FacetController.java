@@ -209,7 +209,7 @@ public class FacetController {
                         for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
                             String query =
                                     "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2727537> . }";
-                            boolean resultSet = sparqlQueryService.executeBooleanQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 20);
+                            boolean resultSet = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, query, 20);
                             if (resultSet) {
                                 for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
                                     nonStatisticalNuts.add(childNut);
@@ -519,7 +519,7 @@ public class FacetController {
                     + language
                     + "\")"
                     + "} order by ?id";
-    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery("https://query.linkedopendata.eu/bigdata/namespace/wdq/sparql", query, 2);
+    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
     JSONArray result = new JSONArray();
     String areaOfIntervention = "";
     String areaOfInterventionLabel = "";

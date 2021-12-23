@@ -14,6 +14,7 @@ public class Application {
   String port;
 
   public static void main(String[] args) {
+    System.setProperty("https.protocols", "TLSv1,TLSv1.1,TLSv1.2");
     SpringApplication.run(eu.ec.doris.kohesio.Application.class, args);
   }
 
