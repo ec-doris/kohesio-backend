@@ -33,7 +33,7 @@ public class SPARQLQueryService {
     }
 
     public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache) {
-        logger.debug("Executing given query: "+query);
+        logger.info("Executing given query: "+query);
         long start = System.nanoTime();
 
         File dir = new File(location + "/facet/cache/");
@@ -54,9 +54,9 @@ public class SPARQLQueryService {
                 logger.debug("Was cached " + (end - start) / 100000);
                 return tupleQueryResultHandler.getQueryResult();
             } catch (QueryResultParseException e) {
-                logger.error("Wrong in cache timeout " + timeout);
+                logger.debug("Wrong in cache timeout " + timeout);
             } catch (FileNotFoundException e) {
-                logger.error("Could not find file it was probably not cached");
+                logger.debug("Could not find file it was probably not cached");
             } catch (IOException e) {
                 e.printStackTrace();
             }
