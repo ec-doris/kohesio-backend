@@ -417,8 +417,7 @@ public class BeneficiaryController {
                         + "              FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } \n"
                         + " OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
                         + "            ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country .   "
-                        + labelsFilter+
-                        " )"
+                        + labelsFilter
                         + " }"
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P1> ?link. } "
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
