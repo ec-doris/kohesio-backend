@@ -405,7 +405,7 @@ public class BeneficiaryController {
         }
         String labelsFilter = getBeneficiaryLabelsFilter();
         String query =
-                "select ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link where { "
+                "select ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link ?transliteration where { "
                         + " { SELECT ?beneficiary (count(?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) where { "
                         + search
                         + "} group by ?beneficiary " +
@@ -413,8 +413,8 @@ public class BeneficiaryController {
                         + " limit " + limit
                         + " offset " + offset
                         + "} "
-                        + "  OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel_en . \n"
-                        + "              FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } \n"
+                        + "  OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel_en ."
+                        + "              FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } "
                         + " OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
                         + "            ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country .   "
                         + labelsFilter
@@ -422,6 +422,9 @@ public class BeneficiaryController {
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P1> ?link. } "
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
                         + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
+                        + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/P7> ?benefStatement . "
+                        + "  ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
+                        + " }"
                         + "} ";
         logger.debug(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
@@ -499,6 +502,12 @@ public class BeneficiaryController {
                     beneficary.setLink(
                             "http://wikidata.org/entity/"
                                     + ((Literal) querySolution.getBinding("link").getValue()).getLabel());
+                }
+
+                if (querySolution.getBinding("transliteration") != null) {
+                    beneficary.setTransliteration(
+                            querySolution.getBinding("transliteration").getValue().stringValue()
+                    );
                 }
             }
             if (!previewsKey.equals("")) {
