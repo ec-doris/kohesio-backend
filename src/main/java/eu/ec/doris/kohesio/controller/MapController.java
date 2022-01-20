@@ -340,6 +340,8 @@ public class MapController {
             }
             if (querySolution.getBinding("infoRegioID") != null) {
                 item.put("isHighlighted", true);
+            } else {
+                item.put("isHighlighted", false);
             }
             result.add(item);
         }
