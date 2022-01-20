@@ -573,9 +573,10 @@ public class FacetController {
         logger.info("Get list of programs");
         String query =
                 ""
-                        + "select ?program ?programLabel ?cci where { "
+                        + "select ?program ?programLabel ?cci ?iru { "
                         + " ?program <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2463047> . "
-                        + " ?program <https://linkedopendata.eu/prop/direct/P1367>  ?cci . ";
+                        + " ?program <https://linkedopendata.eu/prop/direct/P1367>  ?cci . "
+                        + " OPTIONAL{ ?program <https://linkedopendata.eu/prop/direct/P1742>  ?iru . } ";
 
         if (country != null) {
             query += " ?program <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
@@ -594,7 +595,12 @@ public class FacetController {
             JSONObject element = new JSONObject();
             element.put("instance", querySolution.getBinding("program").getValue().toString());
             element.put(
-                    "instanceLabel", querySolution.getBinding("cci").getValue().stringValue() + " - " + querySolution.getBinding("programLabel").getValue().stringValue());
+                    "instanceLabel",
+                    querySolution.getBinding("cci").getValue().stringValue() + " - " + querySolution.getBinding("programLabel").getValue().stringValue()
+            );
+            if (querySolution.getBinding("iru") != null){
+                element.put("infoRegioUrl", querySolution.getBinding("iru").getValue().stringValue());
+            }
             result.add(element);
         }
         return result;
