@@ -316,7 +316,7 @@ public class MapController {
 
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> \"Point(" + coordinate.replace(",", " ") + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral> . ";
         String query =
-                "SELECT DISTINCT ?s0 ?label WHERE { "
+                "SELECT DISTINCT ?s0 ?label ?infoRegioID WHERE { "
                         + " { SELECT ?s0 where { "
                         + search
                         + " } "
@@ -325,6 +325,7 @@ public class MapController {
                         + "             FILTER((LANG(?label)) = \""
                         + language
                         + "\") } ."
+                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . } "
                         + "} ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
 
@@ -336,6 +337,9 @@ public class MapController {
             item.put("item", querySolution.getBinding("s0").getValue().stringValue());
             if (querySolution.getBinding("label") != null) {
                 item.put("label", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+            }
+            if (querySolution.getBinding("infoRegioID") != null) {
+                item.put("isHighlighted", true);
             }
             result.add(item);
         }
