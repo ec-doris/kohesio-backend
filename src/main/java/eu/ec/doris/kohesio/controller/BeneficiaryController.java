@@ -693,12 +693,16 @@ public class BeneficiaryController {
     }
     private String getBeneficiaryLabelsFilter(){
         String labelsFilter = "FILTER(";
-        HashMap<String, String> countriesCodeMapping = filtersGenerator.getCountriesCodeMapping();
+        HashMap<String, List<String>> countriesCodeMapping = filtersGenerator.getCountriesCodeMapping();
         int count = 0;
-        for (Map.Entry<String, String> entry : countriesCodeMapping.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : countriesCodeMapping.entrySet()) {
             String countryQID = entry.getKey();
-            String languageCode = entry.getValue();
-            labelsFilter += "(LANG(?beneficiaryLabel) = \""+languageCode+"\" && ?country = "+countryQID+" )";
+            List<String> languageCode = entry.getValue();
+            labelsFilter += "( ";
+            for (int i=0; i<languageCode.size()-1; i++) {
+                labelsFilter += " LANG(?beneficiaryLabel) = \"" + languageCode.get(i) + "\" && ?country = " + countryQID + " ||  ";
+            }
+            labelsFilter += " LANG(?beneficiaryLabel) = \"" + languageCode.get(languageCode.size()-1) + "\" && ?country = " + countryQID + " ) ";
             if(count < countriesCodeMapping.size() -1)
                 labelsFilter+= "|| \n";
             count++;

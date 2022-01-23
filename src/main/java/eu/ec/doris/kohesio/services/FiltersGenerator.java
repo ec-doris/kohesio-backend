@@ -4,7 +4,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 @Service
 public class FiltersGenerator {
@@ -183,37 +187,38 @@ public class FiltersGenerator {
                 "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
         return search;
     }
-    public HashMap<String,String> getCountriesCodeMapping(){
-        HashMap<String, String> mapping = new HashMap<>();
+    public HashMap<String,List<String>> getCountriesCodeMapping(){
+        HashMap<String, List<String>> mapping = new HashMap<>();
 //        EU_LANGUAGES = ['bg', 'cs', 'da', 'de', 'el', 'en', 'es', 'et', 'fi', 'fr', 'ga', 'hr',
 //                'hu', 'it', 'lt', 'lv', 'mt', 'nl', 'pl', 'pt', 'ro', 'sk', 'sl', 'sv']
 
-        mapping.put("<https://linkedopendata.eu/entity/Q14>","lt"); // lithuania
-        mapping.put("<https://linkedopendata.eu/entity/Q10>"," fi"); // finland
-        mapping.put("<https://linkedopendata.eu/entity/Q27>","sl"); // slovenia
-        mapping.put("<https://linkedopendata.eu/entity/Q18>","pt"); // portugal
-        mapping.put("<https://linkedopendata.eu/entity/Q23>","et"); // estonia
-        mapping.put("<https://linkedopendata.eu/entity/Q9>","fr"); // luxembourg
-        mapping.put("<https://linkedopendata.eu/entity/Q29>","bg"); // bulgaria
-        mapping.put("<https://linkedopendata.eu/entity/Q28>","ro"); // romania
-        mapping.put("<https://linkedopendata.eu/entity/Q3>","hu"); // hungary
-        mapping.put("<https://linkedopendata.eu/entity/Q19>","nl"); // netherlands
-        mapping.put("<https://linkedopendata.eu/entity/Q26>","sk"); // slovakia
-        mapping.put("<https://linkedopendata.eu/entity/Q16>","de"); // austria
-        mapping.put("<https://linkedopendata.eu/entity/Q24>","lv"); // latvia
-        mapping.put("<https://linkedopendata.eu/entity/Q12>","da"); // denmark
-        mapping.put("<https://linkedopendata.eu/entity/Q30>","hr"); // croatia
-        mapping.put("<https://linkedopendata.eu/entity/Q11>","sv"); // sweden
-        mapping.put("<https://linkedopendata.eu/entity/Q7>","es"); // spain
-        mapping.put("<https://linkedopendata.eu/entity/Q22>","de"); // germany
-        mapping.put("<https://linkedopendata.eu/entity/Q31>","el"); // cyprus
-        mapping.put("<https://linkedopendata.eu/entity/Q17>","el"); // greece
-        mapping.put("<https://linkedopendata.eu/entity/Q25>","cs"); // czech republic
-        mapping.put("<https://linkedopendata.eu/entity/Q13>","pl"); // poland
-        mapping.put("<https://linkedopendata.eu/entity/Q15>","it"); // italy
-        mapping.put("<https://linkedopendata.eu/entity/Q20>","fr"); // france
-        mapping.put("<https://linkedopendata.eu/entity/Q2>","en"); // ireland
-        mapping.put("<https://linkedopendata.eu/entity/Q32>","en"); // malta
+        mapping.put("<https://linkedopendata.eu/entity/Q14>", Arrays.asList("lt")); // lithuania
+        mapping.put("<https://linkedopendata.eu/entity/Q10>",Arrays.asList("fi")); // finland
+        mapping.put("<https://linkedopendata.eu/entity/Q27>",Arrays.asList("sl")); // slovenia
+        mapping.put("<https://linkedopendata.eu/entity/Q18>",Arrays.asList("pt")); // portugal
+        mapping.put("<https://linkedopendata.eu/entity/Q23>",Arrays.asList("et")); // estonia
+        mapping.put("<https://linkedopendata.eu/entity/Q9>",Arrays.asList("fr")); // luxembourg
+        mapping.put("<https://linkedopendata.eu/entity/Q29>",Arrays.asList("bg")); // bulgaria
+        mapping.put("<https://linkedopendata.eu/entity/Q28>",Arrays.asList("ro")); // romania
+        mapping.put("<https://linkedopendata.eu/entity/Q3>",Arrays.asList("hu")); // hungary
+        mapping.put("<https://linkedopendata.eu/entity/Q19>",Arrays.asList("nl")); // netherlands
+        mapping.put("<https://linkedopendata.eu/entity/Q26>",Arrays.asList("sk")); // slovakia
+        mapping.put("<https://linkedopendata.eu/entity/Q16>",Arrays.asList("de")); // austria
+        mapping.put("<https://linkedopendata.eu/entity/Q24>",Arrays.asList("lv")); // latvia
+        mapping.put("<https://linkedopendata.eu/entity/Q12>",Arrays.asList("da")); // denmark
+        mapping.put("<https://linkedopendata.eu/entity/Q30>",Arrays.asList("hr")); // croatia
+        mapping.put("<https://linkedopendata.eu/entity/Q11>",Arrays.asList("sv")); // sweden
+        mapping.put("<https://linkedopendata.eu/entity/Q7>",Arrays.asList("es")); // spain
+        mapping.put("<https://linkedopendata.eu/entity/Q22>",Arrays.asList("de")); // germany
+        mapping.put("<https://linkedopendata.eu/entity/Q31>",Arrays.asList("el")); // cyprus
+        mapping.put("<https://linkedopendata.eu/entity/Q17>",Arrays.asList("el")); // greece
+        mapping.put("<https://linkedopendata.eu/entity/Q25>",Arrays.asList("cs")); // czech republic
+        mapping.put("<https://linkedopendata.eu/entity/Q13>",Arrays.asList("pl")); // poland
+        mapping.put("<https://linkedopendata.eu/entity/Q15>",Arrays.asList("it")); // italy
+        mapping.put("<https://linkedopendata.eu/entity/Q20>",Arrays.asList("fr")); // france
+        mapping.put("<https://linkedopendata.eu/entity/Q2>",Arrays.asList("en")); // ireland
+        mapping.put("<https://linkedopendata.eu/entity/Q32>",Arrays.asList("en")); // malta
+        mapping.put("<https://linkedopendata.eu/entity/Q8>",Arrays.asList("fr","nl")); // belgium
 
         return mapping;
     }
