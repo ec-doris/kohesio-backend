@@ -225,40 +225,14 @@ public class MapController {
                         + "} ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
-        JSONArray resultList = new JSONArray();
-        while (resultSet.hasNext()) {
-            BindingSet querySolution = resultSet.next();
-            resultList.add(((Literal) querySolution.getBinding("coordinates").getValue())
-                    .getLabel()
-                    .replace("Point(", "")
-                    .replace(")", "")
-                    .replace(" ", ","));
-        }
-        JSONObject result = new JSONObject();
-        result.put("list", resultList);
-        if (granularityRegion != null) {
-            result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
-        } else if (country != null && region == null) {
-            result.put("geoJson", facetController.nutsRegion.get(country).geoJson);
-        } else if (country != null && region != null) {
-            result.put("geoJson", facetController.nutsRegion.get(region).geoJson);
-        } else {
-            result.put("geoJson", "");
-        }
 //        JSONArray resultList = new JSONArray();
 //        while (resultSet.hasNext()) {
 //            BindingSet querySolution = resultSet.next();
-//            JSONObject point = new JSONObject();
-//            point.put("coordinates",((Literal) querySolution.getBinding("coordinates").getValue())
+//            resultList.add(((Literal) querySolution.getBinding("coordinates").getValue())
 //                    .getLabel()
 //                    .replace("Point(", "")
 //                    .replace(")", "")
 //                    .replace(" ", ","));
-//            if(querySolution.getBinding("infoRegioID") != null)
-//                point.put("isInfoRegio",true);
-//            else
-//                point.put("isInfoRegio",false);
-//            resultList.add(point);
 //        }
 //        JSONObject result = new JSONObject();
 //        result.put("list", resultList);
@@ -271,6 +245,32 @@ public class MapController {
 //        } else {
 //            result.put("geoJson", "");
 //        }
+        JSONArray resultList = new JSONArray();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            JSONObject point = new JSONObject();
+            point.put("coordinates",((Literal) querySolution.getBinding("coordinates").getValue())
+                    .getLabel()
+                    .replace("Point(", "")
+                    .replace(")", "")
+                    .replace(" ", ","));
+            if(querySolution.getBinding("infoRegioID") != null)
+                point.put("isHighlighted",true);
+            else
+                point.put("isHighlighted",false);
+            resultList.add(point);
+        }
+        JSONObject result = new JSONObject();
+        result.put("list", resultList);
+        if (granularityRegion != null) {
+            result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
+        } else if (country != null && region == null) {
+            result.put("geoJson", facetController.nutsRegion.get(country).geoJson);
+        } else if (country != null && region != null) {
+            result.put("geoJson", facetController.nutsRegion.get(region).geoJson);
+        } else {
+            result.put("geoJson", "");
+        }
         return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
     }
 
@@ -316,7 +316,7 @@ public class MapController {
 
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> \"Point(" + coordinate.replace(",", " ") + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral> . ";
         String query =
-                "SELECT DISTINCT ?s0 ?label WHERE { "
+                "SELECT DISTINCT ?s0 ?label ?infoRegioID WHERE { "
                         + " { SELECT ?s0 where { "
                         + search
                         + " } "
@@ -325,6 +325,7 @@ public class MapController {
                         + "             FILTER((LANG(?label)) = \""
                         + language
                         + "\") } ."
+                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . } "
                         + "} ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
 
@@ -336,6 +337,11 @@ public class MapController {
             item.put("item", querySolution.getBinding("s0").getValue().stringValue());
             if (querySolution.getBinding("label") != null) {
                 item.put("label", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+            }
+            if (querySolution.getBinding("infoRegioID") != null) {
+                item.put("isHighlighted", true);
+            } else {
+                item.put("isHighlighted", false);
             }
             result.add(item);
         }

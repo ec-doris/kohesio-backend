@@ -718,17 +718,6 @@ public class ProjectController {
                 orderBy = "order by desc(?totalBudget)";
             }
         }
-        if (search.equals(
-                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
-            search += " { SELECT ?s0 ?snippet where { " +
-                    "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
-                    "      ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . " +
-                    "    } " +
-                    "  } UNION { SELECT ?s0 ?snippet where { " +
-                    "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ." +
-                    "    } " +
-                    "    }";
-        }
 
         // pass cache = false in order to stop caching the semantic search results
 
@@ -740,6 +729,18 @@ public class ProjectController {
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
         //search = "";
+
+        if (search.equals(
+                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
+            search += " { SELECT ?s0 ?snippet where { " +
+                    "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
+                    "      ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . " +
+                    "    } " +
+                    "  } UNION { SELECT ?s0 ?snippet where { " +
+                    "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ." +
+                    "    } " +
+                    "    }";
+        }
 
         search += " " + orderQuery;
         query =
