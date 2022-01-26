@@ -597,6 +597,7 @@ public class FacetController {
                     "instanceLabel",
                     querySolution.getBinding("cci").getValue().stringValue() + " - " + querySolution.getBinding("programLabel").getValue().stringValue()
             );
+            result.add(element);
         }
         return result;
     }
