@@ -111,8 +111,8 @@ public class ProjectController {
                             "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n"+
-                            "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
-                            "?countryCode ?programLabel ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
+                            "select ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
+                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 where { "
                             + " VALUES ?s0 { <"
@@ -125,6 +125,7 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
                             + language
                             + "\") } "
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1742> ?infoRegioUrl . }"
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . } "
@@ -149,6 +150,7 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program ."
                             + "             ?program <https://linkedopendata.eu/prop/direct/P1586> ?managingAuthority. "
                             + "             ?program <http://www.w3.org/2000/01/rdf-schema#label> ?programLabel. "
+                            + "             OPTIONAL { ?program <https://linkedopendata.eu/prop/direct/P1742> ?programInfoRegioUrl . }"
                             + "             FILTER((LANG(?programLabel)) = \""
                             + language
                             + "\") ."
@@ -269,6 +271,7 @@ public class ProjectController {
             result.put("programmingPeriodLabel", "2014-2020");
             result.put("programLabel", "");
             result.put("programWebsite", "");
+            result.put("programInfoRegioUrl", "");
             result.put("objectiveIds", new JSONArray());
             result.put("objectiveLabels", new JSONArray());
             result.put("projectWebsite", "");
@@ -282,6 +285,7 @@ public class ProjectController {
             result.put("regionUpper1", "");
             result.put("regionUpper2", "");
             result.put("regionUpper3", "");
+            result.put("infoRegioUrl", "");
 
             HashSet<String> regionIDs = new HashSet<>();
             HashSet<String> coordinatesSet = new HashSet<>();
@@ -308,6 +312,12 @@ public class ProjectController {
                             ((Literal) querySolution.getBinding("description").getValue()).getLabel());
                 }
                 //
+                if (querySolution.getBinding("infoRegioUrl") != null) {
+                    result.put(
+                            "infoRegioUrl",
+                            querySolution.getBinding("infoRegioUrl").getValue().stringValue()
+                    );
+                }
                 if (querySolution.getBinding("startTime") != null) {
                     result.put(
                             "startTime",
@@ -377,7 +387,12 @@ public class ProjectController {
                             "programLabel",
                             ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
                 }
-
+                if (querySolution.getBinding("programInfoRegioUrl") != null) {
+                    result.put(
+                            "programInfoRegioUrl",
+                            querySolution.getBinding("programInfoRegioUrl").getValue().stringValue()
+                    );
+                }
                 if (querySolution.getBinding("objectiveId") != null) {
                     String objectiveId = querySolution.getBinding("objectiveId").getValue().stringValue();
                     if(!objectiveIds.contains(objectiveId)){
@@ -744,7 +759,7 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
                         + language
                         + "\") } "
-                        + "OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
