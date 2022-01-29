@@ -166,10 +166,10 @@ public class CacheController {
             if(country != null) {
                 regions = facetController.facetEuRegions(country, "en");
             }
-            regions.add(null);
             for (Object region : regions) {
+                String r = ((JSONObject) region).get("region").toString();
                 try{
-                    beneficiaryController.euSearchBeneficiaries("en", null, country, region, null, null, null,
+                    beneficiaryController.euSearchBeneficiaries("en", null, country, r, null, null, null,
                             null, null,null, false, null, 1000, 1, null);
                 } catch(Exception e){
                     e.printStackTrace();
