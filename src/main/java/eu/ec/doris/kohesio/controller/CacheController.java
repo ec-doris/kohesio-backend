@@ -131,6 +131,20 @@ public class CacheController {
                     e.printStackTrace();
                 }
             }
+            JSONArray regions = new JSONArray();
+            if(country != null) {
+                regions = facetController.facetEuRegions(country, "en");
+            }
+            regions.add(null);
+            for (Object region : regions) {
+                try{
+                    beneficiaryController.euSearchBeneficiaries("en", null, country, region, null, null, null,
+                            null, null,null, false, null, 1000, 1, null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+
         }
         for (String country : countries) {
             JSONArray regions = new JSONArray();
