@@ -303,7 +303,7 @@ public class BeneficiaryController {
         logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}", language, keywords, country, region, latitude, longitude, fund, program);
 
         int timeout = 20;
-        if (keywords.equals(null)){
+        if (keywords == null){
             timeout = 100;
         }
 

@@ -648,7 +648,7 @@ public class ProjectController {
             throws Exception {
         if (timeout==null){
             timeout = 20;
-            if (keywords.equals(null)){
+            if (keywords ==  null ){
                 timeout = 100;
             }
         }
