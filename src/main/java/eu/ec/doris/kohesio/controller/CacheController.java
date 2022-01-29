@@ -173,7 +173,7 @@ public class CacheController {
                             projectController.euSearchProject("en", null, country, null, null, null,
                                     null, polic, null, null,
                                     null, null, null, null, null,
-                                    null, null, null, null, null, null, null,
+                                    null, null, null, null, false, null, null,
                                     null, 1000, 1,50, null);
                             mapController.euSearchProjectMap("en", null, country, null, f, p, null,
                                     polic, null, null, null,
