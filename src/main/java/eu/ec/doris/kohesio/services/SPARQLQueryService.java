@@ -69,6 +69,7 @@ public class SPARQLQueryService {
         repo.setAdditionalHttpHeaders(additionalHttpHeaders);
 
         try {
+            logger.info("Was NOT cached ");
             TupleQueryResult resultSet =
                     repo.getConnection().prepareTupleQuery(query).evaluate();
             FileOutputStream out = new FileOutputStream(location + "/facet/cache/" + query.hashCode());
