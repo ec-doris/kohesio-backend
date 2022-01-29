@@ -732,7 +732,7 @@ public class ProjectController {
 
         if (search.equals(
                 "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
-            search += " { SELECT ?s0 ?snippet where { " +
+            search = " { SELECT ?s0 ?snippet where { " +
                     "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                     "      ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . " +
                     "    } " +
