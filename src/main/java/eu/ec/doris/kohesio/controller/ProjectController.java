@@ -648,6 +648,9 @@ public class ProjectController {
             throws Exception {
         if (timeout==null){
             timeout = 20;
+            if (keywords.equals(null)){
+                timeout = 100;
+            }
         }
         logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, region {}, timeout {}", language, keywords, country, theme, fund, region, timeout);
 
@@ -772,6 +775,8 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                         + "} ";
+
+
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
         ArrayList<Project> resultList = new ArrayList<Project>();
