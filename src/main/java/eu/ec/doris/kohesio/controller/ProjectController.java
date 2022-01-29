@@ -738,7 +738,7 @@ public class ProjectController {
                     "    } " +
                     "  } UNION { SELECT ?s0 ?snippet where { " +
                     "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ." +
-                    "    } " +
+                    "    } limit 1000" +
                     "    }";
         }
 

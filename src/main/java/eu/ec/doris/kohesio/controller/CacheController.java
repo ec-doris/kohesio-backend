@@ -60,7 +60,7 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null,
                             null, null, b, null, null, null,
-                            null, null, null, 1000, 1, 50,null);
+                            null, null, null, 1000, 1, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -72,7 +72,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null,
                         null, null, null, b, null, null,
-                        null, null, null, 1000, 1, 50,null);
+                        null, null, null, 1000, 1, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -84,7 +84,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, b, null, null,
-                        null, null, 1000, 1, 50,null);
+                        null, null, 1000, 1, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -96,7 +96,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, null, b, null, null,
-                        null, 1000, 1, 50,null);
+                        null, 1000, 1, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
