@@ -302,6 +302,11 @@ public class BeneficiaryController {
             throws Exception {
         logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}", language, keywords, country, region, latitude, longitude, fund, program);
 
+        int timeout = 20;
+        if (keywords.equals(null)){
+            timeout = 100;
+        }
+
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset <= 990) {
@@ -372,7 +377,7 @@ public class BeneficiaryController {
                 + " } group by ?beneficiary }" +
                 "}";
         logger.debug(queryCount);
-        TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 40);
+        TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
         int numResults = 0;
         if (countResultSet.hasNext()) {
             BindingSet querySolution = countResultSet.next();
