@@ -139,7 +139,7 @@ public class CacheController {
             for (Boolean b : orderEuBudget) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null,null, b, false, false, 1000, 1, null);
+                        null,null, b, null, null, 1000, 1, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
