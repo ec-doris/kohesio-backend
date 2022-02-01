@@ -93,7 +93,7 @@ public class ProjectController {
                                        @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
 
-        logger.info("Project search by ID: id {}, language {}",id, language);
+        logger.info("Project search by ID: id {}, language {}", id, language);
 
         String queryCheck = "ASK {\n" +
                 " <" + id + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> " +
@@ -110,7 +110,7 @@ public class ProjectController {
                     "PREFIX wd: <https://linkedopendata.eu/entity/>\n" +
                             "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
-                            "PREFIX p: <https://linkedopendata.eu/prop/>\n"+
+                            "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
                             "select ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
                             "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
@@ -184,13 +184,13 @@ public class ProjectController {
                             + "        OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
 
 
-                            +"     OPTIONAL\n" +
+                            + "     OPTIONAL\n" +
                             "       { ?s0  wdt:P1845  ?region . \n" +
-                            "          ?region  wdt:P35  wd:Q2576750 . \n "+
+                            "          ?region  wdt:P35  wd:Q2576750 . \n " +
                             "         OPTIONAL\n" +
                             "           { ?region  wdt:P192  ?regionId .\n" +
                             "                        ?region  <http://www.w3.org/2000/01/rdf-schema#label>  ?regionLabel\n" +
-                            "                        FILTER ( lang(?regionLabel) = \""+language+"\" )\n" +
+                            "                        FILTER ( lang(?regionLabel) = \"" + language + "\" )\n" +
                             "           }\n" +
 //                            "         OPTIONAL\n" +
 //                            "           { \n" +
@@ -370,9 +370,9 @@ public class ProjectController {
 
                 if (querySolution.getBinding("categoryLabel") != null) {
                     String interventionField = querySolution.getBinding("categoryLabel").getValue().stringValue();
-                    if(!interventionFieldsSet.contains(interventionField)){
+                    if (!interventionFieldsSet.contains(interventionField)) {
                         interventionFieldsSet.add(interventionField);
-                        result.put("categoryLabels",interventionFieldsSet);
+                        result.put("categoryLabels", interventionFieldsSet);
                     }
                 }
 
@@ -395,7 +395,7 @@ public class ProjectController {
                 }
                 if (querySolution.getBinding("objectiveId") != null) {
                     String objectiveId = querySolution.getBinding("objectiveId").getValue().stringValue();
-                    if(!objectiveIds.contains(objectiveId)){
+                    if (!objectiveIds.contains(objectiveId)) {
                         objectiveIds.add(objectiveId);
                         result.put("objectiveIds", objectiveIds);
                     }
@@ -403,7 +403,7 @@ public class ProjectController {
 
                 if (querySolution.getBinding("objectiveLabel") != null) {
                     String objectiveLabel = querySolution.getBinding("objectiveLabel").getValue().stringValue();
-                    if(!objectiveLabels.contains(objectiveLabel)){
+                    if (!objectiveLabels.contains(objectiveLabel)) {
                         objectiveLabels.add(objectiveLabel);
                         result.put("objectiveLabels", objectiveLabels);
                     }
@@ -423,7 +423,7 @@ public class ProjectController {
                     JSONArray coordinates = (JSONArray) result.get("coordinates");
                     String coo = ((Literal) querySolution.getBinding("coordinates").getValue()).stringValue();
                     //if (!coordinates.contains(coo.replace("Point(", "").replace(")", "").replace(" ", ","))) {
-                    if(!coordinatesSet.contains(coo)){
+                    if (!coordinatesSet.contains(coo)) {
                         coordinatesSet.add(coo);
                         coordinates.add(coo);
                         result.put("coordinates", coordinates);
@@ -443,7 +443,7 @@ public class ProjectController {
                     if (found == false) {
                         image.put("image", im);
                         if (querySolution.getBinding("imageCopyright") != null) {
-                            image.put("imageCopyright", "© "+querySolution.getBinding("imageCopyright").getValue().stringValue());
+                            image.put("imageCopyright", "© " + querySolution.getBinding("imageCopyright").getValue().stringValue());
                         }
                         images.add(image);
                     }
@@ -476,14 +476,14 @@ public class ProjectController {
                             String label =
                                     ((Literal) querySolution.getBinding("beneficiaryLabelRight").getValue()).stringValue();
                             beneficary.put("beneficiaryLabel", label);
-                        } else if (querySolution.getBinding("beneficiaryLabel") != null){
+                        } else if (querySolution.getBinding("beneficiaryLabel") != null) {
                             String label =
                                     ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).stringValue();
                             beneficary.put("beneficiaryLabel", label);
                         } else {
-                            if(querySolution.getBinding("beneficiaryString") != null)
+                            if (querySolution.getBinding("beneficiaryString") != null)
                                 beneficary.put("beneficiaryLabel", querySolution.getBinding("beneficiaryString").getValue().stringValue());
-                            else{
+                            else {
                                 beneficary.put("beneficiaryLabel", "");
                             }
                         }
@@ -504,8 +504,8 @@ public class ProjectController {
                         }
                         beneficiaries.add(beneficary);
                     }
-                }else{
-                    if(querySolution.getBinding("beneficiaryString") != null) {
+                } else {
+                    if (querySolution.getBinding("beneficiaryString") != null) {
                         String ben = querySolution.getBinding("beneficiaryString").getValue().stringValue();
                         boolean found = false;
                         for (Object beneficiary : beneficiaries) {
@@ -513,7 +513,7 @@ public class ProjectController {
                                 found = true;
                             }
                         }
-                        if(!found) {
+                        if (!found) {
                             JSONObject beneficiary = new JSONObject();
                             beneficiary.put("beneficiaryLabel", querySolution.getBinding("beneficiaryString").getValue().stringValue());
                             beneficiary.put("link", "");
@@ -557,7 +557,7 @@ public class ProjectController {
                     if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
                         regionText += ", " + (String) result.get("regionUpper3");
                     }
-                    if(!result.get("countryLabel").equals(regionText))
+                    if (!result.get("countryLabel").equals(regionText))
                         regionText += ", " + (String) result.get("countryLabel");
 
                     result.put("regionText", regionText);
@@ -565,12 +565,12 @@ public class ProjectController {
                     result.put("regionText", (String) result.get("countryLabel"));
                 }
                 String regionId = "";
-                if(querySolution.getBinding("regionId") != null){
-                    regionId = ((Literal)querySolution.getBinding("regionId").getValue()).stringValue();
-                }else{
+                if (querySolution.getBinding("regionId") != null) {
+                    regionId = ((Literal) querySolution.getBinding("regionId").getValue()).stringValue();
+                } else {
                     // replace with country code because there is no nuts
                     regionId = querySolution.getBinding("countryCode").getValue().stringValue();
-                    if(regionId.equals("GR")){
+                    if (regionId.equals("GR")) {
                         // exception for Greece to use EL as nuts code and not GR
                         regionId = "EL";
                     }
@@ -578,7 +578,7 @@ public class ProjectController {
                 if (regionId != null) {
                     JSONArray geoJsons = (JSONArray) result.get("geoJson");
                     String regionLabel = (String) result.get("region");
-                    if(!regionIDs.contains(regionId) && !regions.contains(regionLabel)) {
+                    if (!regionIDs.contains(regionId) && !regions.contains(regionLabel)) {
                         // check if the regioId has already been seen - could be that a project is contained in multipl geometries
                         regionIDs.add(regionId);
                         regions.add(regionLabel);
@@ -605,9 +605,9 @@ public class ProjectController {
                     }
                 }
             }
-            if(regionIDs.size() > 1){
+            if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
-                result.put("regionText", "multiple locations, "+result.get("countryLabel"));
+                result.put("regionText", "multiple locations, " + result.get("countryLabel"));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
@@ -646,9 +646,9 @@ public class ProjectController {
                                            Integer timeout,
                                            Principal principal)
             throws Exception {
-        if (timeout==null){
+        if (timeout == null) {
             timeout = 20;
-            if (keywords ==  null ){
+            if (keywords == null) {
                 timeout = 100;
             }
         }
@@ -656,7 +656,7 @@ public class ProjectController {
 
         int inputOffset = offset;
         int inputLimit = limit;
-        if(offset != Integer.MIN_VALUE) {
+        if (offset != Integer.MIN_VALUE) {
             // if not special offset then cache the and optimize the limits..
             if (keywords != null) {
                 // in case of keywords, optimize to 100 projects for performance issues
@@ -670,19 +670,41 @@ public class ProjectController {
                     limit = 1000;
                 }
             }
-        }else{
+        } else {
             offset = 0;
             inputOffset = 0;
         }
         // expand the query keywords
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
-        if(keywords != null) {
+        if (keywords != null) {
             expandedQuery = similarityService.expandQuery(keywords);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null,limit, offset);
+        String search = filtersGenerator.filterProject(
+                expandedQueryText,
+                country,
+                theme,
+                fund,
+                program,
+                categoryOfIntervention,
+                policyObjective,
+                budgetBiggerThen,
+                budgetSmallerThen,
+                budgetEUBiggerThen,
+                budgetEUSmallerThen,
+                startDateBefore,
+                startDateAfter,
+                endDateBefore,
+                endDateAfter,
+                latitude,
+                longitude,
+                region,
+                null,
+                limit,
+                offset
+        );
 
         int numResults = 0;
 
@@ -747,8 +769,8 @@ public class ProjectController {
 
         search += " " + orderQuery;
         query =
-                "select ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode where { "
-                        + " { SELECT ?s0 ?description where { "
+                "SELECT ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?summary WHERE { "
+                        + " { SELECT ?s0 ?description WHERE { "
                         + search
                         + " } " + orderBy + " limit "
                         + limit
@@ -774,6 +796,9 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
+                        + " FILTER(LANG(?summary)=\"" + language + "\")"
+                        + "} "
                         + "} ";
 
 
@@ -793,6 +818,7 @@ public class ProjectController {
         Set<String> coordinates = new HashSet<>();
         Set<String> objectiveId = new HashSet<>();
         Set<String> countrycode = new HashSet<>();
+        Set<String> summary = new HashSet<>();
         ArrayList<String> similarWords = new ArrayList<>();
 
         boolean hasEntry = resultSet.hasNext();
@@ -816,6 +842,7 @@ public class ProjectController {
                     project.setCoordinates(new ArrayList<String>(coordinates));
                     project.setObjectiveIds(new ArrayList<String>(objectiveId));
                     project.setCountrycode(new ArrayList<String>(countrycode));
+                    project.setSummary(new ArrayList<>(summary));
                     resultList.add(project);
                     snippet = new HashSet<>();
                     label = new HashSet<>();
@@ -829,6 +856,7 @@ public class ProjectController {
                     coordinates = new HashSet<>();
                     objectiveId = new HashSet<>();
                     countrycode = new HashSet<>();
+                    summary = new HashSet<>();
                     similarWords = new ArrayList<>();
                 }
                 previewsKey = querySolution.getBinding("s0").getValue().stringValue();
@@ -867,7 +895,7 @@ public class ProjectController {
                 image.add(querySolution.getBinding("image").getValue().stringValue());
             }
             if (querySolution.getBinding("imageCopyright") != null) {
-                imageCopyright.add("© "+querySolution.getBinding("imageCopyright").getValue().stringValue());
+                imageCopyright.add("© " + querySolution.getBinding("imageCopyright").getValue().stringValue());
             }
             if (querySolution.getBinding("coordinates") != null) {
                 coordinates.add(
@@ -881,9 +909,11 @@ public class ProjectController {
                 objectiveId.add(((Literal) querySolution.getBinding("objectiveId").getValue()).getLabel());
             if (querySolution.getBinding("countrycode") != null)
                 countrycode.add(((Literal) querySolution.getBinding("countrycode").getValue()).getLabel());
+            if (querySolution.getBinding("summary") != null)
+                summary.add(querySolution.getBinding("summary").getValue().stringValue());
 
             // try to create the snippet based on the given expanded query
-            if(expandedQuery != null) {
+            if (expandedQuery != null) {
                 StringBuilder textInput = new StringBuilder();
                 if (querySolution.getBinding("label") != null) {
                     String labelText = ((Literal) querySolution.getBinding("label").getValue()).getLabel();
@@ -917,30 +947,32 @@ public class ProjectController {
             project.setCoordinates(new ArrayList<String>(coordinates));
             project.setObjectiveIds(new ArrayList<String>(objectiveId));
             project.setCountrycode(new ArrayList<String>(countrycode));
+            project.setSummary(new ArrayList<String>(summary));
             resultList.add(project);
         }
         ProjectList projectList = new ProjectList();
         int upperLimit = 990;
-        if(keywords != null)
+        if (keywords != null)
             upperLimit = 90;
-        if(offset <= upperLimit) {
+        if (offset <= upperLimit) {
             for (int i = inputOffset; i < Math.min(resultList.size(), inputOffset + inputLimit); i++) {
                 projectList.getList().add(resultList.get(i));
             }
-        }else{
+        } else {
             projectList.setList(resultList);
         }
         projectList.setNumberResults(numResults);
 
-        if(expandedQuery != null && expandedQuery.getKeywords() != null){
-            for(SimilarWord similarWord:expandedQuery.getKeywords()){
+        if (expandedQuery != null && expandedQuery.getKeywords() != null) {
+            for (SimilarWord similarWord : expandedQuery.getKeywords()) {
                 similarWords.add(similarWord.getWord());
             }
         }
         projectList.setSimilarWords(similarWords);
         return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
     }
-    private String getSnippet(String queryText,String text){
+
+    private String getSnippet(String queryText, String text) {
 
         Query query = null;
         String snippet = "";
@@ -961,12 +993,13 @@ public class ProjectController {
         }
         return snippet;
     }
-    private SemanticSearchResult getProjectsURIsfromSemanticSearch(String keywords,boolean cache,int offset,int limit) {
+
+    private SemanticSearchResult getProjectsURIsfromSemanticSearch(String keywords, boolean cache, int offset, int limit) {
         String url = null;
         //String encoded = URLEncoder.encode(keywords, StandardCharsets.UTF_8.toString());
-        url = "http://kohesio-search-dev.eu-west-1.elasticbeanstalk.com/search?query=" + keywords+"&page="+offset+"&page_size="+limit;
+        url = "http://kohesio-search-dev.eu-west-1.elasticbeanstalk.com/search?query=" + keywords + "&page=" + offset + "&page_size=" + limit;
 
-        String path = cacheDirectory+"/facet/semantic-search";
+        String path = cacheDirectory + "/facet/semantic-search";
         File dir = new File(path);
 
         if (!dir.exists()) {
@@ -997,12 +1030,12 @@ public class ProjectController {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.getBody());
                 ObjectNode result = (ObjectNode) root;
-                numberOfResult = ((JsonNode)result.get("total_hits")).intValue();
+                numberOfResult = ((JsonNode) result.get("total_hits")).intValue();
                 ArrayNode hits = (ArrayNode) result.get("hits");
                 for (int i = 0; i < hits.size(); i++) {
                     String projectURI = hits.get(i).get("uri").textValue();
                     listProjectURIs.add(projectURI);
-                    projectURI+="\n";
+                    projectURI += "\n";
 //                    out.write(projectURI.getBytes());
                 }
 //                out.close();
@@ -1049,12 +1082,12 @@ public class ProjectController {
         // expand the query keywords
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
-        if(keywords != null) {
+        if (keywords != null) {
             expandedQuery = similarityService.expandQuery(keywords);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region,null, limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
@@ -1063,7 +1096,7 @@ public class ProjectController {
                 + " FILTER((LANG(?title)) = \""
                 + language
                 + "\") "
-                +"} ";
+                + "} ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 25);
         int numResults = 0;
         if (resultSet.hasNext()) {
@@ -1098,7 +1131,7 @@ public class ProjectController {
             item.put("item", querySolution.getBinding("s0").getValue().stringValue());
             item.put("image", querySolution.getBinding("image").getValue().stringValue());
             if (querySolution.getBinding("imageCopyright") != null) {
-                item.put("imageCopyright", "© "+querySolution.getBinding("imageCopyright").getValue().stringValue());
+                item.put("imageCopyright", "© " + querySolution.getBinding("imageCopyright").getValue().stringValue());
             }
             item.put("title", querySolution.getBinding("title").getValue().stringValue());
 
@@ -1170,6 +1203,8 @@ public class ProjectController {
         cell.setCellValue("END DATE");
         cell = row.createCell(6);
         cell.setCellValue("COUNTRY");
+        cell = row.createCell(7);
+        cell.setCellValue("SUMMARY");
 
         for (Project project : projectList.getList()) {
             rowNumber++;
@@ -1180,11 +1215,11 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getLabels()));
             cell = row.createCell(2);
             cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-            if(project.getTotalBudgets().size() > 0)
+            if (project.getTotalBudgets().size() > 0)
                 cell.setCellValue(Double.parseDouble(project.getTotalBudgets().get(0)));
             cell = row.createCell(3);
             cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-            if(project.getEuBudgets().size() > 0)
+            if (project.getEuBudgets().size() > 0)
                 cell.setCellValue(Double.parseDouble(project.getEuBudgets().get(0)));
             cell = row.createCell(4);
             if (project.getStartTimes().size() > 0) {
@@ -1196,6 +1231,13 @@ public class ProjectController {
             }
             cell = row.createCell(6);
             cell.setCellValue(String.join("|", project.getCountrycode()));
+
+            cell = row.createCell(7);
+            if (project.getSummary().size()>0) {
+                cell.setCellValue(project.getSummary().get(0));
+            } else {
+                cell.setCellValue("");
+            }
 
         }
         ByteArrayOutputStream fileOut = new ByteArrayOutputStream();
@@ -1259,9 +1301,9 @@ public class ProjectController {
                     new CSVPrinter(
                             response.getWriter(),
                             CSVFormat.DEFAULT.withHeader(
-                                    "ID", "PROJECT NAME", "TOTAL BUDGET", "AMOUNT EU SUPPORT", "START DATE", "END DATE", "COUNTRY"));
+                                    "ID", "PROJECT NAME", "TOTAL BUDGET", "AMOUNT EU SUPPORT", "START DATE", "END DATE", "COUNTRY", "SUMMARY"));
             for (Project project : projectList.getList()) {
-                logger.debug("Project: "+project.getItem());
+                logger.debug("Project: " + project.getItem());
                 csvPrinter.printRecord(
                         Arrays.asList(
                                 String.join("|", project.getItem()),
@@ -1270,7 +1312,8 @@ public class ProjectController {
                                 String.join("|", project.getEuBudgets()),
                                 String.join("|", project.getStartTimes()),
                                 String.join("|", project.getEndTimes()),
-                                String.join("|", project.getCountrycode())
+                                String.join("|", project.getCountrycode()),
+                                String.join("|", project.getSummary())
                         )
                 );
             }

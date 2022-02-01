@@ -88,12 +88,15 @@ public class BeneficiaryController {
         }
 
         String labelsFilter = getBeneficiaryLabelsFilter();
-        String query1 = "select ?s0 ?country ?countryCode ?beneficiaryLabel_en ?beneficiaryLabel ?description ?website ?image ?logo ?coordinates ?wikipedia where {\n"
+        String query1 = "select ?s0 ?country ?countryCode ?beneficiaryLabel_en ?beneficiaryLabel ?transliteration ?description ?website ?image ?logo ?coordinates ?wikipedia where {\n"
                 + " VALUES ?s0 { <"
                 + id
                 + "> } " +
                 "  ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country .  \n" +
-                "  ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . \n " +
+                "  ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . \n "
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P7> ?benefStatement . "
+                + "  ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
+                + " }" +
                 "  OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel_en . \n" +
                 "  FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } \n" +
                 "  OPTIONAL { ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . \n" +
@@ -165,6 +168,9 @@ public class BeneficiaryController {
             }
             if (querySolution.getBinding("beneficiaryLabel_en") != null) {
                 result.put("beneficiaryLabel", ((Literal) querySolution.getBinding("beneficiaryLabel_en").getValue()).getLabel());
+            }
+            if (querySolution.getBinding("transliteration") != null) {
+                result.put("transliteration", ((Literal) querySolution.getBinding("transliteration").getValue()).getLabel());
             }
             if (querySolution.getBinding("description") != null) {
                 result.put("description", querySolution.getBinding("description").getValue().stringValue());
@@ -509,7 +515,7 @@ public class BeneficiaryController {
                                     + ((Literal) querySolution.getBinding("link").getValue()).getLabel());
                 }
 
-                if (querySolution.getBinding("transliteration") != null) {
+                if (querySolution.getBinding("transliteration") != null && querySolution.getBinding("beneficiaryLabel_en") == null) {
                     beneficary.setTransliteration(
                             querySolution.getBinding("transliteration").getValue().stringValue()
                     );
