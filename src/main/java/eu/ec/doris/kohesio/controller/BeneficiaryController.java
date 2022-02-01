@@ -515,7 +515,7 @@ public class BeneficiaryController {
                                     + ((Literal) querySolution.getBinding("link").getValue()).getLabel());
                 }
 
-                if (querySolution.getBinding("transliteration") != null) {
+                if (querySolution.getBinding("transliteration") != null && querySolution.getBinding("beneficiaryLabel_en") == null) {
                     beneficary.setTransliteration(
                             querySolution.getBinding("transliteration").getValue().stringValue()
                     );
