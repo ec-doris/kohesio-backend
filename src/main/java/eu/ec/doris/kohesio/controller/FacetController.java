@@ -313,8 +313,7 @@ public class FacetController {
         logger.info("Get list of countries");
         List<JSONObject> jsonValues = new ArrayList<JSONObject>();
         String query ="SELECT DISTINCT ?country WHERE { 	" +
-                " ?s1  <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q196788> . 	 " +
-                "?s1  <https://linkedopendata.eu/prop/direct/P32>  ?country .  }";
+                " <https://linkedopendata.eu/entity/Q1>  <https://linkedopendata.eu/prop/direct/P104> ?country . }";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
