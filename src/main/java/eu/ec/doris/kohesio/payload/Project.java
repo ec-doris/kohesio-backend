@@ -17,6 +17,7 @@ public class Project {
     ArrayList<String> coordinates;
     ArrayList<String> objectiveIds;
     ArrayList<String> countrycode;
+    ArrayList<String> summary;
 
 
     public String getLink() {
@@ -129,5 +130,13 @@ public class Project {
 
     public void setCopyrightImages(ArrayList<String> copyrightImages) {
         this.copyrightImages = copyrightImages;
+    }
+
+    public ArrayList<String> getSummary() {
+        return summary;
+    }
+
+    public void setSummary(ArrayList<String> summary) {
+        this.summary = summary;
     }
 }
