@@ -310,7 +310,7 @@ public class BeneficiaryController {
 
         int timeout = 20;
         if (keywords == null){
-            timeout = 100;
+            timeout = 150;
         }
 
         int inputOffset = offset;
