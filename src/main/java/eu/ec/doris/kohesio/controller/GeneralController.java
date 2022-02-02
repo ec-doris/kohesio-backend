@@ -5,8 +5,6 @@ import eu.ec.doris.kohesio.payload.General;
 import eu.ec.doris.kohesio.payload.GeneralList;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
-import eu.ec.doris.kohesio.services.SimilarityService;
-import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.slf4j.Logger;
@@ -37,19 +35,10 @@ public class GeneralController {
     SPARQLQueryService sparqlQueryService;
 
     @Autowired
-    SimilarityService similarityService;
-
-    @Autowired
     FiltersGenerator filtersGenerator;
 
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
-
-    @Value("${kohesio.sparqlEndpointNuts}")
-    String getSparqlEndpointNuts;
-
-    @Value("${kohesio.directory}")
-    String cacheDirectory;
 
     @GetMapping(value = "/facet/eu/search/general", produces = "application/json")
     public ResponseEntity euSearchGeneral(
@@ -65,10 +54,6 @@ public class GeneralController {
             throws Exception {
         logger.info("General search: language {}, keywords {}", language, keywords);
 
-        int timeout = 20;
-        if (keywords == null) {
-            timeout = 100;
-        }
 
         String search = "";
         if (keywords != null) {
@@ -90,18 +75,6 @@ public class GeneralController {
                 + " VALUES(?type){(<https://linkedopendata.eu/entity/Q9934>) (<https://linkedopendata.eu/entity/Q196899>)} "
         ;
 
-//        String queryCount = "SELECT (COUNT(?general) AS ?c) { " +
-//                " { SELECT ?general { " +
-//                search
-//                + " } GROUP BY ?general }" +
-//                "}";
-//        logger.debug(queryCount);
-//        TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
-//        int numResults = 0;
-//        if ( countResultSet.hasNext()) {
-//            BindingSet querySolution = countResultSet.next();
-//            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
-//        }
         String orderBy = "";
 
         if (orderEuBudget != null) {
