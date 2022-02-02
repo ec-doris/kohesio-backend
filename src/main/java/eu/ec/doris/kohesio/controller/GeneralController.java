@@ -134,6 +134,14 @@ public class GeneralController {
             while (resultSet.hasNext()) {
                 General general = new General();
                 BindingSet querySolution = resultSet.next();
+                if (querySolution.getBinding("general") != null) {
+                    general.setItem(
+                            querySolution.getBinding("general")
+                                    .getValue()
+                                    .stringValue()
+                                    .replace("https://linkedopendata.eu/entity/", "")
+                    );
+                }
                 if (querySolution.getBinding("generalLabel") != null) {
                     general.setLabel(
                             querySolution.getBinding("generalLabel").getValue().stringValue()

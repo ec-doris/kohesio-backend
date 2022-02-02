@@ -1,12 +1,21 @@
 package eu.ec.doris.kohesio.payload;
 
 public class General {
+    String item;
     String label;
     String country;
     String countryCode;
     String link;
     String transliteration;
     String type;
+
+    public String getItem() {
+        return item;
+    }
+
+    public void setItem(String item) {
+        this.item = item;
+    }
 
     public String getLabel() {
         return label;
