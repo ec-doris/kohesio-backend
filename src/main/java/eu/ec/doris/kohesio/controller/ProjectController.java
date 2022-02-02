@@ -1186,7 +1186,7 @@ public class ProjectController {
                 orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, MAX_LIMIT),
                 SPECIAL_OFFSET, 30, principal).getBody();
         XSSFWorkbook hwb = new XSSFWorkbook();
-        XSSFSheet sheet = hwb.createSheet("beneficiary_export");
+        XSSFSheet sheet = hwb.createSheet("project_export");
         int rowNumber = 0;
         XSSFRow row = sheet.createRow(rowNumber);
         XSSFCell cell = row.createCell(0);
@@ -1245,7 +1245,7 @@ public class ProjectController {
         fileOut.close();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/vnd.ms-excel");
-        headers.set("Content-Disposition", "attachment; filename=\"beneficiary_export.xlsx\"");
+        headers.set("Content-Disposition", "attachment; filename=\"project_export.xlsx\"");
         return new ResponseEntity<byte[]>(fileOut.toByteArray(), headers, HttpStatus.OK);
     }
 
