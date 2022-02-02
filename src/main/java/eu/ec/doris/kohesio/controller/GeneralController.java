@@ -72,7 +72,7 @@ public class GeneralController {
                     + "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet ] . ";
         }
         search += search + " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . "
-                + " FILTER (?type = <https://linkedopendata.eu/entity/Q9934> || ?type = <https://linkedopendata.eu/entity/Q196899>)} "
+                + " FILTER (?type = <https://linkedopendata.eu/entity/Q9934> || ?type = <https://linkedopendata.eu/entity/Q196899>) "
         ;
 
         String orderBy = "";
