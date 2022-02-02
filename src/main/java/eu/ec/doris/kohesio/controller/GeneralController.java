@@ -44,7 +44,7 @@ public class GeneralController {
     public ResponseEntity euSearchGeneral(
             @RequestParam(value = "language", defaultValue = "en") String language,
             @RequestParam(value = "keywords", required = false) String keywords,
-            @RequestParam(value = "orderEuBudget", defaultValue = "false") Boolean orderEuBudget,
+            @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
             @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
             @RequestParam(value = "orderNumProjects", required = false) Boolean orderNumProjects,
             @RequestParam(value = "limit", defaultValue = "200") int limit,
@@ -53,7 +53,7 @@ public class GeneralController {
     )
             throws Exception {
         logger.info("General search: language {}, keywords {}", language, keywords);
-
+        logger.info("Order: EuBudget {}, TotalBudget {}, Number {}", orderEuBudget, orderTotalBudget, orderNumProjects);
 
         String search = "";
         if (keywords != null) {
@@ -69,13 +69,14 @@ public class GeneralController {
             search += "?general <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                     + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                     + keywords.replace("\"", "\\\"") + "\" ; "
-                    + "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet ] . ";
+                    + "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet; "
+                    + "<http://www.openrdf.org/contrib/lucenesail#score> ?score ] . ";
         }
-        search += search + " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . "
-                + " VALUES(?type){(<https://linkedopendata.eu/entity/Q9934>) (<https://linkedopendata.eu/entity/Q196899>)} "
+        search += " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . "
+                + " FILTER(?type=<https://linkedopendata.eu/entity/Q9934>||?type=<https://linkedopendata.eu/entity/Q196899>) "//" VALUES(?type){(<https://linkedopendata.eu/entity/Q9934>) (<https://linkedopendata.eu/entity/Q196899>)} "
         ;
 
-        String orderBy = "";
+        String orderBy = "ORDER BY DESC(?score)";
 
         if (orderEuBudget != null) {
             if (orderEuBudget) {
