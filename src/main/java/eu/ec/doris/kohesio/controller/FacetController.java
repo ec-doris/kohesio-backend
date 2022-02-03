@@ -624,6 +624,7 @@ public class FacetController {
             JSONObject element = new JSONObject();
             element.put("instance", querySolution.getBinding("to").getValue().toString());
             element.put("instanceLabel", querySolution.getBinding("toLabel").getValue().stringValue());
+            element.put("id", querySolution.getBinding("id").getValue().stringValue());
             result.add(element);
         }
         return result;
