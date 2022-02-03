@@ -11,7 +11,7 @@ RUN mvn -f /home/app/pom.xml clean package
 #
 FROM openjdk:11-jre-slim
 COPY --from=build /home/app/target/kohesio-backend-*-SNAPSHOT.jar /usr/local/lib/kohesio-backend.jar
-COPY --from=build /home/app/src/main/resources/config/application-k8s-dev.properties /home/app/application-k8s-dev.properties
+COPY --from=build /home/app/src/main/resources/config/application-k8s-prod.properties /home/app/application-k8s-prod.properties
 
 EXPOSE 5678
 ENTRYPOINT ["java","-Dspring.config.location=file:///home/app/application-k8s-prod.properties","-jar", "/usr/local/lib/kohesio-backend.jar"]
