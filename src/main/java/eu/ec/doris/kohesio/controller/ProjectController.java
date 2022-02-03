@@ -763,7 +763,7 @@ public class ProjectController {
                     "    } " +
                     "  } UNION { SELECT ?s0 ?snippet where { " +
                     "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ." +
-                    "    } limit 1000" +
+                    "    } " +
                     "    }";
         }
 
@@ -772,9 +772,9 @@ public class ProjectController {
                 "SELECT ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?summary WHERE { "
                         + " { SELECT ?s0 ?description WHERE { "
                         + search
-                        + " } " + orderBy + " limit "
+                        + " } " + orderBy + " LIMIT "
                         + limit
-                        + " offset "
+                        + " OFFSET "
                         + offset
                         + " } "
                         + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
@@ -1178,12 +1178,12 @@ public class ProjectController {
                                                         @Context HttpServletResponse response)
             throws Exception {
         int SPECIAL_OFFSET = Integer.MIN_VALUE;
-        int MAX_LIMIT = 1000;
+        int MAX_LIMIT = 5000;
         // pass a special_offset to skip the caching and query up to the given limit or 10k projects
         ProjectList projectList = (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
                 categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate,
-                orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.max(limit, MAX_LIMIT),
+                orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.min(limit, MAX_LIMIT),
                 SPECIAL_OFFSET, 30, principal).getBody();
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("project_export");
@@ -1283,14 +1283,14 @@ public class ProjectController {
                                     @Context HttpServletResponse response)
             throws Exception {
         int SPECIAL_OFFSET = Integer.MIN_VALUE;
-        int MAX_LIMIT = 1000;
+        int MAX_LIMIT = 5000;
         // pass a special_offset to skip the caching and query up to the given limit or 10k projects
         ProjectList projectList =
                 (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
                         categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen,
                         budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                         endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude,
-                        longitude, region, Math.max(limit, MAX_LIMIT), SPECIAL_OFFSET, 20, principal).getBody();
+                        longitude, region, Math.min(limit, MAX_LIMIT), SPECIAL_OFFSET, 20, principal).getBody();
         String filename = "project_export.csv";
         try {
             response.setContentType("text/csv");
