@@ -641,7 +641,7 @@ public class ProjectController {
                                            @RequestParam(value = "latitude", required = false) String latitude,
                                            @RequestParam(value = "longitude", required = false) String longitude,
                                            @RequestParam(value = "region", required = false) String region,
-                                           @RequestParam(value = "limit", defaultValue = "200") int limit,
+                                           @RequestParam(value = "limit", defaultValue = "5000") int limit,
                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
                                            Integer timeout,
                                            Principal principal)
@@ -1172,7 +1172,7 @@ public class ProjectController {
                                                         @RequestParam(value = "latitude", required = false) String latitude,
                                                         @RequestParam(value = "longitude", required = false) String longitude,
                                                         @RequestParam(value = "region", required = false) String region,
-                                                        @RequestParam(value = "limit", defaultValue = "200") int limit,
+                                                        @RequestParam(value = "limit", defaultValue = "5000") int limit,
                                                         @RequestParam(value = "offset", defaultValue = "0") int offset,
                                                         Principal principal,
                                                         @Context HttpServletResponse response)
@@ -1283,7 +1283,7 @@ public class ProjectController {
                                     @Context HttpServletResponse response)
             throws Exception {
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
-        final int MAX_LIMIT = 5000;
+        final int MAX_LIMIT = 50000;
         // pass a special_offset to skip the caching and query up to the given limit or 10k projects
         ProjectList projectList =
                 (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
