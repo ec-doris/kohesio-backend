@@ -68,7 +68,7 @@ public class BeneficiaryController {
                                          @RequestParam(value = "pageSize", defaultValue = "100") int pageSize
     ) throws Exception {
 
-        logger.info("Beneficiary search by ID: id {}, language {}",id, language);
+        logger.info("Beneficiary search by ID: id {}, language {}", id, language);
         String queryCheck = "ask {\n" +
                 " <" + id + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899>\n" +
                 "}";
@@ -100,7 +100,7 @@ public class BeneficiaryController {
                 "  OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel_en . \n" +
                 "  FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } \n" +
                 "  OPTIONAL { ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . \n" +
-                labelsFilter+
+                labelsFilter +
                 " } \n" +
 
                 "  OPTIONAL {  ?s0 <http://schema.org/description> ?description .  FILTER (lang(?description)=\"" + language + "\") }\n" +
@@ -309,15 +309,20 @@ public class BeneficiaryController {
         logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}", language, keywords, country, region, latitude, longitude, fund, program);
 
         int timeout = 20;
-        if (keywords == null){
+        if (keywords == null) {
             timeout = 150;
         }
 
         int inputOffset = offset;
         int inputLimit = limit;
-        if (offset <= 990) {
+        if (offset != Integer.MIN_VALUE) {
+            if (offset <= 990) {
+                offset = 0;
+                limit = 1000;
+            }
+        } else {
             offset = 0;
-            limit = 1000;
+            inputOffset = 0;
         }
         String search = "";
         if (keywords != null) {
@@ -364,9 +369,9 @@ public class BeneficiaryController {
             search += "?project <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
         }
 
-        search = search + "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
-                + "   optional { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
-                + "   optional { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
+        search += "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
+                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
+                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
 
         if (beneficiaryType != null) {
             if (beneficiaryType.equals("private")) {
@@ -377,10 +382,10 @@ public class BeneficiaryController {
                         + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630486> .";
             }
         }
-        String queryCount = "select (count(?beneficiary) as ?c) where { " +
-                "{select ?beneficiary where {\n" +
+        String queryCount = "SELECT (COUNT(?beneficiary) AS ?c) { " +
+                "{SELECT ?beneficiary where {\n" +
                 search
-                + " } group by ?beneficiary }" +
+                + " } GROUP BY ?beneficiary }" +
                 "}";
         logger.debug(queryCount);
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
@@ -416,13 +421,13 @@ public class BeneficiaryController {
         }
         String labelsFilter = getBeneficiaryLabelsFilter();
         String query =
-                "select ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link ?transliteration where { "
-                        + " { SELECT ?beneficiary (count(?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) where { "
+                "SELECT ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link ?transliteration { "
+                        + " { SELECT ?beneficiary (count(?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) { "
                         + search
-                        + "} group by ?beneficiary " +
+                        + "} GROUP BY ?beneficiary " +
                         orderBy
-                        + " limit " + limit
-                        + " offset " + offset
+                        + " LIMIT " + limit
+                        + " OFFSET " + offset
                         + "} "
                         + "  OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel_en ."
                         + "              FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } "
@@ -549,13 +554,33 @@ public class BeneficiaryController {
                                           @RequestParam(value = "fund", required = false) String fund, //
                                           @RequestParam(value = "program", required = false) String program, //
                                           @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
-
+                                          @RequestParam(value = "limit", defaultValue = "200") int limit,
                                           Principal principal,
                                           @Context HttpServletResponse response)
             throws Exception {
         // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
         // by default it export 1000
-        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program, beneficiaryType, false, false, false, 1000, 0, principal).getBody());
+
+        final int SPECIAL_OFFSET = Integer.MIN_VALUE;
+        final int MAX_LIMIT = 5000;
+
+        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(
+                language,
+                keywords,
+                country,
+                region,
+                latitude,
+                longitude,
+                fund,
+                program,
+                beneficiaryType,
+                false,
+                false,
+                false,
+                Math.min(limit, MAX_LIMIT),
+                SPECIAL_OFFSET,
+                principal
+        ).getBody());
         String filename = "beneficiary_export.csv";
         try {
             response.setContentType("text/csv");
@@ -592,12 +617,31 @@ public class BeneficiaryController {
                                                               @RequestParam(value = "fund", required = false) String fund, //
                                                               @RequestParam(value = "program", required = false) String program, //
                                                               @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
-
+                                                              @RequestParam(value = "limit", defaultValue = "200") int limit,
                                                               Principal principal)
             throws Exception {
         // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
         // by default it export 1000
-        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(language, keywords, country, region, latitude, longitude, fund, program, beneficiaryType, false, false, false, 1000, 0, principal).getBody());
+
+        final int SPECIAL_OFFSET = Integer.MIN_VALUE;
+        final int MAX_LIMIT = 5000;
+        BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(
+                language,
+                keywords,
+                country,
+                region,
+                latitude,
+                longitude,
+                fund,
+                program,
+                beneficiaryType,
+                false,
+                false,
+                false,
+                Math.min(limit, MAX_LIMIT),
+                SPECIAL_OFFSET,
+                principal
+        ).getBody());
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("beneficiary_export");
         int rowNumber = 0;
@@ -614,13 +658,19 @@ public class BeneficiaryController {
             rowNumber++;
             row = sheet.createRow(rowNumber);
             cell = row.createCell(0);
-            cell.setCellValue(beneficiary.getLabel());
+            if (!"".equals(beneficiary.getLabel())) {
+                cell.setCellValue(beneficiary.getLabel());
+            }
             cell = row.createCell(1);
             cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-            cell.setCellValue(Double.parseDouble(beneficiary.getBudget()));
+            if (!"".equals(beneficiary.getBudget())) {
+                cell.setCellValue(Double.parseDouble(beneficiary.getBudget()));
+            }
             cell = row.createCell(2);
             cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
-            cell.setCellValue(Double.parseDouble(beneficiary.getEuBudget()));
+            if (!"".equals(beneficiary.getEuBudget())) {
+                cell.setCellValue(Double.parseDouble(beneficiary.getEuBudget()));
+            }
             cell = row.createCell(3);
             cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
             cell.setCellValue(beneficiary.getNumberProjects());
@@ -640,7 +690,7 @@ public class BeneficiaryController {
                                                 @RequestParam(value = "page", defaultValue = "0") int page,
                                                 @RequestParam(value = "pageSize", defaultValue = "100") int pageSize
     ) throws Exception {
-        logger.info("Beneficiary search projects by ID: id {}, language {}",id, language);
+        logger.info("Beneficiary search projects by ID: id {}, language {}", id, language);
         String queryCheck = "ask { " +
                 "<" + id + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> " +
                 "}";
@@ -702,7 +752,8 @@ public class BeneficiaryController {
         result.put("projects", projects);
         return new ResponseEntity(result, HttpStatus.OK);
     }
-    private String getBeneficiaryLabelsFilter(){
+
+    private String getBeneficiaryLabelsFilter() {
         String labelsFilter = "FILTER(";
         HashMap<String, List<String>> countriesCodeMapping = filtersGenerator.getCountriesCodeMapping();
         int count = 0;
@@ -710,12 +761,12 @@ public class BeneficiaryController {
             String countryQID = entry.getKey();
             List<String> languageCode = entry.getValue();
             labelsFilter += "( ";
-            for (int i=0; i<languageCode.size()-1; i++) {
+            for (int i = 0; i < languageCode.size() - 1; i++) {
                 labelsFilter += " LANG(?beneficiaryLabel) = \"" + languageCode.get(i) + "\" && ?country = " + countryQID + " ||  ";
             }
-            labelsFilter += " LANG(?beneficiaryLabel) = \"" + languageCode.get(languageCode.size()-1) + "\" && ?country = " + countryQID + " ) ";
-            if(count < countriesCodeMapping.size() -1)
-                labelsFilter+= "|| \n";
+            labelsFilter += " LANG(?beneficiaryLabel) = \"" + languageCode.get(languageCode.size() - 1) + "\" && ?country = " + countryQID + " ) ";
+            if (count < countriesCodeMapping.size() - 1)
+                labelsFilter += "|| \n";
             count++;
         }
         labelsFilter += ")";
