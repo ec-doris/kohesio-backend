@@ -133,6 +133,7 @@ public class BeneficiaryController {
                 "> } " +
                 "  ?project <http://www.w3.org/2000/01/rdf-schema#label> ?label .\n" +
                 "  FILTER (lang(?label)=\"" + language + "\") .\n" +
+                "  ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . \n" +
                 "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
