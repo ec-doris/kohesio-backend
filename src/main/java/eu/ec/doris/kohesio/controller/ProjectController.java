@@ -575,35 +575,35 @@ public class ProjectController {
                         regionId = "EL";
                     }
                 }
-//                if (regionId != null) {
-//                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
-//                    String regionLabel = (String) result.get("region");
-//                    if (!regionIDs.contains(regionId) && !regions.contains(regionLabel)) {
-//                        // check if the regioId has already been seen - could be that a project is contained in multipl geometries
-//                        regionIDs.add(regionId);
-//                        regions.add(regionLabel);
-//                        query =
-//                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
-//                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-//                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-//                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
-//                                        + "SELECT ?id ?geoJson  WHERE { "
-//                                        + "?s <http://nuts.de/id> \'" + regionId + "\' . "
-//                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
-//                                        + "}";
-//                        logger.debug("Retrieving nuts geometry");
-//                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
-//
-//                        NutsRegion nutsRegion = new NutsRegion();
-//                        while (resultSet2.hasNext()) {
-//                            BindingSet querySolution2 = resultSet2.next();
-//                            if (querySolution2.getBinding("geoJson") != null) {
-//                                geoJsons.add(((Literal) querySolution2.getBinding("geoJson").getValue())
-//                                        .stringValue());
-//                            }
-//                        }
-//                    }
-//                }
+                if (regionId != null) {
+                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
+                    String regionLabel = (String) result.get("region");
+                    if (!regionIDs.contains(regionId) && !regions.contains(regionLabel)) {
+                        // check if the regioId has already been seen - could be that a project is contained in multipl geometries
+                        regionIDs.add(regionId);
+                        regions.add(regionLabel);
+                        query =
+                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+                                        + "SELECT ?id ?geoJson  WHERE { "
+                                        + "?s <http://nuts.de/id> \'" + regionId + "\' . "
+                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
+                                        + "}";
+                        logger.debug("Retrieving nuts geometry");
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+
+                        NutsRegion nutsRegion = new NutsRegion();
+                        while (resultSet2.hasNext()) {
+                            BindingSet querySolution2 = resultSet2.next();
+                            if (querySolution2.getBinding("geoJson") != null) {
+                                geoJsons.add(((Literal) querySolution2.getBinding("geoJson").getValue())
+                                        .stringValue());
+                            }
+                        }
+                    }
+                }
             }
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
@@ -1283,7 +1283,7 @@ public class ProjectController {
                                     @Context HttpServletResponse response)
             throws Exception {
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
-        final int MAX_LIMIT = 50000;
+        final int MAX_LIMIT = 5000;
         // pass a special_offset to skip the caching and query up to the given limit or 10k projects
         ProjectList projectList =
                 (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
