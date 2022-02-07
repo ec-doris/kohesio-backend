@@ -12,6 +12,7 @@ public class Beneficiary {
     String country;
     String countryCode;
     String link;
+    String transliteration;
 
     public Beneficiary(){}
 
@@ -85,6 +86,14 @@ public class Beneficiary {
 
     public String getLink() {
         return link;
+    }
+
+    public String getTransliteration() {
+        return transliteration;
+    }
+
+    public void setTransliteration(String transliteration) {
+        this.transliteration = transliteration;
     }
 
     public void computeCofinancingRate(){

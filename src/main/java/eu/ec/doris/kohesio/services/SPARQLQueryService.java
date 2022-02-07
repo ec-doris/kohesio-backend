@@ -33,17 +33,17 @@ public class SPARQLQueryService {
     }
 
     public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache) {
-        logger.info(query);
+        logger.info("Executing given query: "+query);
         long start = System.nanoTime();
+
         File dir = new File(location + "/facet/cache/");
 
-        System.out.println("The directory of cache: "+dir.getAbsolutePath());
         if (!dir.exists()) {
             dir.mkdirs();
         }
         // check if the query is cached
         if (dir.exists() && cache == true) {
-            System.out.println(query.hashCode());
+            logger.debug("Query hashcode: "+String.valueOf(query.hashCode()));
             SPARQLResultsJSONParser sparqlResultsJSONParser = new SPARQLResultsJSONParser();
             TupleQueryResultBuilder tupleQueryResultHandler = new TupleQueryResultBuilder();
             sparqlResultsJSONParser.setQueryResultHandler(tupleQueryResultHandler);
@@ -51,12 +51,12 @@ public class SPARQLQueryService {
                 sparqlResultsJSONParser.parseQueryResult(
                         new FileInputStream(location + "/facet/cache/" + query.hashCode()));
                 long end = System.nanoTime();
-                logger.info("Was cached " + (end - start) / 100000);
+                logger.debug("Was cached " + (end - start) / 100000);
                 return tupleQueryResultHandler.getQueryResult();
             } catch (QueryResultParseException e) {
-                System.out.println("Wrong in cache timeout " + timeout);
+                logger.debug("Wrong in cache timeout " + timeout);
             } catch (FileNotFoundException e) {
-                System.out.println("Could not find file it was probably not cached");
+                logger.debug("Could not find file it was probably not cached");
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -69,6 +69,7 @@ public class SPARQLQueryService {
         repo.setAdditionalHttpHeaders(additionalHttpHeaders);
 
         try {
+            logger.info("Was NOT cached ");
             TupleQueryResult resultSet =
                     repo.getConnection().prepareTupleQuery(query).evaluate();
             FileOutputStream out = new FileOutputStream(location + "/facet/cache/" + query.hashCode());
@@ -86,13 +87,11 @@ public class SPARQLQueryService {
             logger.info("Was NOT cached "+(end - start)/1000000);
             return tupleQueryResultHandler.getQueryResult();
         } catch(QueryEvaluationException e){
-            logger.error("Malformed query ["+query+"]");
+            logger.error("Query Evaluation Exception: ["+e.getMessage()+"]");
         } catch (QueryResultParseException e){
-            System.out.println("To heavy timeout "+query+" --- "+timeout);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            logger.error("To heavy timeout "+query+" --- "+timeout);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
         return null;
     }
@@ -103,7 +102,6 @@ public class SPARQLQueryService {
         repo.setAdditionalHttpHeaders(additionalHttpHeaders);
 
         BooleanQuery booleanQuery = repo.getConnection().prepareBooleanQuery(query);
-        boolean result = booleanQuery.evaluate();
-        return result;
+        return booleanQuery.evaluate();
     }
 }
