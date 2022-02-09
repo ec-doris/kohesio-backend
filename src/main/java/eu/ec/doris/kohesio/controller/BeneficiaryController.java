@@ -554,7 +554,7 @@ public class BeneficiaryController {
                                           @RequestParam(value = "fund", required = false) String fund, //
                                           @RequestParam(value = "program", required = false) String program, //
                                           @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
-                                          @RequestParam(value = "limit", defaultValue = "5000") int limit,
+                                          @RequestParam(value = "limit", defaultValue = "1000") int limit,
                                           Principal principal,
                                           @Context HttpServletResponse response)
             throws Exception {
@@ -562,7 +562,7 @@ public class BeneficiaryController {
         // by default it export 1000
 
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
-        final int MAX_LIMIT = 5000;
+        final int MAX_LIMIT = 2000;
 
         BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(
                 language,
@@ -617,14 +617,14 @@ public class BeneficiaryController {
                                                               @RequestParam(value = "fund", required = false) String fund, //
                                                               @RequestParam(value = "program", required = false) String program, //
                                                               @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
-                                                              @RequestParam(value = "limit", defaultValue = "5000") int limit,
+                                                              @RequestParam(value = "limit", defaultValue = "1000") int limit,
                                                               Principal principal)
             throws Exception {
         // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
         // by default it export 1000
 
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
-        final int MAX_LIMIT = 5000;
+        final int MAX_LIMIT = 2000;
         BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(
                 language,
                 keywords,
