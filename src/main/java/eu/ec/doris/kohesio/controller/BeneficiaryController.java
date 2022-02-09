@@ -422,7 +422,7 @@ public class BeneficiaryController {
         String labelsFilter = getBeneficiaryLabelsFilter();
         String query =
                 "SELECT ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link ?transliteration { "
-                        + " { SELECT ?beneficiary (count(?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) { "
+                        + " { SELECT ?beneficiary (count(DISTINCT ?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) { "
                         + search
                         + "} GROUP BY ?beneficiary " +
                         orderBy
