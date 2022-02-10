@@ -133,6 +133,7 @@ public class BeneficiaryController {
                 "> } " +
                 "  ?project <http://www.w3.org/2000/01/rdf-schema#label> ?label .\n" +
                 "  FILTER (lang(?label)=\"" + language + "\") .\n" +
+                "  ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . \n" +
                 "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
@@ -422,7 +423,7 @@ public class BeneficiaryController {
         String labelsFilter = getBeneficiaryLabelsFilter();
         String query =
                 "SELECT ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link ?transliteration { "
-                        + " { SELECT ?beneficiary (count(?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) { "
+                        + " { SELECT ?beneficiary (count(DISTINCT ?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) { "
                         + search
                         + "} GROUP BY ?beneficiary " +
                         orderBy
@@ -554,7 +555,7 @@ public class BeneficiaryController {
                                           @RequestParam(value = "fund", required = false) String fund, //
                                           @RequestParam(value = "program", required = false) String program, //
                                           @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
-                                          @RequestParam(value = "limit", defaultValue = "5000") int limit,
+                                          @RequestParam(value = "limit", defaultValue = "1000") int limit,
                                           Principal principal,
                                           @Context HttpServletResponse response)
             throws Exception {
@@ -562,7 +563,7 @@ public class BeneficiaryController {
         // by default it export 1000
 
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
-        final int MAX_LIMIT = 5000;
+        final int MAX_LIMIT = 2000;
 
         BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(
                 language,
@@ -617,14 +618,14 @@ public class BeneficiaryController {
                                                               @RequestParam(value = "fund", required = false) String fund, //
                                                               @RequestParam(value = "program", required = false) String program, //
                                                               @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
-                                                              @RequestParam(value = "limit", defaultValue = "5000") int limit,
+                                                              @RequestParam(value = "limit", defaultValue = "1000") int limit,
                                                               Principal principal)
             throws Exception {
         // if "limit" parameter passed to get a specific number of rows just pass it to euSearchBeneficiaries
         // by default it export 1000
 
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
-        final int MAX_LIMIT = 5000;
+        final int MAX_LIMIT = 2000;
         BeneficiaryList beneficiaryList = ((BeneficiaryList) euSearchBeneficiaries(
                 language,
                 keywords,
@@ -707,6 +708,7 @@ public class BeneficiaryController {
                 "> } " +
                 "  ?project <http://www.w3.org/2000/01/rdf-schema#label> ?label .\n" +
                 "  FILTER (lang(?label)=\"" + language + "\") .\n" +
+                "  ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . \n" +
                 "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
