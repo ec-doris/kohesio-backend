@@ -245,21 +245,28 @@ public class MapController {
 //        } else {
 //            result.put("geoJson", "");
 //        }
-        JSONArray resultList = new JSONArray();
+
+        HashMap<String,Boolean> unique_highlighted = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
-            JSONObject point = new JSONObject();
-            point.put("coordinates",((Literal) querySolution.getBinding("coordinates").getValue())
+            String coordinates = ((Literal) querySolution.getBinding("coordinates").getValue())
                     .getLabel()
                     .replace("Point(", "")
                     .replace(")", "")
-                    .replace(" ", ","));
+                    .replace(" ", ",");
             if(querySolution.getBinding("infoRegioID") != null)
-                point.put("isHighlighted",true);
-            else
-                point.put("isHighlighted",false);
+                unique_highlighted.put(coordinates, true);
+            else if (unique_highlighted.containsKey(coordinates) == false)
+                unique_highlighted.put(coordinates, false);
+        }
+        JSONArray resultList = new JSONArray();
+        for (String coordinates : unique_highlighted.keySet()){
+            JSONObject point = new JSONObject();
+            point.put("coordinates",coordinates);
+            point.put("isHighlighted",unique_highlighted.get(coordinates));
             resultList.add(point);
         }
+
         JSONObject result = new JSONObject();
         result.put("list", resultList);
         if (granularityRegion != null) {
