@@ -107,14 +107,6 @@ public class FiltersGenerator {
                     "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention + "> . ";
         }
 
-        if (budgetBiggerThen != null) {
-            search +=
-                    " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . "
-                            + "FILTER( ?budget > "
-                            + budgetBiggerThen
-                            + ")";
-        }
-
         if (budgetSmallerThen != null || budgetBiggerThen != null) {
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
             if (budgetBiggerThen != null) {
