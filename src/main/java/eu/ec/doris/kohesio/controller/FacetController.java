@@ -377,21 +377,23 @@ public class FacetController {
         initialize(language);
         logger.info("Get EU regions");
         List<JSONObject> jsonValues = new ArrayList<JSONObject>();
-        for (String region :nutsRegion.get(country).narrower){
-            JSONObject element = new JSONObject();
-            element.put("region", region);
-            String query = "select ?instanceLabel where { "
-                    + " <" + region + "> rdfs:label ?instanceLabel . "
-                    + " FILTER (lang(?instanceLabel)=\""
-                    + language
-                    + "\")"
-                    + "}";
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
-            while (resultSet.hasNext()) {
-                BindingSet querySolution = resultSet.next();
-                element.put("name",  querySolution.getBinding("instanceLabel").getValue().stringValue());
+        if (nutsRegion.containsKey(country)) {
+            for (String region : nutsRegion.get(country).narrower) {
+                JSONObject element = new JSONObject();
+                element.put("region", region);
+                String query = "select ?instanceLabel where { "
+                        + " <" + region + "> rdfs:label ?instanceLabel . "
+                        + " FILTER (lang(?instanceLabel)=\""
+                        + language
+                        + "\")"
+                        + "}";
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+                while (resultSet.hasNext()) {
+                    BindingSet querySolution = resultSet.next();
+                    element.put("name", querySolution.getBinding("instanceLabel").getValue().stringValue());
+                }
+                jsonValues.add(element);
             }
-            jsonValues.add(element);
         }
 //        String row;
 //        ClassLoader loader = Thread.currentThread().getContextClassLoader();

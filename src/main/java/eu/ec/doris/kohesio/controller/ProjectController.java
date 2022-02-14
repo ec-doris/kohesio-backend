@@ -624,10 +624,10 @@ public class ProjectController {
                                            @RequestParam(value = "categoryOfIntervention", required = false)
                                                    String categoryOfIntervention,
                                            @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                           @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-                                           @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-                                           @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-                                           @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                           @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+                                           @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+                                           @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+                                           @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
                                            @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
                                            @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
                                            @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
@@ -794,7 +794,7 @@ public class ProjectController {
                         + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
                         + " FILTER(LANG(?summary)=\"" + language + "\")"
@@ -1062,10 +1062,10 @@ public class ProjectController {
             @RequestParam(value = "categoryOfIntervention", required = false)
                     String categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
-            @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-            @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-            @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-            @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+            @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+            @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+            @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+            @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
             @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
             @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
             @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
@@ -1155,10 +1155,10 @@ public class ProjectController {
                                                         @RequestParam(value = "categoryOfIntervention", required = false)
                                                                 String categoryOfIntervention,
                                                         @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                                        @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-                                                        @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-                                                        @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-                                                        @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                                        @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+                                                        @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+                                                        @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+                                                        @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
                                                         @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
                                                         @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
                                                         @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
@@ -1260,10 +1260,10 @@ public class ProjectController {
                                     @RequestParam(value = "categoryOfIntervention", required = false)
                                             String categoryOfIntervention,
                                     @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                    @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-                                    @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-                                    @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-                                    @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                    @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+                                    @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+                                    @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+                                    @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
                                     @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
                                     @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
                                     @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
