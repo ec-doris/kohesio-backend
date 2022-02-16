@@ -568,7 +568,8 @@ public class FacetController {
     @GetMapping(value = "/facet/eu/programs", produces = "application/json")
     public JSONArray facetEuPrograms( //
                                       @RequestParam(value = "language", defaultValue = "en") String language,
-                                      @RequestParam(value = "country", required = false) String country)
+                                      @RequestParam(value = "country", required = false) String country,
+                                      @RequestParam(value = "fund", required = false) String fund)
             throws Exception {
         logger.info("Get list of programs");
         String query =
@@ -580,6 +581,9 @@ public class FacetController {
 
         if (country != null) {
             query += " ?program <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+        }
+        if (fund != null) {
+            query += " FILTER(?fund =<https://linkedopendata.eu/entity/Q2504370>) ";
         }
 
         query +=
