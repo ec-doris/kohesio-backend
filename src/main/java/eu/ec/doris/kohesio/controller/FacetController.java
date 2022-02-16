@@ -68,7 +68,7 @@ public class FacetController {
 
     HashMap<String, Nut> nutsRegion = null;
 
-    public void clear(){
+    public void clear() {
         nutsRegion = null;
     }
 
@@ -111,7 +111,7 @@ public class FacetController {
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     String key = querySolution.getBinding("region").getValue().stringValue();
-                    if (nutsRegion.containsKey(key)){
+                    if (nutsRegion.containsKey(key)) {
                         Nut nut = nutsRegion.get(key);
                         nut.type.add(g);
                     } else {
@@ -158,12 +158,12 @@ public class FacetController {
                 }
                 if (query.equals("") == false) {
                     TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
-                    logger.debug("Is empty result set: "+resultSet.hasNext());
+                    logger.debug("Is empty result set: " + resultSet.hasNext());
                     while (resultSet.hasNext()) {
                         BindingSet querySolution = resultSet.next();
                         if (querySolution.getBinding("region2") != null) {
                             logger.debug(querySolution.getBinding("region2").getValue().stringValue());
-                            if (!querySolution.getBinding("region2").getValue().stringValue().equals(key)){
+                            if (!querySolution.getBinding("region2").getValue().stringValue().equals(key)) {
                                 if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
                                     nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
                                 }
@@ -312,7 +312,7 @@ public class FacetController {
             throws Exception {
         logger.info("Get list of countries");
         List<JSONObject> jsonValues = new ArrayList<JSONObject>();
-        String query ="SELECT DISTINCT ?country WHERE { 	" +
+        String query = "SELECT DISTINCT ?country WHERE { 	" +
                 " <https://linkedopendata.eu/entity/Q1>  <https://linkedopendata.eu/prop/direct/P104> ?country . }";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
         while (resultSet.hasNext()) {
@@ -445,7 +445,6 @@ public class FacetController {
     }
 
 
-
     @GetMapping(value = "/facet/eu/funds", produces = "application/json")
     public JSONArray facetEuFunds( //
                                    @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
@@ -499,72 +498,72 @@ public class FacetController {
     }
 
 
-  @GetMapping(value = "/facet/eu/categoriesOfIntervention", produces = "application/json")
-  public JSONArray facetEuCategoryOfIntervention( //
-                                                  @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
+    @GetMapping(value = "/facet/eu/categoriesOfIntervention", produces = "application/json")
+    public JSONArray facetEuCategoryOfIntervention( //
+                                                    @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
 
         logger.info("Get list of intervention field...");
-    String query =
-            ""
-                    + "select ?instance ?instanceLabel ?id ?areaOfIntervention ?areaOfInterventionLabel ?areaOfInterventionId where { "
-                    + " ?instance <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q200769> . "
-                    + " ?instance <https://linkedopendata.eu/prop/direct/P869>  ?id . "
-                    + " ?instance <https://linkedopendata.eu/prop/direct/P178453>  ?areaOfIntervention . "
-                    + " ?areaOfIntervention <https://linkedopendata.eu/prop/direct/P178454> ?areaOfInterventionId . "
-                    + " ?areaOfIntervention rdfs:label ?areaOfInterventionLabel . "
-                    + " FILTER (lang(?areaOfInterventionLabel)=\""
-                    + language
-                    + "\")"
-                    + " ?instance rdfs:label ?instanceLabel . "
-                    + " FILTER (lang(?instanceLabel)=\""
-                    + language
-                    + "\")"
-                    + "} order by ?id";
-    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
-    JSONArray result = new JSONArray();
-    String areaOfIntervention = "";
-    String areaOfInterventionLabel = "";
-    String areaOfInterventionId = "";
-    JSONArray subset = new JSONArray();
-    while (resultSet.hasNext()) {
-      BindingSet querySolution = resultSet.next();
-      JSONObject element = new JSONObject();
-      element.put("instance", querySolution.getBinding("instance").getValue().toString());
-      String label = querySolution.getBinding("instanceLabel").getValue().stringValue();
-      if (label.length()>=200){
-        label = label.substring(0,200)+" ...";
-      }
-      element.put(
-              "instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + label);
-      if (areaOfIntervention.equals("")){
-          areaOfIntervention = querySolution.getBinding("areaOfIntervention").getValue().toString();
-          areaOfInterventionLabel =  querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue();
-          areaOfInterventionId = querySolution.getBinding("areaOfInterventionId").getValue().toString();
-      }
-      if (areaOfIntervention.equals(querySolution.getBinding("areaOfIntervention").getValue().toString())){
-          subset.add(element);
-      } else {
-          subset.add(element);
-          JSONObject newElement = new JSONObject();
-          newElement.put("areaOfIntervention", areaOfIntervention);
-          newElement.put("areaOfInterventionLabel",areaOfInterventionLabel);
-          newElement.put("areaOfInterventionId",areaOfInterventionId);
-          newElement.put("options",subset);
-          areaOfIntervention = querySolution.getBinding("areaOfIntervention").getValue().toString();
-          areaOfInterventionLabel =  querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue();
-          areaOfInterventionId = querySolution.getBinding("areaOfInterventionId").getValue().toString();
-          subset = new JSONArray();
-          result.add(newElement);
-      }
+        String query =
+                ""
+                        + "select ?instance ?instanceLabel ?id ?areaOfIntervention ?areaOfInterventionLabel ?areaOfInterventionId where { "
+                        + " ?instance <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q200769> . "
+                        + " ?instance <https://linkedopendata.eu/prop/direct/P869>  ?id . "
+                        + " ?instance <https://linkedopendata.eu/prop/direct/P178453>  ?areaOfIntervention . "
+                        + " ?areaOfIntervention <https://linkedopendata.eu/prop/direct/P178454> ?areaOfInterventionId . "
+                        + " ?areaOfIntervention rdfs:label ?areaOfInterventionLabel . "
+                        + " FILTER (lang(?areaOfInterventionLabel)=\""
+                        + language
+                        + "\")"
+                        + " ?instance rdfs:label ?instanceLabel . "
+                        + " FILTER (lang(?instanceLabel)=\""
+                        + language
+                        + "\")"
+                        + "} order by ?id";
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        JSONArray result = new JSONArray();
+        String areaOfIntervention = "";
+        String areaOfInterventionLabel = "";
+        String areaOfInterventionId = "";
+        JSONArray subset = new JSONArray();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            JSONObject element = new JSONObject();
+            element.put("instance", querySolution.getBinding("instance").getValue().toString());
+            String label = querySolution.getBinding("instanceLabel").getValue().stringValue();
+            if (label.length() >= 200) {
+                label = label.substring(0, 200) + " ...";
+            }
+            element.put(
+                    "instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + label);
+            if (areaOfIntervention.equals("")) {
+                areaOfIntervention = querySolution.getBinding("areaOfIntervention").getValue().toString();
+                areaOfInterventionLabel = querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue();
+                areaOfInterventionId = querySolution.getBinding("areaOfInterventionId").getValue().toString();
+            }
+            if (areaOfIntervention.equals(querySolution.getBinding("areaOfIntervention").getValue().toString())) {
+                subset.add(element);
+            } else {
+                subset.add(element);
+                JSONObject newElement = new JSONObject();
+                newElement.put("areaOfIntervention", areaOfIntervention);
+                newElement.put("areaOfInterventionLabel", areaOfInterventionLabel);
+                newElement.put("areaOfInterventionId", areaOfInterventionId);
+                newElement.put("options", subset);
+                areaOfIntervention = querySolution.getBinding("areaOfIntervention").getValue().toString();
+                areaOfInterventionLabel = querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue();
+                areaOfInterventionId = querySolution.getBinding("areaOfInterventionId").getValue().toString();
+                subset = new JSONArray();
+                result.add(newElement);
+            }
+        }
+        JSONObject newElement = new JSONObject();
+        newElement.put("areaOfIntervention", areaOfIntervention);
+        newElement.put("areaOfInterventionLabel", areaOfInterventionLabel);
+        newElement.put("areaOfInterventionId", areaOfInterventionId);
+        newElement.put("options", subset);
+        result.add(newElement);
+        return result;
     }
-  JSONObject newElement = new JSONObject();
-  newElement.put("areaOfIntervention", areaOfIntervention);
-  newElement.put("areaOfInterventionLabel",areaOfInterventionLabel);
-  newElement.put("areaOfInterventionId",areaOfInterventionId);
-  newElement.put("options",subset);
-  result.add(newElement);
-    return result;
-  }
 
     @GetMapping(value = "/facet/eu/programs", produces = "application/json")
     public JSONArray facetEuPrograms( //
@@ -574,9 +573,10 @@ public class FacetController {
         logger.info("Get list of programs");
         String query =
                 ""
-                        + "select ?program ?programLabel ?cci { "
+                        + "select ?program ?programLabel ?cci ?fund { "
                         + " ?program <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2463047> . "
-                        + " ?program <https://linkedopendata.eu/prop/direct/P1367>  ?cci . ";
+                        + " ?program <https://linkedopendata.eu/prop/direct/P1367>  ?cci . "
+                        + " OPTIONAL{ ?program <https://linkedopendata.eu/prop/direct/P1584> ?fund .}";
 
         if (country != null) {
             query += " ?program <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
@@ -592,13 +592,29 @@ public class FacetController {
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
-            JSONObject element = new JSONObject();
-            element.put("instance", querySolution.getBinding("program").getValue().toString());
-            element.put(
-                    "instanceLabel",
-                    querySolution.getBinding("cci").getValue().stringValue() + " - " + querySolution.getBinding("programLabel").getValue().stringValue()
-            );
-            result.add(element);
+
+            boolean found = false;
+            String program = querySolution.getBinding("program").getValue().toString();
+            for (Object o : result) {
+                JSONObject element = (JSONObject) o;
+                if (element.get("instance").equals(program) && (element.containsKey("funds"))) {
+                    ((JSONArray) element.get("funds")).add(querySolution.getBinding("fund").getValue().stringValue());
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                JSONObject element = new JSONObject();
+                element.put("instance", program);
+                element.put(
+                        "instanceLabel",
+                        querySolution.getBinding("cci").getValue().stringValue() + " - " + querySolution.getBinding("programLabel").getValue().stringValue()
+                );
+                JSONArray funds = new JSONArray();
+                funds.add(querySolution.getBinding("fund").getValue().stringValue());
+                element.put("funds", funds);
+                result.add(element);
+            }
         }
         return result;
     }
