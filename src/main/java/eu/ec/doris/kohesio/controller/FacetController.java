@@ -478,24 +478,27 @@ public class FacetController {
         logger.info("Get list of policy objectives");
         String query =
                 ""
-                        + "select ?fund ?fundLabel where { "
-                        + " ?fund <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2547986> . "
-                        + " ?fund rdfs:label ?fundLabel . "
-                        + " FILTER (lang(?fundLabel)=\""
+                        + "SELECT ?po ?poLabel ?id WHERE { "
+                        + " ?po <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2547986> . "
+                        + " ?po rdfs:label ?poLabel . "
+                        + " ?po  <https://linkedopendata.eu/prop/direct/P1747> ?id ."
+                        + " FILTER(LANG(?poLabel)=\""
                         + language
                         + "\")"
-                        + "}";
+                        + "} ORDER BY ?id";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
-            element.put("instance", querySolution.getBinding("fund").getValue().toString());
-            element.put("instanceLabel", querySolution.getBinding("fundLabel").getValue().stringValue());
+            element.put("instance", querySolution.getBinding("po").getValue().toString());
+            element.put("instanceLabel", querySolution.getBinding("poLabel").getValue().stringValue());
+            element.put("id", querySolution.getBinding("id").getValue().stringValue());
             result.add(element);
         }
         return result;
     }
+
 
 
     @GetMapping(value = "/facet/eu/categoriesOfIntervention", produces = "application/json")
