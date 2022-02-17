@@ -131,7 +131,34 @@ public class CacheController {
                 }
             }
 
-
+            // cache the programs
+            JSONArray programs = facetController.facetEuPrograms("en", country, null);
+            for (Object program: programs) {
+                try{
+                    String p = ((JSONObject) program).get("instance").toString();
+                    projectController.euSearchProject("en", null, country, null, null, p,
+                            null, null, null, null,
+                            null, null, null, null, null,
+                            null, null, null, null, false, null, null,
+                            null, 1000, 1, 100,null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
+        // cache the funds
+        JSONArray funds = facetController.facetEuFunds("en");
+        for (Object fund: funds) {
+            try{
+                String t = ((JSONObject) fund).get("instance").toString();
+                projectController.euSearchProject("en", null, null, null, t, null,
+                        null, null, null, null,
+                        null, null, null, null, null,
+                        null, null, null, null, false, null, null,
+                        null, 1000, 1, 100,null);
+            } catch(Exception e){
+                e.printStackTrace();
+            }
         }
         for (String country : countries) {
 
