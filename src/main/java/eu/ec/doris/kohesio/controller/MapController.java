@@ -201,7 +201,8 @@ public class MapController {
                     isCountry = true;
                 }
             }
-            if (isCountry == false) {
+            // this is a hack to show brittany
+            if (isCountry == false && !granularityRegion.equals("https://linkedopendata.eu/entity/Q3487")) {
                 optional += "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
             }
         }

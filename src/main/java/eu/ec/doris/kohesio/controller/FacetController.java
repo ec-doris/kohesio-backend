@@ -72,7 +72,7 @@ public class FacetController {
         nutsRegion = null;
     }
 
-    void initialize(String language) throws Exception {
+    public void initialize(String language) throws Exception {
         logger.info("Initializing Facet Controller...");
         if (nutsRegion == null) {
             nutsRegion = new HashMap<String, Nut>();
