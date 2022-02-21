@@ -477,37 +477,16 @@ public class MapController {
         return nutsRegion;
     }
 
-//    @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
-//    public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
-//        logger.info("Find coordinates of given IP");
-//        String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
-//        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-//        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, 2000, 0, 400, null);
-//        JSONObject mod = result.getBody();
-//        mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
-//        return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
-//    }
-@GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
-public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
-    logger.info("Find coordinates of given IP");
-//        String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
-//        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-    String lat = "50.639722222";
-    String lon = "5.570555555";
-    ResponseEntity<JSONObject> result = euSearchProjectMap(
-            "en", null, null,
-            null, null, null,
-            null, null, null,
-            null, null, null,
-            null, null, null,
-            null, lat /*coordinates2.getLatitude()*/, lon/*coordinates2.getLongitude()*/,
-            null, null, 2000,
-            0, 400, null
-    );
-    JSONObject mod = result.getBody();
-    mod.put("coordinates", lat/*coordinates2.getLatitude()*/ + "," + lon/*coordinates2.getLongitude()*/);
-    return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
-}
+    @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
+    public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
+        logger.info("Find coordinates of given IP");
+        String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
+        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
+        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, 2000, 0, 400, null);
+        JSONObject mod = result.getBody();
+        mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
+        return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
+    }
 
 //    private String filterProject(String keywords, String country, String theme, String fund, String program, String categoryOfIntervention,
 //                                 String policyObjective, Integer budgetBiggerThen, Integer budgetSmallerThen, Integer budgetEUBiggerThen, Integer budgetEUSmallerThen, String startDateBefore, String startDateAfter,
