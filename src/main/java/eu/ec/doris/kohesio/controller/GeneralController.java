@@ -17,10 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -107,7 +104,7 @@ public class GeneralController {
 
         String labelsFilter = getGeneralLangLabelsFilter();
         String query =
-                "SELECT ?general ?generalLabel ?generalLabel_en ?country ?countryCode ?link ?type ?transliteration { "
+                "SELECT ?general ?generalLabel ?generalLabel_en ?country ?countryLabel ?countryCode ?link ?summary ?image ?imageSummary ?imageCopyright ?type ?typeLabel ?transliteration { "
                         + " { SELECT DISTINCT ?general { "
                         + search
                         + "} "
@@ -116,27 +113,39 @@ public class GeneralController {
                         + " OFFSET " + offset
                         + "} "
                         + " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . "
+                        + " ?type <http://www.w3.org/2000/01/rdf-schema#label> ?typeLabel . "
+                        + " FILTER(LANG(?typeLabel) = \"" + language + "\" ) "
                         + " VALUES(?type){(<https://linkedopendata.eu/entity/Q9934>) (<https://linkedopendata.eu/entity/Q196899>)} "
                         + "  OPTIONAL { ?general <http://www.w3.org/2000/01/rdf-schema#label> ?generalLabel_en ."
                         + "              FILTER(LANG(?generalLabel_en) = \"" + language + "\" ) } "
                         + " OPTIONAL { ?general <http://www.w3.org/2000/01/rdf-schema#label> ?generalLabel . "
-                        + "            ?general <https://linkedopendata.eu/prop/direct/P32> ?country .   "
+                        + "            ?general <https://linkedopendata.eu/prop/direct/P32> ?country . "
+                        + "            ?country <http://www.w3.org/2000/01/rdf-schema#label> ?countryLabel . "
+                        + "            FILTER(LANG(?countryLabel) = \"" + language + "\" ) "
+                        + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . "
                         + labelsFilter
                         + " }"
                         + " OPTIONAL { ?general <https://linkedopendata.eu/prop/direct/P1> ?link. } "
-                        + " OPTIONAL { ?general <https://linkedopendata.eu/prop/direct/P32> ?country. "
-                        + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
+                        + " OPTIONAL { ?general <https://linkedopendata.eu/prop/direct/P836> ?summary. FILTER(LANG(?summary) = \"" + language + "\" )} "
+                        + " OPTIONAL { ?general <https://linkedopendata.eu/prop/P851> ?blank . "
+                        + "            ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
+                        + "            OPTIONAL{?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary . FILTER(LANG(?imageSummary) = \"" + language + "\" )} "
+                        + "            OPTIONAL{?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright .} } "
                         + " OPTIONAL { ?general <https://linkedopendata.eu/prop/P7> ?generalStatement . "
                         + "  ?generalStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
                         + " }"
                         + "} ";
+//        String queryCount = "SELECT (COUNT(DISTINCT ?general) as ?c) { " + query + " }";
+
         logger.debug(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
-        ArrayList<General> generals = new ArrayList<>();
+        HashMap<String, General> generals = new HashMap<>();
+
         if (resultSet != null) {
             while (resultSet.hasNext()) {
                 General general = new General();
                 BindingSet querySolution = resultSet.next();
+
                 if (querySolution.getBinding("general") != null) {
                     general.setItem(
                             querySolution.getBinding("general")
@@ -160,6 +169,11 @@ public class GeneralController {
                             querySolution.getBinding("country").getValue().stringValue()
                     );
                 }
+                if (querySolution.getBinding("countryLabel") != null) {
+                    general.setCountryLabel(
+                            querySolution.getBinding("countryLabel").getValue().stringValue()
+                    );
+                }
                 if (querySolution.getBinding("countryCode") != null) {
                     general.setCountryCode(
                             querySolution.getBinding("countryCode").getValue().stringValue()
@@ -168,6 +182,26 @@ public class GeneralController {
                 if (querySolution.getBinding("link") != null) {
                     general.setLink(
                             querySolution.getBinding("link").getValue().stringValue()
+                    );
+                }
+                if (querySolution.getBinding("summary") != null) {
+                    general.setSummary(
+                            querySolution.getBinding("summary").getValue().stringValue()
+                    );
+                }
+                if (querySolution.getBinding("image") != null) {
+                    general.setImage(
+                            querySolution.getBinding("image").getValue().stringValue()
+                    );
+                }
+                if (querySolution.getBinding("imageSummary") != null) {
+                    general.setImageSummary(
+                            querySolution.getBinding("imageSummary").getValue().stringValue()
+                    );
+                }
+                if (querySolution.getBinding("imageCopyright") != null) {
+                    general.setImageCopyright(
+                            querySolution.getBinding("imageCopyright").getValue().stringValue()
                     );
                 }
                 if (querySolution.getBinding("transliteration") != null && querySolution.getBinding("generalLabel_en") == null) {
@@ -180,11 +214,16 @@ public class GeneralController {
                             querySolution.getBinding("type").getValue().stringValue()
                     );
                 }
-                generals.add(general);
+                if (querySolution.getBinding("typeLabel") != null) {
+                    general.setTypeLabel(
+                            querySolution.getBinding("typeLabel").getValue().stringValue()
+                    );
+                }
+                generals.put(UUID.randomUUID().toString(), general);
             }
         }
         GeneralList finalResult = new GeneralList();
-        finalResult.setList(generals);
+        finalResult.setList(new ArrayList<>(generals.values()));
         finalResult.setNumberResults(generals.size());
         return new ResponseEntity<>(finalResult, HttpStatus.OK);
     }
@@ -196,13 +235,13 @@ public class GeneralController {
         for (Map.Entry<String, List<String>> entry : countriesCodeMapping.entrySet()) {
             String countryQID = entry.getKey();
             List<String> languageCode = entry.getValue();
-            labelsFilter.append("( ");
+            labelsFilter.append("(");
             for (int i = 0; i < languageCode.size() - 1; i++) {
-                labelsFilter.append(" LANG(?generalLabel) = \"").append(languageCode.get(i)).append("\" && ?country = ").append(countryQID).append(" ||  ");
+                labelsFilter.append("LANG(?generalLabel)=\"").append(languageCode.get(i)).append("\" && ?country=").append(countryQID).append(" || ");
             }
-            labelsFilter.append(" LANG(?generalLabel) = \"").append(languageCode.get(languageCode.size() - 1)).append("\" && ?country = ").append(countryQID).append(" ) ");
+            labelsFilter.append("LANG(?generalLabel)=\"").append(languageCode.get(languageCode.size() - 1)).append("\" && ?country=").append(countryQID).append(")");
             if (count < countriesCodeMapping.size() - 1)
-                labelsFilter.append("|| \n");
+                labelsFilter.append(" || ");
             count++;
         }
         labelsFilter.append(")");
