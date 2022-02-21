@@ -5,6 +5,7 @@ import eu.ec.doris.kohesio.payload.General;
 import eu.ec.doris.kohesio.payload.GeneralList;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
+import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.slf4j.Logger;
@@ -100,6 +101,15 @@ public class GeneralController {
             } else {
                 orderBy = "ORDER BY DESC(?numberProjects)";
             }
+        }
+
+        String queryCount = "SELECT (COUNT(DISTINCT ?general) as ?c) { " + search + "} ";
+        logger.debug(queryCount);
+        TupleQueryResult resultCount = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 120);
+        int numResults = 0;
+        if (resultCount.hasNext()) {
+            BindingSet querySolution = resultCount.next();
+            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
 
         String labelsFilter = getGeneralLangLabelsFilter();
@@ -224,7 +234,7 @@ public class GeneralController {
         }
         GeneralList finalResult = new GeneralList();
         finalResult.setList(new ArrayList<>(generals.values()));
-        finalResult.setNumberResults(generals.size());
+        finalResult.setNumberResults(numResults);
         return new ResponseEntity<>(finalResult, HttpStatus.OK);
     }
 
