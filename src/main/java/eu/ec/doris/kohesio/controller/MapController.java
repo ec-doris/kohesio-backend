@@ -112,7 +112,6 @@ public class MapController {
         }
 
         String search = filtersGenerator.filterProject(expandedQueryText, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
-
         //computing the number of results
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
         int numResults = 0;
@@ -126,7 +125,7 @@ public class MapController {
         }
         logger.debug("Number of results {}", numResults);
         if (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0)) {
-            return mapReturnCoordinates(search, country, region, granularityRegion, limit, offset, timeout);
+            return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -169,7 +168,7 @@ public class MapController {
             }
             // this happens when we have for example nuts 1 information but not nuts 2 information for the projects
             if (foundNextNutsLevel == false){
-                return mapReturnCoordinates(search, country, region, granularityRegion, limit, offset, timeout);
+                return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude,limit, offset, timeout);
             }
 
             JSONArray resultList = new JSONArray();
@@ -187,7 +186,7 @@ public class MapController {
         }
     }
 
-    ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, Integer limit, Integer offset, int timeout) throws Exception {
+    ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, String latitude, String longitude,Integer limit, Integer offset, int timeout) throws Exception {
         logger.debug("granularityRegion {}, limit {}",granularityRegion,limit);
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
@@ -212,18 +211,33 @@ public class MapController {
         if (limit == null) {
             limit = 1000;
         }
-
-        String query =
-                "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
-                        + " { SELECT ?s0 where { "
-                        + search
-                        + " } limit "
-                        + limit
-                        + " offset "
-                        + offset
-                        + " } "
-                        + optional
-                        + "} ";
+        String query = null;
+        if (latitude != null && longitude != null) {
+            query =
+                    "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
+                            + " { SELECT ?s0 ((<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)) AS ?distance) WHERE { "
+                            + search
+                            + " } ORDER BY ?distance LIMIT "
+                            + limit
+                            + " OFFSET "
+                            + offset
+                            + " } "
+                            + optional
+                            + "} ";
+        }
+        else {
+            query =
+                    "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
+                            + " { SELECT ?s0 WHERE { "
+                            + search
+                            + " } LIMIT "
+                            + limit
+                            + " OFFSET "
+                            + offset
+                            + " } "
+                            + optional
+                            + "} ";
+        }
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
 //        JSONArray resultList = new JSONArray();
@@ -320,7 +334,29 @@ public class MapController {
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
+        String search = filtersGenerator.filterProject(
+                expandedQueryText,
+                country,
+                theme,
+                fund,
+                program,
+                categoryOfIntervention,
+                policyObjective,
+                budgetBiggerThen,
+                budgetSmallerThen,
+                budgetEUBiggerThen,
+                budgetEUSmallerThen,
+                startDateBefore,
+                startDateAfter,
+                endDateBefore,
+                endDateAfter,
+                latitude,
+                longitude,
+                region,
+                granularityRegion,
+                limit,
+                offset
+        );
 
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> \"Point(" + coordinate.replace(",", " ") + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral> . ";
         String query =
@@ -351,7 +387,11 @@ public class MapController {
             } else {
                 item.put("isHighlighted", false);
             }
-            result.add(item);
+            if ((boolean)item.get("isHighlighted")){
+                result.add(0, item);
+            } else {
+                result.add(item);
+            }
         }
         return new ResponseEntity<JSONArray>((JSONArray) result, HttpStatus.OK);
     }
