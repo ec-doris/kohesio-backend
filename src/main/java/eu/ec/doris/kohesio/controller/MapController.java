@@ -320,7 +320,29 @@ public class MapController {
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
+        String search = filtersGenerator.filterProject(
+                expandedQueryText,
+                country,
+                theme,
+                fund,
+                program,
+                categoryOfIntervention,
+                policyObjective,
+                budgetBiggerThen,
+                budgetSmallerThen,
+                budgetEUBiggerThen,
+                budgetEUSmallerThen,
+                startDateBefore,
+                startDateAfter,
+                endDateBefore,
+                endDateAfter,
+                latitude,
+                longitude,
+                region,
+                granularityRegion,
+                limit,
+                offset
+        );
 
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> \"Point(" + coordinate.replace(",", " ") + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral> . ";
         String query =
@@ -351,7 +373,11 @@ public class MapController {
             } else {
                 item.put("isHighlighted", false);
             }
-            result.add(item);
+            if ((boolean)item.get("isHighlighted")){
+                result.add(0, item);
+            } else {
+                result.add(item);
+            }
         }
         return new ResponseEntity<JSONArray>((JSONArray) result, HttpStatus.OK);
     }
