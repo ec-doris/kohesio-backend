@@ -125,7 +125,7 @@ public class MapController {
         }
         logger.debug("Number of results {}", numResults);
         if (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0)) {
-            return mapReturnCoordinates(search, country, region, granularityRegion, limit, offset, timeout);
+            return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -168,7 +168,7 @@ public class MapController {
             }
             // this happens when we have for example nuts 1 information but not nuts 2 information for the projects
             if (foundNextNutsLevel == false){
-                return mapReturnCoordinates(search, country, region, granularityRegion, limit, offset, timeout);
+                return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude,limit, offset, timeout);
             }
 
             JSONArray resultList = new JSONArray();
@@ -186,7 +186,7 @@ public class MapController {
         }
     }
 
-    ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, Integer limit, Integer offset, int timeout) throws Exception {
+    ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, String latitude, String longitude,Integer limit, Integer offset, int timeout) throws Exception {
         logger.debug("granularityRegion {}, limit {}",granularityRegion,limit);
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
@@ -212,10 +212,10 @@ public class MapController {
             limit = 1000;
         }
         String query = null;
-        if (search.contains("?distance")) {
+        if (latitude != null && longitude != null) {
             query =
                     "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
-                            + " { SELECT ?s0 ?distance WHERE { "
+                            + " { SELECT ?s0 ((<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)) AS ?distance) WHERE { "
                             + search
                             + " } ORDER BY ?distance LIMIT "
                             + limit
@@ -477,17 +477,37 @@ public class MapController {
         return nutsRegion;
     }
 
-    @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
-    public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
-        logger.info("Find coordinates of given IP");
-        String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
-        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, 2000, 0, 400, null);
-        JSONObject mod = result.getBody();
-        mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
-        return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
-    }
-
+//    @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
+//    public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
+//        logger.info("Find coordinates of given IP");
+//        String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
+//        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
+//        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, 2000, 0, 400, null);
+//        JSONObject mod = result.getBody();
+//        mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
+//        return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
+//    }
+@GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
+public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
+    logger.info("Find coordinates of given IP");
+//        String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
+//        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
+    String lat = "50.639722222";
+    String lon = "5.570555555";
+    ResponseEntity<JSONObject> result = euSearchProjectMap(
+            "en", null, null,
+            null, null, null,
+            null, null, null,
+            null, null, null,
+            null, null, null,
+            null, lat /*coordinates2.getLatitude()*/, lon/*coordinates2.getLongitude()*/,
+            null, null, 2000,
+            0, 400, null
+    );
+    JSONObject mod = result.getBody();
+    mod.put("coordinates", lat/*coordinates2.getLatitude()*/ + "," + lon/*coordinates2.getLongitude()*/);
+    return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
+}
 
 //    private String filterProject(String keywords, String country, String theme, String fund, String program, String categoryOfIntervention,
 //                                 String policyObjective, Integer budgetBiggerThen, Integer budgetSmallerThen, Integer budgetEUBiggerThen, Integer budgetEUSmallerThen, String startDateBefore, String startDateAfter,
