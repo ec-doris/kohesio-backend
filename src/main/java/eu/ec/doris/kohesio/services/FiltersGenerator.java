@@ -172,7 +172,7 @@ public class FiltersGenerator {
 //                    + "< 100000) . ";
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
                     + " BIND((<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)) AS ?distance)"
-            ;//+ " FILTER(?distance < 100000)";
+                    + " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < 100000)";
         }
 
         search +=
