@@ -230,10 +230,10 @@ public class MapController {
                     "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
                             + " { SELECT ?s0 WHERE { "
                             + search
-                            + " } LIMIT "
+                            + " } "/*LIMIT "
                             + limit
                             + " OFFSET "
-                            + offset
+                            + offset*/
                             + " } "
                             + optional
                             + "} ";
@@ -271,7 +271,7 @@ public class MapController {
                     .replace(" ", ",");
             if(querySolution.getBinding("infoRegioID") != null)
                 unique_highlighted.put(coordinates, true);
-            else if (unique_highlighted.containsKey(coordinates) == false)
+            else if (!unique_highlighted.containsKey(coordinates))
                 unique_highlighted.put(coordinates, false);
         }
         JSONArray resultList = new JSONArray();
