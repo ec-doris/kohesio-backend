@@ -741,11 +741,11 @@ public class ProjectController {
             }
         }
         if (orderTotalBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
             if (orderTotalBudget) {
-                orderBy = "order by asc(?totalBudget)";
+                orderBy = "order by asc(?budget)";
             } else {
-                orderBy = "order by desc(?totalBudget)";
+                orderBy = "order by desc(?budget)";
             }
         }
 
