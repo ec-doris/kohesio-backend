@@ -71,7 +71,8 @@ public class GeneralController {
                     + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                     + keywords.replace("\"", "\\\"") + "\" ; "
                     //+ "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet; "
-                    + "<http://www.openrdf.org/contrib/lucenesail#score> ?score ] . ";
+                    //+ "<http://www.openrdf.org/contrib/lucenesail#score> ?score "
+                    + " ] . ";
         }
 
         search += " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . "
