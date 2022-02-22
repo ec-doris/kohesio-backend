@@ -79,7 +79,9 @@ public class GeneralController {
 
         ;
 
-        String orderBy = "ORDER BY DESC(?score)";
+        //String orderBy = "ORDER BY DESC(?score)";
+
+        String orderBy = "";
 
         if (orderEuBudget != null) {
             if (orderEuBudget) {
