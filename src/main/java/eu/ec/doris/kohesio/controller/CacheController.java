@@ -47,6 +47,8 @@ public class CacheController {
         logger.debug("Start generating map recursively");
         recursiveMap(null);
         logger.debug("End recursive map");
+        // cache statistics
+        facetController.facetEuStatistics();
         ArrayList<String> countries = new ArrayList<>();
         countries.add(null);
         for (Object jsonObject : facetController.facetEuCountries("en")) {
