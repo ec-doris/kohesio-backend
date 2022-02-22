@@ -70,7 +70,7 @@ public class GeneralController {
             search += "?general <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                     + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                     + keywords.replace("\"", "\\\"") + "\" ; "
-                    + "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet; "
+                    //+ "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet; "
                     + "<http://www.openrdf.org/contrib/lucenesail#score> ?score ] . ";
         }
 
