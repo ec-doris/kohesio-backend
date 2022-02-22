@@ -185,17 +185,15 @@ public class ProjectController {
                             + "                 ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
                             + "          }"
                             + " } "
-                            + "        OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
 
 
-                            + "     OPTIONAL\n" +
-                            "       { ?s0  wdt:P1845  ?region . \n" +
-                            "          ?region  wdt:P35  wd:Q2576750 . \n " +
-                            "         OPTIONAL\n" +
-                            "           { ?region  wdt:P192  ?regionId .\n" +
-                            "                        ?region  <http://www.w3.org/2000/01/rdf-schema#label>  ?regionLabel\n" +
-                            "                        FILTER ( lang(?regionLabel) = \"" + language + "\" )\n" +
-                            "           }\n" +
+                            + " OPTIONAL { ?s0  wdt:P1845  ?region . "
+                            + "     ?region  wdt:P35  wd:Q2576750 . "
+                            + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
+                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
+                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
+                            + "     } "
 //                            "         OPTIONAL\n" +
 //                            "           { \n" +
 //                            "             \n" +
@@ -251,9 +249,9 @@ public class ProjectController {
 //                            "            ?blank_country ps:P35 wd:Q510 ." +
 //                            "             FILTER ( lang(?regionUpper3Label) = \"en\" )\n" +
 //                            "           }\n" +
-//                            "           }\n" +
-                            "       }"
-                            + "} ";
+//                            "     |      }\n" +
+                            + " } "
+                            + " } ";
 
 
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
@@ -585,7 +583,7 @@ public class ProjectController {
                 if (regionId != null) {
                     JSONArray geoJsons = (JSONArray) result.get("geoJson");
                     String regionLabel = (String) result.get("region");
-                    if (!regionIDs.contains(regionId) && !regions.contains(regionLabel)) {
+                    if (!regionIDs.contains(regionId) /*&& !regions.contains(regionLabel)*/) {
                         // check if the regioId has already been seen - could be that a project is contained in multipl geometries
                         regionIDs.add(regionId);
                         regions.add(regionLabel);
