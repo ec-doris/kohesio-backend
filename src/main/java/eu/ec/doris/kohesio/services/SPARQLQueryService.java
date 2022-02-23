@@ -19,11 +19,13 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Service
 public class SPARQLQueryService {
 
     private static final Logger logger = LoggerFactory.getLogger(SPARQLQueryService.class);
+    private static final Pattern spaceCleaner = Pattern.compile("[ \\t\\n\\x0B\\f\\r]+");
 
     @Value("${kohesio.directory}")
     String location;
@@ -33,7 +35,8 @@ public class SPARQLQueryService {
     }
 
     public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache) {
-        logger.info("Executing given query: "+query);
+        query = spaceCleaner.matcher(query).replaceAll(" ");
+        logger.info("Executing given query: " + query);
         long start = System.nanoTime();
 
         File dir = new File(location + "/facet/cache/");
@@ -43,7 +46,7 @@ public class SPARQLQueryService {
         }
         // check if the query is cached
         if (dir.exists() && cache == true) {
-            logger.debug("Query hashcode: "+String.valueOf(query.hashCode()));
+            logger.debug("Query hashcode: " + String.valueOf(query.hashCode()));
             SPARQLResultsJSONParser sparqlResultsJSONParser = new SPARQLResultsJSONParser();
             TupleQueryResultBuilder tupleQueryResultHandler = new TupleQueryResultBuilder();
             sparqlResultsJSONParser.setQueryResultHandler(tupleQueryResultHandler);
@@ -84,17 +87,18 @@ public class SPARQLQueryService {
             sparqlResultsJSONParser.parseQueryResult(
                     new FileInputStream(location + "/facet/cache/" + query.hashCode()));
             long end = System.nanoTime();
-            logger.info("Was NOT cached "+(end - start)/1000000);
+            logger.info("Was NOT cached " + (end - start) / 1000000);
             return tupleQueryResultHandler.getQueryResult();
-        } catch(QueryEvaluationException e){
-            logger.error("Query Evaluation Exception: ["+e.getMessage()+"]");
-        } catch (QueryResultParseException e){
-            logger.error("To heavy timeout "+query+" --- "+timeout);
+        } catch (QueryEvaluationException e) {
+            logger.error("Query Evaluation Exception: [" + e.getMessage() + "]");
+        } catch (QueryResultParseException e) {
+            logger.error("To heavy timeout " + query + " --- " + timeout);
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
         return null;
     }
+
     public boolean executeBooleanQuery(String sparqlEndpoint, String query, int timeout) {
         Map<String, String> additionalHttpHeaders = new HashMap();
         additionalHttpHeaders.put("timeout", String.valueOf(timeout));

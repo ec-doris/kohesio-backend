@@ -188,7 +188,7 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
 //todo
 
-                            + " OPTIONAL { SELECT * {"
+                            + " OPTIONAL { SELECT ?s0 ?region ?regionId ?regionLabel {"
                             + " VALUES ?s0 { <"
                             + id
                             + "> } "
@@ -207,8 +207,6 @@ public class ProjectController {
 //                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
 //                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
 //                            + "     } "
-
-
 
 
 //                            "         OPTIONAL\n" +
