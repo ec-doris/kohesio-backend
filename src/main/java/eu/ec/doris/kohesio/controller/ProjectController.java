@@ -603,8 +603,16 @@ public class ProjectController {
                         while (resultSet2.hasNext()) {
                             BindingSet querySolution2 = resultSet2.next();
                             if (querySolution2.getBinding("geoJson") != null) {
-                                geoJsons.add(((Literal) querySolution2.getBinding("geoJson").getValue())
-                                        .stringValue());
+                                boolean alreadyIn = false;
+                                for (int i = 0; i < geoJsons.size(); i++) {
+                                    if (geoJsons.get(i).equals(querySolution2.getBinding("geoJson").getValue().stringValue())) {
+                                        alreadyIn = true;
+                                        break;
+                                    }
+                                }
+                                if (!alreadyIn) {
+                                    geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
+                                }
                             }
                         }
                     }
@@ -1238,7 +1246,7 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getCountrycode()));
 
             cell = row.createCell(7);
-            if (project.getSummary().size()>0) {
+            if (project.getSummary().size() > 0) {
                 cell.setCellValue(project.getSummary().get(0));
             } else {
                 cell.setCellValue("");
