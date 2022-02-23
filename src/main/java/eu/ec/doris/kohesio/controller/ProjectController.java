@@ -186,7 +186,6 @@ public class ProjectController {
                             + "          }"
                             + " } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
-//todo
 
                             + " OPTIONAL { SELECT ?s0 ?region ?regionId ?regionLabel {"
                             + " VALUES ?s0 { <"
@@ -200,15 +199,6 @@ public class ProjectController {
                             + "     }"
                             + "     FILTER(STRLEN(STR(?regionId))>=5)"
                             + "  } "
-//todo
-
-//                            + " OPTIONAL { ?s0  wdt:P1845  ?region . "
-//                            + "     ?region  wdt:P35  wd:Q2576750 . "
-//                            + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
-//                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
-//                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
-//                            + "     } "
-
 
 //                            "         OPTIONAL\n" +
 //                            "           { \n" +
