@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 
 @RestController
@@ -46,6 +47,8 @@ public class CacheController {
         logger.debug("Start generating map recursively");
         recursiveMap(null);
         logger.debug("End recursive map");
+        // cache statistics
+        facetController.facetEuStatistics();
         ArrayList<String> countries = new ArrayList<>();
         countries.add(null);
         for (Object jsonObject : facetController.facetEuCountries("en")) {
@@ -154,6 +157,38 @@ public class CacheController {
                 projectController.euSearchProject("en", null, null, null, t, null,
                         null, null, null, null,
                         null, null, null, null, null,
+                        null, null, null, null, false, null, null,
+                        null, 1000, 1, 100,null);
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+        // cache the amounts
+        List<Long> lower_bound = new ArrayList<>();
+        List<Long> upper_bound = new ArrayList<>();
+        lower_bound.add(0L);
+        upper_bound.add(1000L);
+        lower_bound.add(1000L);
+        upper_bound.add(10000L);
+        lower_bound.add(10000L);
+        upper_bound.add(100000L);
+        lower_bound.add(100000L);
+        upper_bound.add(1000000L);
+        lower_bound.add(1000000L);
+        upper_bound.add(10000000L);
+        lower_bound.add(10000000L);
+        upper_bound.add(100000000L);
+        lower_bound.add(100000000L);
+        upper_bound.add(1000000000L);
+        for (int i=0; i< lower_bound.size(); i++) {
+            try{
+                projectController.euSearchProject("en", null, null, null, null, null,
+                        null, null, lower_bound.get(i), upper_bound.get(i),
+                        null, null, null, null, null,
+                        null, null, null, null, false, null, null,
+                        null, 1000, 1, 100,null);
+                projectController.euSearchProject("en", null, null, null, null, null,
+                        null, null, null, null, lower_bound.get(i), upper_bound.get(i), null, null, null,
                         null, null, null, null, false, null, null,
                         null, 1000, 1, 100,null);
             } catch(Exception e){
