@@ -586,7 +586,8 @@ public class FacetController {
             query += " ?program <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
         }
         if (fund != null) {
-            query += " FILTER(?fund =<https://linkedopendata.eu/entity/Q2504370>) ";
+            query += " ?program <https://linkedopendata.eu/prop/direct/P1584> ?fundFilter .";
+            query += " FILTER(?fundFilter =<"+ fund +">) ";
         }
 
         query +=

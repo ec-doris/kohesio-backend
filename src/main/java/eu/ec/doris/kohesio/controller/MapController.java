@@ -230,10 +230,10 @@ public class MapController {
                     "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
                             + " { SELECT ?s0 WHERE { "
                             + search
-                            + " } LIMIT "
+                            + " } "/*LIMIT "
                             + limit
                             + " OFFSET "
-                            + offset
+                            + offset*/
                             + " } "
                             + optional
                             + "} ";
@@ -271,7 +271,7 @@ public class MapController {
                     .replace(" ", ",");
             if(querySolution.getBinding("infoRegioID") != null)
                 unique_highlighted.put(coordinates, true);
-            else if (unique_highlighted.containsKey(coordinates) == false)
+            else if (!unique_highlighted.containsKey(coordinates))
                 unique_highlighted.put(coordinates, false);
         }
         JSONArray resultList = new JSONArray();
@@ -319,9 +319,9 @@ public class MapController {
             @RequestParam(value = "longitude", required = false) String longitude,
             @RequestParam(value = "region", required = false) String region,
             @RequestParam(value = "granularityRegion", required = false) String granularityRegion,
-            @RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "limit", required = false, defaultValue = "1000") Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
-            @RequestParam(value = "coordinate", required = false) String coordinate,
+            @RequestParam(value = "coordinate", required = true) String coordinate,
             Principal principal)
             throws Exception {
         logger.info("Search project map point: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
@@ -357,13 +357,16 @@ public class MapController {
                 limit,
                 offset
         );
-
+        String limitS = "";
+        if (limit != null)
+            limitS = "LIMIT " + limit;
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> \"Point(" + coordinate.replace(",", " ") + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral> . ";
         String query =
                 "SELECT DISTINCT ?s0 ?label ?infoRegioID WHERE { "
                         + " { SELECT ?s0 where { "
                         + search
                         + " } "
+                        + limitS
                         + " } "
                         + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
                         + "             FILTER((LANG(?label)) = \""

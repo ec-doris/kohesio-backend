@@ -185,17 +185,21 @@ public class ProjectController {
                             + "                 ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
                             + "          }"
                             + " } "
-                            + "        OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
 
+                            + " OPTIONAL { SELECT ?s0 ?region ?regionId ?regionLabel {"
+                            + " VALUES ?s0 { <"
+                            + id
+                            + "> } "
+                            + " ?s0  wdt:P1845  ?region . "
+                            + "     ?region  wdt:P35  wd:Q2576750 . "
+                            + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
+                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
+                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
+                            + "     }"
+                            + "     FILTER(STRLEN(STR(?regionId))>=5)"
+                            + "  } "
 
-                            + "     OPTIONAL\n" +
-                            "       { ?s0  wdt:P1845  ?region . \n" +
-                            "          ?region  wdt:P35  wd:Q2576750 . \n " +
-                            "         OPTIONAL\n" +
-                            "           { ?region  wdt:P192  ?regionId .\n" +
-                            "                        ?region  <http://www.w3.org/2000/01/rdf-schema#label>  ?regionLabel\n" +
-                            "                        FILTER ( lang(?regionLabel) = \"" + language + "\" )\n" +
-                            "           }\n" +
 //                            "         OPTIONAL\n" +
 //                            "           { \n" +
 //                            "             \n" +
@@ -251,13 +255,12 @@ public class ProjectController {
 //                            "            ?blank_country ps:P35 wd:Q510 ." +
 //                            "             FILTER ( lang(?regionUpper3Label) = \"en\" )\n" +
 //                            "           }\n" +
-//                            "           }\n" +
-                            "       }"
-                            + "} ";
+//                            "     |      }\n" +
+                            + " } "
+                            + " } ";
 
 
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
-
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
             result.put("link", id);
@@ -585,7 +588,7 @@ public class ProjectController {
                 if (regionId != null) {
                     JSONArray geoJsons = (JSONArray) result.get("geoJson");
                     String regionLabel = (String) result.get("region");
-                    if (!regionIDs.contains(regionId) && !regions.contains(regionLabel)) {
+                    if (!regionIDs.contains(regionId) /*&& !regions.contains(regionLabel)*/) {
                         // check if the regioId has already been seen - could be that a project is contained in multipl geometries
                         regionIDs.add(regionId);
                         regions.add(regionLabel);
@@ -605,8 +608,7 @@ public class ProjectController {
                         while (resultSet2.hasNext()) {
                             BindingSet querySolution2 = resultSet2.next();
                             if (querySolution2.getBinding("geoJson") != null) {
-                                geoJsons.add(((Literal) querySolution2.getBinding("geoJson").getValue())
-                                        .stringValue());
+                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
                             }
                         }
                     }
@@ -743,11 +745,11 @@ public class ProjectController {
             }
         }
         if (orderTotalBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
             if (orderTotalBudget) {
-                orderBy = "order by asc(?totalBudget)";
+                orderBy = "order by asc(?budget)";
             } else {
-                orderBy = "order by desc(?totalBudget)";
+                orderBy = "order by desc(?budget)";
             }
         }
 
@@ -1240,7 +1242,7 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getCountrycode()));
 
             cell = row.createCell(7);
-            if (project.getSummary().size()>0) {
+            if (project.getSummary().size() > 0) {
                 cell.setCellValue(project.getSummary().get(0));
             } else {
                 cell.setCellValue("");
