@@ -186,14 +186,30 @@ public class ProjectController {
                             + "          }"
                             + " } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
+//todo
 
-
-                            + " OPTIONAL { ?s0  wdt:P1845  ?region . "
+                            + " OPTIONAL { SELECT ?s0 ?region ?regionId ?regionLabel {"
+                            + " VALUES ?s0 { <"
+                            + id
+                            + "> } "
+                            + " ?s0  wdt:P1845  ?region . "
                             + "     ?region  wdt:P35  wd:Q2576750 . "
                             + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
                             + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
                             + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
-                            + "     } "
+                            + "     }"
+                            + "     FILTER(STRLEN(STR(?regionId))>=5)"
+                            + "  } "
+//todo
+
+//                            + " OPTIONAL { ?s0  wdt:P1845  ?region . "
+//                            + "     ?region  wdt:P35  wd:Q2576750 . "
+//                            + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
+//                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
+//                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
+//                            + "     } "
+
+
 //                            "         OPTIONAL\n" +
 //                            "           { \n" +
 //                            "             \n" +
@@ -255,7 +271,6 @@ public class ProjectController {
 
 
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
-
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
             result.put("link", id);
@@ -603,8 +618,7 @@ public class ProjectController {
                         while (resultSet2.hasNext()) {
                             BindingSet querySolution2 = resultSet2.next();
                             if (querySolution2.getBinding("geoJson") != null) {
-                                geoJsons.add(((Literal) querySolution2.getBinding("geoJson").getValue())
-                                        .stringValue());
+                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
                             }
                         }
                     }
@@ -1238,7 +1252,7 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getCountrycode()));
 
             cell = row.createCell(7);
-            if (project.getSummary().size()>0) {
+            if (project.getSummary().size() > 0) {
                 cell.setCellValue(project.getSummary().get(0));
             } else {
                 cell.setCellValue("");
