@@ -188,14 +188,24 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
 
 
-                            + " OPTIONAL { SELECT * {"
-                            + " ?s0  wdt:P1845  ?region . "
+//                            + " OPTIONAL { SELECT * {"
+//                            + " ?s0  wdt:P1845  ?region . "
+//                            + "     ?region  wdt:P35  wd:Q2576750 . "
+//                            + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
+//                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
+//                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
+//                            + "     }"
+//                            + "  } ORDER BY DESC(?regionId) LIMIT 1  "
+                            + " OPTIONAL { ?s0  wdt:P1845  ?region . "
                             + "     ?region  wdt:P35  wd:Q2576750 . "
                             + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
                             + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
                             + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
-                            + "     }"
-                            + "  } ORDER BY DESC(?regionId) LIMIT 1  "
+                            + "     } "
+
+
+
+
 //                            "         OPTIONAL\n" +
 //                            "           { \n" +
 //                            "             \n" +
