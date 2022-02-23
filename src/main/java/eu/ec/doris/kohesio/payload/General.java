@@ -4,10 +4,16 @@ public class General {
     String item;
     String label;
     String country;
+    String countryLabel;
     String countryCode;
     String link;
     String transliteration;
     String type;
+    String typeLabel;
+    String summary;
+    String image;
+    String imageCopyright;
+    String imageSummary;
 
     public String getItem() {
         return item;
@@ -64,5 +70,53 @@ public class General {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getCountryLabel() {
+        return countryLabel;
+    }
+
+    public void setCountryLabel(String countryLabel) {
+        this.countryLabel = countryLabel;
+    }
+
+    public String getTypeLabel() {
+        return typeLabel;
+    }
+
+    public void setTypeLabel(String typeLabel) {
+        this.typeLabel = typeLabel;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
+    public String getImageCopyright() {
+        return imageCopyright;
+    }
+
+    public void setImageCopyright(String imageCopyright) {
+        this.imageCopyright = imageCopyright;
+    }
+
+    public String getImageSummary() {
+        return imageSummary;
+    }
+
+    public void setImageSummary(String imageSummary) {
+        this.imageSummary = imageSummary;
     }
 }

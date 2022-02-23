@@ -111,10 +111,10 @@ public class ProjectController {
                             "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
-                            "select ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
+                            "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
                             "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
-                            " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
-                            "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 where { "
+                            " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
+                            "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 WHERE { "
                             + " VALUES ?s0 { <"
                             + id
                             + "> } "
@@ -180,18 +180,26 @@ public class ProjectController {
                             + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . }"
                             + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID .  "
                             + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
-                            + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } } "
-                            + "        OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
+                            + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } "
+                            + "          OPTIONAL { ?beneficiaryLink <https://linkedopendata.eu/prop/P7> ?benefStatement . "
+                            + "                 ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
+                            + "          }"
+                            + " } "
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
 
+                            + " OPTIONAL { SELECT ?s0 ?region ?regionId ?regionLabel {"
+                            + " VALUES ?s0 { <"
+                            + id
+                            + "> } "
+                            + " ?s0  wdt:P1845  ?region . "
+                            + "     ?region  wdt:P35  wd:Q2576750 . "
+                            + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
+                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
+                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
+                            + "     }"
+                            + "     FILTER(STRLEN(STR(?regionId))>=5)"
+                            + "  } "
 
-                            + "     OPTIONAL\n" +
-                            "       { ?s0  wdt:P1845  ?region . \n" +
-                            "          ?region  wdt:P35  wd:Q2576750 . \n " +
-                            "         OPTIONAL\n" +
-                            "           { ?region  wdt:P192  ?regionId .\n" +
-                            "                        ?region  <http://www.w3.org/2000/01/rdf-schema#label>  ?regionLabel\n" +
-                            "                        FILTER ( lang(?regionLabel) = \"" + language + "\" )\n" +
-                            "           }\n" +
 //                            "         OPTIONAL\n" +
 //                            "           { \n" +
 //                            "             \n" +
@@ -247,13 +255,12 @@ public class ProjectController {
 //                            "            ?blank_country ps:P35 wd:Q510 ." +
 //                            "             FILTER ( lang(?regionUpper3Label) = \"en\" )\n" +
 //                            "           }\n" +
-//                            "           }\n" +
-                            "       }"
-                            + "} ";
+//                            "     |      }\n" +
+                            + " } "
+                            + " } ";
 
 
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
-
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
             result.put("link", id);
@@ -502,6 +509,9 @@ public class ProjectController {
                         } else {
                             beneficary.put("website", "");
                         }
+                        if (querySolution.getBinding("transliteration") != null) {
+                            beneficary.put("transliteration", querySolution.getBinding("transliteration").getValue().stringValue());
+                        }
                         beneficiaries.add(beneficary);
                     }
                 } else {
@@ -578,7 +588,7 @@ public class ProjectController {
                 if (regionId != null) {
                     JSONArray geoJsons = (JSONArray) result.get("geoJson");
                     String regionLabel = (String) result.get("region");
-                    if (!regionIDs.contains(regionId) && !regions.contains(regionLabel)) {
+                    if (!regionIDs.contains(regionId) /*&& !regions.contains(regionLabel)*/) {
                         // check if the regioId has already been seen - could be that a project is contained in multipl geometries
                         regionIDs.add(regionId);
                         regions.add(regionLabel);
@@ -598,8 +608,7 @@ public class ProjectController {
                         while (resultSet2.hasNext()) {
                             BindingSet querySolution2 = resultSet2.next();
                             if (querySolution2.getBinding("geoJson") != null) {
-                                geoJsons.add(((Literal) querySolution2.getBinding("geoJson").getValue())
-                                        .stringValue());
+                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
                             }
                         }
                     }
@@ -624,10 +633,10 @@ public class ProjectController {
                                            @RequestParam(value = "categoryOfIntervention", required = false)
                                                    String categoryOfIntervention,
                                            @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                           @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-                                           @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-                                           @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-                                           @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                           @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+                                           @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+                                           @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+                                           @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
                                            @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
                                            @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
                                            @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
@@ -736,11 +745,11 @@ public class ProjectController {
             }
         }
         if (orderTotalBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
             if (orderTotalBudget) {
-                orderBy = "order by asc(?totalBudget)";
+                orderBy = "order by asc(?budget)";
             } else {
-                orderBy = "order by desc(?totalBudget)";
+                orderBy = "order by desc(?budget)";
             }
         }
 
@@ -794,7 +803,7 @@ public class ProjectController {
                         + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country 	<https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
                         + " FILTER(LANG(?summary)=\"" + language + "\")"
@@ -1062,10 +1071,10 @@ public class ProjectController {
             @RequestParam(value = "categoryOfIntervention", required = false)
                     String categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
-            @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-            @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-            @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-            @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+            @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+            @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+            @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+            @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
             @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
             @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
             @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
@@ -1155,10 +1164,10 @@ public class ProjectController {
                                                         @RequestParam(value = "categoryOfIntervention", required = false)
                                                                 String categoryOfIntervention,
                                                         @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                                        @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-                                                        @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-                                                        @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-                                                        @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                                        @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+                                                        @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+                                                        @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+                                                        @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
                                                         @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
                                                         @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
                                                         @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
@@ -1233,7 +1242,7 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getCountrycode()));
 
             cell = row.createCell(7);
-            if (project.getSummary().size()>0) {
+            if (project.getSummary().size() > 0) {
                 cell.setCellValue(project.getSummary().get(0));
             } else {
                 cell.setCellValue("");
@@ -1260,10 +1269,10 @@ public class ProjectController {
                                     @RequestParam(value = "categoryOfIntervention", required = false)
                                             String categoryOfIntervention,
                                     @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                    @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-                                    @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-                                    @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-                                    @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+                                    @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+                                    @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+                                    @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+                                    @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
                                     @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
                                     @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
                                     @RequestParam(value = "endDateBefore", required = false) String endDateBefore,

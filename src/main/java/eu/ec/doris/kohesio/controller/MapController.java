@@ -76,10 +76,10 @@ public class MapController {
             @RequestParam(value = "categoryOfIntervention", required = false)
                     String categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
-            @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-            @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-            @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-            @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+            @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+            @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+            @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+            @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
             @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
             @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
             @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
@@ -112,7 +112,6 @@ public class MapController {
         }
 
         String search = filtersGenerator.filterProject(expandedQueryText, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
-
         //computing the number of results
         String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
         int numResults = 0;
@@ -126,7 +125,7 @@ public class MapController {
         }
         logger.debug("Number of results {}", numResults);
         if (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0)) {
-            return mapReturnCoordinates(search, country, region, granularityRegion, limit, offset, timeout);
+            return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -169,7 +168,7 @@ public class MapController {
             }
             // this happens when we have for example nuts 1 information but not nuts 2 information for the projects
             if (foundNextNutsLevel == false){
-                return mapReturnCoordinates(search, country, region, granularityRegion, limit, offset, timeout);
+                return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude,limit, offset, timeout);
             }
 
             JSONArray resultList = new JSONArray();
@@ -187,7 +186,7 @@ public class MapController {
         }
     }
 
-    ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, Integer limit, Integer offset, int timeout) throws Exception {
+    ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, String latitude, String longitude,Integer limit, Integer offset, int timeout) throws Exception {
         logger.debug("granularityRegion {}, limit {}",granularityRegion,limit);
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
@@ -201,7 +200,8 @@ public class MapController {
                     isCountry = true;
                 }
             }
-            if (isCountry == false) {
+            // this is a hack to show brittany
+            if (isCountry == false && !granularityRegion.equals("https://linkedopendata.eu/entity/Q3487")) {
                 optional += "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
             }
         }
@@ -211,18 +211,33 @@ public class MapController {
         if (limit == null) {
             limit = 1000;
         }
-
-        String query =
-                "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
-                        + " { SELECT ?s0 where { "
-                        + search
-                        + " } limit "
-                        + limit
-                        + " offset "
-                        + offset
-                        + " } "
-                        + optional
-                        + "} ";
+        String query = null;
+        if (latitude != null && longitude != null) {
+            query =
+                    "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
+                            + " { SELECT ?s0 ((<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)) AS ?distance) WHERE { "
+                            + search
+                            + " } ORDER BY ?distance LIMIT "
+                            + limit
+                            + " OFFSET "
+                            + offset
+                            + " } "
+                            + optional
+                            + "} ";
+        }
+        else {
+            query =
+                    "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
+                            + " { SELECT ?s0 WHERE { "
+                            + search
+                            + " } "/*LIMIT "
+                            + limit
+                            + " OFFSET "
+                            + offset*/
+                            + " } "
+                            + optional
+                            + "} ";
+        }
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
 //        JSONArray resultList = new JSONArray();
@@ -256,7 +271,7 @@ public class MapController {
                     .replace(" ", ",");
             if(querySolution.getBinding("infoRegioID") != null)
                 unique_highlighted.put(coordinates, true);
-            else if (unique_highlighted.containsKey(coordinates) == false)
+            else if (!unique_highlighted.containsKey(coordinates))
                 unique_highlighted.put(coordinates, false);
         }
         JSONArray resultList = new JSONArray();
@@ -292,10 +307,10 @@ public class MapController {
             @RequestParam(value = "categoryOfIntervention", required = false)
                     String categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
-            @RequestParam(value = "budgetBiggerThan", required = false) Integer budgetBiggerThen,
-            @RequestParam(value = "budgetSmallerThan", required = false) Integer budgetSmallerThen,
-            @RequestParam(value = "budgetEUBiggerThan", required = false) Integer budgetEUBiggerThen,
-            @RequestParam(value = "budgetEUSmallerThan", required = false) Integer budgetEUSmallerThen,
+            @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+            @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+            @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+            @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
             @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
             @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
             @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
@@ -304,9 +319,9 @@ public class MapController {
             @RequestParam(value = "longitude", required = false) String longitude,
             @RequestParam(value = "region", required = false) String region,
             @RequestParam(value = "granularityRegion", required = false) String granularityRegion,
-            @RequestParam(value = "limit", required = false) Integer limit,
+            @RequestParam(value = "limit", required = false, defaultValue = "1000") Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
-            @RequestParam(value = "coordinate", required = false) String coordinate,
+            @RequestParam(value = "coordinate", required = true) String coordinate,
             Principal principal)
             throws Exception {
         logger.info("Search project map point: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
@@ -319,14 +334,39 @@ public class MapController {
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
-
+        String search = filtersGenerator.filterProject(
+                expandedQueryText,
+                country,
+                theme,
+                fund,
+                program,
+                categoryOfIntervention,
+                policyObjective,
+                budgetBiggerThen,
+                budgetSmallerThen,
+                budgetEUBiggerThen,
+                budgetEUSmallerThen,
+                startDateBefore,
+                startDateAfter,
+                endDateBefore,
+                endDateAfter,
+                latitude,
+                longitude,
+                region,
+                granularityRegion,
+                limit,
+                offset
+        );
+        String limitS = "";
+        if (limit != null)
+            limitS = "LIMIT " + limit;
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> \"Point(" + coordinate.replace(",", " ") + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral> . ";
         String query =
                 "SELECT DISTINCT ?s0 ?label ?infoRegioID WHERE { "
                         + " { SELECT ?s0 where { "
                         + search
                         + " } "
+                        + limitS
                         + " } "
                         + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
                         + "             FILTER((LANG(?label)) = \""
@@ -350,7 +390,11 @@ public class MapController {
             } else {
                 item.put("isHighlighted", false);
             }
-            result.add(item);
+            if ((boolean)item.get("isHighlighted")){
+                result.add(0, item);
+            } else {
+                result.add(item);
+            }
         }
         return new ResponseEntity<JSONArray>((JSONArray) result, HttpStatus.OK);
     }
