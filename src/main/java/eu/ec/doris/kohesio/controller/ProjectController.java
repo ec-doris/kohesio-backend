@@ -198,7 +198,8 @@ public class ProjectController {
                             + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
                             + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
                             + "     }"
-                            + "  } ORDER BY DESC(?regionId) LIMIT 1  "
+                            + "     FILTER(STRLEN(STR(?regionId))>=5)"
+                            + "  } "
 //todo
 
 //                            + " OPTIONAL { ?s0  wdt:P1845  ?region . "
