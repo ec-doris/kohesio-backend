@@ -187,6 +187,10 @@ public class CacheController {
                         null, null, null, null, null,
                         null, null, null, null, false, null, null,
                         null, 1000, 1, 100,null);
+                projectController.euSearchProject("en", null, null, null, null, null,
+                        null, null, null, null, lower_bound.get(i), upper_bound.get(i), null, null, null,
+                        null, null, null, null, false, null, null,
+                        null, 1000, 1, 100,null);
             } catch(Exception e){
                 e.printStackTrace();
             }
