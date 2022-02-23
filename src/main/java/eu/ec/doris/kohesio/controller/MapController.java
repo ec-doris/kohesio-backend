@@ -321,7 +321,7 @@ public class MapController {
             @RequestParam(value = "granularityRegion", required = false) String granularityRegion,
             @RequestParam(value = "limit", required = false, defaultValue = "1000") Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
-            @RequestParam(value = "coordinate", required = false) String coordinate,
+            @RequestParam(value = "coordinate", required = true) String coordinate,
             Principal principal)
             throws Exception {
         logger.info("Search project map point: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
