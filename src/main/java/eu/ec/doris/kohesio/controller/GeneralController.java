@@ -109,11 +109,11 @@ public class GeneralController {
         String queryCount = "SELECT (COUNT(DISTINCT ?general) as ?c) { " + search + "} ";
         logger.debug(queryCount);
         TupleQueryResult resultCount = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 120);
-        int numResults = 0;
-        if (resultCount.hasNext()) {
-            BindingSet querySolution = resultCount.next();
-            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
-        }
+        int numResults = 200;
+//        if (resultCount.hasNext()) {
+//            BindingSet querySolution = resultCount.next();
+//            numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+//        }
 
         String labelsFilter = getGeneralLangLabelsFilter();
         String query =
