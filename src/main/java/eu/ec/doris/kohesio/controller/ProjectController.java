@@ -188,12 +188,14 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
 
 
-                            + " OPTIONAL { ?s0  wdt:P1845  ?region . "
+                            + " OPTIONAL { SELECT * {"
+                            + " ?s0  wdt:P1845  ?region . "
                             + "     ?region  wdt:P35  wd:Q2576750 . "
                             + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
                             + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
                             + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
-                            + "     } "
+                            + "     }"
+                            + "  } ORDER BY DESC(?regionId) LIMIT 1  "
 //                            "         OPTIONAL\n" +
 //                            "           { \n" +
 //                            "             \n" +
@@ -255,7 +257,6 @@ public class ProjectController {
 
 
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
-
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
             result.put("link", id);
@@ -603,16 +604,7 @@ public class ProjectController {
                         while (resultSet2.hasNext()) {
                             BindingSet querySolution2 = resultSet2.next();
                             if (querySolution2.getBinding("geoJson") != null) {
-                                boolean alreadyIn = false;
-                                for (int i = 0; i < geoJsons.size(); i++) {
-                                    if (geoJsons.get(i).equals(querySolution2.getBinding("geoJson").getValue().stringValue())) {
-                                        alreadyIn = true;
-                                        break;
-                                    }
-                                }
-                                if (!alreadyIn) {
-                                    geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
-                                }
+                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
                             }
                         }
                     }
