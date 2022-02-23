@@ -14,4 +14,4 @@ COPY --from=build /home/app/target/kohesio-backend-*-SNAPSHOT.jar /usr/local/lib
 COPY --from=build /home/app/src/main/resources/config/application-k8s-prod.properties /home/app/application-k8s-prod.properties
 
 EXPOSE 5678
-ENTRYPOINT ["java","-Dspring.config.location=file:///home/app/application-k8s-prod.properties","-jar", "/usr/local/lib/kohesio-backend.jar"]
+ENTRYPOINT ["java","-Xmx${JAVA_HEAP}","-Dspring.config.location=file:///home/app/application-k8s-prod.properties","-jar", "/usr/local/lib/kohesio-backend.jar"]
