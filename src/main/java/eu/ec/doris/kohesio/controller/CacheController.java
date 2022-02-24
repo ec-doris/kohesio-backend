@@ -180,6 +180,8 @@ public class CacheController {
         upper_bound.add(100000000L);
         lower_bound.add(100000000L);
         upper_bound.add(1000000000L);
+        lower_bound.add(1000000000L);
+        upper_bound.add(10000000000L);
         for (int i=0; i< lower_bound.size(); i++) {
             try{
                 projectController.euSearchProject("en", null, null, null, null, null,
