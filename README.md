@@ -1,6 +1,14 @@
 # kohesio-backend
 
-The kohesio backend contains a set offers the APIs to serve (<https://kohesio.ec.europa.eu>).
+The kohesio backend contains a set offers the APIs to serve (<https://kohesio.ec.europa.eu>). It offers APIs to:
+
+- search over projects
+- search over beneficiaries
+- explore a Map
+- serve the facets of the search
+- find projects nearby based on the IP
+
+All REST API requests are transformed into SPARQL queries serving the requested content. 
 
 To run from cli:
 
