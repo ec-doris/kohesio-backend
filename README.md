@@ -12,10 +12,13 @@ All REST API requests are transformed into SPARQL queries serving the requested 
 
 To run from cli:
 
-- mvn clean package
-- java -jar target/kohesio-backend-1.0-SNAPSHOT.jar
+```sh
+mvn clean package
+java -jar target/kohesio-backend-1.0-SNAPSHOT.jar
+```
 
 To run using docker:
+
 
 - Build the image: `docker build -t kohesio-backend .`
 - Run the container: `docker run -p 5678:5678 --name kohesio-api kohesio-backend`
