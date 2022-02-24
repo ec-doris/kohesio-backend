@@ -71,7 +71,7 @@ public class GeneralController {
                     + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                     + keywords.replace("\"", "\\\"") + "\" ; "
                     //+ "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet; "
-                    //+ "<http://www.openrdf.org/contrib/lucenesail#score> ?score "
+                    + "<http://www.openrdf.org/contrib/lucenesail#score> ?score "
                     + " ] . ";
         }
 
@@ -118,7 +118,7 @@ public class GeneralController {
         String labelsFilter = getGeneralLangLabelsFilter();
         String query =
                 "SELECT ?general ?generalLabel ?generalLabel_en ?country ?countryLabel ?countryCode ?link ?summary ?image ?imageSummary ?imageCopyright ?type ?typeLabel ?transliteration { "
-                        + " { SELECT DISTINCT ?general { "
+                        + " { SELECT DISTINCT ?general ?score { "
                         + search
                         + "} "
                         + orderBy
@@ -149,12 +149,12 @@ public class GeneralController {
                         + " OPTIONAL { ?general <https://linkedopendata.eu/prop/P7> ?generalStatement . "
                         + "  ?generalStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
                         + " }"
-                        + "} ";
+                        + "} ORDER BY DESC(?score)";
 //        String queryCount = "SELECT (COUNT(DISTINCT ?general) as ?c) { " + query + " }";
 
         logger.debug(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
-        HashMap<String, General> generals = new HashMap<>();
+        ArrayList<General> generals = new ArrayList<>();
 
         if (resultSet != null) {
             while (resultSet.hasNext()) {
@@ -234,11 +234,11 @@ public class GeneralController {
                             querySolution.getBinding("typeLabel").getValue().stringValue()
                     );
                 }
-                generals.put(UUID.randomUUID().toString(), general);
+                generals.add(general);
             }
         }
         GeneralList finalResult = new GeneralList();
-        finalResult.setList(new ArrayList<>(generals.values()));
+        finalResult.setList(generals);
         finalResult.setNumberResults(numResults);
         return new ResponseEntity<>(finalResult, HttpStatus.OK);
     }
