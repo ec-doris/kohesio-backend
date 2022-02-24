@@ -1,6 +1,6 @@
 # kohesio-backend
 
-APIs for feeding the frontend of kohesio.eu
+The kohesio backend contains a set offers the APIs to serve (<https://kohesio.ec.europa.eu>).
 
 To run from cli:
 
