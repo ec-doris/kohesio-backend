@@ -88,7 +88,7 @@ public class BeneficiaryController {
         }
 
         String labelsFilter = getBeneficiaryLabelsFilter();
-        String query1 = "select ?s0 ?country ?countryCode ?beneficiaryLabel_en ?beneficiaryLabel ?transliteration ?description ?website ?image ?logo ?coordinates ?wikipedia where {\n"
+        String query1 = "SELECT ?s0 ?country ?countryCode ?beneficiaryLabel_en ?beneficiaryLabel ?transliteration ?description ?website ?image ?logo ?coordinates ?wikipedia WHERE {\n"
                 + " VALUES ?s0 { <"
                 + id
                 + "> } " +
@@ -114,7 +114,7 @@ public class BeneficiaryController {
                 "                 <http://schema.org/isPartOf> <https://" + language + ".wikipedia.org/> ." + "}\n " +
                 "}";
 
-        String query2 = "select ?s0 (sum(?euBudget) as ?totalEuBudget) (sum(?budget) as ?totalBudget) (count(?project) as ?numberProjects) (min(?startTime) as ?minStartTime) (max(?endTime) as ?maxEndTime) where {\n" +
+        String query2 = "SELECT ?s0 (SUM(?euBudget) AS ?totalEuBudget) (SUM(?budget) AS ?totalBudget) (COUNT(DISTINCT?project) AS ?numberProjects) (MIN(?startTime) AS ?minStartTime) (MAX(?endTime) AS ?maxEndTime) WHERE {\n" +
                 " VALUES ?s0 { <" +
                 id +
                 "> } " +
@@ -125,9 +125,9 @@ public class BeneficiaryController {
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P838> ?endTime . } \n" +
                 "  \n" +
-                "} group by ?s0";
+                "} GROUP BY ?s0";
 
-        String query3 = "select ?project ?label ?euBudget ?budget ?startTime ?endTime ?fundLabel where {\n" +
+        String query3 = "SELECT ?project ?label ?euBudget ?budget ?startTime ?endTime ?fundLabel WHERE {\n" +
                 " VALUES ?s0 { <" +
                 id +
                 "> } " +
@@ -141,9 +141,9 @@ public class BeneficiaryController {
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
                 "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n " +
-                "} order by DESC(?euBudget) limit " + pageSize + "OFFSET " + pageSize * page;
+                "} ORDER BY DESC(?euBudget) LIMIT " + pageSize + "OFFSET " + pageSize * page;
 
-        String query4 = "select ?fundLabel (sum(?euBudget) as ?totalEuBudget) where {\n" +
+        String query4 = "SELECT ?fundLabel (sum(?euBudget) as ?totalEuBudget) WHERE {\n" +
                 " VALUES ?s0 { <" +
                 id +
                 "> }   \n" +
@@ -151,7 +151,7 @@ public class BeneficiaryController {
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
                 "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n" +
-                " } group by ?fundLabel order by desc(?totalEuBudget)";
+                " } GROUP BY ?fundLabel ORDER BY DESC(?totalEuBudget)";
 
         TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query1, 30);
         JSONObject result = new JSONObject();
@@ -383,7 +383,7 @@ public class BeneficiaryController {
                         + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630486> .";
             }
         }
-        String queryCount = "SELECT (COUNT(?beneficiary) AS ?c) { " +
+        String queryCount = "SELECT (COUNT(DISTINCT ?beneficiary) AS ?c) { " +
                 "{SELECT ?beneficiary where {\n" +
                 search
                 + " } GROUP BY ?beneficiary }" +
@@ -423,7 +423,7 @@ public class BeneficiaryController {
         String labelsFilter = getBeneficiaryLabelsFilter();
         String query =
                 "SELECT ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link ?transliteration { "
-                        + " { SELECT ?beneficiary (count(DISTINCT ?project) as ?numberProjects) (sum(?budget) as ?totalBudget) (sum(?euBudget) as ?totalEuBudget) { "
+                        + " { SELECT ?beneficiary (COUNT(DISTINCT ?project) AS ?numberProjects) (SUM(?budget) AS ?totalBudget) (SUM(?euBudget) AS ?totalEuBudget) { "
                         + search
                         + "} GROUP BY ?beneficiary " +
                         orderBy
