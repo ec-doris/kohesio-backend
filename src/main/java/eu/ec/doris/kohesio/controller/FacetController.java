@@ -229,7 +229,7 @@ public class FacetController {
     public JSONObject facetEuStatistics() throws Exception {
         logger.info("Get EU statistics");
         JSONObject statistics = new JSONObject();
-        String query = "SELECT (count(?s0) as ?c) where { "
+        String query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "} ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
@@ -237,7 +237,7 @@ public class FacetController {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberProjects", ((Literal) querySolution.getBinding("c").getValue()).intValue());
         }
-        query = "SELECT (count(?s0) as ?c) where { "
+        query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> . "
                 + "} ";
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
@@ -245,7 +245,7 @@ public class FacetController {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberBeneficiaries", ((Literal) querySolution.getBinding("c").getValue()).intValue());
         }
-        query = "SELECT (sum(?o) as ?sum) where { "
+        query = "SELECT (SUM(?o) AS ?sum) WHERE { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "    ?s0  <https://linkedopendata.eu/prop/direct/P835>  ?o . "
                 + "} ";
@@ -257,7 +257,7 @@ public class FacetController {
         }
 
         JSONObject themes = new JSONObject();
-        query = "SELECT (COUNT(?s0) as ?c ) WHERE {" +
+        query = "SELECT (COUNT(DISTINCT ?s0) AS ?c ) WHERE {" +
                 "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. " +
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236692> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
@@ -268,7 +268,7 @@ public class FacetController {
             themes.put("lowCarbonEconomy", ((Literal) querySolution.getBinding("c").getValue()).doubleValue());
         }
 
-        query = "SELECT (COUNT(?s0) as ?c ) WHERE {" +
+        query = "SELECT (COUNT(DISTINCT ?s0) AS ?c ) WHERE {" +
                 "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. " +
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236693> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
@@ -279,7 +279,7 @@ public class FacetController {
             themes.put("climateChangeAdaptation", ((Literal) querySolution.getBinding("c").getValue()).intValue());
         }
 
-        query = "SELECT (COUNT(?s0) as ?c ) WHERE {" +
+        query = "SELECT (COUNT(DISTINCT ?s0) AS ?c ) WHERE {" +
                 "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. " +
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236694> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
@@ -290,7 +290,7 @@ public class FacetController {
             themes.put("enviromentProtection", ((Literal) querySolution.getBinding("c").getValue()).intValue());
         }
 
-        query = "SELECT (COUNT(?s0) as ?c ) WHERE {" +
+        query = "SELECT (COUNT(DISTINCT ?s0) AS ?c ) WHERE {" +
                 "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category." +
                 " ?category <https://linkedopendata.eu/prop/direct/P1849> <https://linkedopendata.eu/entity/Q2547987> . " +
                 "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +

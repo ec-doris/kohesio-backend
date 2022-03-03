@@ -150,7 +150,6 @@ public class GeneralController {
                         + "  ?generalStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
                         + " }"
                         + "} ORDER BY DESC(?score)";
-//        String queryCount = "SELECT (COUNT(DISTINCT ?general) as ?c) { " + query + " }";
 
         logger.debug(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
