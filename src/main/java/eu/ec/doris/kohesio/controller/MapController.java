@@ -113,7 +113,7 @@ public class MapController {
 
         String search = filtersGenerator.filterProject(expandedQueryText, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, granularityRegion, limit, offset);
         //computing the number of results
-        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
+        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
         int numResults = 0;
         if (limit == null || limit > 2000) {
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
@@ -130,16 +130,16 @@ public class MapController {
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
                 query =
-                        "SELECT ?region (count(?s0) as ?c) where { "
+                        "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
                                 + search
                                 + " ?s0 <https://linkedopendata.eu/prop/direct/P32> ?region . "
-                                + " } group by ?region ";
+                                + " } GROUP BY ?region ";
             } else {
                 query =
-                        "SELECT ?region (count(?s0) as ?c) where { "
+                        "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
                                 + search
                                 + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region . "
-                                + " } group by ?region ";
+                                + " } GROUP BY ?region ";
             }
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 

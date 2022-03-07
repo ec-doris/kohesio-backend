@@ -105,6 +105,20 @@ public class CacheController {
                     e.printStackTrace();
                 }
             }
+            // cache regions
+            JSONArray regions = facetController.facetEuRegions(country,"en");
+            for (Object region: regions) {
+                try{
+                    String regio = ((JSONObject) region).get("instance").toString();
+                    projectController.euSearchProject("en", null, country, null, null, null,
+                            null, null, null, null,
+                            null, null, null, null, null,
+                            null, null, null, null, false, null, null,
+                            regio, 1000, 1, 100,null);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
             // cache policy objective
             JSONArray policies = facetController.facetPolicyObjective("en");
             for (Object policy: policies) {
@@ -180,6 +194,8 @@ public class CacheController {
         upper_bound.add(100000000L);
         lower_bound.add(100000000L);
         upper_bound.add(1000000000L);
+        lower_bound.add(1000000000L);
+        upper_bound.add(10000000000L);
         for (int i=0; i< lower_bound.size(); i++) {
             try{
                 projectController.euSearchProject("en", null, null, null, null, null,

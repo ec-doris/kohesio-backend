@@ -755,7 +755,7 @@ public class ProjectController {
 
         // pass cache = false in order to stop caching the semantic search results
 
-        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + search + "} ";
+        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
         // count the results with the applied filters
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
         if (resultSet != null && resultSet.hasNext()) {
@@ -1101,7 +1101,7 @@ public class ProjectController {
         //computing the number of results
         String searchCount = search;
         searchCount += " ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?title. ";
-        String query = "SELECT (COUNT(?s0) as ?c ) WHERE {" + searchCount
+        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + searchCount
                 + " FILTER((LANG(?title)) = \""
                 + language
                 + "\") "
