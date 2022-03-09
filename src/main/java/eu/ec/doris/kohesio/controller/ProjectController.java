@@ -716,45 +716,6 @@ public class ProjectController {
         );
 
         int numResults = 0;
-
-        String orderQuery = "";
-
-        String orderBy = "";
-        if (orderStartDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .";
-            if (orderStartDate) {
-                orderBy = "order by asc(?startTime)";
-            } else {
-                orderBy = "order by desc(?startTime)";
-            }
-        }
-        if (orderEndDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
-            if (orderEndDate) {
-                orderBy = "order by asc(?endTime)";
-            } else {
-                orderBy = "order by desc(?endTime)";
-            }
-        }
-        if (orderEuBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
-            if (orderEuBudget) {
-                orderBy = "order by asc(?euBudget)";
-            } else {
-                orderBy = "order by desc(?euBudget)";
-            }
-        }
-        if (orderTotalBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
-            if (orderTotalBudget) {
-                orderBy = "order by asc(?budget)";
-            } else {
-                orderBy = "order by desc(?budget)";
-            }
-        }
-
-        // pass cache = false in order to stop caching the semantic search results
-
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
         // count the results with the applied filters
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
@@ -762,7 +723,43 @@ public class ProjectController {
             BindingSet querySolution = resultSet.next();
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
-        //search = "";
+
+
+        String orderQuery = "";
+
+        String orderBy = "";
+        if (orderStartDate != null) {
+            orderQuery += "OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . }";
+            if (orderStartDate) {
+                orderBy = "order by asc(?startTime)";
+            } else {
+                orderBy = "order by desc(?startTime)";
+            }
+        }
+        if (orderEndDate != null) {
+            orderQuery += "OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } ";
+            if (orderEndDate) {
+                orderBy = "order by asc(?endTime)";
+            } else {
+                orderBy = "order by desc(?endTime)";
+            }
+        }
+        if (orderEuBudget != null) {
+            orderQuery += "OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } ";
+            if (orderEuBudget) {
+                orderBy = "order by asc(?euBudget)";
+            } else {
+                orderBy = "order by desc(?euBudget)";
+            }
+        }
+        if (orderTotalBudget != null) {
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. } ";
+            if (orderTotalBudget) {
+                orderBy = "order by asc(?budget)";
+            } else {
+                orderBy = "order by desc(?budget)";
+            }
+        }
 
         if (search.equals(
                 "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {

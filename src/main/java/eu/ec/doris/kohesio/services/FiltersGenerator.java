@@ -108,7 +108,7 @@ public class FiltersGenerator {
         }
 
         if (budgetSmallerThen != null || budgetBiggerThen != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
+            search += " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
             if (budgetBiggerThen != null) {
                 search += "FILTER( ?budget > " + budgetBiggerThen + ")";
             }
@@ -118,7 +118,7 @@ public class FiltersGenerator {
         }
 
         if (budgetEUBiggerThen != null || budgetEUSmallerThen != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P835> ?budgetEU . ";
+            search += " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?budgetEU . } ";
             if (budgetEUBiggerThen != null) {
                 search += "FILTER( ?budgetEU > " + budgetEUBiggerThen + ")";
             }
@@ -128,7 +128,7 @@ public class FiltersGenerator {
         }
 
         if (startDateBefore != null || startDateAfter != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startDate . ";
+            search += " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startDate . } ";
             if (startDateBefore != null) {
                 search +=
                         "FILTER( ?startDate <= \""
@@ -144,7 +144,7 @@ public class FiltersGenerator {
         }
 
         if (endDateBefore != null || endDateAfter != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endDate . ";
+            search += " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endDate . } ";
             if (endDateBefore != null) {
                 search +=
                         "FILTER( ?endDate <= \""
