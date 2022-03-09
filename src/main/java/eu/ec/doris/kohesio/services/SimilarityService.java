@@ -60,7 +60,7 @@ public class SimilarityService {
     Query the similarity API and get a list of similar words
      */
     private ArrayList<SimilarWord> getSimilarWords(String text,int number){
-        String url = "http://similarity.cnect.eu:3000/similarity?text="+text+"&number="+number+"&model=kohesio";
+        String url = "https://similarity.cnect.eu/api?text="+text+"&number="+number+"&model=kohesio";
         ArrayList<SimilarWord> similarWords = new ArrayList<>();
         try {
             RestTemplate restTemplate = new RestTemplate();
