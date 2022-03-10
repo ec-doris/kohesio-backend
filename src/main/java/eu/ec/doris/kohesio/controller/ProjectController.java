@@ -81,12 +81,6 @@ public class ProjectController {
     @Value("${kohesio.directory}")
     String cacheDirectory;
 
-    // Set this to allow browser requests from other websites
-    @ModelAttribute
-    public void setVaryResponseHeader(HttpServletResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*");
-    }
-
     @GetMapping(value = "/facet/eu/project", produces = "application/json")
     public ResponseEntity euProjectID( //
                                        @RequestParam(value = "id") String id,
