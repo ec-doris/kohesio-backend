@@ -36,7 +36,7 @@ public class FiltersGenerator {
                                 String granularityRegion,
                                 Integer limit,
                                 Integer offset) throws IOException {
-        String search = "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
+        String search = "";
         if (keywords != null) {
 //            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
 //                String[] words = keywords.split(" ");
@@ -108,7 +108,7 @@ public class FiltersGenerator {
         }
 
         if (budgetSmallerThen != null || budgetBiggerThen != null) {
-            search += " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
             if (budgetBiggerThen != null) {
                 search += "FILTER( ?budget > " + budgetBiggerThen + ")";
             }
@@ -118,7 +118,7 @@ public class FiltersGenerator {
         }
 
         if (budgetEUBiggerThen != null || budgetEUSmallerThen != null) {
-            search += " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?budgetEU . } ";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P835> ?budgetEU . ";
             if (budgetEUBiggerThen != null) {
                 search += "FILTER( ?budgetEU > " + budgetEUBiggerThen + ")";
             }
@@ -128,7 +128,7 @@ public class FiltersGenerator {
         }
 
         if (startDateBefore != null || startDateAfter != null) {
-            search += " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startDate . } ";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startDate . ";
             if (startDateBefore != null) {
                 search +=
                         "FILTER( ?startDate <= \""
@@ -144,7 +144,7 @@ public class FiltersGenerator {
         }
 
         if (endDateBefore != null || endDateAfter != null) {
-            search += " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endDate . } ";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endDate . ";
             if (endDateBefore != null) {
                 search +=
                         "FILTER( ?endDate <= \""
@@ -174,7 +174,8 @@ public class FiltersGenerator {
                     + " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < 100000)";
         }
 
-
+        search +=
+                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
         return search;
     }
 
