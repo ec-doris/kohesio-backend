@@ -119,6 +119,8 @@ public class BeneficiaryController {
                 id +
                 "> } " +
                 "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
+                "  ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
+
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . }\n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . }\n" +
@@ -371,6 +373,7 @@ public class BeneficiaryController {
         }
 
         search += "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
+                + "   ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
                 + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
 
