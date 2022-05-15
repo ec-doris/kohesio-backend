@@ -148,6 +148,7 @@ public class MapController {
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
+                System.out.println("r "+r+" "+facetController.nutsRegion.get(r).name);
                 element.put("regionLabel", facetController.nutsRegion.get(r).name);
                 element.put("geoJson", facetController.nutsRegion.get(r).geoJson);
                 element.put("count", 0);
