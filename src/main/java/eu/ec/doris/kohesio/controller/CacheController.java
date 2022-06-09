@@ -103,7 +103,7 @@ public class CacheController {
             JSONArray regions = facetController.facetEuRegions(country,"en");
             for (Object region: regions) {
                 try{
-                    String regio = ((JSONObject) region).get("instance").toString();
+                    String regio = ((JSONObject) region).get("region").toString();
                     projectController.euSearchProject("en", null, country, null, null, null,
                             null, null, null, null,
                             null, null, null, null, null,
