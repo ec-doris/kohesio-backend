@@ -619,7 +619,9 @@ public class FacetController {
                         querySolution.getBinding("cci").getValue().stringValue() + " - " + querySolution.getBinding("programLabel").getValue().stringValue()
                 );
                 JSONArray funds = new JSONArray();
-                funds.add(querySolution.getBinding("fund").getValue().stringValue());
+                if (querySolution.getBinding("fund")!=null){
+                    funds.add(querySolution.getBinding("fund").getValue().stringValue());
+                }
                 element.put("funds", funds);
                 result.add(element);
             }
