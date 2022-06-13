@@ -319,7 +319,7 @@ public class BeneficiaryController {
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset != Integer.MIN_VALUE) {
-            if (offset <= 990) {
+            if (offset <= 985) {
                 offset = 0;
                 limit = 1000;
             }
