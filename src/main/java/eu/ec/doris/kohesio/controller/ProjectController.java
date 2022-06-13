@@ -112,7 +112,7 @@ public class ProjectController {
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
                             "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
-                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
+                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?themeId ?themeLabel ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 WHERE { "
                             + " VALUES ?s0 { <"
@@ -163,10 +163,17 @@ public class ProjectController {
                             + language
                             + "\") }"
                             + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category.  "
-                            + "           ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective."
-                            + "           ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. "
-                            + "           ?objective <http://www.w3.org/2000/01/rdf-schema#label> ?objectiveLabel. "
-                            + "           FILTER((LANG(?objectiveLabel)) = \""
+                            + "           ?category <https://linkedopendata.eu/prop/direct/P1848> ?theme."
+                            + "           ?theme <https://linkedopendata.eu/prop/direct/P1105> ?themeId. "
+                            + "           ?theme <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabel. "
+                            + "           FILTER((LANG(?themeLabel)) = \""
+                            + language
+                            + "\") } "
+                            + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category.  " //todo policy objective
+                            + "           ?category <https://linkedopendata.eu/prop/direct/P1849> ?policy."
+                            + "           ?policy <https://linkedopendata.eu/prop/direct/P1747> ?policyId. "
+                            + "           ?policy <http://www.w3.org/2000/01/rdf-schema#label> ?policyLabel. "
+                            + "           FILTER((LANG(?policyLabel)) = \""
                             + language
                             + "\") } "
                             + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1584> ?fund.  "
@@ -279,8 +286,10 @@ public class ProjectController {
             result.put("programLabel", "");
             result.put("programWebsite", "");
             result.put("programInfoRegioUrl", "");
-            result.put("objectiveIds", new JSONArray());
-            result.put("objectiveLabels", new JSONArray());
+            result.put("themeIds", new JSONArray());
+            result.put("themeLabels", new JSONArray());
+            result.put("policyIds", new JSONArray());
+            result.put("policyLabels", new JSONArray());
             result.put("projectWebsite", "");
             result.put("coordinates", new JSONArray());
             result.put("images", new JSONArray());
@@ -298,8 +307,10 @@ public class ProjectController {
             HashSet<String> coordinatesSet = new HashSet<>();
             HashSet<String> regions = new HashSet<>();
             HashSet<String> interventionFieldsSet = new HashSet<>();
-            HashSet<String> objectiveLabels = new HashSet<>();
-            HashSet<String> objectiveIds = new HashSet<>();
+            HashSet<String> themeLabels = new HashSet<>();
+            HashSet<String> themeIds = new HashSet<>();
+            HashSet<String> policyLabels = new HashSet<>();
+            HashSet<String> policyIds = new HashSet<>();
 
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
@@ -400,19 +411,34 @@ public class ProjectController {
                             querySolution.getBinding("programInfoRegioUrl").getValue().stringValue()
                     );
                 }
-                if (querySolution.getBinding("objectiveId") != null) {
-                    String objectiveId = querySolution.getBinding("objectiveId").getValue().stringValue();
-                    if (!objectiveIds.contains(objectiveId)) {
-                        objectiveIds.add(objectiveId);
-                        result.put("objectiveIds", objectiveIds);
+                if (querySolution.getBinding("themeId") != null) {
+                    String themeId = querySolution.getBinding("themeId").getValue().stringValue();
+                    if (!themeIds.contains(themeId)) {
+                        themeIds.add(themeId);
+                        result.put("themeIds", themeIds);
                     }
                 }
 
-                if (querySolution.getBinding("objectiveLabel") != null) {
-                    String objectiveLabel = querySolution.getBinding("objectiveLabel").getValue().stringValue();
-                    if (!objectiveLabels.contains(objectiveLabel)) {
-                        objectiveLabels.add(objectiveLabel);
-                        result.put("objectiveLabels", objectiveLabels);
+                if (querySolution.getBinding("themeLabel") != null) {
+                    String themeLabel = querySolution.getBinding("themeLabel").getValue().stringValue();
+                    if (!themeLabels.contains(themeLabel)) {
+                        themeLabels.add(themeLabel);
+                        result.put("themeLabels", themeLabels);
+                    }
+                }
+                if (querySolution.getBinding("policyId") != null) {
+                    String policyId = querySolution.getBinding("policyId").getValue().stringValue();
+                    if (!policyIds.contains(policyId)) {
+                        policyIds.add(policyId);
+                        result.put("policyIds", policyIds);
+                    }
+                }
+
+                if (querySolution.getBinding("policyLabel") != null) {
+                    String policyLabel = querySolution.getBinding("policyLabel").getValue().stringValue();
+                    if (!policyLabels.contains(policyLabel)) {
+                        policyLabels.add(policyLabel);
+                        result.put("policyLabels", policyLabels);
                     }
                 }
 
@@ -443,11 +469,11 @@ public class ProjectController {
                     String im = querySolution.getBinding("image").getValue().stringValue();
                     boolean found = false;
                     for (Object i : images) {
-                        if (((JSONObject) i).get("image").toString().equals(im) && found == false) {
+                        if (((JSONObject) i).get("image").toString().equals(im) && !found) {
                             found = true;
                         }
                     }
-                    if (found == false) {
+                    if (!found) {
                         image.put("image", im);
                         if (querySolution.getBinding("imageCopyright") != null) {
                             image.put("imageCopyright", "© " + querySolution.getBinding("imageCopyright").getValue().stringValue());
