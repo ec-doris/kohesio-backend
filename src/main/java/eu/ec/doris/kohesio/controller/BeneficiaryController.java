@@ -319,7 +319,7 @@ public class BeneficiaryController {
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset != Integer.MIN_VALUE) {
-            if (offset <= 985) {
+            if (offset <= 1000 - inputLimit) {
                 offset = 0;
                 limit = 1000;
             }
@@ -537,7 +537,7 @@ public class BeneficiaryController {
         }
         BeneficiaryList finalRes = new BeneficiaryList();
         finalRes.setNumberResults(numResults);
-        if (offset <= 990) {
+        if (offset <= 1000 - inputLimit) {
             for (int i = inputOffset; i < Math.min(beneficiaries.size(), inputOffset + inputLimit); i++) {
                 finalRes.getList().add(beneficiaries.get(i));
             }
