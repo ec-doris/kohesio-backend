@@ -679,8 +679,8 @@ public class FacetController {
                         + " FILTER (LANG(?toLabel)=\""
                         + language
                         + "\")"
-                        + " ?to <https://linkedopendata.eu/prop/direct/P1849> ?policy . "
-                        + " ?policy <https://linkedopendata.eu/prop/direct/P1747> ?policyId . ";
+                        + " OPTIONAL{?to <https://linkedopendata.eu/prop/direct/P1849> ?policy . "
+                        + " ?policy <https://linkedopendata.eu/prop/direct/P1747> ?policyId . }";
 
         if (policy != null) {
             query += " FILTER(?policy = <" + policy + "> ) . ";
