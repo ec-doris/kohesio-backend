@@ -472,33 +472,67 @@ public class FacetController {
         return result;
     }
 
-    @GetMapping(value = "/facet/eu/policy_objective", produces = "application/json")
+
     public JSONArray facetPolicyObjective( //
-                                           @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
+                                           @RequestParam(value = "language", defaultValue = "en") String language
+    ) throws Exception {
+        return facetPolicyObjective(language, null);
+    }
+
+    @GetMapping(value = "/facet/eu/policy_objectives", produces = "application/json")
+    public JSONArray facetPolicyObjective( //
+                                           @RequestParam(value = "language", defaultValue = "en") String language,
+                                           @RequestParam(value = "theme", required = false) String theme
+    ) throws Exception {
         logger.info("Get list of policy objectives");
         String query =
                 ""
-                        + "SELECT ?po ?poLabel ?id WHERE { "
+                        + "SELECT ?po ?poLabel ?id ?to ?toId { "
+                        + " { SELECT DISTINCT ?po ?poLabel ?id WHERE { "
                         + " ?po <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2547986> . "
                         + " ?po rdfs:label ?poLabel . "
                         + " ?po  <https://linkedopendata.eu/prop/direct/P1747> ?id ."
                         + " FILTER(LANG(?poLabel)=\""
                         + language
                         + "\")"
-                        + "} ORDER BY ?id";
+                        + " ?po <https://linkedopendata.eu/prop/direct/P1848> ?to ."
+                        + " ?to <https://linkedopendata.eu/prop/direct/P1105> ?toId .";
+        if (theme != null) {
+            query += " FILTER (?to = <" + theme + "> )";
+        }
+        query += "}}"
+                + " ?po <https://linkedopendata.eu/prop/direct/P1848> ?to ."
+                + " ?to <https://linkedopendata.eu/prop/direct/P1105> ?toId ."
+                + " } ORDER BY ?id";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
-        JSONArray result = new JSONArray();
+        HashMap<String, JSONObject> tempList = new HashMap<>();
+
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
-            element.put("instance", querySolution.getBinding("po").getValue().toString());
-            element.put("instanceLabel", querySolution.getBinding("poLabel").getValue().stringValue());
-            element.put("id", querySolution.getBinding("id").getValue().stringValue());
+            String instance = querySolution.getBinding("po").getValue().toString();
+            if (tempList.containsKey(instance)) {
+                element = tempList.get(instance);
+            } else {
+                element.put("instance", querySolution.getBinding("po").getValue().toString());
+                element.put("instanceLabel", querySolution.getBinding("poLabel").getValue().stringValue());
+                element.put("id", querySolution.getBinding("id").getValue().stringValue());
+                element.put("theme", new JSONArray());
+
+                tempList.put(querySolution.getBinding("po").getValue().toString(), element);
+            }
+            JSONObject themeObj = new JSONObject();
+            themeObj.put("instance", querySolution.getBinding("to").getValue().stringValue());
+            themeObj.put("id", querySolution.getBinding("toId").getValue().stringValue());
+            ((JSONArray) element.get("theme")).add(themeObj);
+        }
+
+        JSONArray result = new JSONArray();
+        for (JSONObject element : tempList.values()) {
             result.add(element);
         }
         return result;
     }
-
 
 
     @GetMapping(value = "/facet/eu/categoriesOfIntervention", produces = "application/json")
@@ -587,7 +621,7 @@ public class FacetController {
         }
         if (fund != null) {
             query += " ?program <https://linkedopendata.eu/prop/direct/P1584> ?fundFilter .";
-            query += " FILTER(?fundFilter =<"+ fund +">) ";
+            query += " FILTER(?fundFilter =<" + fund + ">) ";
         }
 
         query +=
@@ -619,7 +653,7 @@ public class FacetController {
                         querySolution.getBinding("cci").getValue().stringValue() + " - " + querySolution.getBinding("programLabel").getValue().stringValue()
                 );
                 JSONArray funds = new JSONArray();
-                if (querySolution.getBinding("fund")!=null){
+                if (querySolution.getBinding("fund") != null) {
                     funds.add(querySolution.getBinding("fund").getValue().stringValue());
                 }
                 element.put("funds", funds);
@@ -631,19 +665,27 @@ public class FacetController {
 
     @GetMapping(value = "/facet/eu/thematic_objectives", produces = "application/json")
     public JSONArray facetEuThematicObjective( //
-                                               @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
+                                               @RequestParam(value = "language", defaultValue = "en") String language,
+                                               @RequestParam(value = "policy", required = false) String policy
+    ) throws Exception {
 
         logger.info("Get list of thematic objectives");
         String query =
                 ""
-                        + "select ?to ?toLabel ?id where { "
+                        + "SELECT ?to ?toLabel ?id ?policy ?policyId { "
                         + " ?to <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q236700> . "
                         + " ?to <https://linkedopendata.eu/prop/direct/P1105>  ?id . "
                         + " ?to rdfs:label ?toLabel . "
-                        + " FILTER (lang(?toLabel)=\""
+                        + " FILTER (LANG(?toLabel)=\""
                         + language
                         + "\")"
-                        + "} order by ?id ";
+                        + " OPTIONAL{?to <https://linkedopendata.eu/prop/direct/P1849> ?policy . "
+                        + " ?policy <https://linkedopendata.eu/prop/direct/P1747> ?policyId . }";
+
+        if (policy != null) {
+            query += " FILTER(?policy = <" + policy + "> ) . ";
+        }
+        query += "} ORDER BY ?id ";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
         JSONArray result = new JSONArray();
@@ -653,9 +695,15 @@ public class FacetController {
             element.put("instance", querySolution.getBinding("to").getValue().toString());
             element.put("instanceLabel", querySolution.getBinding("toLabel").getValue().stringValue());
             element.put("id", querySolution.getBinding("id").getValue().stringValue());
+//            element.put("policyId", querySolution.getBinding("policyId").getValue().stringValue());
             result.add(element);
         }
         return result;
     }
 
+    public JSONArray facetEuThematicObjective( //
+                                               @RequestParam(value = "language", defaultValue = "en") String language
+    ) throws Exception {
+        return facetEuThematicObjective(language, null);
+    }
 }
