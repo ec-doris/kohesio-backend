@@ -162,15 +162,14 @@ public class ProjectController {
                             + "             FILTER((LANG(?categoryLabel)) = \""
                             + language
                             + "\") }"
-                            + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category.  "
-                            + "           ?category <https://linkedopendata.eu/prop/direct/P1848> ?theme."
+                            + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme."
                             + "           ?theme <https://linkedopendata.eu/prop/direct/P1105> ?themeId. "
                             + "           ?theme <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabel. "
                             + "           FILTER((LANG(?themeLabel)) = \""
                             + language
                             + "\") } "
-                            + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category.  " //todo policy objective
-                            + "           ?category <https://linkedopendata.eu/prop/direct/P1849> ?policy."
+                            + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme.  "
+                            + "           ?theme <https://linkedopendata.eu/prop/direct/P1849> ?policy."
                             + "           ?policy <https://linkedopendata.eu/prop/direct/P1747> ?policyId. "
                             + "           ?policy <http://www.w3.org/2000/01/rdf-schema#label> ?policyLabel. "
                             + "           FILTER((LANG(?policyLabel)) = \""
