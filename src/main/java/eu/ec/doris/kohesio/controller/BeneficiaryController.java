@@ -309,7 +309,7 @@ public class BeneficiaryController {
                                                  @RequestParam(value = "offset", defaultValue = "0") int offset,
                                                  Principal principal)
             throws Exception {
-        logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}", language, keywords, country, region, latitude, longitude, fund, program);
+        logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}, orderEuBudget {}, orderTotalBudget {}, orderNumProjects {}", language, keywords, country, region, latitude, longitude, fund, program, orderEuBudget, orderTotalBudget, orderNumProjects);
 
         int timeout = 20;
         if (keywords == null) {
