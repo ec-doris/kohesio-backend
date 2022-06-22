@@ -213,7 +213,7 @@ public class CacheController {
         }
         for (String country : countries) {
 
-            Boolean[] orderEuBudget = {null, true, false};
+            Boolean[] orderEuBudget = {true, false};
             for (Boolean b : orderEuBudget) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
@@ -222,7 +222,7 @@ public class CacheController {
                     e.printStackTrace();
                 }
             }
-            Boolean[] orderTotalBudget = {null, true, false};
+            Boolean[] orderTotalBudget = {true, false};
             for (Boolean b : orderTotalBudget) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
@@ -231,7 +231,7 @@ public class CacheController {
                     e.printStackTrace();
                 }
             }
-            Boolean[] orderNumProjects = {null, true, false};
+            Boolean[] orderNumProjects = {true, false};
             for (Boolean b : orderNumProjects) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
