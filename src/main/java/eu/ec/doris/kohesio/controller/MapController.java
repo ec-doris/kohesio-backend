@@ -124,7 +124,7 @@ public class MapController {
             }
         }
         logger.debug("Number of results {}", numResults);
-        if ((!granularityRegion.equals("https://linkedopendata.eu/entity/Q3487") && !granularityRegion.equals("https://linkedopendata.eu/entity/Q11")) && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))) {
+        if ((!"https://linkedopendata.eu/entity/Q3487".equals(granularityRegion) && !"https://linkedopendata.eu/entity/Q11".equals(granularityRegion)) && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))) {
             return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
             if (granularityRegion == null) {
