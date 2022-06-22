@@ -596,7 +596,7 @@ public class ProjectController {
                         regionText += ", " + (String) result.get("regionUpper3");
                     }
                     if (!result.get("countryLabel").equals(regionText))
-                        regionText += ", " + (String) result.get("countryLabel");
+                        regionText += ", " + String.join(", ", (JSONArray) result.get("countryLabel"));
 
                     result.put("regionText", regionText);
                 } else {
