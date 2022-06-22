@@ -386,11 +386,9 @@ public class BeneficiaryController {
                         + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630486> .";
             }
         }
-        String queryCount = "SELECT (COUNT(DISTINCT ?beneficiary) AS ?c) { " +
-                "{SELECT ?beneficiary where {\n" +
+        String queryCount = "SELECT (COUNT(DISTINCT ?beneficiary) AS ?c) { \n" +
                 search
-                + " } GROUP BY ?beneficiary }" +
-                "}";
+                + " }";
         logger.debug(queryCount);
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
         int numResults = 0;
