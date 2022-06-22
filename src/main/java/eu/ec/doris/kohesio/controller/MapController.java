@@ -74,7 +74,7 @@ public class MapController {
             @RequestParam(value = "fund", required = false) String fund,
             @RequestParam(value = "program", required = false) String program,
             @RequestParam(value = "categoryOfIntervention", required = false)
-                    String categoryOfIntervention,
+            String categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
             @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
             @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -106,7 +106,7 @@ public class MapController {
         }
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
-        if(keywords != null) {
+        if (keywords != null) {
             expandedQuery = similarityService.expandQuery(keywords);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
@@ -124,7 +124,7 @@ public class MapController {
             }
         }
         logger.debug("Number of results {}", numResults);
-        if (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0)) {
+        if ((!granularityRegion.equals("https://linkedopendata.eu/entity/Q3487") && !granularityRegion.equals("https://linkedopendata.eu/entity/Q11")) && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))) {
             return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
             if (granularityRegion == null) {
@@ -144,11 +144,11 @@ public class MapController {
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
 
-            HashMap<String, JSONObject> subRegions = new HashMap();
+            HashMap<String, JSONObject> subRegions = new HashMap<>();
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
-                System.out.println("r "+r+" "+facetController.nutsRegion.get(r).name);
+                System.out.println("r " + r + " " + facetController.nutsRegion.get(r).name);
                 element.put("regionLabel", facetController.nutsRegion.get(r).name);
                 element.put("geoJson", facetController.nutsRegion.get(r).geoJson);
                 element.put("count", 0);
@@ -161,15 +161,15 @@ public class MapController {
                 if (subRegions.containsKey(querySolution.getBinding("region").getValue().stringValue())) {
                     JSONObject element = subRegions.get(querySolution.getBinding("region").getValue().stringValue());
                     element.put("count", ((Literal) querySolution.getBinding("c").getValue()).intValue());
-                    if (((Literal) querySolution.getBinding("c").getValue()).intValue()!=0){
+                    if (((Literal) querySolution.getBinding("c").getValue()).intValue() != 0) {
                         foundNextNutsLevel = true;
                     }
                     subRegions.put(querySolution.getBinding("region").getValue().stringValue(), element);
                 }
             }
             // this happens when we have for example nuts 1 information but not nuts 2 information for the projects
-            if (foundNextNutsLevel == false){
-                return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude,limit, offset, timeout);
+            if (foundNextNutsLevel == false) {
+                return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
             }
 
             JSONArray resultList = new JSONArray();
@@ -187,8 +187,8 @@ public class MapController {
         }
     }
 
-    ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, String latitude, String longitude,Integer limit, Integer offset, int timeout) throws Exception {
-        logger.debug("granularityRegion {}, limit {}",granularityRegion,limit);
+    ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, String latitude, String longitude, Integer limit, Integer offset, int timeout) throws Exception {
+        logger.debug("granularityRegion {}, limit {}", granularityRegion, limit);
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
         if (granularityRegion != null) {
@@ -202,7 +202,7 @@ public class MapController {
                 }
             }
             // this is a hack to show brittany
-            if (isCountry == false && !granularityRegion.equals("https://linkedopendata.eu/entity/Q3487")) {
+            if (/*isCountry == false && */!granularityRegion.equals("https://linkedopendata.eu/entity/Q3487")) {
                 optional += "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
             }
         }
@@ -225,8 +225,7 @@ public class MapController {
                             + " } "
                             + optional
                             + "} ";
-        }
-        else {
+        } else {
             query =
                     "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
                             + " { SELECT ?s0 WHERE { "
@@ -262,7 +261,7 @@ public class MapController {
 //            result.put("geoJson", "");
 //        }
 
-        HashMap<String,Boolean> unique_highlighted = new HashMap<>();
+        HashMap<String, Boolean> unique_highlighted = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             String coordinates = ((Literal) querySolution.getBinding("coordinates").getValue())
@@ -270,16 +269,16 @@ public class MapController {
                     .replace("Point(", "")
                     .replace(")", "")
                     .replace(" ", ",");
-            if(querySolution.getBinding("infoRegioID") != null)
+            if (querySolution.getBinding("infoRegioID") != null)
                 unique_highlighted.put(coordinates, true);
             else if (!unique_highlighted.containsKey(coordinates))
                 unique_highlighted.put(coordinates, false);
         }
         JSONArray resultList = new JSONArray();
-        for (String coordinates : unique_highlighted.keySet()){
+        for (String coordinates : unique_highlighted.keySet()) {
             JSONObject point = new JSONObject();
-            point.put("coordinates",coordinates);
-            point.put("isHighlighted",unique_highlighted.get(coordinates));
+            point.put("coordinates", coordinates);
+            point.put("isHighlighted", unique_highlighted.get(coordinates));
             resultList.add(point);
         }
 
@@ -306,7 +305,7 @@ public class MapController {
             @RequestParam(value = "fund", required = false) String fund,
             @RequestParam(value = "program", required = false) String program,
             @RequestParam(value = "categoryOfIntervention", required = false)
-                    String categoryOfIntervention,
+            String categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
             @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
             @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -330,7 +329,7 @@ public class MapController {
 
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
-        if(keywords != null) {
+        if (keywords != null) {
             expandedQuery = similarityService.expandQuery(keywords);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
@@ -391,7 +390,7 @@ public class MapController {
             } else {
                 item.put("isHighlighted", false);
             }
-            if ((boolean)item.get("isHighlighted")){
+            if ((boolean) item.get("isHighlighted")) {
                 result.add(0, item);
             } else {
                 result.add(item);
@@ -405,7 +404,7 @@ public class MapController {
                                        @RequestParam(value = "id") String id,
                                        @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
-        logger.info("Get coordinates by ID : id {}, language {}",id, language);
+        logger.info("Get coordinates by ID : id {}, language {}", id, language);
         String query =
                 "select ?s0 ?coordinates where { "
                         + " VALUES ?s0 { <"
