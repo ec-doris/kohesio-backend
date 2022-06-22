@@ -686,7 +686,7 @@ public class ProjectController {
                 timeout = 100;
             }
         }
-        logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, region {}, timeout {}", language, keywords, country, theme, fund, region, timeout);
+        logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, program {}, region {}, timeout {}", language, keywords, country, theme, fund, program, region, timeout);
 
         int inputOffset = offset;
         int inputLimit = limit;
