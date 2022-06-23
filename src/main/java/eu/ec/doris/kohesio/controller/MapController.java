@@ -225,7 +225,7 @@ public class MapController {
                             + offset
                             + " } "
                             + optional
-                            + " FILTER(?distance < 100000) "
+                            + " FILTER(?distance < 10000) "
                             + "} ";
         } else {
             query =
@@ -264,6 +264,7 @@ public class MapController {
         HashMap<String, Boolean> unique_highlighted = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
+
             String coordinates = ((Literal) querySolution.getBinding("coordinates").getValue())
                     .getLabel()
                     .replace("Point(", "")
