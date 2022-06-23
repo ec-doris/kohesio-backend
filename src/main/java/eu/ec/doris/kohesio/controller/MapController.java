@@ -2,9 +2,7 @@ package eu.ec.doris.kohesio.controller;
 
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
-import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.payload.NutsRegion;
-import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.services.ExpandedQuery;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
@@ -18,16 +16,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.security.Principal;
-import java.util.*;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api")
@@ -124,7 +120,7 @@ public class MapController {
             }
         }
         logger.debug("Number of results {}", numResults);
-        if ((!"https://linkedopendata.eu/entity/Q11".equals(granularityRegion)) && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))) {
+        if ((!"country".equals(facetController.nutsRegion.get(granularityRegion).granularity)) && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))) {
             return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
             if (granularityRegion == null) {
@@ -144,6 +140,9 @@ public class MapController {
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
 
+//            System.err.println(facetController.nutsRegion.get(granularityRegion).country);
+//            System.err.println(facetController.nutsRegion.get(granularityRegion).granularity);
+
             HashMap<String, JSONObject> subRegions = new HashMap<>();
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
@@ -156,19 +155,22 @@ public class MapController {
             }
 
             boolean foundNextNutsLevel = false;
+
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 if (subRegions.containsKey(querySolution.getBinding("region").getValue().stringValue())) {
                     JSONObject element = subRegions.get(querySolution.getBinding("region").getValue().stringValue());
                     element.put("count", ((Literal) querySolution.getBinding("c").getValue()).intValue());
                     if (((Literal) querySolution.getBinding("c").getValue()).intValue() != 0) {
-                        foundNextNutsLevel = true;
+                        if (!("country".equals(facetController.nutsRegion.get(granularityRegion).country) && "nuts2".equals(facetController.nutsRegion.get(granularityRegion).granularity))) {
+                            foundNextNutsLevel = true;
+                        }
                     }
                     subRegions.put(querySolution.getBinding("region").getValue().stringValue(), element);
                 }
             }
             // this happens when we have for example nuts 1 information but not nuts 2 information for the projects
-            if (foundNextNutsLevel == false) {
+            if (!foundNextNutsLevel) {
                 return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
             }
 
@@ -202,7 +204,7 @@ public class MapController {
                 }
             }
             // this is a hack to show brittany
-            if (/*isCountry == false && */!granularityRegion.equals("https://linkedopendata.eu/entity/Q3487")) {
+            if (/*!isCountry && */!granularityRegion.equals("https://linkedopendata.eu/entity/Q3487")) {
                 optional += "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
             }
         }
