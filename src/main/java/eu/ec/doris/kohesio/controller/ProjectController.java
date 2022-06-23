@@ -112,7 +112,7 @@ public class ProjectController {
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
                             "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
-                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?themeId ?themeLabel ?policyId ?policyLabel ?managingAuthorityLabel" +
+                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 WHERE { "
                             + " VALUES ?s0 { <"
@@ -162,13 +162,22 @@ public class ProjectController {
                             + "             FILTER((LANG(?categoryLabel)) = \""
                             + language
                             + "\") }"
+
                             + " OPTIONAL {"
-                            + "           ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category."
-                            + "           OPTIONAL { "
-                            + "                 ?category <https://linkedopendata.eu/prop/direct/P1848> ?theme."
+                            + "                 ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme."
                             + "                 ?theme <https://linkedopendata.eu/prop/direct/P1105> ?themeId. "
                             + "                 ?theme <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabel. "
                             + "                 FILTER((LANG(?themeLabel)) = \""
+                            + language
+                            + "\") } "
+
+                            + " OPTIONAL {"
+                            + "           ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category."
+                            + "           OPTIONAL { "
+                            + "                 ?category <https://linkedopendata.eu/prop/direct/P1848> ?themeInferred."
+                            + "                 ?themeInferred <https://linkedopendata.eu/prop/direct/P1105> ?themeIdInferred. "
+                            + "                 ?themeInferred <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabelInferred . "
+                            + "                 FILTER((LANG(?themeLabelInferred)) = \""
                             + language
                             + "\") } } "
                             + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme.  "
@@ -422,6 +431,14 @@ public class ProjectController {
                         themeIds.add(themeId);
                         result.put("themeIds", themeIds);
                     }
+                } else {
+                    if (querySolution.getBinding("themeIdInferred") != null) {
+                        String themeId = querySolution.getBinding("themeIdInferred").getValue().stringValue();
+                        if (!themeIds.contains(themeId)) {
+                            themeIds.add(themeId);
+                            result.put("themeIds", themeIds);
+                        }
+                    }
                 }
 
                 if (querySolution.getBinding("themeLabel") != null) {
@@ -429,6 +446,14 @@ public class ProjectController {
                     if (!themeLabels.contains(themeLabel)) {
                         themeLabels.add(themeLabel);
                         result.put("themeLabels", themeLabels);
+                    }
+                } else {
+                    if (querySolution.getBinding("themeLabelInferred") != null) {
+                        String themeLabel = querySolution.getBinding("themeLabelInferred").getValue().stringValue();
+                        if (!themeLabels.contains(themeLabel)) {
+                            themeLabels.add(themeLabel);
+                            result.put("themeLabels", themeLabels);
+                        }
                     }
                 }
                 if (querySolution.getBinding("policyId") != null) {
