@@ -120,7 +120,9 @@ public class MapController {
             }
         }
         logger.debug("Number of results {}", numResults);
-        if ((!"country".equals(facetController.nutsRegion.get(granularityRegion).granularity)) && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))) {
+        if ((granularityRegion != null && !"country".equals(facetController.nutsRegion.get(granularityRegion).granularity))
+                && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
+        ) {
             return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
             if (granularityRegion == null) {
@@ -140,8 +142,6 @@ public class MapController {
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
 
-//            System.err.println(facetController.nutsRegion.get(granularityRegion).country);
-//            System.err.println(facetController.nutsRegion.get(granularityRegion).granularity);
 
             HashMap<String, JSONObject> subRegions = new HashMap<>();
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
@@ -262,7 +262,6 @@ public class MapController {
 //        } else {
 //            result.put("geoJson", "");
 //        }
-
         HashMap<String, Boolean> unique_highlighted = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
