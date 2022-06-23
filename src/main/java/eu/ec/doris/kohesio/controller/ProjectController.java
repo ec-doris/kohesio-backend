@@ -277,8 +277,8 @@ public class ProjectController {
             result.put("budget", "");
             result.put("euBudget", "");
             result.put("cofinancingRate", "");
-            result.put("countryLabel", "");
-            result.put("countryCode", "");
+            result.put("countryLabel", new JSONArray());
+            result.put("countryCode", new JSONArray());
             result.put("categoryLabels", new JSONArray());
             result.put("fundLabel", "");
             result.put("programmingPeriodLabel", "2014-2020");
@@ -374,15 +374,18 @@ public class ProjectController {
                 }
 
                 if (querySolution.getBinding("countryLabel") != null) {
-                    result.put(
-                            "countryLabel",
-                            ((Literal) querySolution.getBinding("countryLabel").getValue()).stringValue());
+                    if (!((JSONArray) result.get("countryLabel")).contains(querySolution.getBinding("countryLabel").getValue().stringValue())) {
+                        ((JSONArray) result.get("countryLabel")).add(
+                                querySolution.getBinding("countryLabel").getValue().stringValue()
+                        );
+                    }
                 }
 
                 if (querySolution.getBinding("countryCode") != null) {
-                    result.put(
-                            "countryCode",
-                            ((Literal) querySolution.getBinding("countryCode").getValue()).stringValue());
+                    if (!((JSONArray) result.get("countryCode")).contains(querySolution.getBinding("countryCode").getValue().stringValue()))
+                        ((JSONArray) result.get("countryCode")).add(
+                                querySolution.getBinding("countryCode").getValue().stringValue()
+                        );
                 }
 
                 if (querySolution.getBinding("categoryLabel") != null) {
@@ -593,11 +596,11 @@ public class ProjectController {
                         regionText += ", " + (String) result.get("regionUpper3");
                     }
                     if (!result.get("countryLabel").equals(regionText))
-                        regionText += ", " + (String) result.get("countryLabel");
+                        regionText += ", " + String.join(", ", (JSONArray) result.get("countryLabel"));
 
                     result.put("regionText", regionText);
                 } else {
-                    result.put("regionText", (String) result.get("countryLabel"));
+                    result.put("regionText", String.join(", ", (JSONArray) result.get("countryLabel")));
                 }
                 String regionId = "";
                 if (querySolution.getBinding("regionId") != null) {
@@ -641,7 +644,7 @@ public class ProjectController {
             }
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
-                result.put("regionText", "multiple locations, " + result.get("countryLabel"));
+                result.put("regionText", "multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
@@ -656,7 +659,7 @@ public class ProjectController {
                                            @RequestParam(value = "fund", required = false) String fund,
                                            @RequestParam(value = "program", required = false) String program,
                                            @RequestParam(value = "categoryOfIntervention", required = false)
-                                                   String categoryOfIntervention,
+                                           String categoryOfIntervention,
                                            @RequestParam(value = "policyObjective", required = false) String policyObjective,
                                            @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
                                            @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -1094,7 +1097,7 @@ public class ProjectController {
             @RequestParam(value = "fund", required = false) String fund,
             @RequestParam(value = "program", required = false) String program,
             @RequestParam(value = "categoryOfIntervention", required = false)
-                    String categoryOfIntervention,
+            String categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
             @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
             @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -1187,7 +1190,7 @@ public class ProjectController {
                                                         @RequestParam(value = "fund", required = false) String fund,
                                                         @RequestParam(value = "program", required = false) String program,
                                                         @RequestParam(value = "categoryOfIntervention", required = false)
-                                                                String categoryOfIntervention,
+                                                        String categoryOfIntervention,
                                                         @RequestParam(value = "policyObjective", required = false) String policyObjective,
                                                         @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
                                                         @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -1292,7 +1295,7 @@ public class ProjectController {
                                     @RequestParam(value = "fund", required = false) String fund,
                                     @RequestParam(value = "program", required = false) String program,
                                     @RequestParam(value = "categoryOfIntervention", required = false)
-                                            String categoryOfIntervention,
+                                    String categoryOfIntervention,
                                     @RequestParam(value = "policyObjective", required = false) String policyObjective,
                                     @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
                                     @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
