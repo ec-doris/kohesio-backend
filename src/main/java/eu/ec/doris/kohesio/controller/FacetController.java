@@ -102,8 +102,9 @@ public class FacetController {
                 }
 
                 String query =
-                        "SELECT ?region ?regionLabel where {" +
+                        "SELECT ?region ?regionLabel ?country where {" +
                                 filter +
+                                " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } " +
                                 " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
                                 "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
                                 "}";
@@ -118,11 +119,15 @@ public class FacetController {
                         Nut nut = new Nut();
                         nut.uri = key;
                         nut.type.add(g);
+                        nut.granularity = g;
                         if (nutsRegion.get(key) != null) {
                             nut = nutsRegion.get(key);
                         }
                         if (querySolution.getBinding("regionLabel") != null) {
                             nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
+                        }
+                        if (querySolution.getBinding("country") != null) {
+                            nut.country = querySolution.getBinding("country").getValue().stringValue();
                         }
                         nutsRegion.put(key, nut);
                     }

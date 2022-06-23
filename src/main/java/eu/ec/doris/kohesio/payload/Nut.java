@@ -8,5 +8,7 @@ public class Nut{
     public List<String> type = new ArrayList<>();
     public String name="";
     public String geoJson="";
+    public String country="";
+    public String granularity;
     public List<String> narrower = new ArrayList<String>();
 }
