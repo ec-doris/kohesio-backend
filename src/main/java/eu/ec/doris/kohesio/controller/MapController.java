@@ -155,13 +155,15 @@ public class MapController {
 
             boolean foundNextNutsLevel = false;
 
+            System.err.println(facetController.nutsRegion.get(granularityRegion).country);
+            System.err.println(facetController.nutsRegion.get(granularityRegion).granularity);
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 if (subRegions.containsKey(querySolution.getBinding("region").getValue().stringValue())) {
                     JSONObject element = subRegions.get(querySolution.getBinding("region").getValue().stringValue());
                     element.put("count", ((Literal) querySolution.getBinding("c").getValue()).intValue());
                     if (((Literal) querySolution.getBinding("c").getValue()).intValue() != 0) {
-                        if (!("country".equals(facetController.nutsRegion.get(granularityRegion).country) && "nuts2".equals(facetController.nutsRegion.get(granularityRegion).granularity))) {
+                        if (!("https://linkedopendata.eu/entity/Q17".equals(facetController.nutsRegion.get(granularityRegion).country) && "nuts2".equals(facetController.nutsRegion.get(granularityRegion).granularity))) {
                             foundNextNutsLevel = true;
                         }
                     }
