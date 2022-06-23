@@ -860,6 +860,7 @@ public class ProjectController {
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
+                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
                         + " FILTER(LANG(?summary)=\"" + language + "\")"
