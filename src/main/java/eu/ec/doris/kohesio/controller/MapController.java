@@ -120,7 +120,7 @@ public class MapController {
             }
         }
         logger.debug("Number of results {}", numResults);
-        if ((latitude != null && longitude != null)||(granularityRegion != null && !"country".equals(facetController.nutsRegion.get(granularityRegion).granularity))
+        if ((latitude != null && longitude != null) || (granularityRegion != null && !"country".equals(facetController.nutsRegion.get(granularityRegion).granularity))
                 && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
         ) {
             return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
@@ -140,7 +140,6 @@ public class MapController {
                                 + " } GROUP BY ?region ";
             }
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
-
 
 
             HashMap<String, JSONObject> subRegions = new HashMap<>();
@@ -226,6 +225,7 @@ public class MapController {
                             + offset
                             + " } "
                             + optional
+                            + " FILTER(?distance < 100000) "
                             + "} ";
         } else {
             query =
