@@ -225,6 +225,7 @@ public class MapController {
                             + offset
                             + " } "
                             + optional
+                            + " FILTER((<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>, ?coordinates, <http://www.opengis.net/def/uom/OGC/1.0/metre>)) < 100000 )"
                             + "} ";
         } else {
             query =
