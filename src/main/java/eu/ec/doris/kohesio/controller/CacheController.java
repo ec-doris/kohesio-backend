@@ -64,7 +64,7 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null,
                             null, null, b, null, null, null,
-                            null, null, null, 1000, 1, 100,null);
+                            null, null, null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -76,7 +76,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null,
                         null, null, null, b, null, null,
-                        null, null, null, 1000, 1, 100,null);
+                        null, null, null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -88,7 +88,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, b, null, null,
-                        null, null, 1000, 1, 100,null);
+                        null, null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -100,7 +100,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, null, b, null, null,
-                        null, 1000, 1, 100,null);
+                        null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -114,7 +114,7 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            regio, 1000, 1, 100,null);
+                            regio, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -128,7 +128,7 @@ public class CacheController {
                             null, polic, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 1, 100,null);
+                            null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -142,7 +142,7 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 1, 100,null);
+                            null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -157,7 +157,7 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 1, 100,null);
+                            null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -172,7 +172,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, null, false, null, null,
-                        null, 1000, 1, 100,null);
+                        null, 1000, 0, 100,null);
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -202,11 +202,11 @@ public class CacheController {
                         null, null, lower_bound.get(i), upper_bound.get(i),
                         null, null, null, null, null,
                         null, null, null, null, false, null, null,
-                        null, 1000, 1, 100,null);
+                        null, 1000, 0, 100,null);
                 projectController.euSearchProject("en", null, null, null, null, null,
                         null, null, null, null, lower_bound.get(i), upper_bound.get(i), null, null, null,
                         null, null, null, null, false, null, null,
-                        null, 1000, 1, 100,null);
+                        null, 1000, 0, 100,null);
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -217,7 +217,7 @@ public class CacheController {
             for (Boolean b : orderEuBudget) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null,null, b, null, null, 1000, 1, null);
+                        null,null, b, null, null, 1000, 0, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -226,7 +226,7 @@ public class CacheController {
             for (Boolean b : orderTotalBudget) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null, null,null, b, null, 1000, 1, null);
+                        null, null,null, b, null, 1000, 0, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -235,7 +235,7 @@ public class CacheController {
             for (Boolean b : orderNumProjects) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null, null,null, null, b, 1000, 1, null);
+                        null, null,null, null, b, 1000, 0, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -248,7 +248,7 @@ public class CacheController {
                 String r = ((JSONObject) region).get("region").toString();
                 try{
                     beneficiaryController.euSearchBeneficiaries("en", null, country, r, null, null, null,
-                            null, null,null, false, null, 1000, 1, null);
+                            null, null,null, false, null, 1000, 0, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
