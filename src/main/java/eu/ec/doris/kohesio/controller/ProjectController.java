@@ -395,9 +395,16 @@ public class ProjectController {
 
                 if (querySolution.getBinding("countryCode") != null) {
                     if (!((JSONArray) result.get("countryCode")).contains(querySolution.getBinding("countryCode").getValue().stringValue()))
-                        ((JSONArray) result.get("countryCode")).add(
-                                querySolution.getBinding("countryCode").getValue().stringValue()
-                        );
+                        if (!"GR".equals(querySolution.getBinding("countryCode").getValue().stringValue())) {
+                            ((JSONArray) result.get("countryCode")).add(
+                                    querySolution.getBinding("countryCode").getValue().stringValue()
+                            );
+                        } else {
+                            ((JSONArray) result.get("countryCode")).add(
+                                    "EL"
+                            );
+                        }
+
                 }
 
                 if (querySolution.getBinding("categoryLabel") != null) {
