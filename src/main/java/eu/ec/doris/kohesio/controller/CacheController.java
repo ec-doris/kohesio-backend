@@ -122,8 +122,8 @@ public class CacheController {
             // cache policy objective
             JSONArray policies = facetController.facetPolicyObjective("en");
             for (Object policy: policies) {
+                String polic = ((JSONObject) policy).get("instance").toString();
                 try{
-                    String polic = ((JSONObject) policy).get("instance").toString();
                     projectController.euSearchProject("en", null, country, null, null, null,
                             null, polic, null, null,
                             null, null, null, null, null,
@@ -132,6 +132,20 @@ public class CacheController {
                 } catch(Exception e){
                     e.printStackTrace();
                 }
+                JSONArray themes = facetController.facetEuThematicObjective("en", polic);
+                for (Object theme: themes) {
+                    try{
+                        String t = ((JSONObject) theme).get("instance").toString();
+                        projectController.euSearchProject("en", null, country, t, null, null,
+                                null, polic, null, null,
+                                null, null, null, null, null,
+                                null, null, null, null, false, null, null,
+                                null, 1000, 0, 100,null);
+                    } catch(Exception e){
+                        e.printStackTrace();
+                    }
+                }
+
             }
             // cache thematic objective
             JSONArray themes = facetController.facetEuThematicObjective("en");
