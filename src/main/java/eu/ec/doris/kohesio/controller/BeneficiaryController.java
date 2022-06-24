@@ -211,7 +211,7 @@ public class BeneficiaryController {
             }
             JSONArray images = new JSONArray();
             if (querySolution.getBinding("image") != null) {
-                images.add(querySolution.getBinding("image").getValue().stringValue());
+                images.add(querySolution.getBinding("image").getValue().stringValue().replace("http://commons.wikimedia.org/","https://commons.wikimedia.org/"));
             }
             if (querySolution.getBinding("logo") != null) {
                 images.add(querySolution.getBinding("logo").getValue().stringValue());
