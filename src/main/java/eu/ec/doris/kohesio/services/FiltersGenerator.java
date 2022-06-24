@@ -210,7 +210,7 @@ public class FiltersGenerator {
         mapping.put("<https://linkedopendata.eu/entity/Q20>", Arrays.asList("fr")); // france
         mapping.put("<https://linkedopendata.eu/entity/Q2>", Arrays.asList("en")); // ireland
         mapping.put("<https://linkedopendata.eu/entity/Q32>", Arrays.asList("en")); // malta
-        mapping.put("<https://linkedopendata.eu/entity/Q8>", Arrays.asList("fr", "nl", "de")); // belgium
+        mapping.put("<https://linkedopendata.eu/entity/Q8>", Arrays.asList("fr", "nl", "de", "en")); // belgium
 
         return mapping;
     }
