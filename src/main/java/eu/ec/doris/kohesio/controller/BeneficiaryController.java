@@ -214,7 +214,7 @@ public class BeneficiaryController {
                 images.add(querySolution.getBinding("image").getValue().stringValue().replace("http://commons.wikimedia.org/","https://commons.wikimedia.org/"));
             }
             if (querySolution.getBinding("logo") != null) {
-                images.add(querySolution.getBinding("logo").getValue().stringValue());
+                images.add(querySolution.getBinding("logo").getValue().stringValue().replace("http://commons.wikimedia.org/","https://commons.wikimedia.org/"));
             }
             result.put("images", images);
         }
