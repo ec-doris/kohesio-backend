@@ -120,10 +120,11 @@ public class MapController {
             }
         }
         logger.debug("Number of results {}", numResults);
-        if ((latitude != null && longitude != null) || (granularityRegion != null
-                && !"country".equals(facetController.nutsRegion.get(granularityRegion).granularity)
-                && !"https://linkedopendata.eu/entity/Q2".equals(facetController.nutsRegion.get(granularityRegion).uri))
-                || (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
+
+        if ((latitude != null && longitude != null)
+                || ((granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q2".equals(facetController.nutsRegion.get(granularityRegion).country))
+                && !(granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q11".equals(facetController.nutsRegion.get(granularityRegion).country))
+                && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0)))
         ) {
             return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
@@ -157,8 +158,8 @@ public class MapController {
 
             boolean foundNextNutsLevel = false;
 
-            System.err.println(facetController.nutsRegion.get(granularityRegion).country);
-            System.err.println(facetController.nutsRegion.get(granularityRegion).granularity);
+//            System.err.println(facetController.nutsRegion.get(granularityRegion).country);
+//            System.err.println(facetController.nutsRegion.get(granularityRegion).granularity);
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 if (subRegions.containsKey(querySolution.getBinding("region").getValue().stringValue())) {
@@ -207,7 +208,7 @@ public class MapController {
                 }
             }
             // this is a hack to show brittany
-            if ((latitude == null || longitude == null)&&/*!isCountry && */!granularityRegion.equals("https://linkedopendata.eu/entity/Q3487")) {
+            if ((latitude == null || longitude == null) &&/*!isCountry && */!granularityRegion.equals("https://linkedopendata.eu/entity/Q3487")) {
                 optional += "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
             }
         }
