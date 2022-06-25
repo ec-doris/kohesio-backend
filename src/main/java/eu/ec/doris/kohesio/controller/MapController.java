@@ -121,10 +121,20 @@ public class MapController {
         }
         logger.debug("Number of results {}", numResults);
 
-        if ((latitude != null && longitude != null)
-                || ((granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q2".equals(facetController.nutsRegion.get(granularityRegion).country))
-                || !(granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q11".equals(facetController.nutsRegion.get(granularityRegion).country))
-                || (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0)))
+        if (
+                (latitude != null && longitude != null)
+                ||
+                (
+                    (
+                        granularityRegion != null && !"country".equals(facetController.nutsRegion.get(granularityRegion).granularity)
+                        && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
+                    )
+                ||
+                    (
+                        granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q2".equals(facetController.nutsRegion.get(granularityRegion).country))
+                        && !(granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q11".equals(facetController.nutsRegion.get(granularityRegion).country)
+                    )
+                )
         ) {
             return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
