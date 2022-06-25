@@ -203,7 +203,7 @@ public class FiltersGenerator {
         mapping.put("<https://linkedopendata.eu/entity/Q7>", Arrays.asList("es")); // spain
         mapping.put("<https://linkedopendata.eu/entity/Q22>", Arrays.asList("de")); // germany
         mapping.put("<https://linkedopendata.eu/entity/Q31>", Arrays.asList("el")); // cyprus
-        mapping.put("<https://linkedopendata.eu/entity/Q17>", Arrays.asList("el")); // greece
+        mapping.put("<https://linkedopendata.eu/entity/Q17>", Arrays.asList("el", "en")); // greece
         mapping.put("<https://linkedopendata.eu/entity/Q25>", Arrays.asList("cs")); // czech republic
         mapping.put("<https://linkedopendata.eu/entity/Q13>", Arrays.asList("pl")); // poland
         mapping.put("<https://linkedopendata.eu/entity/Q15>", Arrays.asList("it")); // italy
