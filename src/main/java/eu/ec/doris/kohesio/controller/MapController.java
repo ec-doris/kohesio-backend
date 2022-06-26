@@ -120,13 +120,17 @@ public class MapController {
             }
         }
         logger.debug("Number of results {}", numResults);
-
+        System.out.println((granularityRegion != null && !"country".equals(facetController.nutsRegion.get(granularityRegion).granularity)));
+        System.out.println((numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0)));
         if (
                 (latitude != null && longitude != null)
                 ||
                 (
                     (
-                        granularityRegion != null && !"country".equals(facetController.nutsRegion.get(granularityRegion).granularity)
+                            (
+                                    granularityRegion == null
+                                    ||
+                                    granularityRegion != null && !"country".equals(facetController.nutsRegion.get(granularityRegion).granularity))
                         && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
                     )
                 ||
