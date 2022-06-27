@@ -106,7 +106,7 @@ public class ProjectController {
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
                             "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
-                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?objectiveId ?objectiveLabel ?managingAuthorityLabel" +
+                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 WHERE { "
                             + " VALUES ?s0 { <"
@@ -156,11 +156,29 @@ public class ProjectController {
                             + "             FILTER((LANG(?categoryLabel)) = \""
                             + language
                             + "\") }"
-                            + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category.  "
-                            + "           ?category <https://linkedopendata.eu/prop/direct/P1848> ?objective."
-                            + "           ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. "
-                            + "           ?objective <http://www.w3.org/2000/01/rdf-schema#label> ?objectiveLabel. "
-                            + "           FILTER((LANG(?objectiveLabel)) = \""
+
+                            + " OPTIONAL {"
+                            + "                 ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme."
+                            + "                 ?theme <https://linkedopendata.eu/prop/direct/P1105> ?themeId. "
+                            + "                 ?theme <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabel. "
+                            + "                 FILTER((LANG(?themeLabel)) = \""
+                            + language
+                            + "\") } "
+
+                            + " OPTIONAL {"
+                            + "           ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category."
+                            + "           OPTIONAL { "
+                            + "                 ?category <https://linkedopendata.eu/prop/direct/P1848> ?themeInferred."
+                            + "                 ?themeInferred <https://linkedopendata.eu/prop/direct/P1105> ?themeIdInferred. "
+                            + "                 ?themeInferred <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabelInferred . "
+                            + "                 FILTER((LANG(?themeLabelInferred)) = \""
+                            + language
+                            + "\") } } "
+                            + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme.  "
+                            + "           ?theme <https://linkedopendata.eu/prop/direct/P1849> ?policy."
+                            + "           ?policy <https://linkedopendata.eu/prop/direct/P1747> ?policyId. "
+                            + "           ?policy <http://www.w3.org/2000/01/rdf-schema#label> ?policyLabel. "
+                            + "           FILTER((LANG(?policyLabel)) = \""
                             + language
                             + "\") } "
                             + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1584> ?fund.  "
@@ -254,7 +272,7 @@ public class ProjectController {
                             + " } ";
 
 
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, false);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 3, false);
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
             result.put("link", id);
@@ -265,16 +283,18 @@ public class ProjectController {
             result.put("budget", "");
             result.put("euBudget", "");
             result.put("cofinancingRate", "");
-            result.put("countryLabel", "");
-            result.put("countryCode", "");
+            result.put("countryLabel", new JSONArray());
+            result.put("countryCode", new JSONArray());
             result.put("categoryLabels", new JSONArray());
             result.put("fundLabel", "");
             result.put("programmingPeriodLabel", "2014-2020");
             result.put("programLabel", "");
             result.put("programWebsite", "");
             result.put("programInfoRegioUrl", "");
-            result.put("objectiveIds", new JSONArray());
-            result.put("objectiveLabels", new JSONArray());
+            result.put("themeIds", new JSONArray());
+            result.put("themeLabels", new JSONArray());
+            result.put("policyIds", new JSONArray());
+            result.put("policyLabels", new JSONArray());
             result.put("projectWebsite", "");
             result.put("coordinates", new JSONArray());
             result.put("images", new JSONArray());
@@ -292,8 +312,10 @@ public class ProjectController {
             HashSet<String> coordinatesSet = new HashSet<>();
             HashSet<String> regions = new HashSet<>();
             HashSet<String> interventionFieldsSet = new HashSet<>();
-            HashSet<String> objectiveLabels = new HashSet<>();
-            HashSet<String> objectiveIds = new HashSet<>();
+            HashSet<String> themeLabels = new HashSet<>();
+            HashSet<String> themeIds = new HashSet<>();
+            HashSet<String> policyLabels = new HashSet<>();
+            HashSet<String> policyIds = new HashSet<>();
 
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
@@ -358,15 +380,25 @@ public class ProjectController {
                 }
 
                 if (querySolution.getBinding("countryLabel") != null) {
-                    result.put(
-                            "countryLabel",
-                            ((Literal) querySolution.getBinding("countryLabel").getValue()).stringValue());
+                    if (!((JSONArray) result.get("countryLabel")).contains(querySolution.getBinding("countryLabel").getValue().stringValue())) {
+                        ((JSONArray) result.get("countryLabel")).add(
+                                querySolution.getBinding("countryLabel").getValue().stringValue()
+                        );
+                    }
                 }
 
                 if (querySolution.getBinding("countryCode") != null) {
-                    result.put(
-                            "countryCode",
-                            ((Literal) querySolution.getBinding("countryCode").getValue()).stringValue());
+                    if (!((JSONArray) result.get("countryCode")).contains(querySolution.getBinding("countryCode").getValue().stringValue()))
+                        if (!"GR".equals(querySolution.getBinding("countryCode").getValue().stringValue())) {
+                            ((JSONArray) result.get("countryCode")).add(
+                                    querySolution.getBinding("countryCode").getValue().stringValue()
+                            );
+                        } else {
+                            ((JSONArray) result.get("countryCode")).add(
+                                    "EL"
+                            );
+                        }
+
                 }
 
                 if (querySolution.getBinding("categoryLabel") != null) {
@@ -394,19 +426,50 @@ public class ProjectController {
                             querySolution.getBinding("programInfoRegioUrl").getValue().stringValue()
                     );
                 }
-                if (querySolution.getBinding("objectiveId") != null) {
-                    String objectiveId = querySolution.getBinding("objectiveId").getValue().stringValue();
-                    if (!objectiveIds.contains(objectiveId)) {
-                        objectiveIds.add(objectiveId);
-                        result.put("objectiveIds", objectiveIds);
+                if (querySolution.getBinding("themeId") != null) {
+                    String themeId = querySolution.getBinding("themeId").getValue().stringValue();
+                    if (!themeIds.contains(themeId)) {
+                        themeIds.add(themeId);
+                        result.put("themeIds", themeIds);
+                    }
+                } else {
+                    if (querySolution.getBinding("themeIdInferred") != null) {
+                        String themeId = querySolution.getBinding("themeIdInferred").getValue().stringValue();
+                        if (!themeIds.contains(themeId)) {
+                            themeIds.add(themeId);
+                            result.put("themeIds", themeIds);
+                        }
                     }
                 }
 
-                if (querySolution.getBinding("objectiveLabel") != null) {
-                    String objectiveLabel = querySolution.getBinding("objectiveLabel").getValue().stringValue();
-                    if (!objectiveLabels.contains(objectiveLabel)) {
-                        objectiveLabels.add(objectiveLabel);
-                        result.put("objectiveLabels", objectiveLabels);
+                if (querySolution.getBinding("themeLabel") != null) {
+                    String themeLabel = querySolution.getBinding("themeLabel").getValue().stringValue();
+                    if (!themeLabels.contains(themeLabel)) {
+                        themeLabels.add(themeLabel);
+                        result.put("themeLabels", themeLabels);
+                    }
+                } else {
+                    if (querySolution.getBinding("themeLabelInferred") != null) {
+                        String themeLabel = querySolution.getBinding("themeLabelInferred").getValue().stringValue();
+                        if (!themeLabels.contains(themeLabel)) {
+                            themeLabels.add(themeLabel);
+                            result.put("themeLabels", themeLabels);
+                        }
+                    }
+                }
+                if (querySolution.getBinding("policyId") != null) {
+                    String policyId = querySolution.getBinding("policyId").getValue().stringValue();
+                    if (!policyIds.contains(policyId)) {
+                        policyIds.add(policyId);
+                        result.put("policyIds", policyIds);
+                    }
+                }
+
+                if (querySolution.getBinding("policyLabel") != null) {
+                    String policyLabel = querySolution.getBinding("policyLabel").getValue().stringValue();
+                    if (!policyLabels.contains(policyLabel)) {
+                        policyLabels.add(policyLabel);
+                        result.put("policyLabels", policyLabels);
                     }
                 }
 
@@ -437,11 +500,11 @@ public class ProjectController {
                     String im = querySolution.getBinding("image").getValue().stringValue();
                     boolean found = false;
                     for (Object i : images) {
-                        if (((JSONObject) i).get("image").toString().equals(im) && found == false) {
+                        if (((JSONObject) i).get("image").toString().equals(im) && !found) {
                             found = true;
                         }
                     }
-                    if (found == false) {
+                    if (!found) {
                         image.put("image", im);
                         if (querySolution.getBinding("imageCopyright") != null) {
                             image.put("imageCopyright", "© " + querySolution.getBinding("imageCopyright").getValue().stringValue());
@@ -562,11 +625,11 @@ public class ProjectController {
                         regionText += ", " + (String) result.get("regionUpper3");
                     }
                     if (!result.get("countryLabel").equals(regionText))
-                        regionText += ", " + (String) result.get("countryLabel");
+                        regionText += ", " + String.join(", ", (JSONArray) result.get("countryLabel"));
 
                     result.put("regionText", regionText);
                 } else {
-                    result.put("regionText", (String) result.get("countryLabel"));
+                    result.put("regionText", String.join(", ", (JSONArray) result.get("countryLabel")));
                 }
                 String regionId = "";
                 if (querySolution.getBinding("regionId") != null) {
@@ -610,7 +673,7 @@ public class ProjectController {
             }
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
-                result.put("regionText", "multiple locations, " + result.get("countryLabel"));
+                result.put("regionText", "multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
@@ -625,7 +688,7 @@ public class ProjectController {
                                            @RequestParam(value = "fund", required = false) String fund,
                                            @RequestParam(value = "program", required = false) String program,
                                            @RequestParam(value = "categoryOfIntervention", required = false)
-                                                   String categoryOfIntervention,
+                                           String categoryOfIntervention,
                                            @RequestParam(value = "policyObjective", required = false) String policyObjective,
                                            @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
                                            @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -655,7 +718,7 @@ public class ProjectController {
                 timeout = 100;
             }
         }
-        logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, region {}, timeout {}", language, keywords, country, theme, fund, region, timeout);
+        logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, program {}, region {}, timeout {}", language, keywords, country, theme, fund, program, region, timeout);
 
         int inputOffset = offset;
         int inputLimit = limit;
@@ -798,6 +861,7 @@ public class ProjectController {
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
+                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
                         + " FILTER(LANG(?summary)=\"" + language + "\")"
@@ -1063,7 +1127,7 @@ public class ProjectController {
             @RequestParam(value = "fund", required = false) String fund,
             @RequestParam(value = "program", required = false) String program,
             @RequestParam(value = "categoryOfIntervention", required = false)
-                    String categoryOfIntervention,
+            String categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
             @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
             @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -1156,7 +1220,7 @@ public class ProjectController {
                                                         @RequestParam(value = "fund", required = false) String fund,
                                                         @RequestParam(value = "program", required = false) String program,
                                                         @RequestParam(value = "categoryOfIntervention", required = false)
-                                                                String categoryOfIntervention,
+                                                        String categoryOfIntervention,
                                                         @RequestParam(value = "policyObjective", required = false) String policyObjective,
                                                         @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
                                                         @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -1261,7 +1325,7 @@ public class ProjectController {
                                     @RequestParam(value = "fund", required = false) String fund,
                                     @RequestParam(value = "program", required = false) String program,
                                     @RequestParam(value = "categoryOfIntervention", required = false)
-                                            String categoryOfIntervention,
+                                    String categoryOfIntervention,
                                     @RequestParam(value = "policyObjective", required = false) String policyObjective,
                                     @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
                                     @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,

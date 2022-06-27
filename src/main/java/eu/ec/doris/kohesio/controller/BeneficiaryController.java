@@ -114,6 +114,8 @@ public class BeneficiaryController {
                 id +
                 "> } " +
                 "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
+                "  ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
+
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . }\n" +
                 "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . }\n" +
@@ -204,7 +206,7 @@ public class BeneficiaryController {
             }
             JSONArray images = new JSONArray();
             if (querySolution.getBinding("image") != null) {
-                images.add(querySolution.getBinding("image").getValue().stringValue());
+                images.add(querySolution.getBinding("image").getValue().stringValue().replace("http://commons.wikimedia.org/","https://commons.wikimedia.org/"));
             }
             if (querySolution.getBinding("logo") != null) {
                 images.add(querySolution.getBinding("logo").getValue().stringValue());
@@ -302,17 +304,17 @@ public class BeneficiaryController {
                                                  @RequestParam(value = "offset", defaultValue = "0") int offset,
                                                  Principal principal)
             throws Exception {
-        logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}", language, keywords, country, region, latitude, longitude, fund, program);
+        logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}, orderEuBudget {}, orderTotalBudget {}, orderNumProjects {}", language, keywords, country, region, latitude, longitude, fund, program, orderEuBudget, orderTotalBudget, orderNumProjects);
 
         int timeout = 20;
         if (keywords == null) {
-            timeout = 150;
+            timeout = 200;
         }
 
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset != Integer.MIN_VALUE) {
-            if (offset <= 990) {
+            if (offset <= 1000 - inputLimit) {
                 offset = 0;
                 limit = 1000;
             }
@@ -366,6 +368,7 @@ public class BeneficiaryController {
         }
 
         search += "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
+                + "   ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
                 + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
 
@@ -378,11 +381,9 @@ public class BeneficiaryController {
                         + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630486> .";
             }
         }
-        String queryCount = "SELECT (COUNT(DISTINCT ?beneficiary) AS ?c) { " +
-                "{SELECT ?beneficiary where {\n" +
+        String queryCount = "SELECT (COUNT(DISTINCT ?beneficiary) AS ?c) { \n" +
                 search
-                + " } GROUP BY ?beneficiary }" +
-                "}";
+                + " }";
         logger.debug(queryCount);
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
         int numResults = 0;
@@ -529,7 +530,7 @@ public class BeneficiaryController {
         }
         BeneficiaryList finalRes = new BeneficiaryList();
         finalRes.setNumberResults(numResults);
-        if (offset <= 990) {
+        if (offset <= 1000 - inputLimit) {
             for (int i = inputOffset; i < Math.min(beneficiaries.size(), inputOffset + inputLimit); i++) {
                 finalRes.getList().add(beneficiaries.get(i));
             }

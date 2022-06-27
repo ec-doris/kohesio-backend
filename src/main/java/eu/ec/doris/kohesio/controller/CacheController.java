@@ -58,7 +58,7 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null,
                             null, null, b, null, null, null,
-                            null, null, null, 1000, 1, 100,null);
+                            null, null, null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -70,7 +70,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null,
                         null, null, null, b, null, null,
-                        null, null, null, 1000, 1, 100,null);
+                        null, null, null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -82,7 +82,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, b, null, null,
-                        null, null, 1000, 1, 100,null);
+                        null, null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -94,7 +94,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, null, b, null, null,
-                        null, 1000, 1, 100,null);
+                        null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -108,7 +108,7 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            regio, 1000, 1, 100,null);
+                            regio, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -116,16 +116,30 @@ public class CacheController {
             // cache policy objective
             JSONArray policies = facetController.facetPolicyObjective("en");
             for (Object policy: policies) {
+                String polic = ((JSONObject) policy).get("instance").toString();
                 try{
-                    String polic = ((JSONObject) policy).get("instance").toString();
                     projectController.euSearchProject("en", null, country, null, null, null,
                             null, polic, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 1, 100,null);
+                            null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
+                JSONArray themes = facetController.facetEuThematicObjective("en", polic);
+                for (Object theme: themes) {
+                    try{
+                        String t = ((JSONObject) theme).get("instance").toString();
+                        projectController.euSearchProject("en", null, country, t, null, null,
+                                null, polic, null, null,
+                                null, null, null, null, null,
+                                null, null, null, null, false, null, null,
+                                null, 1000, 0, 100,null);
+                    } catch(Exception e){
+                        e.printStackTrace();
+                    }
+                }
+
             }
             // cache thematic objective
             JSONArray themes = facetController.facetEuThematicObjective("en");
@@ -136,7 +150,7 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 1, 100,null);
+                            null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -151,7 +165,7 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 1, 100,null);
+                            null, 1000, 0, 100,null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -166,7 +180,7 @@ public class CacheController {
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, null, false, null, null,
-                        null, 1000, 1, 100,null);
+                        null, 1000, 0, 100,null);
             } catch(Exception e){
                 e.printStackTrace();
             }
@@ -196,40 +210,40 @@ public class CacheController {
                         null, null, lower_bound.get(i), upper_bound.get(i),
                         null, null, null, null, null,
                         null, null, null, null, false, null, null,
-                        null, 1000, 1, 100,null);
+                        null, 1000, 0, 100,null);
                 projectController.euSearchProject("en", null, null, null, null, null,
                         null, null, null, null, lower_bound.get(i), upper_bound.get(i), null, null, null,
                         null, null, null, null, false, null, null,
-                        null, 1000, 1, 100,null);
+                        null, 1000, 0, 100,null);
             } catch(Exception e){
                 e.printStackTrace();
             }
         }
         for (String country : countries) {
 
-            Boolean[] orderEuBudget = {null, true, false};
+            Boolean[] orderEuBudget = {true, false};
             for (Boolean b : orderEuBudget) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null,null, b, null, null, 1000, 1, null);
+                        null,null, b, null, null, 1000, 0, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
             }
-            Boolean[] orderTotalBudget = {null, true, false};
+            Boolean[] orderTotalBudget = {true, false};
             for (Boolean b : orderTotalBudget) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null, null,null, b, null, 1000, 1, null);
+                        null, null,null, b, null, 1000, 0, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
             }
-            Boolean[] orderNumProjects = {null, true, false};
+            Boolean[] orderNumProjects = {true, false};
             for (Boolean b : orderNumProjects) {
                 try{
                 beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null, null,null, null, b, 1000, 1, null);
+                        null, null,null, null, b, 1000, 0, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
@@ -242,7 +256,7 @@ public class CacheController {
                 String r = ((JSONObject) region).get("region").toString();
                 try{
                     beneficiaryController.euSearchBeneficiaries("en", null, country, r, null, null, null,
-                            null, null,null, false, null, 1000, 1, null);
+                            null, null,null, false, null, 1000, 0, null);
                 } catch(Exception e){
                     e.printStackTrace();
                 }
