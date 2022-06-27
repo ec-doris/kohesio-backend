@@ -148,7 +148,8 @@ public class GeneralController {
 
         logger.debug(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
-        ArrayList<General> generals = new ArrayList<>();
+//        ArrayList<General> generals = new ArrayList<>();
+        HashMap<String, General> generals = new HashMap<>();
 
         if (resultSet != null) {
             while (resultSet.hasNext()) {
@@ -228,11 +229,14 @@ public class GeneralController {
                             querySolution.getBinding("typeLabel").getValue().stringValue()
                     );
                 }
-                generals.add(general);
+//                generals.add(general);
+                if (!generals.containsKey(general.getItem())) {
+                    generals.put(general.getItem(), general);
+                }
             }
         }
         GeneralList finalResult = new GeneralList();
-        finalResult.setList(generals);
+        finalResult.setList(new ArrayList<>(generals.values()));
         finalResult.setNumberResults(numResults);
         return new ResponseEntity<>(finalResult, HttpStatus.OK);
     }
