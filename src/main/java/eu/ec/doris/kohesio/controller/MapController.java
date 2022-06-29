@@ -210,7 +210,7 @@ public class MapController {
         // not performing
         if (granularityRegion != null) {
             if ("country".equals(facetController.nutsRegion.get(granularityRegion).granularity)) {
-                optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry60M> ?o . ";
+                optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry20M> ?o . ";
 
             }
             else {
