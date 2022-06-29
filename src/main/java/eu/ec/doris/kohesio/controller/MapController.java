@@ -204,7 +204,13 @@ public class MapController {
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
         if (granularityRegion != null) {
-            optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . ";
+            if ("country".equals(facetController.nutsRegion.get(granularityRegion).granularity)) {
+                optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry20M> ?o . ";
+
+            }
+            else {
+                optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . ";
+            }
             //check if granularity region is a country, if yes the filter is not needed
             boolean isCountry = false;
             for (Object jsonObject : facetController.facetEuCountries("en")) {
