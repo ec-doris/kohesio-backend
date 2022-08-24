@@ -302,8 +302,8 @@ public class BeneficiaryController {
                                                  @RequestParam(value = "program", required = false) String program, //
                                                  @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
 
-                                                 @RequestParam(value = "orderEuBudget", defaultValue = "false") Boolean orderEuBudget,
-                                                 @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+                                                 @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+                                                 @RequestParam(value = "orderTotalBudget", defaultValue = "false") Boolean orderTotalBudget,
                                                  @RequestParam(value = "orderNumProjects", required = false) Boolean orderNumProjects,
                                                  @RequestParam(value = "limit", defaultValue = "200") int limit,
                                                  @RequestParam(value = "offset", defaultValue = "0") int offset,
@@ -400,18 +400,18 @@ public class BeneficiaryController {
 
         String orderBy = "";
 
-        if (orderEuBudget != null) {
-            if (orderEuBudget) {
-                orderBy = "order by asc(?totalEuBudget)";
-            } else {
-                orderBy = "order by desc(?totalEuBudget)";
-            }
-        }
         if (orderTotalBudget != null) {
             if (orderTotalBudget) {
                 orderBy = "order by asc(?totalBudget)";
             } else {
                 orderBy = "order by desc(?totalBudget)";
+            }
+        }
+        if (orderEuBudget != null) {
+            if (orderEuBudget) {
+                orderBy = "order by asc(?totalEuBudget)";
+            } else {
+                orderBy = "order by desc(?totalEuBudget)";
             }
         }
         if (orderNumProjects != null) {
