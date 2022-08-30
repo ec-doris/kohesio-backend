@@ -210,7 +210,7 @@ public class ProjectController {
                             + id
                             + "> } "
                             + " ?s0  wdt:P1845  ?region . "
-                            + "     ?region  wdt:P35  wd:Q2576750 . "
+                            + "     ?region  wdt:P35  wd:Q4407315 . "
                             + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
                             + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
                             + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
