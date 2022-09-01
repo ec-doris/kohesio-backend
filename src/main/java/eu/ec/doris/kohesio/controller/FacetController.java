@@ -105,7 +105,7 @@ public class FacetController {
                 }
 
                 String query =
-                        "SELECT ?region ?regionLabel ?country where {" +
+                        "SELECT DISTINCT ?region ?regionLabel ?country where {" +
                                 filter +
                                 " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } " +
                                 " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
