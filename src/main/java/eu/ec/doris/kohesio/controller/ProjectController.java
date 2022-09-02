@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.maxmind.geoip2.exception.GeoIp2Exception;
+import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.payload.*;
 import eu.ec.doris.kohesio.services.ExpandedQuery;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
@@ -24,14 +26,13 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.mapstruct.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -55,6 +56,7 @@ import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.eclipse.rdf4j.sail.lucene.SearchFields;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api")
@@ -685,6 +687,104 @@ public class ProjectController {
         }
     }
 
+
+    public class Coordinates {
+        String latitude;
+        String longitude;
+
+        public Coordinates(String latitude, String longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+
+        public String getLatitude() {
+            return latitude;
+        }
+
+        public void setLatitude(String latitude) {
+            this.latitude = latitude;
+        }
+
+        public String getLongitude() {
+            return longitude;
+        }
+
+        public void setLongitude(String longitude) {
+            this.longitude = longitude;
+        }
+    }
+
+    private Coordinates getCoordinatesFromTown(String town) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        String urlTemplate = UriComponentsBuilder.fromHttpUrl("https://nominatim.openstreetmap.org/search/search")
+                .queryParam("q", town)
+                .queryParam("format", "json")
+                .queryParam("addressdetails", "1")
+                .encode().toUriString();
+        System.out.println(urlTemplate);
+
+        HttpEntity<String> response = new RestTemplate().exchange(
+                urlTemplate,
+                HttpMethod.GET, entity, String.class
+        );
+        System.out.println(response.getBody());
+        try {
+            JSONArray JsonArray = (JSONArray) new JSONParser().parse(response.getBody());
+            System.out.println(((JSONObject)JsonArray.get(0)).get("lat"));
+            System.out.println(((JSONObject)JsonArray.get(0)).get("lon"));
+
+            return new Coordinates(
+                    ((JSONObject)JsonArray.get(0)).get("lat").toString(),
+                    ((JSONObject)JsonArray.get(0)).get("lon").toString()
+            );
+        } catch (org.json.simple.parser.ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public ResponseEntity euSearchProject(
+                                           String language,
+                                           String keywords, //
+                                           String country,
+                                           String theme,
+                                           String fund,
+                                           String program,
+                                           String categoryOfIntervention,
+                                           String policyObjective,
+                                           Long budgetBiggerThen,
+                                           Long budgetSmallerThen,
+                                           Long budgetEUBiggerThen,
+                                           Long budgetEUSmallerThen,
+                                           String startDateBefore,
+                                           String startDateAfter,
+                                           String endDateBefore,
+                                           String endDateAfter,
+
+                                           Boolean orderStartDate,
+                                           Boolean orderEndDate,
+                                           Boolean orderEuBudget,
+                                           Boolean orderTotalBudget,
+
+                                           String latitude,
+                                           String longitude,
+                                           String region,
+                                           int limit,
+                                           int offset,
+                                           Integer timeout,
+                                           Principal principal)
+            throws Exception {
+        return euSearchProject(
+                language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
+                budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
+                startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, timeout, principal
+        );
+    }
+
     @GetMapping(value = "/facet/eu/search/project", produces = "application/json")
     public ResponseEntity euSearchProject( //
                                            @RequestParam(value = "language", defaultValue = "en") String language,
@@ -715,6 +815,9 @@ public class ProjectController {
                                            @RequestParam(value = "region", required = false) String region,
                                            @RequestParam(value = "limit", defaultValue = "5000") int limit,
                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                           @RequestParam(value = "town", required = false) String town,
+                                           @RequestParam(value = "radius", required = false) Long radius,
+//                                           @RequestParam(value = "nuts", required = false) String nuts,
                                            Integer timeout,
                                            Principal principal)
             throws Exception {
@@ -753,7 +856,14 @@ public class ProjectController {
             expandedQuery = similarityService.expandQuery(keywords);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
+        if (town != null) {
+            Coordinates tmpCoordinates = getCoordinatesFromTown(town);
+            if (tmpCoordinates != null) {
+                latitude = tmpCoordinates.getLatitude();
+                longitude = tmpCoordinates.getLongitude();
 
+            }
+        }
         String search = filtersGenerator.filterProject(
                 expandedQueryText,
                 country,
@@ -772,6 +882,7 @@ public class ProjectController {
                 endDateAfter,
                 latitude,
                 longitude,
+                radius,
                 region,
                 null,
                 limit,
@@ -1148,6 +1259,8 @@ public class ProjectController {
             @RequestParam(value = "region", required = false) String region,
             @RequestParam(value = "limit", defaultValue = "10") Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
+            @RequestParam(value = "town", required = false) String town,
+            @RequestParam(value = "radius", required = false) Long radius,
             Principal principal)
             throws Exception {
         logger.info("Project image search: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, null);
@@ -1160,7 +1273,16 @@ public class ProjectController {
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, null, limit, offset);
+
+        if (town != null) {
+            Coordinates tmpCoordinates = getCoordinatesFromTown(town);
+            if (tmpCoordinates != null) {
+                latitude = tmpCoordinates.getLatitude();
+                longitude = tmpCoordinates.getLongitude();
+
+            }
+        }
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
