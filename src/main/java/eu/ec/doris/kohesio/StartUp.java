@@ -27,10 +27,10 @@ public class StartUp {
     @Autowired
     FacetController facetController;
 
-//    @EventListener(ApplicationReadyEvent.class)
-//    public void initialize() throws Exception {
-//        if (initialize)
-//            facetController.initialize("en");
-//    }
+    @EventListener(ApplicationReadyEvent.class)
+    public void initialize() throws Exception {
+        if (initialize)
+            facetController.initialize("en");
+    }
 
 }
