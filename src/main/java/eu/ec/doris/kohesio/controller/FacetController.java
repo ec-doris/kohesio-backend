@@ -111,7 +111,7 @@ public class FacetController {
                                 " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
                                 "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
                                 "}";
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     String key = querySolution.getBinding("region").getValue().stringValue();
@@ -165,7 +165,7 @@ public class FacetController {
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407315> . }";
                 }
                 if (query.equals("") == false) {
-                    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
+                    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
                     logger.debug("Is empty result set: " + resultSet.hasNext());
                     while (resultSet.hasNext()) {
                         BindingSet querySolution = resultSet.next();
@@ -257,7 +257,7 @@ public class FacetController {
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "    ?s0  <https://linkedopendata.eu/prop/direct/P835>  ?o . "
                 + "} ";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 60);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             DecimalFormat df2 = new DecimalFormat("#.##");
@@ -270,7 +270,7 @@ public class FacetController {
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236692> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 60);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("lowCarbonEconomy", ((Literal) querySolution.getBinding("c").getValue()).doubleValue());
@@ -281,7 +281,7 @@ public class FacetController {
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236693> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 60);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("climateChangeAdaptation", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -292,7 +292,7 @@ public class FacetController {
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236694> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 60);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("enviromentProtection", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -303,7 +303,7 @@ public class FacetController {
                 " ?category <https://linkedopendata.eu/prop/direct/P1849> <https://linkedopendata.eu/entity/Q2547987> . " +
                 "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 60);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("greenerAndCarbonFreeEurope", ((Literal) querySolution.getBinding("c").getValue()).intValue());
