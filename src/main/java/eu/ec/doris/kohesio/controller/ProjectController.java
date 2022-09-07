@@ -113,7 +113,7 @@ public class ProjectController {
                             "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
-                            "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
+                            "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube ?video ?coordinates  ?countryLabel " +
                             "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 WHERE { "
@@ -135,6 +135,7 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P837> ?cofinancingRate. } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image } . "
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P2210> ?youtube } . "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
                             + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
                             + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
@@ -521,8 +522,6 @@ public class ProjectController {
                     }
                     result.put("images", images);
                 }
-
-
                 if (querySolution.getBinding("video") != null) {
                     JSONArray images = (JSONArray) result.get("videos");
                     String im = querySolution.getBinding("video").getValue().stringValue();
@@ -531,6 +530,15 @@ public class ProjectController {
                         result.put("videos", images);
                     }
                 }
+                if (querySolution.getBinding("youtube") != null) {
+                    JSONArray images = (JSONArray) result.get("videos");
+                    String im = querySolution.getBinding("youtube").getValue().stringValue();
+                    if (!images.contains(im)) {
+                        images.add(im);
+                        result.put("videos", images);
+                    }
+                }
+
                 JSONArray beneficiaries = (JSONArray) result.get("beneficiaries");
                 if (querySolution.getBinding("beneficiaryLink") != null) {
 
