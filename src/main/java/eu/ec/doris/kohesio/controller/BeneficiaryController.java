@@ -374,9 +374,7 @@ public class BeneficiaryController {
         }
 
         search += "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
-                + "   ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
-                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
-                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
+                + "   ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
 
         if (beneficiaryType != null) {
             if (beneficiaryType.equals("private")) {
@@ -391,6 +389,10 @@ public class BeneficiaryController {
                 search
                 + " }";
         logger.debug(queryCount);
+
+        search += "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
+                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
+
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
         int numResults = 0;
         if (countResultSet.hasNext()) {
