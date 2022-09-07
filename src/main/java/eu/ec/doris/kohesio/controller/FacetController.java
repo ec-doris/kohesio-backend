@@ -253,16 +253,16 @@ public class FacetController {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberBeneficiaries", ((Literal) querySolution.getBinding("c").getValue()).intValue());
         }
-        query = "SELECT (SUM(?o) AS ?sum) WHERE { "
-                + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
-                + "    ?s0  <https://linkedopendata.eu/prop/direct/P835>  ?o . "
-                + "} ";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
-        while (resultSet.hasNext()) {
-            BindingSet querySolution = resultSet.next();
-            DecimalFormat df2 = new DecimalFormat("#.##");
-            statistics.put("totalEuBudget", df2.format(((Literal) querySolution.getBinding("sum").getValue()).doubleValue()));
-        }
+//        query = "SELECT (SUM(?o) AS ?sum) WHERE { "
+//                + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
+//                + "    ?s0  <https://linkedopendata.eu/prop/direct/P835>  ?o . "
+//                + "} ";
+//        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
+//        while (resultSet.hasNext()) {
+//            BindingSet querySolution = resultSet.next();
+//            DecimalFormat df2 = new DecimalFormat("#.##");
+//            statistics.put("totalEuBudget", df2.format(((Literal) querySolution.getBinding("sum").getValue()).doubleValue()));
+//        }
 
         JSONObject themes = new JSONObject();
         query = "SELECT (COUNT(DISTINCT ?s0) AS ?c ) WHERE {" +
