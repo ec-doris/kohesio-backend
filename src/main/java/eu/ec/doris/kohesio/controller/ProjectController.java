@@ -532,7 +532,7 @@ public class ProjectController {
                 }
                 if (querySolution.getBinding("youtube") != null) {
                     JSONArray images = (JSONArray) result.get("videos");
-                    String im = querySolution.getBinding("youtube").getValue().stringValue();
+                    String im = "https://www.youtube.com/watch?v="+querySolution.getBinding("youtube").getValue().stringValue();
                     if (!images.contains(im)) {
                         images.add(im);
                         result.put("videos", images);
