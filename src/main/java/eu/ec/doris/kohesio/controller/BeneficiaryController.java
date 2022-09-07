@@ -390,8 +390,7 @@ public class BeneficiaryController {
                 + " }";
         logger.debug(queryCount);
 
-        search += "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
-                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
+
 
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
         int numResults = 0;
@@ -400,6 +399,9 @@ public class BeneficiaryController {
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
             //System.out.println(querySolution.getBinding("beneficiary").getValue());
         }
+
+        search += "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
+                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
 
         String orderBy = "";
 
