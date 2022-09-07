@@ -824,7 +824,7 @@ public class ProjectController {
         if (timeout == null) {
             timeout = 20;
             if (keywords == null) {
-                timeout = 100;
+                timeout = 200;
             }
         }
         logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, program {}, region {}, timeout {}", language, keywords, country, theme, fund, program, region, timeout);

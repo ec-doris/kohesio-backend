@@ -311,7 +311,7 @@ public class BeneficiaryController {
             throws Exception {
         int timeout = 20;
         if (keywords == null) {
-            timeout = 200;
+            timeout = 300;
         }
         logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}, orderEuBudget {}, orderTotalBudget {}, orderNumProjects {}, timeout {}", language, keywords, country, region, latitude, longitude, fund, program, orderEuBudget, orderTotalBudget, orderNumProjects, timeout);
 
