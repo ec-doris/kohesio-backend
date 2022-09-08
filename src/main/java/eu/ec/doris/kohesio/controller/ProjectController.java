@@ -803,7 +803,7 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null,
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null,
                 timeout, principal
         );
     }
@@ -841,6 +841,8 @@ public class ProjectController {
                                            @RequestParam(value = "town", required = false) String town,
                                            @RequestParam(value = "radius", required = false) Long radius,
                                            @RequestParam(value = "nuts3", required = false) String nuts3,
+                                           @RequestParam(value = "interreg", required = false) Boolean interreg,
+
                                            Integer timeout,
                                            Principal principal)
             throws Exception {
@@ -851,7 +853,7 @@ public class ProjectController {
             }
         }
         logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, program {}, region {}, timeout {}", language, keywords, country, theme, fund, program, region, timeout);
-
+        logger.info("interreg {}", interreg);
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset != Integer.MIN_VALUE) {
@@ -908,6 +910,7 @@ public class ProjectController {
                 radius,
                 region,
                 nuts3,
+                interreg,
                 limit,
                 offset
         );
@@ -1305,7 +1308,7 @@ public class ProjectController {
 
             }
         }
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
