@@ -311,7 +311,7 @@ public class BeneficiaryController {
             throws Exception {
         int timeout = 20;
         if (keywords == null) {
-            timeout = 200;
+            timeout = 500;
         }
         logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}, orderEuBudget {}, orderTotalBudget {}, orderNumProjects {}, timeout {}", language, keywords, country, region, latitude, longitude, fund, program, orderEuBudget, orderTotalBudget, orderNumProjects, timeout);
 
@@ -374,9 +374,7 @@ public class BeneficiaryController {
         }
 
         search += "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
-                + "   ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
-                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
-                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
+                + "   ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
 
         if (beneficiaryType != null) {
             if (beneficiaryType.equals("private")) {
@@ -391,6 +389,9 @@ public class BeneficiaryController {
                 search
                 + " }";
         logger.debug(queryCount);
+
+
+
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
         int numResults = 0;
         if (countResultSet.hasNext()) {
@@ -398,6 +399,9 @@ public class BeneficiaryController {
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
             //System.out.println(querySolution.getBinding("beneficiary").getValue());
         }
+
+        search += "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
+                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
 
         String orderBy = "";
 
