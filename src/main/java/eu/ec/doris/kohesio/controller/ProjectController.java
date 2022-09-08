@@ -781,7 +781,8 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, timeout, principal
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null,
+                timeout, principal
         );
     }
 
@@ -817,7 +818,7 @@ public class ProjectController {
                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
                                            @RequestParam(value = "town", required = false) String town,
                                            @RequestParam(value = "radius", required = false) Long radius,
-//                                           @RequestParam(value = "nuts", required = false) String nuts,
+                                           @RequestParam(value = "nuts3", required = false) String nuts3,
                                            Integer timeout,
                                            Principal principal)
             throws Exception {
@@ -884,7 +885,7 @@ public class ProjectController {
                 longitude,
                 radius,
                 region,
-                null,
+                nuts3,
                 limit,
                 offset
         );
