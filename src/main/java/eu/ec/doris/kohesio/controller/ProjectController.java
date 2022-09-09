@@ -130,7 +130,7 @@ public class ProjectController {
                             "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube ?video ?coordinates  ?countryLabel " +
                             "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
-                            "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 WHERE { "
+                            "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 ?keepUrl WHERE { "
                             + " VALUES ?s0 { <"
                             + id
                             + "> } "
@@ -150,6 +150,7 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P837> ?cofinancingRate. } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image } . "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P2210> ?youtube } . "
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId. <https://linkedopendata.eu/entity/P562941> <https://linkedopendata.eu/prop/direct/P877> ?formatter. BIND(REPLACE(?keepId, '^(.+)$', ?formatter) AS ?keepUrl). } . "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
                             + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
                             + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
@@ -330,6 +331,7 @@ public class ProjectController {
             result.put("regionUpper2", "");
             result.put("regionUpper3", "");
             result.put("infoRegioUrl", "");
+            result.put("keepUrl", "");
 
             HashSet<String> regionIDs = new HashSet<>();
             HashSet<String> coordinatesSet = new HashSet<>();
@@ -346,6 +348,11 @@ public class ProjectController {
                 if (querySolution.getBinding("budget") != null) {
                     result.put(
                             "budget", ((Literal) querySolution.getBinding("budget").getValue()).stringValue());
+                }
+
+                if (querySolution.getBinding("keepUrl") != null) {
+                    result.put(
+                            "keepUrl", ((Literal) querySolution.getBinding("keepUrl").getValue()).stringValue());
                 }
 
                 if (querySolution.getBinding("label") != null) {
@@ -803,7 +810,7 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null,
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null,
                 timeout, principal
         );
     }
@@ -841,6 +848,8 @@ public class ProjectController {
                                            @RequestParam(value = "town", required = false) String town,
                                            @RequestParam(value = "radius", required = false) Long radius,
                                            @RequestParam(value = "nuts3", required = false) String nuts3,
+                                           @RequestParam(value = "interreg", required = false) Boolean interreg,
+
                                            Integer timeout,
                                            Principal principal)
             throws Exception {
@@ -851,7 +860,7 @@ public class ProjectController {
             }
         }
         logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, program {}, region {}, timeout {}", language, keywords, country, theme, fund, program, region, timeout);
-
+        logger.info("interreg {}", interreg);
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset != Integer.MIN_VALUE) {
@@ -908,6 +917,7 @@ public class ProjectController {
                 radius,
                 region,
                 nuts3,
+                interreg,
                 limit,
                 offset
         );
@@ -1305,7 +1315,7 @@ public class ProjectController {
 
             }
         }
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
