@@ -985,7 +985,7 @@ public class ProjectController {
 
         search += " " + orderQuery;
         query =
-                "SELECT ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?summary WHERE { "
+                "SELECT ?s0 ?snippet ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?summary WHERE { "
                         + " { SELECT ?s0 ?description WHERE { "
                         + search
                         + " } " + orderBy + " LIMIT "
@@ -997,9 +997,9 @@ public class ProjectController {
                         + " FILTER((LANG(?label)) = \""
                         + language
                         + "\") }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
-                        + language
-                        + "\") } "
+//                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
+//                        + language
+//                        + "\") } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
