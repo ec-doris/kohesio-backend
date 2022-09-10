@@ -869,7 +869,7 @@ public class ProjectController {
                 // in case of keywords, optimize to 100 projects for performance issues
                 if (offset < 100) {
                     offset = 0;
-                    limit = 100;
+                    limit = 10;
                 }
             } else {
                 if (offset < 1000) {
