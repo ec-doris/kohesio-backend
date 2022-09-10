@@ -675,7 +675,7 @@ public class FacetController {
                         + language
                         + "\")"
                         + "} order by ?id";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 5);
         JSONArray result = new JSONArray();
         String areaOfIntervention = "";
         String areaOfInterventionLabel = "";
