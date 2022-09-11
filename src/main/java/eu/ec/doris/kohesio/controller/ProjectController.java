@@ -869,7 +869,7 @@ public class ProjectController {
                 // in case of keywords, optimize to 100 projects for performance issues
                 if (offset < 100) {
                     offset = 0;
-                    limit = 10;
+                    limit = 100;
                 }
             } else {
                 if (offset < 1000) {
@@ -885,8 +885,10 @@ public class ProjectController {
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
         if (keywords != null) {
+            long start = System.nanoTime();
             expandedQuery = similarityService.expandQuery(keywords);
             expandedQueryText = expandedQuery.getExpandedQuery();
+            logger.info("Expansion time "+ (System.nanoTime()-start)/ 1000000);
         }
         if (town != null) {
             Coordinates tmpCoordinates = getCoordinatesFromTown(town);
