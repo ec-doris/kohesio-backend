@@ -710,7 +710,7 @@ public class ProjectController {
             }
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
-                result.put("regionText", "multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
+                result.put("regionText", "Multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
@@ -885,8 +885,10 @@ public class ProjectController {
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
         if (keywords != null) {
+            long start = System.nanoTime();
             expandedQuery = similarityService.expandQuery(keywords);
             expandedQueryText = expandedQuery.getExpandedQuery();
+            logger.info("Expansion time "+ (System.nanoTime()-start)/ 1000000);
         }
         if (town != null) {
             Coordinates tmpCoordinates = getCoordinatesFromTown(town);
@@ -985,7 +987,7 @@ public class ProjectController {
 
         search += " " + orderQuery;
         query =
-                "SELECT ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?summary WHERE { "
+                "SELECT ?s0 ?snippet ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?summary WHERE { "
                         + " { SELECT ?s0 ?description WHERE { "
                         + search
                         + " } " + orderBy + " LIMIT "
@@ -997,9 +999,9 @@ public class ProjectController {
                         + " FILTER((LANG(?label)) = \""
                         + language
                         + "\") }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
-                        + language
-                        + "\") } "
+//                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
+//                        + language
+//                        + "\") } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
@@ -1013,9 +1015,9 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode . }} "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} } } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
-                        + " FILTER(LANG(?summary)=\"" + language + "\")"
-                        + "} "
+//                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
+//                        + " FILTER(LANG(?summary)=\"" + language + "\")"
+//                        + "} "
                         + "} ";
 
 
