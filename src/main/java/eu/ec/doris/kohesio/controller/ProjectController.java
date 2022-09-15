@@ -710,7 +710,7 @@ public class ProjectController {
             }
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
-                result.put("regionText", "multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
+                result.put("regionText", "Multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
