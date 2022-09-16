@@ -104,7 +104,9 @@ public class ProjectController {
     }
 
     @GetMapping(value = "/facet/eu/project", produces = "application/json")
-    public ResponseEntity euProjectID( //
+    public ResponseEntity
+
+    euProjectID( //
                                        @RequestParam(value = "id") String id,
                                        @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
@@ -128,7 +130,7 @@ public class ProjectController {
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
                             "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube ?video ?coordinates  ?countryLabel " +
-                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
+                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 ?keepUrl WHERE { "
                             + " VALUES ?s0 { <"
@@ -176,10 +178,11 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program ."
                             + "             ?program <https://linkedopendata.eu/prop/direct/P1750> ?source2 . }"
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category ."
-                            + "             ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
-                            + "             FILTER((LANG(?categoryLabel)) = \""
+                            + "             OPTIONAL { ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
+                            + "                         FILTER((LANG(?categoryLabel)) = \""
                             + language
                             + "\") }"
+                            + " OPTIONAL { ?category <https://linkedopendata.eu/prop/direct/P869> ?categoryID . } }"
 
                             + " OPTIONAL {"
                             + "                 ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme."
@@ -310,6 +313,7 @@ public class ProjectController {
             result.put("countryLabel", new JSONArray());
             result.put("countryCode", new JSONArray());
             result.put("categoryLabels", new JSONArray());
+            result.put("categoryIDs", new JSONArray());
             result.put("fundLabel", "");
             result.put("programmingPeriodLabel", "2014-2020");
             result.put("programLabel", "");
@@ -337,6 +341,7 @@ public class ProjectController {
             HashSet<String> coordinatesSet = new HashSet<>();
             HashSet<String> regions = new HashSet<>();
             HashSet<String> interventionFieldsSet = new HashSet<>();
+            HashSet<String> interventionFieldsIDSet = new HashSet<>();
             HashSet<String> themeLabels = new HashSet<>();
             HashSet<String> themeIds = new HashSet<>();
             HashSet<String> policyLabels = new HashSet<>();
@@ -436,6 +441,14 @@ public class ProjectController {
                     if (!interventionFieldsSet.contains(interventionField)) {
                         interventionFieldsSet.add(interventionField);
                         result.put("categoryLabels", interventionFieldsSet);
+                    }
+                }
+
+                if (querySolution.getBinding("categoryID") != null) {
+                    String interventionField = querySolution.getBinding("categoryID").getValue().stringValue();
+                    if (!interventionFieldsIDSet.contains(interventionField)) {
+                        interventionFieldsIDSet.add(interventionField);
+                        result.put("categoryIDs", interventionFieldsIDSet);
                     }
                 }
 
