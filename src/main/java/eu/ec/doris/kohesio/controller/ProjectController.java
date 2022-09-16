@@ -129,7 +129,7 @@ public class ProjectController {
                             "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
-                            "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube ?video ?coordinates  ?countryLabel " +
+                            "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube ?video ?tweet ?coordinates  ?countryLabel " +
                             "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 ?keepUrl WHERE { "
@@ -158,6 +158,7 @@ public class ProjectController {
                             + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
                             + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1746> ?video . }"
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1416> ?tweet . }"
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1360> ?sou . "
                             + " BIND(CONCAT(\"http://www.opencoesione.gov.it/progetti/\",STR( ?sou )) AS ?source ) . }"
@@ -330,6 +331,7 @@ public class ProjectController {
             result.put("coordinates", new JSONArray());
             result.put("images", new JSONArray());
             result.put("videos", new JSONArray());
+            result.put("tweets", new JSONArray());
             result.put("beneficiaries", new JSONArray());
             result.put("managingAuthorityLabel", "");
             result.put("region", "");
@@ -566,19 +568,28 @@ public class ProjectController {
                     result.put("images", images);
                 }
                 if (querySolution.getBinding("video") != null) {
-                    JSONArray images = (JSONArray) result.get("videos");
+                    JSONArray videos = (JSONArray) result.get("videos");
                     String im = querySolution.getBinding("video").getValue().stringValue();
-                    if (!images.contains(im)) {
-                        images.add(im);
-                        result.put("videos", images);
+                    if (!videos.contains(im)) {
+                        videos.add(im);
+                        result.put("videos", videos);
                     }
                 }
                 if (querySolution.getBinding("youtube") != null) {
-                    JSONArray images = (JSONArray) result.get("videos");
+                    JSONArray videos = (JSONArray) result.get("videos");
                     String im = "https://www.youtube.com/watch?v="+querySolution.getBinding("youtube").getValue().stringValue();
-                    if (!images.contains(im)) {
-                        images.add(im);
-                        result.put("videos", images);
+                    if (!videos.contains(im)) {
+                        videos.add(im);
+                        result.put("videos", videos);
+                    }
+                }
+
+                if (querySolution.getBinding("tweet") != null) {
+                    JSONArray tweets = (JSONArray) result.get("tweets");
+                    String im = "https://twitter.com/i/status/"+querySolution.getBinding("tweet").getValue().stringValue();
+                    if (!tweets.contains(im)) {
+                        tweets.add(im);
+                        result.put("tweets", tweets);
                     }
                 }
 
