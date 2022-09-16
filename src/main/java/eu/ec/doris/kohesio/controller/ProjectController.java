@@ -130,7 +130,7 @@ public class ProjectController {
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
                             "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube ?video ?coordinates  ?countryLabel " +
-                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
+                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 ?keepUrl WHERE { "
                             + " VALUES ?s0 { <"
@@ -209,10 +209,12 @@ public class ProjectController {
                             + language
                             + "\") } "
                             + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1584> ?fund.  "
-                            + "           ?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
+                            + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
                             + "           FILTER((LANG(?fundLabel)) = \""
                             + language
-                            + "\") } "
+                            + "\") }"
+                            + "           OPTIONAL {?fund <https://linkedopendata.eu/prop/direct/P67> ?fundWebsite .} "
+                            + "} "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P889> ?beneficiaryLink . "
                             + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabelRight . "
                             + "             FILTER(LANG(?beneficiaryLabelRight) = \"" + language + "\" ) } "
@@ -315,6 +317,7 @@ public class ProjectController {
             result.put("categoryLabels", new JSONArray());
             result.put("categoryIDs", new JSONArray());
             result.put("fundLabel", "");
+            result.put("fundWebsite", "");
             result.put("programmingPeriodLabel", "2014-2020");
             result.put("programLabel", "");
             result.put("programWebsite", "");
@@ -456,6 +459,12 @@ public class ProjectController {
                     result.put(
                             "fundLabel",
                             ((Literal) querySolution.getBinding("fundLabel").getValue()).stringValue());
+                }
+
+                if (querySolution.getBinding("fundWebsite") != null) {
+                    result.put(
+                            "fundWebsite",
+                            querySolution.getBinding("fundWebsite").getValue().stringValue());
                 }
 
                 if (querySolution.getBinding("programLabel") != null) {
