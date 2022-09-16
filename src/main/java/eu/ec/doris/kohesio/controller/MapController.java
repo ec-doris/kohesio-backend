@@ -84,6 +84,7 @@ public class MapController {
             @RequestParam(value = "longitude", required = false) String longitude,
             @RequestParam(value = "region", required = false) String region,
             @RequestParam(value = "granularityRegion", required = false) String granularityRegion,
+            @RequestParam(value = "nuts3", required = false) String nuts3,
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
             Integer timeout,
@@ -97,6 +98,11 @@ public class MapController {
 
         //simplify the query
         String c = country;
+
+        if (nuts3 != null && facetController.nutsRegion.containsKey(nuts3) && facetController.nutsRegion.get(nuts3).type.contains("nuts3")) {
+            granularityRegion = nuts3;
+        }
+
         if (granularityRegion != null) {
             c = null;
         }
@@ -510,7 +516,7 @@ public class MapController {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, 2000, 0, 400, null);
+        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, 400, null);
         JSONObject mod = result.getBody();
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);

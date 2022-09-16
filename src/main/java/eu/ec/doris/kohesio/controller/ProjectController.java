@@ -723,7 +723,7 @@ public class ProjectController {
             }
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
-                result.put("regionText", "multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
+                result.put("regionText", "Multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
@@ -1012,9 +1012,9 @@ public class ProjectController {
                         + " FILTER((LANG(?label)) = \""
                         + language
                         + "\") }"
-//                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
-//                        + language
-//                        + "\") } "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
+                        + language
+                        + "\") } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
@@ -1024,6 +1024,7 @@ public class ProjectController {
                         + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
                         + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode . }} "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} } "
