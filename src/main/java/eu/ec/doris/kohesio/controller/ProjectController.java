@@ -234,7 +234,7 @@ public class ProjectController {
                             + id
                             + "> } "
                             + " ?s0  wdt:P1845  ?region . "
-                            + "     ?region  wdt:P35  wd:Q4407315 . "
+                            + "     FILTER EXISTS { ?region  wdt:P35  wd:Q4407315 . }"
                             + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
                             + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
                             + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
@@ -1049,9 +1049,9 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode . }} "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} } } "
-//                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
-//                        + " FILTER(LANG(?summary)=\"" + language + "\")"
-//                        + "} "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
+                        + " FILTER(LANG(?summary)=\"" + language + "\")"
+                        + "} "
                         + "} ";
 
 
