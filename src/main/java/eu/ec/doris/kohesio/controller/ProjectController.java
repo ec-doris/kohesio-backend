@@ -479,7 +479,7 @@ public class ProjectController {
                     if (querySolution.getBinding("program_cci") != null) {
                         result.put(
                                 "programFullLabel",
-                                querySolution.getBinding("program_cci").getValue() + " - " +((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
+                                ((Literal)querySolution.getBinding("program_cci").getValue()).stringValue() + " - " +((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
                     }
 
                 }
