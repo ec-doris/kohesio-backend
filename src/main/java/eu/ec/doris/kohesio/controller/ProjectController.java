@@ -130,7 +130,7 @@ public class ProjectController {
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
                             "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube ?video ?tweet ?coordinates  ?countryLabel " +
-                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
+                            "?countryCode ?programLabel ?program_cci ?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
                             "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 ?keepUrl WHERE { "
                             + " VALUES ?s0 { <"
@@ -169,6 +169,7 @@ public class ProjectController {
                             + language
                             + "\") }"
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program ."
+                            + "             OPTIONAL { ?program <https://linkedopendata.eu/prop/direct/P1367>  ?program_cci . } "
                             + "             ?program <https://linkedopendata.eu/prop/direct/P1586> ?managingAuthority. "
                             + "             ?program <http://www.w3.org/2000/01/rdf-schema#label> ?programLabel. "
                             + "             OPTIONAL { ?program <https://linkedopendata.eu/prop/direct/P1742> ?programInfoRegioUrl . }"
@@ -321,6 +322,7 @@ public class ProjectController {
             result.put("fundWebsite", "");
             result.put("programmingPeriodLabel", "2014-2020");
             result.put("programLabel", "");
+            result.put("programFullLabel", "");
             result.put("programWebsite", "");
             result.put("programInfoRegioUrl", "");
             result.put("themeIds", new JSONArray());
@@ -473,6 +475,13 @@ public class ProjectController {
                     result.put(
                             "programLabel",
                             ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
+
+                    if (querySolution.getBinding("program_cci") != null) {
+                        result.put(
+                                "programFullLabel",
+                                querySolution.getBinding("program_cci").getValue() + " - " +((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
+                    }
+
                 }
                 if (querySolution.getBinding("programInfoRegioUrl") != null) {
                     result.put(
