@@ -433,7 +433,7 @@ public class BeneficiaryController {
         // enforce a country if the filter is on the country
         if (country!=null){
             countryInfo = " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country . "
-                        + " FILTER (?country = "+country+")"
+                        + " FILTER (?country = <"+country+"> )"
                         + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } ";
         }
 
