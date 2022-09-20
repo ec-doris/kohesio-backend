@@ -427,6 +427,17 @@ public class BeneficiaryController {
             }
         }
         String labelsFilter = getBeneficiaryLabelsFilter();
+
+        String countryInfo = " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
+                + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } ";
+        // enforce a country if the filter is on the country
+        if (country!=null){
+            countryInfo = " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country . "
+                        + " FILTER (?country = "+country+")"
+                        + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } ";
+        }
+
+
         String query =
                 "SELECT ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link ?transliteration { "
                         + " { SELECT ?beneficiary (COUNT(DISTINCT ?project) AS ?numberProjects) (SUM(?budget) AS ?totalBudget) (SUM(?euBudget) AS ?totalEuBudget) { "
@@ -443,8 +454,7 @@ public class BeneficiaryController {
                         + labelsFilter
                         + " }"
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P1> ?link. } "
-                        + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
-                        + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
+                        + countryInfo
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/P7> ?benefStatement . "
                         + "  ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
                         + " }"
