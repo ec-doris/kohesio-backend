@@ -495,6 +495,7 @@ public class ProjectController {
                     program.put(
                             "programWebsite", querySolution.getBinding("source2").getValue().stringValue());
                 }
+                program.put("programmingPeriodLabel", "2014-2020");
 
                 programs.add(program);
 
