@@ -65,10 +65,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -320,11 +317,16 @@ public class ProjectController {
             result.put("categoryIDs", new JSONArray());
             result.put("fundLabel", "");
             result.put("fundWebsite", "");
-            result.put("programmingPeriodLabel", "2014-2020");
-            result.put("programLabel", "");
-            result.put("programFullLabel", "");
-            result.put("programWebsite", "");
-            result.put("programInfoRegioUrl", "");
+
+//            result.put("programmingPeriodLabel", "2014-2020");
+//            result.put("programLabel", "");
+//            result.put("programFullLabel", "");
+//            result.put("programWebsite", "");
+//            result.put("programInfoRegioUrl", "");
+            HashSet<HashMap> programs = new HashSet<>();
+
+            result.put("program", programs);
+
             result.put("themeIds", new JSONArray());
             result.put("themeLabels", new JSONArray());
             result.put("policyIds", new JSONArray());
@@ -470,25 +472,32 @@ public class ProjectController {
                             "fundWebsite",
                             querySolution.getBinding("fundWebsite").getValue().stringValue());
                 }
-
+                HashMap<String, String> program = new HashMap<>();
                 if (querySolution.getBinding("programLabel") != null) {
-                    result.put(
+                    program.put(
                             "programLabel",
                             ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
 
                     if (querySolution.getBinding("program_cci") != null) {
-                        result.put(
+                        program.put(
                                 "programFullLabel",
                                 ((Literal)querySolution.getBinding("program_cci").getValue()).stringValue() + " - " +((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
                     }
 
                 }
                 if (querySolution.getBinding("programInfoRegioUrl") != null) {
-                    result.put(
+                    program.put(
                             "programInfoRegioUrl",
                             querySolution.getBinding("programInfoRegioUrl").getValue().stringValue()
                     );
                 }
+                if (querySolution.getBinding("source2") != null) {
+                    program.put(
+                            "programWebsite", querySolution.getBinding("source2").getValue().stringValue());
+                }
+
+                programs.add(program);
+
                 if (querySolution.getBinding("themeId") != null) {
                     String themeId = querySolution.getBinding("themeId").getValue().stringValue();
                     if (!themeIds.contains(themeId)) {
@@ -540,10 +549,7 @@ public class ProjectController {
                     result.put(
                             "projectWebsite", ((Literal) querySolution.getBinding("source").getValue()).stringValue());
                 }
-                if (querySolution.getBinding("source2") != null) {
-                    result.put(
-                            "programWebsite", querySolution.getBinding("source2").getValue().stringValue());
-                }
+
 
 
                 if (querySolution.getBinding("coordinates") != null) {
