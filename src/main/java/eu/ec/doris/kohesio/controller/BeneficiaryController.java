@@ -297,19 +297,20 @@ public class BeneficiaryController {
                                                  @RequestParam(value = "program", required = false) String program, //
                                                  @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
 
-                                                 @RequestParam(value = "orderEuBudget", defaultValue = "false") Boolean orderEuBudget,
-                                                 @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+                                                 @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+                                                 @RequestParam(value = "orderTotalBudget", defaultValue = "false") Boolean orderTotalBudget,
                                                  @RequestParam(value = "orderNumProjects", required = false) Boolean orderNumProjects,
                                                  @RequestParam(value = "limit", defaultValue = "200") int limit,
                                                  @RequestParam(value = "offset", defaultValue = "0") int offset,
                                                  Principal principal)
             throws Exception {
-        logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}, orderEuBudget {}, orderTotalBudget {}, orderNumProjects {}", language, keywords, country, region, latitude, longitude, fund, program, orderEuBudget, orderTotalBudget, orderNumProjects);
-
         int timeout = 20;
         if (keywords == null) {
-            timeout = 200;
+            timeout = 500;
         }
+        logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}, orderEuBudget {}, orderTotalBudget {}, orderNumProjects {}, timeout {}", language, keywords, country, region, latitude, longitude, fund, program, orderEuBudget, orderTotalBudget, orderNumProjects, timeout);
+
+
 
         int inputOffset = offset;
         int inputLimit = limit;
@@ -368,9 +369,7 @@ public class BeneficiaryController {
         }
 
         search += "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
-                + "   ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
-                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
-                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
+                + "   ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
 
         if (beneficiaryType != null) {
             if (beneficiaryType.equals("private")) {
@@ -385,6 +384,9 @@ public class BeneficiaryController {
                 search
                 + " }";
         logger.debug(queryCount);
+
+
+
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
         int numResults = 0;
         if (countResultSet.hasNext()) {
@@ -393,20 +395,23 @@ public class BeneficiaryController {
             //System.out.println(querySolution.getBinding("beneficiary").getValue());
         }
 
+        search += "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
+                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
+
         String orderBy = "";
 
-        if (orderEuBudget != null) {
-            if (orderEuBudget) {
-                orderBy = "order by asc(?totalEuBudget)";
-            } else {
-                orderBy = "order by desc(?totalEuBudget)";
-            }
-        }
         if (orderTotalBudget != null) {
             if (orderTotalBudget) {
                 orderBy = "order by asc(?totalBudget)";
             } else {
                 orderBy = "order by desc(?totalBudget)";
+            }
+        }
+        if (orderEuBudget != null) {
+            if (orderEuBudget) {
+                orderBy = "order by asc(?totalEuBudget)";
+            } else {
+                orderBy = "order by desc(?totalEuBudget)";
             }
         }
         if (orderNumProjects != null) {
@@ -417,6 +422,17 @@ public class BeneficiaryController {
             }
         }
         String labelsFilter = getBeneficiaryLabelsFilter();
+
+        String countryInfo = " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
+                + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } ";
+        // enforce a country if the filter is on the country
+        if (country!=null){
+            countryInfo = " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country . "
+                        + " FILTER (?country = <"+country+"> )"
+                        + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } ";
+        }
+
+
         String query =
                 "SELECT ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link ?transliteration { "
                         + " { SELECT ?beneficiary (COUNT(DISTINCT ?project) AS ?numberProjects) (SUM(?budget) AS ?totalBudget) (SUM(?euBudget) AS ?totalEuBudget) { "
@@ -433,14 +449,13 @@ public class BeneficiaryController {
                         + labelsFilter
                         + " }"
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P1> ?link. } "
-                        + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
-                        + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } "
+                        + countryInfo
                         + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/P7> ?benefStatement . "
                         + "  ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
                         + " }"
                         + "} ";
         logger.debug(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
 
         ArrayList<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
         if (resultSet != null) {

@@ -4,57 +4,70 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import eu.ec.doris.kohesio.payload.*;
+
+import eu.ec.doris.kohesio.payload.NutsRegion;
+import eu.ec.doris.kohesio.payload.Project;
+import eu.ec.doris.kohesio.payload.ProjectList;
+import eu.ec.doris.kohesio.payload.SemanticSearchResult;
+import eu.ec.doris.kohesio.payload.SimilarWord;
 import eu.ec.doris.kohesio.services.ExpandedQuery;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import eu.ec.doris.kohesio.services.SimilarityService;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.math3.util.Precision;
-import org.apache.lucene.search.Query;
-import org.apache.poi.hssf.usermodel.HSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.query.Binding;
-import org.eclipse.rdf4j.query.BindingSet;
-import org.eclipse.rdf4j.query.TupleQueryResult;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.mapstruct.Context;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.net.*;
-import java.nio.charset.StandardCharsets;
-import java.security.Principal;
-import java.util.*;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.highlight.Formatter;
 import org.apache.lucene.search.highlight.Highlighter;
 import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.sail.lucene.SearchFields;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.mapstruct.Context;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.security.Principal;
+import java.util.*;
+
+import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api")
@@ -82,7 +95,9 @@ public class ProjectController {
     String cacheDirectory;
 
     @GetMapping(value = "/facet/eu/project", produces = "application/json")
-    public ResponseEntity euProjectID( //
+    public ResponseEntity
+
+    euProjectID( //
                                        @RequestParam(value = "id") String id,
                                        @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
@@ -105,10 +120,10 @@ public class ProjectController {
                             "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
                             "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
                             "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
-                            "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?video ?coordinates  ?countryLabel " +
-                            "?countryCode ?programLabel ?programInfoRegioUrl ?categoryLabel ?fundLabel ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
+                            "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube ?video ?tweet ?coordinates  ?countryLabel " +
+                            "?countryCode ?programLabel ?program_cci ?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
                             " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
-                            "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 WHERE { "
+                            "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 ?keepUrl WHERE { "
                             + " VALUES ?s0 { <"
                             + id
                             + "> } "
@@ -127,11 +142,14 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P837> ?cofinancingRate. } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image } . "
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P2210> ?youtube } . "
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId. <https://linkedopendata.eu/entity/P562941> <https://linkedopendata.eu/prop/direct/P877> ?formatter. BIND(REPLACE(?keepId, '^(.+)$', ?formatter) AS ?keepUrl). } . "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
                             + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
                             + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
                             + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1746> ?video . }"
+                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1416> ?tweet . }"
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1360> ?sou . "
                             + " BIND(CONCAT(\"http://www.opencoesione.gov.it/progetti/\",STR( ?sou )) AS ?source ) . }"
@@ -142,6 +160,7 @@ public class ProjectController {
                             + language
                             + "\") }"
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program ."
+                            + "             OPTIONAL { ?program <https://linkedopendata.eu/prop/direct/P1367>  ?program_cci . } "
                             + "             ?program <https://linkedopendata.eu/prop/direct/P1586> ?managingAuthority. "
                             + "             ?program <http://www.w3.org/2000/01/rdf-schema#label> ?programLabel. "
                             + "             OPTIONAL { ?program <https://linkedopendata.eu/prop/direct/P1742> ?programInfoRegioUrl . }"
@@ -152,10 +171,11 @@ public class ProjectController {
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program ."
                             + "             ?program <https://linkedopendata.eu/prop/direct/P1750> ?source2 . }"
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category ."
-                            + "             ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
-                            + "             FILTER((LANG(?categoryLabel)) = \""
+                            + "             OPTIONAL { ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
+                            + "                         FILTER((LANG(?categoryLabel)) = \""
                             + language
                             + "\") }"
+                            + " OPTIONAL { ?category <https://linkedopendata.eu/prop/direct/P869> ?categoryID . } }"
 
                             + " OPTIONAL {"
                             + "                 ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme."
@@ -182,10 +202,12 @@ public class ProjectController {
                             + language
                             + "\") } "
                             + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1584> ?fund.  "
-                            + "           ?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
+                            + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
                             + "           FILTER((LANG(?fundLabel)) = \""
                             + language
-                            + "\") } "
+                            + "\") }"
+                            + "           OPTIONAL {?fund <https://linkedopendata.eu/prop/direct/P67> ?fundWebsite .} "
+                            + "} "
                             + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P889> ?beneficiaryLink . "
                             + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabelRight . "
                             + "             FILTER(LANG(?beneficiaryLabelRight) = \"" + language + "\" ) } "
@@ -204,7 +226,7 @@ public class ProjectController {
                             + id
                             + "> } "
                             + " ?s0  wdt:P1845  ?region . "
-                            + "     ?region  wdt:P35  wd:Q2576750 . "
+                            + "     FILTER EXISTS { ?region  wdt:P35  wd:Q4407315 . }"
                             + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
                             + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
                             + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
@@ -286,11 +308,19 @@ public class ProjectController {
             result.put("countryLabel", new JSONArray());
             result.put("countryCode", new JSONArray());
             result.put("categoryLabels", new JSONArray());
+            result.put("categoryIDs", new JSONArray());
             result.put("fundLabel", "");
-            result.put("programmingPeriodLabel", "2014-2020");
-            result.put("programLabel", "");
-            result.put("programWebsite", "");
-            result.put("programInfoRegioUrl", "");
+            result.put("fundWebsite", "");
+
+//            result.put("programmingPeriodLabel", "2014-2020");
+//            result.put("programLabel", "");
+//            result.put("programFullLabel", "");
+//            result.put("programWebsite", "");
+//            result.put("programInfoRegioUrl", "");
+            HashSet<HashMap> programs = new HashSet<>();
+
+            result.put("program", programs);
+
             result.put("themeIds", new JSONArray());
             result.put("themeLabels", new JSONArray());
             result.put("policyIds", new JSONArray());
@@ -299,6 +329,7 @@ public class ProjectController {
             result.put("coordinates", new JSONArray());
             result.put("images", new JSONArray());
             result.put("videos", new JSONArray());
+            result.put("tweets", new JSONArray());
             result.put("beneficiaries", new JSONArray());
             result.put("managingAuthorityLabel", "");
             result.put("region", "");
@@ -307,11 +338,13 @@ public class ProjectController {
             result.put("regionUpper2", "");
             result.put("regionUpper3", "");
             result.put("infoRegioUrl", "");
+            result.put("keepUrl", "");
 
             HashSet<String> regionIDs = new HashSet<>();
             HashSet<String> coordinatesSet = new HashSet<>();
             HashSet<String> regions = new HashSet<>();
             HashSet<String> interventionFieldsSet = new HashSet<>();
+            HashSet<String> interventionFieldsIDSet = new HashSet<>();
             HashSet<String> themeLabels = new HashSet<>();
             HashSet<String> themeIds = new HashSet<>();
             HashSet<String> policyLabels = new HashSet<>();
@@ -323,6 +356,11 @@ public class ProjectController {
                 if (querySolution.getBinding("budget") != null) {
                     result.put(
                             "budget", ((Literal) querySolution.getBinding("budget").getValue()).stringValue());
+                }
+
+                if (querySolution.getBinding("keepUrl") != null) {
+                    result.put(
+                            "keepUrl", ((Literal) querySolution.getBinding("keepUrl").getValue()).stringValue());
                 }
 
                 if (querySolution.getBinding("label") != null) {
@@ -409,23 +447,52 @@ public class ProjectController {
                     }
                 }
 
+                if (querySolution.getBinding("categoryID") != null) {
+                    String interventionField = querySolution.getBinding("categoryID").getValue().stringValue();
+                    if (!interventionFieldsIDSet.contains(interventionField)) {
+                        interventionFieldsIDSet.add(interventionField);
+                        result.put("categoryIDs", interventionFieldsIDSet);
+                    }
+                }
+
                 if (querySolution.getBinding("fundLabel") != null) {
                     result.put(
                             "fundLabel",
                             ((Literal) querySolution.getBinding("fundLabel").getValue()).stringValue());
                 }
 
-                if (querySolution.getBinding("programLabel") != null) {
+                if (querySolution.getBinding("fundWebsite") != null) {
                     result.put(
+                            "fundWebsite",
+                            querySolution.getBinding("fundWebsite").getValue().stringValue());
+                }
+                HashMap<String, String> program = new HashMap<>();
+                if (querySolution.getBinding("programLabel") != null) {
+                    program.put(
                             "programLabel",
                             ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
+
+                    if (querySolution.getBinding("program_cci") != null) {
+                        program.put(
+                                "programFullLabel",
+                                ((Literal)querySolution.getBinding("program_cci").getValue()).stringValue() + " - " +((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
+                    }
+
                 }
                 if (querySolution.getBinding("programInfoRegioUrl") != null) {
-                    result.put(
+                    program.put(
                             "programInfoRegioUrl",
                             querySolution.getBinding("programInfoRegioUrl").getValue().stringValue()
                     );
                 }
+                if (querySolution.getBinding("source2") != null) {
+                    program.put(
+                            "programWebsite", querySolution.getBinding("source2").getValue().stringValue());
+                }
+                program.put("programmingPeriodLabel", "2014-2020");
+
+                programs.add(program);
+
                 if (querySolution.getBinding("themeId") != null) {
                     String themeId = querySolution.getBinding("themeId").getValue().stringValue();
                     if (!themeIds.contains(themeId)) {
@@ -477,10 +544,7 @@ public class ProjectController {
                     result.put(
                             "projectWebsite", ((Literal) querySolution.getBinding("source").getValue()).stringValue());
                 }
-                if (querySolution.getBinding("source2") != null) {
-                    result.put(
-                            "programWebsite", querySolution.getBinding("source2").getValue().stringValue());
-                }
+
 
 
                 if (querySolution.getBinding("coordinates") != null) {
@@ -513,16 +577,32 @@ public class ProjectController {
                     }
                     result.put("images", images);
                 }
-
-
                 if (querySolution.getBinding("video") != null) {
-                    JSONArray images = (JSONArray) result.get("videos");
+                    JSONArray videos = (JSONArray) result.get("videos");
                     String im = querySolution.getBinding("video").getValue().stringValue();
-                    if (!images.contains(im)) {
-                        images.add(im);
-                        result.put("videos", images);
+                    if (!videos.contains(im)) {
+                        videos.add(im);
+                        result.put("videos", videos);
                     }
                 }
+                if (querySolution.getBinding("youtube") != null) {
+                    JSONArray videos = (JSONArray) result.get("videos");
+                    String im = "https://www.youtube.com/watch?v="+querySolution.getBinding("youtube").getValue().stringValue();
+                    if (!videos.contains(im)) {
+                        videos.add(im);
+                        result.put("videos", videos);
+                    }
+                }
+
+                if (querySolution.getBinding("tweet") != null) {
+                    JSONArray tweets = (JSONArray) result.get("tweets");
+                    String im = "https://twitter.com/i/status/"+querySolution.getBinding("tweet").getValue().stringValue();
+                    if (!tweets.contains(im)) {
+                        tweets.add(im);
+                        result.put("tweets", tweets);
+                    }
+                }
+
                 JSONArray beneficiaries = (JSONArray) result.get("beneficiaries");
                 if (querySolution.getBinding("beneficiaryLink") != null) {
 
@@ -673,10 +753,109 @@ public class ProjectController {
             }
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
-                result.put("regionText", "multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
+                result.put("regionText", "Multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
+    }
+
+
+    public class Coordinates {
+        String latitude;
+        String longitude;
+
+        public Coordinates(String latitude, String longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+
+        public String getLatitude() {
+            return latitude;
+        }
+
+        public void setLatitude(String latitude) {
+            this.latitude = latitude;
+        }
+
+        public String getLongitude() {
+            return longitude;
+        }
+
+        public void setLongitude(String longitude) {
+            this.longitude = longitude;
+        }
+    }
+
+    private Coordinates getCoordinatesFromTown(String town) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        String urlTemplate = UriComponentsBuilder.fromHttpUrl("https://nominatim.openstreetmap.org/search/search")
+                .queryParam("q", town)
+                .queryParam("format", "json")
+                .queryParam("addressdetails", "1")
+                .encode().toUriString();
+        System.out.println(urlTemplate);
+
+        HttpEntity<String> response = new RestTemplate().exchange(
+                urlTemplate,
+                HttpMethod.GET, entity, String.class
+        );
+        System.out.println(response.getBody());
+        try {
+            JSONArray JsonArray = (JSONArray) new JSONParser().parse(response.getBody());
+            System.out.println(((JSONObject)JsonArray.get(0)).get("lat"));
+            System.out.println(((JSONObject)JsonArray.get(0)).get("lon"));
+
+            return new Coordinates(
+                    ((JSONObject)JsonArray.get(0)).get("lat").toString(),
+                    ((JSONObject)JsonArray.get(0)).get("lon").toString()
+            );
+        } catch (org.json.simple.parser.ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public ResponseEntity euSearchProject(
+                                           String language,
+                                           String keywords, //
+                                           String country,
+                                           String theme,
+                                           String fund,
+                                           String program,
+                                           String categoryOfIntervention,
+                                           String policyObjective,
+                                           Long budgetBiggerThen,
+                                           Long budgetSmallerThen,
+                                           Long budgetEUBiggerThen,
+                                           Long budgetEUSmallerThen,
+                                           String startDateBefore,
+                                           String startDateAfter,
+                                           String endDateBefore,
+                                           String endDateAfter,
+
+                                           Boolean orderStartDate,
+                                           Boolean orderEndDate,
+                                           Boolean orderEuBudget,
+                                           Boolean orderTotalBudget,
+
+                                           String latitude,
+                                           String longitude,
+                                           String region,
+                                           int limit,
+                                           int offset,
+                                           Integer timeout,
+                                           Principal principal)
+            throws Exception {
+        return euSearchProject(
+                language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
+                budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
+                startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null,
+                timeout, principal
+        );
     }
 
     @GetMapping(value = "/facet/eu/search/project", produces = "application/json")
@@ -709,17 +888,22 @@ public class ProjectController {
                                            @RequestParam(value = "region", required = false) String region,
                                            @RequestParam(value = "limit", defaultValue = "5000") int limit,
                                            @RequestParam(value = "offset", defaultValue = "0") int offset,
+                                           @RequestParam(value = "town", required = false) String town,
+                                           @RequestParam(value = "radius", required = false) Long radius,
+                                           @RequestParam(value = "nuts3", required = false) String nuts3,
+                                           @RequestParam(value = "interreg", required = false) Boolean interreg,
+
                                            Integer timeout,
                                            Principal principal)
             throws Exception {
         if (timeout == null) {
             timeout = 20;
             if (keywords == null) {
-                timeout = 100;
+                timeout = 200;
             }
         }
         logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, program {}, region {}, timeout {}", language, keywords, country, theme, fund, program, region, timeout);
-
+        logger.info("interreg {}", interreg);
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset != Integer.MIN_VALUE) {
@@ -744,10 +928,19 @@ public class ProjectController {
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
         if (keywords != null) {
+            long start = System.nanoTime();
             expandedQuery = similarityService.expandQuery(keywords);
             expandedQueryText = expandedQuery.getExpandedQuery();
+            logger.info("Expansion time "+ (System.nanoTime()-start)/ 1000000);
         }
+        if (town != null) {
+            Coordinates tmpCoordinates = getCoordinatesFromTown(town);
+            if (tmpCoordinates != null) {
+                latitude = tmpCoordinates.getLatitude();
+                longitude = tmpCoordinates.getLongitude();
 
+            }
+        }
         String search = filtersGenerator.filterProject(
                 expandedQueryText,
                 country,
@@ -766,8 +959,10 @@ public class ProjectController {
                 endDateAfter,
                 latitude,
                 longitude,
+                radius,
                 region,
-                null,
+                nuts3,
+                interreg,
                 limit,
                 offset
         );
@@ -835,7 +1030,7 @@ public class ProjectController {
 
         search += " " + orderQuery;
         query =
-                "SELECT ?s0 ?snippet ?label ?description ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?summary WHERE { "
+                "SELECT ?s0 ?snippet ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?summary ?description WHERE { "
                         + " { SELECT ?s0 ?description WHERE { "
                         + search
                         + " } " + orderBy + " LIMIT "
@@ -847,7 +1042,7 @@ public class ProjectController {
                         + " FILTER((LANG(?label)) = \""
                         + language
                         + "\") }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description . FILTER((LANG(?description)) = \""
                         + language
                         + "\") } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
@@ -860,9 +1055,10 @@ public class ProjectController {
                         + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . ?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode .} "
-                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } "
-                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. ?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId. } } "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode . }} "
+                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} } "
+                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} } } "
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
                         + " FILTER(LANG(?summary)=\"" + language + "\")"
                         + "} "
@@ -1142,6 +1338,8 @@ public class ProjectController {
             @RequestParam(value = "region", required = false) String region,
             @RequestParam(value = "limit", defaultValue = "10") Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
+            @RequestParam(value = "town", required = false) String town,
+            @RequestParam(value = "radius", required = false) Long radius,
             Principal principal)
             throws Exception {
         logger.info("Project image search: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, null);
@@ -1154,7 +1352,16 @@ public class ProjectController {
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, null, limit, offset);
+
+        if (town != null) {
+            Coordinates tmpCoordinates = getCoordinatesFromTown(town);
+            if (tmpCoordinates != null) {
+                latitude = tmpCoordinates.getLatitude();
+                longitude = tmpCoordinates.getLongitude();
+
+            }
+        }
+        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, limit, offset);
 
         //computing the number of results
         String searchCount = search;

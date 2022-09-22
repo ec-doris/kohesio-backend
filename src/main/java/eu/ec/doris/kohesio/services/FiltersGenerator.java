@@ -32,11 +32,16 @@ public class FiltersGenerator {
                                 String endDateAfter,
                                 String latitude,
                                 String longitude,
+                                Long radius,
                                 String region,
                                 String granularityRegion,
+                                Boolean interreg,
                                 Integer limit,
                                 Integer offset) throws IOException {
         String search = "";
+
+        search +=
+                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
         if (keywords != null) {
 //            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
 //                String[] words = keywords.split(" ");
@@ -107,6 +112,15 @@ public class FiltersGenerator {
                     "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention + "> . ";
         }
 
+        if (interreg != null && interreg) {
+            search +=
+                    "?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId . ";
+        }
+        if (interreg != null && !interreg) {
+            search +=
+                    "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId . } FILTER(!BOUND(?keepId))";
+        }
+
         if (budgetSmallerThen != null || budgetBiggerThen != null) {
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget . ";
             if (budgetBiggerThen != null) {
@@ -166,16 +180,17 @@ public class FiltersGenerator {
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . ";
         }
         if (latitude != null && longitude != null) {
+            if (radius == null) {
+                radius = 100L;
+            }
 //            search += "?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
 //                    + "FILTER ( "
 //                    + "<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)"
 //                    + "< 100000) . ";
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                    + " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < 100000)";
+                    + " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < " + (radius * 1000) + ")";
         }
 
-        search +=
-                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
         return search;
     }
 

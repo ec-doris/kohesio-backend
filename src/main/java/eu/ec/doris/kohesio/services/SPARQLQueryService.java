@@ -72,7 +72,6 @@ public class SPARQLQueryService {
         repo.setAdditionalHttpHeaders(additionalHttpHeaders);
 
         try {
-            logger.info("Was NOT cached ");
             TupleQueryResult resultSet =
                     repo.getConnection().prepareTupleQuery(query).evaluate();
             FileOutputStream out = new FileOutputStream(location + "/facet/cache/" + query.hashCode());
@@ -87,7 +86,8 @@ public class SPARQLQueryService {
             sparqlResultsJSONParser.parseQueryResult(
                     new FileInputStream(location + "/facet/cache/" + query.hashCode()));
             long end = System.nanoTime();
-            logger.info("Was NOT cached " + (end - start) / 1000000);
+            logger.info("Was NOT cached " + query );
+            logger.info("Time "+ (end - start) / 1000000);
             return tupleQueryResultHandler.getQueryResult();
         } catch (QueryEvaluationException e) {
             logger.error("Query Evaluation Exception: [" + e.getMessage() + "]");
