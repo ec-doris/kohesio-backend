@@ -214,14 +214,13 @@ public class FacetController {
                             boolean resultSet = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, query, 20);
                             if (resultSet) {
                                 for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
-//                                    System.err.println(childNut);
                                     nonStatisticalNuts.add(childNut);
                                 }
                             } else {
                                 nonStatisticalNuts.add(nutsCheckStatistical);
                             }
                         }
-                        nutsRegion.get(key).narrower.addAll(nonStatisticalNuts);
+                        nutsRegion.get(key).narrower = nonStatisticalNuts;
                     }
                 }
             }
