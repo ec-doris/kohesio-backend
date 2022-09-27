@@ -219,6 +219,23 @@ public class CacheController {
                 e.printStackTrace();
             }
         }
+        JSONArray areaOfInterventions = facetController.facetEuCategoryOfIntervention("en");
+        for (Object areaOfIntervention : areaOfInterventions){
+            try{
+                JSONArray interventionFileds = (JSONArray)((JSONObject) areaOfIntervention).get("options");
+                for (Object intervention : interventionFileds){
+                    String t = ((JSONObject) intervention).get("instance").toString();
+                    projectController.euSearchProject("en", null, null, null, null, null,
+                            t, null, null, null,
+                            null, null, null, null, null,
+                            null, null, null, null, false, null, null,
+                            null, 1000, 0, 100,null);
+                }
+
+            } catch(Exception e){
+                e.printStackTrace();
+            }
+        }
         for (String country : countries) {
 
             Boolean[] orderEuBudget = {true, false};

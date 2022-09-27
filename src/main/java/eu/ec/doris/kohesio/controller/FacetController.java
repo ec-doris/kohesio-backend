@@ -168,52 +168,6 @@ public class FacetController {
                 }
             }
 
-//            // Retrieving the wider concept
-//            for (String key : nutsRegion.keySet()) {
-//                String query = "";
-//                if (nutsRegion.get(key).type.contains("nuts3")) {
-//                    query =
-//                            "SELECT DISTINCT ?region2 where {" +
-//                                    " <" + nutsRegion.get(key).uri + "> <https://linkedopendata.eu/prop/direct/P1845> ?region2 . " +
-//                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407316> . " +
-//                                    "}";
-//                }
-//                if (nutsRegion.get(key).type.contains("nuts2")) {
-//                    query =
-//                            "SELECT DISTINCT ?region2 where {" +
-//                                    " <" + nutsRegion.get(key).uri + "> <https://linkedopendata.eu/prop/direct/P1845> ?region2 . " +
-//                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407317> . }";
-//                }
-//                if (nutsRegion.get(key).type.contains("nuts1")) {
-//                    query =
-//                            "SELECT DISTINCT ?region2 where {" +
-//                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-//                                    " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?region2 . " +
-//                                    "}";
-//                }
-//                if (nutsRegion.get(key).type.contains("country")) {
-//                    query = "";
-//                }
-//                if (nutsRegion.get(key).type.contains("continent")) {
-//                    query = "";
-//                }
-//                if (!query.equals("")) {
-//                    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
-//                    logger.debug("Is empty result set: " + resultSet.hasNext());
-//                    while (resultSet.hasNext()) {
-//                        BindingSet querySolution = resultSet.next();
-//                        if (querySolution.getBinding("region2") != null) {
-//                            logger.debug(querySolution.getBinding("region2").getValue().stringValue());
-//                            if (!querySolution.getBinding("region2").getValue().stringValue().equals(key)) {
-//                                if (!nutsRegion.get(key).wider.contains(querySolution.getBinding("region2").getValue().stringValue())) {
-//                                    nutsRegion.get(key).wider.add(querySolution.getBinding("region2").getValue().stringValue());
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-
             //retriving the geoJson geometries
             for (String key : nutsRegion.keySet()) {
                 String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
@@ -250,7 +204,7 @@ public class FacetController {
                         List<String> nonStatisticalNuts = new ArrayList<>();
                         for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
                             String query =
-                                    "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2727537> . }";
+                                    "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }";
                             boolean resultSet = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, query, 20);
                             if (resultSet) {
                                 for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {

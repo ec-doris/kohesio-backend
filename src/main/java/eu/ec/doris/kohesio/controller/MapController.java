@@ -226,7 +226,7 @@ public class MapController {
                 }
             }
             // this is a hack to show brittany
-            if ((latitude == null || longitude == null) &&/*!isCountry && */!granularityRegion.equals("https://linkedopendata.eu/entity/Q3487")) {
+            if ((latitude == null || longitude == null) ) {
                 optional += "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
             }
         }
