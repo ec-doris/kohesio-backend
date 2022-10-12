@@ -98,8 +98,8 @@ public class ProjectController {
     public ResponseEntity
 
     euProjectID( //
-                                       @RequestParam(value = "id") String id,
-                                       @RequestParam(value = "language", defaultValue = "en") String language)
+                 @RequestParam(value = "id") String id,
+                 @RequestParam(value = "language", defaultValue = "en") String language)
             throws Exception {
 
         logger.info("Project search by ID: id {}, language {}", id, language);
@@ -131,170 +131,131 @@ public class ProjectController {
                             + " FILTER((LANG(?label)) = \""
                             + language
                             + "\") "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description. FILTER((LANG(?description)) = \""
+                            + " OPTIONAL { ?s0 wdt:P836 ?description. FILTER((LANG(?description)) = \""
                             + language
                             + "\") } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1742> ?infoRegioUrl . }"
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P837> ?cofinancingRate. } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image } . "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P2210> ?youtube } . "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId. <https://linkedopendata.eu/entity/P562941> <https://linkedopendata.eu/prop/direct/P877> ?formatter. BIND(REPLACE(?keepId, '^(.+)$', ?formatter) AS ?keepUrl). } . "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
-                            + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
+                            + " OPTIONAL { ?s0 wdt:P1742 ?infoRegioUrl . }"
+                            + " OPTIONAL { ?s0 wdt:P20 ?startTime . } "
+                            + " OPTIONAL { ?s0 wdt:P33 ?endTime . } "
+                            + " OPTIONAL { ?s0 wdt:P838 ?expectedEndTime . } "
+                            + " OPTIONAL { ?s0 wdt:P835 ?euBudget. } "
+                            + " OPTIONAL { ?s0 wdt:P474 ?budget. } "
+                            + " OPTIONAL { ?s0 wdt:P837 ?cofinancingRate. } "
+                            + " OPTIONAL { ?s0 wdt:P851 ?image } . "
+                            + " OPTIONAL { ?s0 wdt:P2210 ?youtube } . "
+                            + " OPTIONAL { ?s0 wdt:P562941 ?keepId. wd:P562941 wdt:P877 ?formatter. BIND(REPLACE(?keepId, '^(.+)$', ?formatter) AS ?keepUrl). } . "
+                            + " OPTIONAL { ?s0 p:P851 ?blank . "
+                            + " ?blank ps:P851 ?image . "
                             + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
                             + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1746> ?video . }"
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1416> ?tweet . }"
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1360> ?sou . "
+                            + " OPTIONAL { ?s0 wdt:P1746 ?video . }"
+                            + " OPTIONAL { ?s0 wdt:P1416 ?tweet . }"
+//                            + " OPTIONAL { ?s0 wdt:P127 ?coordinates. } "
+                            + " OPTIONAL { ?s0 wdt:P1360 ?sou . "
                             + " BIND(CONCAT(\"http://www.opencoesione.gov.it/progetti/\",STR( ?sou )) AS ?source ) . }"
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . "
-                            + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . "
+                            + " OPTIONAL { ?s0 wdt:P32 ?country . "
+                            + "            ?country wdt:P173 ?countryCode . "
                             + "             ?country <http://www.w3.org/2000/01/rdf-schema#label> ?countryLabel. "
                             + "             FILTER((LANG(?countryLabel)) = \""
                             + language
                             + "\") }"
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program ."
-                            + "             OPTIONAL { ?program <https://linkedopendata.eu/prop/direct/P1367>  ?program_cci . } "
-                            + "             ?program <https://linkedopendata.eu/prop/direct/P1586> ?managingAuthority. "
+                            + " OPTIONAL { ?s0 wdt:P1368 ?program ."
+                            + "             OPTIONAL { ?program wdt:P1367  ?program_cci . } "
+                            + "             ?program wdt:P1586 ?managingAuthority. "
                             + "             ?program <http://www.w3.org/2000/01/rdf-schema#label> ?programLabel. "
-                            + "             OPTIONAL { ?program <https://linkedopendata.eu/prop/direct/P1742> ?programInfoRegioUrl . }"
+                            + "             OPTIONAL { ?program wdt:P1742 ?programInfoRegioUrl . }"
                             + "             FILTER((LANG(?programLabel)) = \""
                             + language
                             + "\") ."
                             + "             ?managingAuthority <http://www.w3.org/2000/01/rdf-schema#label> ?managingAuthorityLabel. } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program ."
-                            + "             ?program <https://linkedopendata.eu/prop/direct/P1750> ?source2 . }"
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category ."
+                            + " OPTIONAL { ?s0 wdt:P1368 ?program ."
+                            + "             ?program wdt:P1750 ?source2 . }"
+                            + " OPTIONAL { ?s0 wdt:P888 ?category ."
                             + "             OPTIONAL { ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
                             + "                         FILTER((LANG(?categoryLabel)) = \""
                             + language
                             + "\") }"
-                            + " OPTIONAL { ?category <https://linkedopendata.eu/prop/direct/P869> ?categoryID . } }"
+                            + " OPTIONAL { ?category wdt:P869 ?categoryID . } }"
 
                             + " OPTIONAL {"
-                            + "                 ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme."
-                            + "                 ?theme <https://linkedopendata.eu/prop/direct/P1105> ?themeId. "
+                            + "                 ?s0 wdt:P1848 ?theme."
+                            + "                 ?theme wdt:P1105 ?themeId. "
                             + "                 ?theme <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabel. "
                             + "                 FILTER((LANG(?themeLabel)) = \""
                             + language
                             + "\") } "
 
                             + " OPTIONAL {"
-                            + "           ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category."
+                            + "           ?s0 wdt:P888 ?category."
                             + "           OPTIONAL { "
-                            + "                 ?category <https://linkedopendata.eu/prop/direct/P1848> ?themeInferred."
-                            + "                 ?themeInferred <https://linkedopendata.eu/prop/direct/P1105> ?themeIdInferred. "
+                            + "                 ?category wdt:P1848 ?themeInferred."
+                            + "                 ?themeInferred wdt:P1105 ?themeIdInferred. "
                             + "                 ?themeInferred <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabelInferred . "
                             + "                 FILTER((LANG(?themeLabelInferred)) = \""
                             + language
                             + "\") } } "
-                            + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?theme.  "
-                            + "           ?theme <https://linkedopendata.eu/prop/direct/P1849> ?policy."
-                            + "           ?policy <https://linkedopendata.eu/prop/direct/P1747> ?policyId. "
+                            + " OPTIONAL {?s0 wdt:P1848 ?theme.  "
+                            + "           ?theme wdt:P1849 ?policy."
+                            + "           ?policy wdt:P1747 ?policyId. "
                             + "           ?policy <http://www.w3.org/2000/01/rdf-schema#label> ?policyLabel. "
                             + "           FILTER((LANG(?policyLabel)) = \""
                             + language
                             + "\") } "
-                            + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1584> ?fund.  "
+                            + " OPTIONAL {?s0 wdt:P1584 ?fund.  "
                             + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
                             + "           FILTER((LANG(?fundLabel)) = \""
                             + language
                             + "\") }"
-                            + "           OPTIONAL {?fund <https://linkedopendata.eu/prop/direct/P67> ?fundWebsite .} "
+                            + "           OPTIONAL {?fund wdt:P67 ?fundWebsite .} "
                             + "} "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P889> ?beneficiaryLink . "
+                            + " OPTIONAL { ?s0 wdt:P889 ?beneficiaryLink . "
                             + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabelRight . "
                             + "             FILTER(LANG(?beneficiaryLabelRight) = \"" + language + "\" ) } "
                             + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . }"
-                            + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P1> ?beneficiaryID .  "
+                            + "          OPTIONAL {?beneficiaryLink wdt:P1 ?beneficiaryID .  "
                             + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
-                            + "          OPTIONAL {?beneficiaryLink <https://linkedopendata.eu/prop/direct/P67> ?beneficiaryWebsite . } "
-                            + "          OPTIONAL { ?beneficiaryLink <https://linkedopendata.eu/prop/P7> ?benefStatement . "
+                            + "          OPTIONAL {?beneficiaryLink wdt:P67 ?beneficiaryWebsite . } "
+                            + "          OPTIONAL { ?beneficiaryLink p:P7 ?benefStatement . "
                             + "                 ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
                             + "          }"
                             + " } "
-                            + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P841> ?beneficiaryString .}"
+                            + " OPTIONAL { ?s0 wdt:P841 ?beneficiaryString .}"
 
-                            + " OPTIONAL { SELECT ?s0 ?region ?regionId ?regionLabel {"
-                            + " VALUES ?s0 { <"
-                            + id
-                            + "> } "
-                            + " ?s0  wdt:P1845  ?region . "
-                            + "     FILTER EXISTS { ?region  wdt:P35  wd:Q4407315 . }"
-                            + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
-                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
-                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
-                            + "     }"
-                            + "     FILTER(STRLEN(STR(?regionId))>=5)"
-                            + "  } "
-
-//                            "         OPTIONAL\n" +
-//                            "           { \n" +
-//                            "             \n" +
-//                            "               ?region  wdt:P35  ?regionType .\n" +
-//                            "             OPTIONAL {\n" +
-//                            "                  ?region p:P35 ?blank .\n" +
-//                            "                  ?blank ps:P35 ?is_statistical_only_0 .\n" +
-//                            "                 filter(?is_statistical_only_0 = wd:Q2727537)\n" +
-//                            "               }\n" +
-//                            "            \n" +
-//                            "             FILTER ( ( ?regionType = wd:Q2576750 ))\n" +
-//                            "           \n" +
-//                            "         OPTIONAL\n" +
-//                            "           { \n" +
-//                            "             \n" +
-//                            "             ?region   wdt:P1845  ?regionUpper1 .\n" +
-//                            "             ?regionUpper1 wdt:P35  ?regionType1 .\n" +
-//                            "            \n" +
-//                            "             OPTIONAL {\n" +
-//                            "                ?regionUpper1 p:P35 ?blank_1 .\n" +
-//                            "                 ?blank_1 ps:P35 ?is_statistical_only_1 .\n" +
-//                            "                 filter(?is_statistical_only_1 = wd:Q2727537)\n" +
-//                            "               }\n" +
-//                            "            \n" +
-//                            "             FILTER ( ( ?regionType1 = wd:Q2576674 ) )\n" +
-//                            "             ?regionUpper1\n" +
-//                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper1Label\n" +
-//                            "             FILTER ( lang(?regionUpper1Label) = \""+language+"\" )\n" +
-//                            "           }\n" +
-//                            "         OPTIONAL\n" +
-//                            "           { ?regionUpper1\n" +
-//                            "                       wdt:P1845  ?regionUpper2 .\n" +
-//                            "             ?regionUpper2 wdt:P35  ?regionType2 .\n" +
-//                            "            \n" +
-//                            "            OPTIONAL {\n" +
-//                            "              \n" +
-//                            "             ?regionUpper2 p:P35 ?blank_2 .\n" +
-//                            "             ?blank_2 ps:P35 ?is_statistical_only_2 .\n" +
-//                            "              filter(?is_statistical_only_2 = wd:Q2727537)\n" +
-//                            "              }\n" +
-//                            "            \n" +
-//                            "             FILTER ( ( ?regionType2 = wd:Q2576630 ) )\n" +
-//                            "             ?regionUpper2\n" +
-//                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper2Label\n" +
-//                            "             FILTER ( lang(?regionUpper2Label) = \""+language+"\" )\n" +
-//                            "           }\n" +
-//                            "         OPTIONAL\n" +
-//                            "           { ?regionUpper2\n" +
-//                            "                       wdt:P1845  ?regionUpper3 .\n" +
-//                            "             ?regionUpper3\n" +
-//                            "                       <http://www.w3.org/2000/01/rdf-schema#label>  ?regionUpper3Label .\n" +
-//                            "             ?regionUpper3 p:P35 ?blank_country .\n" +
-//                            "            ?blank_country ps:P35 wd:Q510 ." +
-//                            "             FILTER ( lang(?regionUpper3Label) = \"en\" )\n" +
-//                            "           }\n" +
-//                            "     |      }\n" +
-                            + " } "
+//                            + " OPTIONAL { SELECT ?s0 ?region ?regionId ?regionLabel {"
+//                            + " VALUES ?s0 { <"
+//                            + id
+//                            + "> } "
+//                            + " ?s0  wdt:P1845  ?region . "
+//                            + "     FILTER EXISTS { ?region  wdt:P35  wd:Q4407315 . }"
+//                            + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
+//                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
+//                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
+//                            + "     }"
+//                            + "     FILTER(STRLEN(STR(?regionId))>=5)"
+//                            + "  } "
+//                            + " } "
                             + " } ";
+            String queryCoordinates = "PREFIX wd: <https://linkedopendata.eu/entity/> "
+                    + "PREFIX wdt: <https://linkedopendata.eu/prop/direct/> "
+                    + "SELECT ?coordinates WHERE { <" + id + "> wdt:P127 ?coordinates. }";
 
+            String queryRegion = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
+                    "PREFIX wd: <https://linkedopendata.eu/entity/> " +
+                    "PREFIX wdt: <https://linkedopendata.eu/prop/direct/> " +
+                    "SELECT ?s0 ?region ?regionId ?regionLabel { "
+                    + "<" + id + "> wdt:P1845 ?region . "
+                    + "FILTER EXISTS { ?region  wdt:P35  wd:Q4407315 . } "
+                    + "OPTIONAL { ?region  wdt:P192  ?regionId . } "
+                    + "OPTIONAL { ?region rdfs:label ?regionLabel . "
+                    + "FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
+                    + "} "
+                    + "FILTER(STRLEN(STR(?regionId))>=5) "
+                    + "}";
 
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 3, false);
+            TupleQueryResult resultSetCoords = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCoordinates, 3, false);
+            TupleQueryResult resultSetRegion = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryRegion, 3, false);
+
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
             result.put("link", id);
@@ -350,6 +311,96 @@ public class ProjectController {
             HashSet<String> policyLabels = new HashSet<>();
             HashSet<String> policyIds = new HashSet<>();
 
+            while (resultSetCoords.hasNext()){
+                BindingSet querySolution = resultSetCoords.next();
+
+                if (querySolution.getBinding("coordinates") != null) {
+                    JSONArray coordinates = (JSONArray) result.get("coordinates");
+                    String coo = ((Literal) querySolution.getBinding("coordinates").getValue()).stringValue();
+                    //if (!coordinates.contains(coo.replace("Point(", "").replace(")", "").replace(" ", ","))) {
+                    if (!coordinatesSet.contains(coo)) {
+                        coordinatesSet.add(coo);
+                        coordinates.add(coo);
+                        result.put("coordinates", coordinates);
+                    }
+                }
+            }
+            while (resultSetRegion.hasNext()) {
+                BindingSet querySolution = resultSetRegion.next();
+                if (querySolution.getBinding("regionLabel") != null && querySolution.getBinding("is_statistical_only_0") == null) {
+                    result.put("region", ((Literal) querySolution.getBinding("regionLabel").getValue())
+                            .stringValue());
+                }
+                if (querySolution.getBinding("regionUpper1Label") != null && querySolution.getBinding("is_statistical_only_1") == null) {
+                    result.put("regionUpper1", ((Literal) querySolution.getBinding("regionUpper1Label").getValue())
+                            .stringValue());
+                }
+                if (querySolution.getBinding("regionUpper2Label") != null && querySolution.getBinding("is_statistical_only_2") == null) {
+                    result.put("regionUpper2", ((Literal) querySolution.getBinding("regionUpper2Label").getValue())
+                            .stringValue());
+                }
+                if (querySolution.getBinding("regionUpper3Label") != null) {
+                    result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
+                            .stringValue());
+                }
+                if (result.get("region") != "") {
+                    String regionText = (String) result.get("region");
+                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1"))) && !result.get("regionUpper1").equals("")) {
+                        regionText += ", " + (String) result.get("regionUpper1");
+                    }
+                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2"))) && !result.get("regionUpper2").equals("")) {
+                        regionText += ", " + (String) result.get("regionUpper2");
+                    }
+                    if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
+                        regionText += ", " + (String) result.get("regionUpper3");
+                    }
+                    if (!result.get("countryLabel").equals(regionText))
+                        regionText += ", " + String.join(", ", (JSONArray) result.get("countryLabel"));
+
+                    result.put("regionText", regionText);
+                } else {
+                    result.put("regionText", String.join(", ", (JSONArray) result.get("countryLabel")));
+                }
+                String regionId = "";
+                if (querySolution.getBinding("regionId") != null) {
+                    regionId = ((Literal) querySolution.getBinding("regionId").getValue()).stringValue();
+                } else {
+                    // replace with country code because there is no nuts
+                    regionId = querySolution.getBinding("countryCode").getValue().stringValue();
+                    if (regionId.equals("GR")) {
+                        // exception for Greece to use EL as nuts code and not GR
+                        regionId = "EL";
+                    }
+                }
+                if (regionId != null) {
+                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
+                    String regionLabel = (String) result.get("region");
+                    if (!regionIDs.contains(regionId) /*&& !regions.contains(regionLabel)*/) {
+                        // check if the regioId has already been seen - could be that a project is contained in multipl geometries
+                        regionIDs.add(regionId);
+                        regions.add(regionLabel);
+                        query =
+                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+                                        + "SELECT ?id ?geoJson  WHERE { "
+                                        + "?s <http://nuts.de/id> \'" + regionId + "\' . "
+                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
+                                        + "}";
+                        logger.debug("Retrieving nuts geometry");
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+
+                        NutsRegion nutsRegion = new NutsRegion();
+                        while (resultSet2.hasNext()) {
+                            BindingSet querySolution2 = resultSet2.next();
+                            if (querySolution2.getBinding("geoJson") != null) {
+                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
+                            }
+                        }
+                    }
+                }
+            }
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
 
@@ -475,7 +526,7 @@ public class ProjectController {
                     if (querySolution.getBinding("program_cci") != null) {
                         program.put(
                                 "programFullLabel",
-                                ((Literal)querySolution.getBinding("program_cci").getValue()).stringValue() + " - " +((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
+                                ((Literal) querySolution.getBinding("program_cci").getValue()).stringValue() + " - " + ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
                     }
 
                 }
@@ -545,19 +596,6 @@ public class ProjectController {
                             "projectWebsite", ((Literal) querySolution.getBinding("source").getValue()).stringValue());
                 }
 
-
-
-                if (querySolution.getBinding("coordinates") != null) {
-                    JSONArray coordinates = (JSONArray) result.get("coordinates");
-                    String coo = ((Literal) querySolution.getBinding("coordinates").getValue()).stringValue();
-                    //if (!coordinates.contains(coo.replace("Point(", "").replace(")", "").replace(" ", ","))) {
-                    if (!coordinatesSet.contains(coo)) {
-                        coordinatesSet.add(coo);
-                        coordinates.add(coo);
-                        result.put("coordinates", coordinates);
-                    }
-                }
-
                 if (querySolution.getBinding("image") != null) {
                     JSONArray images = (JSONArray) result.get("images");
                     JSONObject image = new JSONObject();
@@ -587,7 +625,7 @@ public class ProjectController {
                 }
                 if (querySolution.getBinding("youtube") != null) {
                     JSONArray videos = (JSONArray) result.get("videos");
-                    String im = "https://www.youtube.com/watch?v="+querySolution.getBinding("youtube").getValue().stringValue();
+                    String im = "https://www.youtube.com/watch?v=" + querySolution.getBinding("youtube").getValue().stringValue();
                     if (!videos.contains(im)) {
                         videos.add(im);
                         result.put("videos", videos);
@@ -596,7 +634,7 @@ public class ProjectController {
 
                 if (querySolution.getBinding("tweet") != null) {
                     JSONArray tweets = (JSONArray) result.get("tweets");
-                    String im = "https://twitter.com/i/status/"+querySolution.getBinding("tweet").getValue().stringValue();
+                    String im = "https://twitter.com/i/status/" + querySolution.getBinding("tweet").getValue().stringValue();
                     if (!tweets.contains(im)) {
                         tweets.add(im);
                         result.put("tweets", tweets);
@@ -677,79 +715,79 @@ public class ProjectController {
                             ((Literal) querySolution.getBinding("managingAuthorityLabel").getValue())
                                     .stringValue());
                 }
-                if (querySolution.getBinding("regionLabel") != null && querySolution.getBinding("is_statistical_only_0") == null) {
-                    result.put("region", ((Literal) querySolution.getBinding("regionLabel").getValue())
-                            .stringValue());
-                }
-                if (querySolution.getBinding("regionUpper1Label") != null && querySolution.getBinding("is_statistical_only_1") == null) {
-                    result.put("regionUpper1", ((Literal) querySolution.getBinding("regionUpper1Label").getValue())
-                            .stringValue());
-                }
-                if (querySolution.getBinding("regionUpper2Label") != null && querySolution.getBinding("is_statistical_only_2") == null) {
-                    result.put("regionUpper2", ((Literal) querySolution.getBinding("regionUpper2Label").getValue())
-                            .stringValue());
-                }
-                if (querySolution.getBinding("regionUpper3Label") != null) {
-                    result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
-                            .stringValue());
-                }
-                if (result.get("region") != "") {
-                    String regionText = (String) result.get("region");
-                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1"))) && !result.get("regionUpper1").equals("")) {
-                        regionText += ", " + (String) result.get("regionUpper1");
-                    }
-                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2"))) && !result.get("regionUpper2").equals("")) {
-                        regionText += ", " + (String) result.get("regionUpper2");
-                    }
-                    if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
-                        regionText += ", " + (String) result.get("regionUpper3");
-                    }
-                    if (!result.get("countryLabel").equals(regionText))
-                        regionText += ", " + String.join(", ", (JSONArray) result.get("countryLabel"));
-
-                    result.put("regionText", regionText);
-                } else {
-                    result.put("regionText", String.join(", ", (JSONArray) result.get("countryLabel")));
-                }
-                String regionId = "";
-                if (querySolution.getBinding("regionId") != null) {
-                    regionId = ((Literal) querySolution.getBinding("regionId").getValue()).stringValue();
-                } else {
-                    // replace with country code because there is no nuts
-                    regionId = querySolution.getBinding("countryCode").getValue().stringValue();
-                    if (regionId.equals("GR")) {
-                        // exception for Greece to use EL as nuts code and not GR
-                        regionId = "EL";
-                    }
-                }
-                if (regionId != null) {
-                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
-                    String regionLabel = (String) result.get("region");
-                    if (!regionIDs.contains(regionId) /*&& !regions.contains(regionLabel)*/) {
-                        // check if the regioId has already been seen - could be that a project is contained in multipl geometries
-                        regionIDs.add(regionId);
-                        regions.add(regionLabel);
-                        query =
-                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
-                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
-                                        + "SELECT ?id ?geoJson  WHERE { "
-                                        + "?s <http://nuts.de/id> \'" + regionId + "\' . "
-                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
-                                        + "}";
-                        logger.debug("Retrieving nuts geometry");
-                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
-
-                        NutsRegion nutsRegion = new NutsRegion();
-                        while (resultSet2.hasNext()) {
-                            BindingSet querySolution2 = resultSet2.next();
-                            if (querySolution2.getBinding("geoJson") != null) {
-                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
-                            }
-                        }
-                    }
-                }
+//                if (querySolution.getBinding("regionLabel") != null && querySolution.getBinding("is_statistical_only_0") == null) {
+//                    result.put("region", ((Literal) querySolution.getBinding("regionLabel").getValue())
+//                            .stringValue());
+//                }
+//                if (querySolution.getBinding("regionUpper1Label") != null && querySolution.getBinding("is_statistical_only_1") == null) {
+//                    result.put("regionUpper1", ((Literal) querySolution.getBinding("regionUpper1Label").getValue())
+//                            .stringValue());
+//                }
+//                if (querySolution.getBinding("regionUpper2Label") != null && querySolution.getBinding("is_statistical_only_2") == null) {
+//                    result.put("regionUpper2", ((Literal) querySolution.getBinding("regionUpper2Label").getValue())
+//                            .stringValue());
+//                }
+//                if (querySolution.getBinding("regionUpper3Label") != null) {
+//                    result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
+//                            .stringValue());
+//                }
+//                if (result.get("region") != "") {
+//                    String regionText = (String) result.get("region");
+//                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1"))) && !result.get("regionUpper1").equals("")) {
+//                        regionText += ", " + (String) result.get("regionUpper1");
+//                    }
+//                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2"))) && !result.get("regionUpper2").equals("")) {
+//                        regionText += ", " + (String) result.get("regionUpper2");
+//                    }
+//                    if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
+//                        regionText += ", " + (String) result.get("regionUpper3");
+//                    }
+//                    if (!result.get("countryLabel").equals(regionText))
+//                        regionText += ", " + String.join(", ", (JSONArray) result.get("countryLabel"));
+//
+//                    result.put("regionText", regionText);
+//                } else {
+//                    result.put("regionText", String.join(", ", (JSONArray) result.get("countryLabel")));
+//                }
+//                String regionId = "";
+//                if (querySolution.getBinding("regionId") != null) {
+//                    regionId = ((Literal) querySolution.getBinding("regionId").getValue()).stringValue();
+//                } else {
+//                    // replace with country code because there is no nuts
+//                    regionId = querySolution.getBinding("countryCode").getValue().stringValue();
+//                    if (regionId.equals("GR")) {
+//                        // exception for Greece to use EL as nuts code and not GR
+//                        regionId = "EL";
+//                    }
+//                }
+//                if (regionId != null) {
+//                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
+//                    String regionLabel = (String) result.get("region");
+//                    if (!regionIDs.contains(regionId) /*&& !regions.contains(regionLabel)*/) {
+//                        // check if the regioId has already been seen - could be that a project is contained in multipl geometries
+//                        regionIDs.add(regionId);
+//                        regions.add(regionLabel);
+//                        query =
+//                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+//                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+//                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+//                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+//                                        + "SELECT ?id ?geoJson  WHERE { "
+//                                        + "?s <http://nuts.de/id> \'" + regionId + "\' . "
+//                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
+//                                        + "}";
+//                        logger.debug("Retrieving nuts geometry");
+//                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+//
+//                        NutsRegion nutsRegion = new NutsRegion();
+//                        while (resultSet2.hasNext()) {
+//                            BindingSet querySolution2 = resultSet2.next();
+//                            if (querySolution2.getBinding("geoJson") != null) {
+//                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
+//                            }
+//                        }
+//                    }
+//                }
             }
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
