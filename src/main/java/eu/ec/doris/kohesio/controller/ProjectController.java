@@ -115,126 +115,104 @@ public class ProjectController {
             result.put("message", "Bad Request - project ID not found");
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
         } else {
-            String query =
-                    "PREFIX wd: <https://linkedopendata.eu/entity/>\n" +
-                            "PREFIX wdt: <https://linkedopendata.eu/prop/direct/>\n" +
-                            "PREFIX ps: <https://linkedopendata.eu/prop/statement/>\n" +
-                            "PREFIX p: <https://linkedopendata.eu/prop/>\n" +
-                            "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime ?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube ?video ?tweet ?coordinates  ?countryLabel " +
-                            "?countryCode ?programLabel ?program_cci ?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId ?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel ?managingAuthorityLabel" +
-                            " ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight ?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite ?beneficiaryString ?source ?source2 " +
-                            "?regionId ?regionLabel ?regionUpper1Label ?regionUpper2Label ?regionUpper3Label ?is_statistical_only_0 ?is_statistical_only_1 ?is_statistical_only_2 ?keepUrl WHERE { "
-                            + " VALUES ?s0 { <"
-                            + id
-                            + "> } "
-                            + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
-                            + " FILTER((LANG(?label)) = \""
-                            + language
-                            + "\") "
-                            + " OPTIONAL { ?s0 wdt:P836 ?description. FILTER((LANG(?description)) = \""
-                            + language
-                            + "\") } "
-                            + " OPTIONAL { ?s0 wdt:P1742 ?infoRegioUrl . }"
-                            + " OPTIONAL { ?s0 wdt:P20 ?startTime . } "
-                            + " OPTIONAL { ?s0 wdt:P33 ?endTime . } "
-                            + " OPTIONAL { ?s0 wdt:P838 ?expectedEndTime . } "
-                            + " OPTIONAL { ?s0 wdt:P835 ?euBudget. } "
-                            + " OPTIONAL { ?s0 wdt:P474 ?budget. } "
-                            + " OPTIONAL { ?s0 wdt:P837 ?cofinancingRate. } "
-                            + " OPTIONAL { ?s0 wdt:P851 ?image } . "
-                            + " OPTIONAL { ?s0 wdt:P2210 ?youtube } . "
-                            + " OPTIONAL { ?s0 wdt:P562941 ?keepId. wd:P562941 wdt:P877 ?formatter. BIND(REPLACE(?keepId, '^(.+)$', ?formatter) AS ?keepUrl). } . "
-                            + " OPTIONAL { ?s0 p:P851 ?blank . "
-                            + " ?blank ps:P851 ?image . "
-                            + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
-                            + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
-                            + " OPTIONAL { ?s0 wdt:P1746 ?video . }"
-                            + " OPTIONAL { ?s0 wdt:P1416 ?tweet . }"
-//                            + " OPTIONAL { ?s0 wdt:P127 ?coordinates. } "
-                            + " OPTIONAL { ?s0 wdt:P1360 ?sou . "
-                            + " BIND(CONCAT(\"http://www.opencoesione.gov.it/progetti/\",STR( ?sou )) AS ?source ) . }"
-                            + " OPTIONAL { ?s0 wdt:P32 ?country . "
-                            + "            ?country wdt:P173 ?countryCode . "
-                            + "             ?country <http://www.w3.org/2000/01/rdf-schema#label> ?countryLabel. "
-                            + "             FILTER((LANG(?countryLabel)) = \""
-                            + language
-                            + "\") }"
-                            + " OPTIONAL { ?s0 wdt:P1368 ?program ."
-                            + "             OPTIONAL { ?program wdt:P1367  ?program_cci . } "
-                            + "             ?program wdt:P1586 ?managingAuthority. "
-                            + "             ?program <http://www.w3.org/2000/01/rdf-schema#label> ?programLabel. "
-                            + "             OPTIONAL { ?program wdt:P1742 ?programInfoRegioUrl . }"
-                            + "             FILTER((LANG(?programLabel)) = \""
-                            + language
-                            + "\") ."
-                            + "             ?managingAuthority <http://www.w3.org/2000/01/rdf-schema#label> ?managingAuthorityLabel. } "
-                            + " OPTIONAL { ?s0 wdt:P1368 ?program ."
-                            + "             ?program wdt:P1750 ?source2 . }"
-                            + " OPTIONAL { ?s0 wdt:P888 ?category ."
-                            + "             OPTIONAL { ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
-                            + "                         FILTER((LANG(?categoryLabel)) = \""
-                            + language
-                            + "\") }"
-                            + " OPTIONAL { ?category wdt:P869 ?categoryID . } }"
-
-                            + " OPTIONAL {"
-                            + "                 ?s0 wdt:P1848 ?theme."
-                            + "                 ?theme wdt:P1105 ?themeId. "
-                            + "                 ?theme <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabel. "
-                            + "                 FILTER((LANG(?themeLabel)) = \""
-                            + language
-                            + "\") } "
-
-                            + " OPTIONAL {"
-                            + "           ?s0 wdt:P888 ?category."
-                            + "           OPTIONAL { "
-                            + "                 ?category wdt:P1848 ?themeInferred."
-                            + "                 ?themeInferred wdt:P1105 ?themeIdInferred. "
-                            + "                 ?themeInferred <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabelInferred . "
-                            + "                 FILTER((LANG(?themeLabelInferred)) = \""
-                            + language
-                            + "\") } } "
-                            + " OPTIONAL {?s0 wdt:P1848 ?theme.  "
-                            + "           ?theme wdt:P1849 ?policy."
-                            + "           ?policy wdt:P1747 ?policyId. "
-                            + "           ?policy <http://www.w3.org/2000/01/rdf-schema#label> ?policyLabel. "
-                            + "           FILTER((LANG(?policyLabel)) = \""
-                            + language
-                            + "\") } "
-                            + " OPTIONAL {?s0 wdt:P1584 ?fund.  "
-                            + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
-                            + "           FILTER((LANG(?fundLabel)) = \""
-                            + language
-                            + "\") }"
-                            + "           OPTIONAL {?fund wdt:P67 ?fundWebsite .} "
-                            + "} "
-                            + " OPTIONAL { ?s0 wdt:P889 ?beneficiaryLink . "
-                            + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabelRight . "
-                            + "             FILTER(LANG(?beneficiaryLabelRight) = \"" + language + "\" ) } "
-                            + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . }"
-                            + "          OPTIONAL {?beneficiaryLink wdt:P1 ?beneficiaryID .  "
-                            + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
-                            + "          OPTIONAL {?beneficiaryLink wdt:P67 ?beneficiaryWebsite . } "
-                            + "          OPTIONAL { ?beneficiaryLink p:P7 ?benefStatement . "
-                            + "                 ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
-                            + "          }"
-                            + " } "
-                            + " OPTIONAL { ?s0 wdt:P841 ?beneficiaryString .}"
-
-//                            + " OPTIONAL { SELECT ?s0 ?region ?regionId ?regionLabel {"
-//                            + " VALUES ?s0 { <"
-//                            + id
-//                            + "> } "
-//                            + " ?s0  wdt:P1845  ?region . "
-//                            + "     FILTER EXISTS { ?region  wdt:P35  wd:Q4407315 . }"
-//                            + "     OPTIONAL { ?region  wdt:P192  ?regionId . }"
-//                            + "     OPTIONAL { ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . "
-//                            + "         FILTER ( lang(?regionLabel) = \"" + language + "\" ) "
-//                            + "     }"
-//                            + "     FILTER(STRLEN(STR(?regionId))>=5)"
-//                            + "  } "
-//                            + " } "
-                            + " } ";
+            String query = "PREFIX wd: <https://linkedopendata.eu/entity/> "
+                    + "PREFIX wdt: <https://linkedopendata.eu/prop/direct/> "
+                    + "PREFIX ps: <https://linkedopendata.eu/prop/statement/> "
+                    + "PREFIX p: <https://linkedopendata.eu/prop/> "
+                    + "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime "
+                    + "?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube "
+                    + "?video ?tweet ?coordinates  ?countryLabel ?countryCode ?programLabel ?program_cci "
+                    + "?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId "
+                    + "?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel "
+                    + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
+                    + "?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite "
+                    + "?beneficiaryString ?source ?source2 ?keepUrl WHERE { "
+                    + "VALUES ?s0 { <" + id + "> } "
+                    + " ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
+                    + " FILTER((LANG(?label)) = \"" + language + "\") "
+                    + " OPTIONAL { ?s0 wdt:P836 ?description. FILTER((LANG(?description)) = \"" + language + "\") } "
+                    + " OPTIONAL { ?s0 wdt:P1742 ?infoRegioUrl . }"
+                    + " OPTIONAL { ?s0 wdt:P20 ?startTime . } "
+                    + " OPTIONAL { ?s0 wdt:P33 ?endTime . } "
+                    + " OPTIONAL { ?s0 wdt:P838 ?expectedEndTime . } "
+                    + " OPTIONAL { ?s0 wdt:P835 ?euBudget. } "
+                    + " OPTIONAL { ?s0 wdt:P474 ?budget. } "
+                    + " OPTIONAL { ?s0 wdt:P837 ?cofinancingRate. } "
+                    + " OPTIONAL { ?s0 wdt:P851 ?image } . "
+                    + " OPTIONAL { ?s0 wdt:P2210 ?youtube } . "
+                    + " OPTIONAL { ?s0 wdt:P562941 ?keepId. wd:P562941 wdt:P877 ?formatter. BIND(REPLACE(?keepId, '^(.+)$', ?formatter) AS ?keepUrl). } . "
+                    + " OPTIONAL { ?s0 p:P851 ?blank . "
+                    + " ?blank ps:P851 ?image . "
+                    + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
+                    + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
+                    + " OPTIONAL { ?s0 wdt:P1746 ?video . }"
+                    + " OPTIONAL { ?s0 wdt:P1416 ?tweet . }"
+                    + " OPTIONAL { ?s0 wdt:P1360 ?sou . "
+                    + " BIND(CONCAT(\"http://www.opencoesione.gov.it/progetti/\",STR( ?sou )) AS ?source ) . }"
+                    + " OPTIONAL { ?s0 wdt:P32 ?country . "
+                    + "            ?country wdt:P173 ?countryCode . "
+                    + "             ?country <http://www.w3.org/2000/01/rdf-schema#label> ?countryLabel. "
+                    + "             FILTER((LANG(?countryLabel)) = \"" + language + "\") }"
+                    + " OPTIONAL { ?s0 wdt:P1368 ?program ."
+                    + "             OPTIONAL { ?program wdt:P1367  ?program_cci . } "
+                    + "             ?program wdt:P1586 ?managingAuthority. "
+                    + "             ?program <http://www.w3.org/2000/01/rdf-schema#label> ?programLabel. "
+                    + "             OPTIONAL { ?program wdt:P1742 ?programInfoRegioUrl . }"
+                    + "             FILTER((LANG(?programLabel)) = \""
+                    + language
+                    + "\") ."
+                    + "             ?managingAuthority <http://www.w3.org/2000/01/rdf-schema#label> ?managingAuthorityLabel. } "
+                    + " OPTIONAL { ?s0 wdt:P1368 ?program ."
+                    + "             ?program wdt:P1750 ?source2 . }"
+                    + " OPTIONAL { ?s0 wdt:P888 ?category ."
+                    + "             OPTIONAL { ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
+                    + "                         FILTER((LANG(?categoryLabel)) = \""
+                    + language
+                    + "\") }"
+                    + " OPTIONAL { ?category wdt:P869 ?categoryID . } }"
+                    + " OPTIONAL {"
+                    + "                 ?s0 wdt:P1848 ?theme."
+                    + "                 ?theme wdt:P1105 ?themeId. "
+                    + "                 ?theme <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabel. "
+                    + "                 FILTER((LANG(?themeLabel)) = \""
+                    + language
+                    + "\") } "
+                    + " OPTIONAL {"
+                    + "           ?s0 wdt:P888 ?category."
+                    + "           OPTIONAL { "
+                    + "                 ?category wdt:P1848 ?themeInferred."
+                    + "                 ?themeInferred wdt:P1105 ?themeIdInferred. "
+                    + "                 ?themeInferred <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabelInferred . "
+                    + "                 FILTER((LANG(?themeLabelInferred)) = \""
+                    + language
+                    + "\") } } "
+                    + " OPTIONAL {?s0 wdt:P1848 ?theme.  "
+                    + "           ?theme wdt:P1849 ?policy."
+                    + "           ?policy wdt:P1747 ?policyId. "
+                    + "           ?policy <http://www.w3.org/2000/01/rdf-schema#label> ?policyLabel. "
+                    + "           FILTER((LANG(?policyLabel)) = \""
+                    + language
+                    + "\") } "
+                    + " OPTIONAL {?s0 wdt:P1584 ?fund.  "
+                    + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
+                    + "           FILTER((LANG(?fundLabel)) = \""
+                    + language
+                    + "\") }"
+                    + "           OPTIONAL {?fund wdt:P67 ?fundWebsite .} "
+                    + "} "
+                    + " OPTIONAL { ?s0 wdt:P889 ?beneficiaryLink . "
+                    + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabelRight . "
+                    + "             FILTER(LANG(?beneficiaryLabelRight) = \"" + language + "\" ) } "
+                    + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . }"
+                    + "          OPTIONAL {?beneficiaryLink wdt:P1 ?beneficiaryID .  "
+                    + "          BIND(CONCAT(\"http://wikidata.org/entity/\",STR( ?beneficiaryID )) AS ?beneficiaryWikidata ) . }"
+                    + "          OPTIONAL {?beneficiaryLink wdt:P67 ?beneficiaryWebsite . } "
+                    + "          OPTIONAL { ?beneficiaryLink p:P7 ?benefStatement . "
+                    + "                 ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
+                    + "          }"
+                    + " } "
+                    + " OPTIONAL { ?s0 wdt:P841 ?beneficiaryString .}"
+                    + " } ";
             String queryCoordinates = "PREFIX wd: <https://linkedopendata.eu/entity/> "
                     + "PREFIX wdt: <https://linkedopendata.eu/prop/direct/> "
                     + "SELECT ?coordinates WHERE { <" + id + "> wdt:P127 ?coordinates. }";
@@ -242,7 +220,7 @@ public class ProjectController {
             String queryRegion = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
                     "PREFIX wd: <https://linkedopendata.eu/entity/> " +
                     "PREFIX wdt: <https://linkedopendata.eu/prop/direct/> " +
-                    "SELECT ?s0 ?region ?regionId ?regionLabel { "
+                    "SELECT ?region ?regionId ?regionLabel { "
                     + "<" + id + "> wdt:P1845 ?region . "
                     + "FILTER EXISTS { ?region  wdt:P35  wd:Q4407315 . } "
                     + "OPTIONAL { ?region  wdt:P192  ?regionId . } "
@@ -273,11 +251,6 @@ public class ProjectController {
             result.put("fundLabel", "");
             result.put("fundWebsite", "");
 
-//            result.put("programmingPeriodLabel", "2014-2020");
-//            result.put("programLabel", "");
-//            result.put("programFullLabel", "");
-//            result.put("programWebsite", "");
-//            result.put("programInfoRegioUrl", "");
             HashSet<HashMap> programs = new HashSet<>();
 
             result.put("program", programs);
@@ -311,96 +284,6 @@ public class ProjectController {
             HashSet<String> policyLabels = new HashSet<>();
             HashSet<String> policyIds = new HashSet<>();
 
-            while (resultSetCoords.hasNext()){
-                BindingSet querySolution = resultSetCoords.next();
-
-                if (querySolution.getBinding("coordinates") != null) {
-                    JSONArray coordinates = (JSONArray) result.get("coordinates");
-                    String coo = ((Literal) querySolution.getBinding("coordinates").getValue()).stringValue();
-                    //if (!coordinates.contains(coo.replace("Point(", "").replace(")", "").replace(" ", ","))) {
-                    if (!coordinatesSet.contains(coo)) {
-                        coordinatesSet.add(coo);
-                        coordinates.add(coo);
-                        result.put("coordinates", coordinates);
-                    }
-                }
-            }
-            while (resultSetRegion.hasNext()) {
-                BindingSet querySolution = resultSetRegion.next();
-                if (querySolution.getBinding("regionLabel") != null && querySolution.getBinding("is_statistical_only_0") == null) {
-                    result.put("region", ((Literal) querySolution.getBinding("regionLabel").getValue())
-                            .stringValue());
-                }
-                if (querySolution.getBinding("regionUpper1Label") != null && querySolution.getBinding("is_statistical_only_1") == null) {
-                    result.put("regionUpper1", ((Literal) querySolution.getBinding("regionUpper1Label").getValue())
-                            .stringValue());
-                }
-                if (querySolution.getBinding("regionUpper2Label") != null && querySolution.getBinding("is_statistical_only_2") == null) {
-                    result.put("regionUpper2", ((Literal) querySolution.getBinding("regionUpper2Label").getValue())
-                            .stringValue());
-                }
-                if (querySolution.getBinding("regionUpper3Label") != null) {
-                    result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
-                            .stringValue());
-                }
-                if (result.get("region") != "") {
-                    String regionText = (String) result.get("region");
-                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1"))) && !result.get("regionUpper1").equals("")) {
-                        regionText += ", " + (String) result.get("regionUpper1");
-                    }
-                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2"))) && !result.get("regionUpper2").equals("")) {
-                        regionText += ", " + (String) result.get("regionUpper2");
-                    }
-                    if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
-                        regionText += ", " + (String) result.get("regionUpper3");
-                    }
-                    if (!result.get("countryLabel").equals(regionText))
-                        regionText += ", " + String.join(", ", (JSONArray) result.get("countryLabel"));
-
-                    result.put("regionText", regionText);
-                } else {
-                    result.put("regionText", String.join(", ", (JSONArray) result.get("countryLabel")));
-                }
-                String regionId = "";
-                if (querySolution.getBinding("regionId") != null) {
-                    regionId = ((Literal) querySolution.getBinding("regionId").getValue()).stringValue();
-                } else {
-                    // replace with country code because there is no nuts
-                    regionId = querySolution.getBinding("countryCode").getValue().stringValue();
-                    if (regionId.equals("GR")) {
-                        // exception for Greece to use EL as nuts code and not GR
-                        regionId = "EL";
-                    }
-                }
-                if (regionId != null) {
-                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
-                    String regionLabel = (String) result.get("region");
-                    if (!regionIDs.contains(regionId) /*&& !regions.contains(regionLabel)*/) {
-                        // check if the regioId has already been seen - could be that a project is contained in multipl geometries
-                        regionIDs.add(regionId);
-                        regions.add(regionLabel);
-                        query =
-                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
-                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
-                                        + "SELECT ?id ?geoJson  WHERE { "
-                                        + "?s <http://nuts.de/id> \'" + regionId + "\' . "
-                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
-                                        + "}";
-                        logger.debug("Retrieving nuts geometry");
-                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
-
-                        NutsRegion nutsRegion = new NutsRegion();
-                        while (resultSet2.hasNext()) {
-                            BindingSet querySolution2 = resultSet2.next();
-                            if (querySolution2.getBinding("geoJson") != null) {
-                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
-                            }
-                        }
-                    }
-                }
-            }
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
 
@@ -715,83 +598,139 @@ public class ProjectController {
                             ((Literal) querySolution.getBinding("managingAuthorityLabel").getValue())
                                     .stringValue());
                 }
-//                if (querySolution.getBinding("regionLabel") != null && querySolution.getBinding("is_statistical_only_0") == null) {
-//                    result.put("region", ((Literal) querySolution.getBinding("regionLabel").getValue())
-//                            .stringValue());
-//                }
-//                if (querySolution.getBinding("regionUpper1Label") != null && querySolution.getBinding("is_statistical_only_1") == null) {
-//                    result.put("regionUpper1", ((Literal) querySolution.getBinding("regionUpper1Label").getValue())
-//                            .stringValue());
-//                }
-//                if (querySolution.getBinding("regionUpper2Label") != null && querySolution.getBinding("is_statistical_only_2") == null) {
-//                    result.put("regionUpper2", ((Literal) querySolution.getBinding("regionUpper2Label").getValue())
-//                            .stringValue());
-//                }
-//                if (querySolution.getBinding("regionUpper3Label") != null) {
-//                    result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
-//                            .stringValue());
-//                }
-//                if (result.get("region") != "") {
-//                    String regionText = (String) result.get("region");
-//                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1"))) && !result.get("regionUpper1").equals("")) {
-//                        regionText += ", " + (String) result.get("regionUpper1");
-//                    }
-//                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2"))) && !result.get("regionUpper2").equals("")) {
-//                        regionText += ", " + (String) result.get("regionUpper2");
-//                    }
-//                    if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
-//                        regionText += ", " + (String) result.get("regionUpper3");
-//                    }
-//                    if (!result.get("countryLabel").equals(regionText))
-//                        regionText += ", " + String.join(", ", (JSONArray) result.get("countryLabel"));
-//
-//                    result.put("regionText", regionText);
-//                } else {
-//                    result.put("regionText", String.join(", ", (JSONArray) result.get("countryLabel")));
-//                }
-//                String regionId = "";
-//                if (querySolution.getBinding("regionId") != null) {
-//                    regionId = ((Literal) querySolution.getBinding("regionId").getValue()).stringValue();
-//                } else {
-//                    // replace with country code because there is no nuts
-//                    regionId = querySolution.getBinding("countryCode").getValue().stringValue();
-//                    if (regionId.equals("GR")) {
-//                        // exception for Greece to use EL as nuts code and not GR
-//                        regionId = "EL";
-//                    }
-//                }
-//                if (regionId != null) {
-//                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
-//                    String regionLabel = (String) result.get("region");
-//                    if (!regionIDs.contains(regionId) /*&& !regions.contains(regionLabel)*/) {
-//                        // check if the regioId has already been seen - could be that a project is contained in multipl geometries
-//                        regionIDs.add(regionId);
-//                        regions.add(regionLabel);
-//                        query =
-//                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
-//                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
-//                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
-//                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
-//                                        + "SELECT ?id ?geoJson  WHERE { "
-//                                        + "?s <http://nuts.de/id> \'" + regionId + "\' . "
-//                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
-//                                        + "}";
-//                        logger.debug("Retrieving nuts geometry");
-//                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
-//
-//                        NutsRegion nutsRegion = new NutsRegion();
-//                        while (resultSet2.hasNext()) {
-//                            BindingSet querySolution2 = resultSet2.next();
-//                            if (querySolution2.getBinding("geoJson") != null) {
-//                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
-//                            }
-//                        }
-//                    }
-//                }
             }
+            while (resultSetCoords.hasNext()) {
+                BindingSet querySolution = resultSetCoords.next();
+
+                if (querySolution.getBinding("coordinates") != null) {
+                    JSONArray coordinates = (JSONArray) result.get("coordinates");
+                    String coo = ((Literal) querySolution.getBinding("coordinates").getValue()).stringValue();
+                    //if (!coordinates.contains(coo.replace("Point(", "").replace(")", "").replace(" ", ","))) {
+                    if (!coordinatesSet.contains(coo)) {
+                        coordinatesSet.add(coo);
+                        coordinates.add(coo);
+                        result.put("coordinates", coordinates);
+                    }
+                }
+            }
+            while (resultSetRegion.hasNext()) {
+                BindingSet querySolution = resultSetRegion.next();
+                if (querySolution.getBinding("regionLabel") != null) {
+                    result.put("region", ((Literal) querySolution.getBinding("regionLabel").getValue())
+                            .stringValue());
+                }
+                if (querySolution.getBinding("regionUpper1Label") != null) {
+                    result.put("regionUpper1", ((Literal) querySolution.getBinding("regionUpper1Label").getValue())
+                            .stringValue());
+                }
+                if (querySolution.getBinding("regionUpper2Label") != null) {
+                    result.put("regionUpper2", ((Literal) querySolution.getBinding("regionUpper2Label").getValue())
+                            .stringValue());
+                }
+                if (querySolution.getBinding("regionUpper3Label") != null) {
+                    result.put("regionUpper3", ((Literal) querySolution.getBinding("regionUpper3Label").getValue())
+                            .stringValue());
+                }
+                if (result.get("region") != "") {
+                    String regionText = (String) result.get("region");
+                    if (!((String) result.get("region")).equals(((String) result.get("regionUpper1"))) && !result.get("regionUpper1").equals("")) {
+                        regionText += ", " + (String) result.get("regionUpper1");
+                    }
+                    if (!((String) result.get("regionUpper1")).equals(((String) result.get("regionUpper2"))) && !result.get("regionUpper2").equals("")) {
+                        regionText += ", " + (String) result.get("regionUpper2");
+                    }
+                    if (!result.get("regionUpper3").equals("") && !((String) result.get("regionUpper2")).equals(((String) result.get("regionUpper3")))) {
+                        regionText += ", " + (String) result.get("regionUpper3");
+                    }
+                    if (!result.get("countryLabel").equals(regionText)) {
+                        regionText += ", " + String.join(", ", (JSONArray) result.get("countryLabel"));
+                    }
+                    result.put("regionText", regionText);
+                } else {
+                    result.put("regionText", String.join(", ", (JSONArray) result.get("countryLabel")));
+                }
+                String regionId = "";
+                if (querySolution.getBinding("regionId") != null) {
+                    regionId = ((Literal) querySolution.getBinding("regionId").getValue()).stringValue();
+                } else {
+                    // replace with country code because there is no nuts
+                    regionId = querySolution.getBinding("countryCode").getValue().stringValue();
+                    if (regionId.equals("GR")) {
+                        // exception for Greece to use EL as nuts code and not GR
+                        regionId = "EL";
+                    }
+                }
+                System.err.println(regionId);
+                if (regionId != null) {
+                    JSONArray geoJsons = (JSONArray) result.get("geoJson");
+                    String regionLabel = (String) result.get("region");
+                    if (!regionIDs.contains(regionId) /*&& !regions.contains(regionLabel)*/) {
+                        // check if the regioId has already been seen - could be that a project is contained in multiple geometries
+                        regionIDs.add(regionId);
+                        regions.add(regionLabel);
+                        query =
+                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+                                        + "SELECT ?id ?geoJson  WHERE { "
+                                        + "?s <http://nuts.de/id> '" + regionId + "' . "
+                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
+                                        + "}";
+                        logger.debug("Retrieving nuts geometry");
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+
+                        NutsRegion nutsRegion = new NutsRegion();
+                        while (resultSet2.hasNext()) {
+                            BindingSet querySolution2 = resultSet2.next();
+                            if (querySolution2.getBinding("geoJson") != null) {
+                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (((JSONArray) result.get("geoJson")).size() == 0) {
+                JSONArray geoJsons = (JSONArray) result.get("geoJson");
+                for (int i = 0; i < ((JSONArray) result.get("countryCode")).size(); i++) {
+                    String countryCode = (String) ((JSONArray) result.get("countryCode")).get(i);
+                    if (countryCode.equals("GR")) {
+                        // exception for Greece to use EL as nuts code and not GR
+                        countryCode = "EL";
+                    }
+                    if (!regionIDs.contains(countryCode)) {
+                        // check if the regioId has already been seen - could be that a project is contained in multiple geometries
+                        regionIDs.add(countryCode);
+                        query =
+                                "PREFIX geof: <http://www.opengis.net/def/function/geosparql/> "
+                                        + "PREFIX geo: <http://www.opengis.net/ont/geosparql#> "
+                                        + "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+                                        + "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+                                        + "SELECT ?id ?geoJson  WHERE { "
+                                        + "?s <http://nuts.de/id> '" + countryCode + "' . "
+                                        + "?s <http://nuts.de/geoJson> ?geoJson . "
+                                        + "}";
+                        logger.debug("Retrieving nuts geometry");
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+
+                        NutsRegion nutsRegion = new NutsRegion();
+                        while (resultSet2.hasNext()) {
+                            BindingSet querySolution2 = resultSet2.next();
+                            if (querySolution2.getBinding("geoJson") != null) {
+                                geoJsons.add(querySolution2.getBinding("geoJson").getValue().stringValue());
+                            }
+                        }
+                    }
+                }
+            }
+
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
                 result.put("regionText", "Multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
+            }
+            if (result.get("regionText") == null || result.get("regionText") != null && ((String) result.get("regionText")).length() == 0) {
+                result.put("regionText", String.join(", ", (JSONArray) result.get("countryLabel")));
             }
             return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
         }
@@ -843,12 +782,12 @@ public class ProjectController {
         System.out.println(response.getBody());
         try {
             JSONArray JsonArray = (JSONArray) new JSONParser().parse(response.getBody());
-            System.out.println(((JSONObject)JsonArray.get(0)).get("lat"));
-            System.out.println(((JSONObject)JsonArray.get(0)).get("lon"));
+            System.out.println(((JSONObject) JsonArray.get(0)).get("lat"));
+            System.out.println(((JSONObject) JsonArray.get(0)).get("lon"));
 
             return new Coordinates(
-                    ((JSONObject)JsonArray.get(0)).get("lat").toString(),
-                    ((JSONObject)JsonArray.get(0)).get("lon").toString()
+                    ((JSONObject) JsonArray.get(0)).get("lat").toString(),
+                    ((JSONObject) JsonArray.get(0)).get("lon").toString()
             );
         } catch (org.json.simple.parser.ParseException e) {
             e.printStackTrace();
@@ -857,35 +796,35 @@ public class ProjectController {
     }
 
     public ResponseEntity euSearchProject(
-                                           String language,
-                                           String keywords, //
-                                           String country,
-                                           String theme,
-                                           String fund,
-                                           String program,
-                                           String categoryOfIntervention,
-                                           String policyObjective,
-                                           Long budgetBiggerThen,
-                                           Long budgetSmallerThen,
-                                           Long budgetEUBiggerThen,
-                                           Long budgetEUSmallerThen,
-                                           String startDateBefore,
-                                           String startDateAfter,
-                                           String endDateBefore,
-                                           String endDateAfter,
+            String language,
+            String keywords, //
+            String country,
+            String theme,
+            String fund,
+            String program,
+            String categoryOfIntervention,
+            String policyObjective,
+            Long budgetBiggerThen,
+            Long budgetSmallerThen,
+            Long budgetEUBiggerThen,
+            Long budgetEUSmallerThen,
+            String startDateBefore,
+            String startDateAfter,
+            String endDateBefore,
+            String endDateAfter,
 
-                                           Boolean orderStartDate,
-                                           Boolean orderEndDate,
-                                           Boolean orderEuBudget,
-                                           Boolean orderTotalBudget,
+            Boolean orderStartDate,
+            Boolean orderEndDate,
+            Boolean orderEuBudget,
+            Boolean orderTotalBudget,
 
-                                           String latitude,
-                                           String longitude,
-                                           String region,
-                                           int limit,
-                                           int offset,
-                                           Integer timeout,
-                                           Principal principal)
+            String latitude,
+            String longitude,
+            String region,
+            int limit,
+            int offset,
+            Integer timeout,
+            Principal principal)
             throws Exception {
         return euSearchProject(
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
@@ -969,7 +908,7 @@ public class ProjectController {
             long start = System.nanoTime();
             expandedQuery = similarityService.expandQuery(keywords);
             expandedQueryText = expandedQuery.getExpandedQuery();
-            logger.info("Expansion time "+ (System.nanoTime()-start)/ 1000000);
+            logger.info("Expansion time " + (System.nanoTime() - start) / 1000000);
         }
         if (town != null) {
             Coordinates tmpCoordinates = getCoordinatesFromTown(town);
