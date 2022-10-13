@@ -56,12 +56,6 @@ public class FacetController {
     @Autowired
     HttpReqRespUtils httpReqRespUtils;
 
-    // Set this to allow browser requests from other websites
-    @ModelAttribute
-    public void setVaryResponseHeader(HttpServletResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*");
-    }
-
     HashMap<String, Nut> nutsRegion = null;
 
     public void clear() {
