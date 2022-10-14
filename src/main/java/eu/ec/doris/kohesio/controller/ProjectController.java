@@ -94,9 +94,13 @@ public class ProjectController {
     @Value("${kohesio.directory}")
     String cacheDirectory;
 
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
+
     @GetMapping(value = "/facet/eu/project", produces = "application/json")
     public ResponseEntity
-
     euProjectID( //
                  @RequestParam(value = "id") String id,
                  @RequestParam(value = "language", defaultValue = "en") String language)

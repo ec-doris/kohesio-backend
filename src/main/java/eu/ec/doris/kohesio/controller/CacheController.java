@@ -36,6 +36,12 @@ public class CacheController {
     @Autowired
     MapController mapController;
 
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
+
+
     @PostMapping(value = "/facet/eu/cache/generate", produces = "application/json")
     public void generateCache() throws Exception {
         logger.debug("Start generating map recursively");

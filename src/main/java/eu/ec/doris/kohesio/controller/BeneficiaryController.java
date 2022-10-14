@@ -56,6 +56,11 @@ public class BeneficiaryController {
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
 
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
+
     @GetMapping(value = "/facet/eu/beneficiary", produces = "application/json")
     public ResponseEntity euBenfeciaryId(@RequestParam(value = "id") String id,
                                          @RequestParam(value = "language", defaultValue = "en") String language,

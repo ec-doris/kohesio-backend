@@ -56,6 +56,11 @@ public class MapController {
     @Autowired
     FacetController facetController;
 
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
+
     @GetMapping(value = "/facet/eu/search/project/map", produces = "application/json")
     public ResponseEntity euSearchProjectMap(
             @RequestParam(value = "language", defaultValue = "en") String language,

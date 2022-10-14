@@ -56,6 +56,11 @@ public class FacetController {
     @Autowired
     HttpReqRespUtils httpReqRespUtils;
 
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
+
     HashMap<String, Nut> nutsRegion = null;
 
     public void clear() {
