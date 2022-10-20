@@ -471,7 +471,7 @@ public class FacetController {
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
-                    if (querySolution.getBinding("instanceLabel").getValue()!=null){
+                    if (querySolution.getBinding("instanceLabel")!=null){
                         element.put("name", querySolution.getBinding("instanceLabel").getValue().stringValue());
                     } else {
                         element.put("name", querySolution.getBinding("instanceLabelEn").getValue().stringValue());
