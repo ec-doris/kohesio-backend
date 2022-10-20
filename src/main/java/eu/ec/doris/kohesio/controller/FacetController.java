@@ -246,7 +246,7 @@ public class FacetController {
                 JSONObject element = new JSONObject();
 
                 element.put("instance", nut.uri);
-                element.put("name", nut.name);
+                element.put("name", nut.nutsCode + " - " + nut.name);
                 element.put("country", nut.country);
                 element.put("nuts_code", nut.nutsCode);
                 jsonValues.add(element);
