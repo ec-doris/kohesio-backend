@@ -465,7 +465,7 @@ public class FacetController {
                         + " OPTIONAL { ?region rdfs:label ?instanceLabel . "
                         + "   FILTER (lang(?instanceLabel)=\""
                         + language
-                        + "   \") } "
+                        + "\") } "
                         + " OPTIONAL { ?region rdfs:label ?instanceLabelEn . FILTER (lang(?instanceLabelEn)=\"en\")  } "
                         + "}";
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
