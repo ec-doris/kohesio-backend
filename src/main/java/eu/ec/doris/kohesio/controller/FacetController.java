@@ -460,16 +460,21 @@ public class FacetController {
             for (String region : nutsRegion.get(country).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", region);
-                String query = "select ?instanceLabel where { "
+                String query = "select ?instanceLabel ?instanceLabelEn where { "
                         + " <" + region + "> rdfs:label ?instanceLabel . "
                         + " FILTER (lang(?instanceLabel)=\""
                         + language
                         + "\")"
+                        + " OPTIONAL { <" + region + "> rdfs:label ?instanceLabelEn . FILTER (lang(?instanceLabelEn)=\"en\")  } "
                         + "}";
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
-                    element.put("name", querySolution.getBinding("instanceLabel").getValue().stringValue());
+                    if (querySolution.getBinding("instanceLabel").getValue()!=null){
+                        element.put("name", querySolution.getBinding("instanceLabel").getValue().stringValue());
+                    } else {
+                        element.put("name", querySolution.getBinding("instanceLabelEn").getValue().stringValue());
+                    }
                 }
                 jsonValues.add(element);
             }
