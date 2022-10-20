@@ -461,11 +461,12 @@ public class FacetController {
                 JSONObject element = new JSONObject();
                 element.put("region", region);
                 String query = "select ?instanceLabel ?instanceLabelEn where { "
-                        + " <" + region + "> rdfs:label ?instanceLabel . "
-                        + " FILTER (lang(?instanceLabel)=\""
+                        + "{ "
+                        + "   <" + region + "> rdfs:label ?instanceLabel . "
+                        + "   FILTER (lang(?instanceLabel)=\""
                         + language
-                        + "\")"
-                        + " OPTIONAL { <" + region + "> rdfs:label ?instanceLabelEn . FILTER (lang(?instanceLabelEn)=\"en\")  } "
+                        + "   \") "
+                        + "} UNION { <" + region + "> rdfs:label ?instanceLabelEn . FILTER (lang(?instanceLabelEn)=\"en\")  } "
                         + "}";
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
                 while (resultSet.hasNext()) {
