@@ -476,6 +476,7 @@ public class FacetController {
                         element.put("name", querySolution.getBinding("instanceLabelEn").getValue().stringValue());
                     }
                 }
+                System.out.println(element.toJSONString());
                 jsonValues.add(element);
             }
         }
