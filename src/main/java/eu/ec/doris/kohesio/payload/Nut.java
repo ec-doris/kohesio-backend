@@ -9,6 +9,7 @@ public class Nut{
     public String name="";
     public String geoJson="";
     public String country="";
+    public String nutsCode = "";
     public String granularity;
     public List<String> narrower = new ArrayList<String>();
 }

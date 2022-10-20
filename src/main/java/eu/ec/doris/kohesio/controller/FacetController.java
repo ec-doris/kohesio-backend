@@ -97,9 +97,10 @@ public class FacetController {
                 }
 
                 String query =
-                        "SELECT DISTINCT ?region ?regionLabel ?country where {" +
+                        "SELECT DISTINCT ?region ?regionLabel ?country ?nuts_code where {" +
                                 filter +
                                 " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } " +
+                                " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?nuts_code } " +
                                 " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
                                 "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
                                 "}";
@@ -123,6 +124,9 @@ public class FacetController {
                         }
                         if (querySolution.getBinding("country") != null) {
                             nut.country = querySolution.getBinding("country").getValue().stringValue();
+                        }
+                        if (querySolution.getBinding("nuts_code") != null) {
+                            nut.nutsCode = querySolution.getBinding("nuts_code").getValue().stringValue();
                         }
                         nutsRegion.put(key, nut);
                     }
@@ -244,6 +248,7 @@ public class FacetController {
                 element.put("instance", nut.uri);
                 element.put("name", nut.name);
                 element.put("country", nut.country);
+                element.put("nuts_code", nut.nutsCode);
                 jsonValues.add(element);
 
             });
@@ -256,6 +261,7 @@ public class FacetController {
                         element.put("instance", nut.uri);
                         element.put("name", nut.name);
                         element.put("country", nut.country);
+                        element.put("nuts_code", nut.nutsCode);
                         jsonValues.add(element);
                     }
                 }
@@ -268,6 +274,7 @@ public class FacetController {
                     element.put("instance", nut.uri);
                     element.put("name", nut.name);
                     element.put("country", nut.country);
+                    element.put("nuts_code", nut.nutsCode);
                     jsonValues.add(element);
                 }
             });
