@@ -956,33 +956,33 @@ public class ProjectController {
         if (orderStartDate != null) {
             orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .";
             if (orderStartDate) {
-                orderBy = "order by asc(?startTime)";
+                orderBy = "ORDER BY ASC(?startTime)";
             } else {
-                orderBy = "order by desc(?startTime)";
+                orderBy = "ORDER BY DESC(?startTime)";
             }
         }
         if (orderEndDate != null) {
             orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
             if (orderEndDate) {
-                orderBy = "order by asc(?endTime)";
+                orderBy = "ORDER BY ASC(?endTime)";
             } else {
-                orderBy = "order by desc(?endTime)";
+                orderBy = "ORDER BY DESC(?endTime)";
             }
         }
         if (orderEuBudget != null) {
             orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
             if (orderEuBudget) {
-                orderBy = "order by asc(?euBudget)";
+                orderBy = "ORDER BY ASC(?euBudget)";
             } else {
-                orderBy = "order by desc(?euBudget)";
+                orderBy = "ORDER BY DESC(?euBudget)";
             }
         }
         if (orderTotalBudget != null) {
             orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
             if (orderTotalBudget) {
-                orderBy = "order by asc(?budget)";
+                orderBy = "ORDER BY ASC(?budget)";
             } else {
-                orderBy = "order by desc(?budget)";
+                orderBy = "ORDER BY DESC(?budget)";
             }
         }
 
@@ -995,58 +995,50 @@ public class ProjectController {
             BindingSet querySolution = resultSet.next();
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
-        //search = "";
-
-        if (search.equals(
-                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ")) {
-            search = " { SELECT ?s0 ?snippet where { " +
-                    "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
-                    "      ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image . " +
-                    "    } " +
-                    "  } UNION { SELECT ?s0 ?snippet where { " +
-                    "      ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ." +
-                    "    } " +
-                    "    }";
-        }
 
         search += " " + orderQuery;
+
+        String mainQuery = "SELECT DISTINCT ?s0 WHERE { " + search + " } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout);
+        StringBuilder values = new StringBuilder();
+        int indexLimit = 0;
+        int indexOffset = 0;
+        while (resultSet.hasNext()) {
+
+            BindingSet querySolution = resultSet.next();
+            if (offset == 0) {
+                if (indexOffset < inputOffset) {
+                    indexOffset++;
+                } else {
+                    if (indexLimit < inputLimit) {
+                        values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
+                        indexLimit++;
+                    }
+                }
+            } else {
+                values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
+            }
+        }
         query =
-                "SELECT ?s0 ?snippet ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?summary ?description WHERE { "
-                        + " { SELECT ?s0 ?description WHERE { "
-                        + search
-                        + " } " + orderBy + " LIMIT "
-                        + limit
-                        + " OFFSET "
-                        + offset
-                        + " } "
-                        + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
-                        + " FILTER((LANG(?label)) = \""
-                        + language
-                        + "\") }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description . FILTER((LANG(?description)) = \""
-                        + language
-                        + "\") } "
+                "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?description WHERE { "
+                        + " VALUES ?s0 { " + values + " }"
+                        + " OPTIONAL { ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \"" + language + "\") }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description . FILTER((LANG(?description)) = \"" + language + "\") }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P851> ?image. } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . "
-                        + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . "
-                        + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
-                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode . }} "
-                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} } "
-                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} } } "
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. "
-                        + " FILTER(LANG(?summary)=\"" + language + "\")"
-                        + "} "
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode . }}"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.}}}"
+//                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. FILTER(LANG(?summary)=\"" + language + "\") }"
                         + "} ";
 
 
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false);
 
         ArrayList<Project> resultList = new ArrayList<Project>();
         String previewsKey = "";
@@ -1062,7 +1054,7 @@ public class ProjectController {
         Set<String> coordinates = new HashSet<>();
         Set<String> objectiveId = new HashSet<>();
         Set<String> countrycode = new HashSet<>();
-        Set<String> summary = new HashSet<>();
+//        Set<String> summary = new HashSet<>();
         ArrayList<String> similarWords = new ArrayList<>();
 
         boolean hasEntry = resultSet.hasNext();
@@ -1086,7 +1078,7 @@ public class ProjectController {
                     project.setCoordinates(new ArrayList<String>(coordinates));
                     project.setObjectiveIds(new ArrayList<String>(objectiveId));
                     project.setCountrycode(new ArrayList<String>(countrycode));
-                    project.setSummary(new ArrayList<>(summary));
+//                    project.setSummary(new ArrayList<>(summary));
                     resultList.add(project);
                     snippet = new HashSet<>();
                     label = new HashSet<>();
@@ -1100,7 +1092,7 @@ public class ProjectController {
                     coordinates = new HashSet<>();
                     objectiveId = new HashSet<>();
                     countrycode = new HashSet<>();
-                    summary = new HashSet<>();
+//                    summary = new HashSet<>();
                     similarWords = new ArrayList<>();
                 }
                 previewsKey = querySolution.getBinding("s0").getValue().stringValue();
@@ -1153,8 +1145,8 @@ public class ProjectController {
                 objectiveId.add(((Literal) querySolution.getBinding("objectiveId").getValue()).getLabel());
             if (querySolution.getBinding("countrycode") != null)
                 countrycode.add(((Literal) querySolution.getBinding("countrycode").getValue()).getLabel());
-            if (querySolution.getBinding("summary") != null)
-                summary.add(querySolution.getBinding("summary").getValue().stringValue());
+//            if (querySolution.getBinding("summary") != null)
+//                summary.add(querySolution.getBinding("summary").getValue().stringValue());
 
             // try to create the snippet based on the given expanded query
             if (expandedQuery != null) {
@@ -1191,20 +1183,21 @@ public class ProjectController {
             project.setCoordinates(new ArrayList<String>(coordinates));
             project.setObjectiveIds(new ArrayList<String>(objectiveId));
             project.setCountrycode(new ArrayList<String>(countrycode));
-            project.setSummary(new ArrayList<String>(summary));
+//            project.setSummary(new ArrayList<String>(summary));
             resultList.add(project);
         }
         ProjectList projectList = new ProjectList();
         int upperLimit = 990;
         if (keywords != null)
             upperLimit = 90;
-        if (offset <= upperLimit) {
-            for (int i = inputOffset; i < Math.min(resultList.size(), inputOffset + inputLimit); i++) {
-                projectList.getList().add(resultList.get(i));
-            }
-        } else {
-            projectList.setList(resultList);
-        }
+//        if (offset <= upperLimit) {
+//            for (int i = inputOffset; i < Math.min(resultList.size(), inputOffset + inputLimit); i++) {
+//                projectList.getList().add(resultList.get(i));
+//            }
+//        } else {
+//            projectList.setList(resultList);
+//        }
+        projectList.setList(resultList);
         projectList.setNumberResults(numResults);
 
         if (expandedQuery != null && expandedQuery.getKeywords() != null) {
@@ -1488,8 +1481,8 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getCountrycode()));
 
             cell = row.createCell(7);
-            if (project.getSummary().size() > 0) {
-                cell.setCellValue(project.getSummary().get(0));
+            if (project.getDescriptions().size() > 0) {
+                cell.setCellValue(project.getDescriptions().get(0));
             } else {
                 cell.setCellValue("");
             }
@@ -1568,7 +1561,7 @@ public class ProjectController {
                                 String.join("|", project.getStartTimes()),
                                 String.join("|", project.getEndTimes()),
                                 String.join("|", project.getCountrycode()),
-                                String.join("|", project.getSummary())
+                                String.join("|", project.getDescriptions())
                         )
                 );
             }
