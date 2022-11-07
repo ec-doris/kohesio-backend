@@ -51,7 +51,7 @@ public class CacheController {
         facetController.facetEuStatistics();
         ArrayList<String> countries = new ArrayList<>();
         countries.add(null);
-        for (Object jsonObject : facetController.facetEuCountries("en")) {
+        for (Object jsonObject : facetController.facetEuCountries("en", null)) {
             JSONObject o = (JSONObject) jsonObject;
             countries.add(o.get("instance").toString());
         }
@@ -106,7 +106,7 @@ public class CacheController {
                 }
             }
             // cache regions
-            JSONArray regions = facetController.facetEuRegions(country, "en");
+            JSONArray regions = facetController.facetEuRegions(country, "en", null);
             for (Object region : regions) {
                 try {
                     String regio = ((JSONObject) region).get("region").toString();
@@ -132,7 +132,7 @@ public class CacheController {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                JSONArray themes = facetController.facetEuThematicObjective("en", polic);
+                JSONArray themes = facetController.facetEuThematicObjective("en", polic, null);
                 for (Object theme : themes) {
                     try {
                         String t = ((JSONObject) theme).get("instance").toString();
@@ -163,7 +163,7 @@ public class CacheController {
             }
 
             // cache the programs
-            JSONArray programs = facetController.facetEuPrograms("en", country, null);
+            JSONArray programs = facetController.facetEuPrograms("en", country, null, null);
             for (Object program : programs) {
                 try {
                     String p = ((JSONObject) program).get("instance").toString();
@@ -178,7 +178,7 @@ public class CacheController {
             }
         }
         // cache the funds
-        JSONArray funds = facetController.facetEuFunds("en");
+        JSONArray funds = facetController.facetEuFunds("en", null);
         for (Object fund : funds) {
             try {
                 String t = ((JSONObject) fund).get("instance").toString();
@@ -225,7 +225,7 @@ public class CacheController {
                 e.printStackTrace();
             }
         }
-        JSONArray areaOfInterventions = facetController.facetEuCategoryOfIntervention("en");
+        JSONArray areaOfInterventions = facetController.facetEuCategoryOfIntervention("en", null);
         for (Object areaOfIntervention : areaOfInterventions) {
             try {
                 JSONArray interventionFileds = (JSONArray) ((JSONObject) areaOfIntervention).get("options");
@@ -273,7 +273,7 @@ public class CacheController {
             }
             JSONArray regions = new JSONArray();
             if (country != null) {
-                regions = facetController.facetEuRegions(country, "en");
+                regions = facetController.facetEuRegions(country, "en", null);
             }
             for (Object region : regions) {
                 String r = ((JSONObject) region).get("region").toString();

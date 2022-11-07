@@ -114,7 +114,13 @@ public class MapController {
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, null,region, granularityRegion, interreg, limit, offset);
+        String search = filtersGenerator.filterProject(
+                expandedQueryText, c, theme, fund, program, categoryOfIntervention,
+                policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
+                budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
+                endDateAfter, latitude, longitude, null,region, granularityRegion,
+                interreg, limit, offset
+        );
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
         int numResults = 0;
@@ -225,7 +231,7 @@ public class MapController {
             }
             //check if granularity region is a country, if yes the filter is not needed
             boolean isCountry = false;
-            for (Object jsonObject : facetController.facetEuCountries("en")) {
+            for (Object jsonObject : facetController.facetEuCountries("en", null)) {
                 JSONObject o = (JSONObject) jsonObject;
                 if (granularityRegion.equals(o.get("instance"))) {
                     isCountry = true;
