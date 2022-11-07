@@ -64,84 +64,84 @@ public class CacheController {
                             null, null, null, null,
                             null, null, null, null,
                             null, null, b, null, null, null,
-                            null, null, null, 1000, 0, 100,null);
-                } catch(Exception e){
+                            null, null, null, 1000, 0, 100, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             Boolean[] orderEndDate = {null, true, false};
             for (Boolean b : orderEndDate) {
                 try {
-                projectController.euSearchProject("en", null, country, null, null, null,
-                        null, null, null, null,
-                        null, null, null, null,
-                        null, null, null, b, null, null,
-                        null, null, null, 1000, 0, 100,null);
-                } catch(Exception e){
+                    projectController.euSearchProject("en", null, country, null, null, null,
+                            null, null, null, null,
+                            null, null, null, null,
+                            null, null, null, b, null, null,
+                            null, null, null, 1000, 0, 100, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             Boolean[] orderEuBudget = {null, true, false};
             for (Boolean b : orderEuBudget) {
-                try{
-                projectController.euSearchProject("en", null, country, null, null, null,
-                        null, null, null, null,
-                        null, null, null, null, null,
-                        null, null, null, b, null, null,
-                        null, null, 1000, 0, 100,null);
-                } catch(Exception e){
+                try {
+                    projectController.euSearchProject("en", null, country, null, null, null,
+                            null, null, null, null,
+                            null, null, null, null, null,
+                            null, null, null, b, null, null,
+                            null, null, 1000, 0, 100, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             Boolean[] orderTotalBudget = {null, true, false};
             for (Boolean b : orderTotalBudget) {
-                try{
-                projectController.euSearchProject("en", null, country, null, null, null,
-                        null, null, null, null,
-                        null, null, null, null, null,
-                        null, null, null, null, b, null, null,
-                        null, 1000, 0, 100,null);
-                } catch(Exception e){
+                try {
+                    projectController.euSearchProject("en", null, country, null, null, null,
+                            null, null, null, null,
+                            null, null, null, null, null,
+                            null, null, null, null, b, null, null,
+                            null, 1000, 0, 100, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             // cache regions
-            JSONArray regions = facetController.facetEuRegions(country,"en");
-            for (Object region: regions) {
-                try{
+            JSONArray regions = facetController.facetEuRegions(country, "en");
+            for (Object region : regions) {
+                try {
                     String regio = ((JSONObject) region).get("region").toString();
                     projectController.euSearchProject("en", null, country, null, null, null,
                             null, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            regio, 1000, 0, 100,null);
-                } catch(Exception e){
+                            regio, 1000, 0, 100, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             // cache policy objective
             JSONArray policies = facetController.facetPolicyObjective("en");
-            for (Object policy: policies) {
+            for (Object policy : policies) {
                 String polic = ((JSONObject) policy).get("instance").toString();
-                try{
+                try {
                     projectController.euSearchProject("en", null, country, null, null, null,
                             null, polic, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 0, 100,null);
-                } catch(Exception e){
+                            null, 1000, 0, 100, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
                 JSONArray themes = facetController.facetEuThematicObjective("en", polic);
-                for (Object theme: themes) {
-                    try{
+                for (Object theme : themes) {
+                    try {
                         String t = ((JSONObject) theme).get("instance").toString();
                         projectController.euSearchProject("en", null, country, t, null, null,
                                 null, polic, null, null,
                                 null, null, null, null, null,
                                 null, null, null, null, false, null, null,
-                                null, 1000, 0, 100,null);
-                    } catch(Exception e){
+                                null, 1000, 0, 100, null);
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
@@ -149,45 +149,45 @@ public class CacheController {
             }
             // cache thematic objective
             JSONArray themes = facetController.facetEuThematicObjective("en");
-            for (Object theme: themes) {
-                try{
+            for (Object theme : themes) {
+                try {
                     String t = ((JSONObject) theme).get("instance").toString();
                     projectController.euSearchProject("en", null, country, t, null, null,
                             null, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 0, 100,null);
-                } catch(Exception e){
+                            null, 1000, 0, 100, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
 
             // cache the programs
             JSONArray programs = facetController.facetEuPrograms("en", country, null);
-            for (Object program: programs) {
-                try{
+            for (Object program : programs) {
+                try {
                     String p = ((JSONObject) program).get("instance").toString();
                     projectController.euSearchProject("en", null, country, null, null, p,
                             null, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 0, 100,null);
-                } catch(Exception e){
+                            null, 1000, 0, 100, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
         // cache the funds
         JSONArray funds = facetController.facetEuFunds("en");
-        for (Object fund: funds) {
-            try{
+        for (Object fund : funds) {
+            try {
                 String t = ((JSONObject) fund).get("instance").toString();
                 projectController.euSearchProject("en", null, null, null, t, null,
                         null, null, null, null,
                         null, null, null, null, null,
                         null, null, null, null, false, null, null,
-                        null, 1000, 0, 100,null);
-            } catch(Exception e){
+                        null, 1000, 0, 100, null);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -210,35 +210,35 @@ public class CacheController {
         upper_bound.add(1000000000L);
         lower_bound.add(1000000000L);
         upper_bound.add(10000000000L);
-        for (int i=0; i< lower_bound.size(); i++) {
-            try{
+        for (int i = 0; i < lower_bound.size(); i++) {
+            try {
                 projectController.euSearchProject("en", null, null, null, null, null,
                         null, null, lower_bound.get(i), upper_bound.get(i),
                         null, null, null, null, null,
                         null, null, null, null, false, null, null,
-                        null, 1000, 0, 100,null);
+                        null, 1000, 0, 100, null);
                 projectController.euSearchProject("en", null, null, null, null, null,
                         null, null, null, null, lower_bound.get(i), upper_bound.get(i), null, null, null,
                         null, null, null, null, false, null, null,
-                        null, 1000, 0, 100,null);
-            } catch(Exception e){
+                        null, 1000, 0, 100, null);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         JSONArray areaOfInterventions = facetController.facetEuCategoryOfIntervention("en");
-        for (Object areaOfIntervention : areaOfInterventions){
-            try{
-                JSONArray interventionFileds = (JSONArray)((JSONObject) areaOfIntervention).get("options");
-                for (Object intervention : interventionFileds){
+        for (Object areaOfIntervention : areaOfInterventions) {
+            try {
+                JSONArray interventionFileds = (JSONArray) ((JSONObject) areaOfIntervention).get("options");
+                for (Object intervention : interventionFileds) {
                     String t = ((JSONObject) intervention).get("instance").toString();
                     projectController.euSearchProject("en", null, null, null, null, null,
                             t, null, null, null,
                             null, null, null, null, null,
                             null, null, null, null, false, null, null,
-                            null, 1000, 0, 100,null);
+                            null, 1000, 0, 100, null);
                 }
 
-            } catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
@@ -246,41 +246,41 @@ public class CacheController {
 
             Boolean[] orderEuBudget = {true, false};
             for (Boolean b : orderEuBudget) {
-                try{
-                beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null,null, b, null, null, 1000, 0, null);
-                } catch(Exception e){
+                try {
+                    beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
+                            null, null, b, null, null, 1000, 0, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             Boolean[] orderTotalBudget = {true, false};
             for (Boolean b : orderTotalBudget) {
-                try{
-                beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null, null,null, b, null, 1000, 0, null);
-                } catch(Exception e){
+                try {
+                    beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
+                            null, null, null, b, null, 1000, 0, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             Boolean[] orderNumProjects = {true, false};
             for (Boolean b : orderNumProjects) {
-                try{
-                beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
-                        null, null,null, null, b, 1000, 0, null);
-                } catch(Exception e){
+                try {
+                    beneficiaryController.euSearchBeneficiaries("en", null, country, null, null, null, null,
+                            null, null, null, null, b, 1000, 0, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             JSONArray regions = new JSONArray();
-            if(country != null) {
+            if (country != null) {
                 regions = facetController.facetEuRegions(country, "en");
             }
             for (Object region : regions) {
                 String r = ((JSONObject) region).get("region").toString();
-                try{
+                try {
                     beneficiaryController.euSearchBeneficiaries("en", null, country, r, null, null, null,
-                            null, null,null, false, null, 1000, 0, null);
-                } catch(Exception e){
+                            null, null, null, false, null, 1000, 0, null);
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -353,7 +353,7 @@ public class CacheController {
 
     void recursiveMap(String granularityRegion) throws Exception {
         logger.debug("Resolving for region: " + granularityRegion);
-        ResponseEntity responseEntity = mapController.euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, granularityRegion, null, null, 0, 400, null);
+        ResponseEntity responseEntity = mapController.euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, granularityRegion, null, null, 0, null, 400, null);
         logger.debug("Response result: " + responseEntity.getBody());
         if (((JSONObject) responseEntity.getBody()).get("subregions") instanceof JSONArray) {
             for (Object element : (JSONArray) ((JSONObject) responseEntity.getBody()).get("subregions")) {
