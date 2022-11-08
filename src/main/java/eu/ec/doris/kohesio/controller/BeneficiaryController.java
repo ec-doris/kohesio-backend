@@ -10,6 +10,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.math3.util.Precision;
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -679,17 +680,17 @@ public class BeneficiaryController {
                 cell.setCellValue(beneficiary.getLabel());
             }
             cell = row.createCell(1);
-            cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellType(CellType.NUMERIC);
             if (!"".equals(beneficiary.getBudget())) {
                 cell.setCellValue(Double.parseDouble(beneficiary.getBudget()));
             }
             cell = row.createCell(2);
-            cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellType(CellType.NUMERIC);
             if (!"".equals(beneficiary.getEuBudget())) {
                 cell.setCellValue(Double.parseDouble(beneficiary.getEuBudget()));
             }
             cell = row.createCell(3);
-            cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellType(CellType.NUMERIC);
             cell.setCellValue(beneficiary.getNumberProjects());
         }
         ByteArrayOutputStream fileOut = new ByteArrayOutputStream();

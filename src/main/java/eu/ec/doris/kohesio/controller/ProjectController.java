@@ -30,6 +30,7 @@ import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
 import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -1461,11 +1462,11 @@ public class ProjectController {
             cell = row.createCell(1);
             cell.setCellValue(String.join("|", project.getLabels()));
             cell = row.createCell(2);
-            cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellType(CellType.NUMERIC);
             if (project.getTotalBudgets().size() > 0)
                 cell.setCellValue(Double.parseDouble(project.getTotalBudgets().get(0)));
             cell = row.createCell(3);
-            cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellType(CellType.NUMERIC);
             if (project.getEuBudgets().size() > 0)
                 cell.setCellValue(Double.parseDouble(project.getEuBudgets().get(0)));
             cell = row.createCell(4);
