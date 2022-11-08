@@ -840,42 +840,41 @@ public class ProjectController {
     }
 
     @GetMapping(value = "/facet/eu/search/project", produces = "application/json")
-    public ResponseEntity euSearchProject( //
-                                           @RequestParam(value = "language", defaultValue = "en") String language,
-                                           @RequestParam(value = "keywords", required = false) String keywords, //
-                                           @RequestParam(value = "country", required = false) String country,
-                                           @RequestParam(value = "theme", required = false) String theme,
-                                           @RequestParam(value = "fund", required = false) String fund,
-                                           @RequestParam(value = "program", required = false) String program,
-                                           @RequestParam(value = "categoryOfIntervention", required = false)
-                                           String categoryOfIntervention,
-                                           @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                           @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
-                                           @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
-                                           @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
-                                           @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
-                                           @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
-                                           @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
-                                           @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
-                                           @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+    public ResponseEntity euSearchProject(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "keywords", required = false) String keywords, //
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "theme", required = false) String theme,
+            @RequestParam(value = "fund", required = false) String fund,
+            @RequestParam(value = "program", required = false) String program,
+            @RequestParam(value = "categoryOfIntervention", required = false)
+            String categoryOfIntervention,
+            @RequestParam(value = "policyObjective", required = false) String policyObjective,
+            @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+            @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+            @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+            @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
+            @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
+            @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
+            @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
+            @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
 
-                                           @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
-                                           @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
-                                           @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
-                                           @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
-
-                                           @RequestParam(value = "latitude", required = false) String latitude,
-                                           @RequestParam(value = "longitude", required = false) String longitude,
-                                           @RequestParam(value = "region", required = false) String region,
-                                           @RequestParam(value = "limit", defaultValue = "5000") int limit,
-                                           @RequestParam(value = "offset", defaultValue = "0") int offset,
-                                           @RequestParam(value = "town", required = false) String town,
-                                           @RequestParam(value = "radius", required = false) Long radius,
-                                           @RequestParam(value = "nuts3", required = false) String nuts3,
-                                           @RequestParam(value = "interreg", required = false) Boolean interreg,
-
-                                           Integer timeout,
-                                           Principal principal)
+            @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
+            @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
+            @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+            @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+            @RequestParam(value = "latitude", required = false) String latitude,
+            @RequestParam(value = "longitude", required = false) String longitude,
+            @RequestParam(value = "region", required = false) String region,
+            @RequestParam(value = "limit", defaultValue = "5000") int limit,
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "town", required = false) String town,
+            @RequestParam(value = "radius", required = false) Long radius,
+            @RequestParam(value = "nuts3", required = false) String nuts3,
+            @RequestParam(value = "interreg", required = false) Boolean interreg,
+            Integer timeout,
+            Principal principal
+    )
             throws Exception {
         if (timeout == null) {
             timeout = 20;
