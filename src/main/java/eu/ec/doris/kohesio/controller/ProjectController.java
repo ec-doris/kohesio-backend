@@ -4,17 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import eu.ec.doris.kohesio.payload.NutsRegion;
-import eu.ec.doris.kohesio.payload.Project;
-import eu.ec.doris.kohesio.payload.ProjectList;
-import eu.ec.doris.kohesio.payload.SemanticSearchResult;
-import eu.ec.doris.kohesio.payload.SimilarWord;
+import eu.ec.doris.kohesio.payload.*;
 import eu.ec.doris.kohesio.services.ExpandedQuery;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import eu.ec.doris.kohesio.services.SimilarityService;
-
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.math3.util.Precision;
@@ -25,11 +19,7 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.highlight.Formatter;
-import org.apache.lucene.search.highlight.Highlighter;
-import org.apache.lucene.search.highlight.InvalidTokenOffsetsException;
-import org.apache.lucene.search.highlight.QueryScorer;
-import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
-import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.lucene.search.highlight.*;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -47,28 +37,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.security.Principal;
 import java.util.*;
-
-import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api")
@@ -126,7 +106,7 @@ public class ProjectController {
                     + "PREFIX p: <https://linkedopendata.eu/prop/> "
                     + "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime "
                     + "?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube "
-                    + "?video ?tweet ?coordinates  ?countryLabel ?countryCode ?programLabel ?program_cci "
+                    + "?video ?tweet ?coordinates  ?countryLabel ?countryCode ?program ?programLabel ?program_cci "
                     + "?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId "
                     + "?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel "
                     + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
@@ -163,46 +143,33 @@ public class ProjectController {
                     + "             ?program wdt:P1586 ?managingAuthority. "
                     + "             ?program <http://www.w3.org/2000/01/rdf-schema#label> ?programLabel. "
                     + "             OPTIONAL { ?program wdt:P1742 ?programInfoRegioUrl . }"
-                    + "             FILTER((LANG(?programLabel)) = \""
-                    + language
-                    + "\") ."
+                    + "             OPTIONAL { ?program wdt:P1750 ?source2 . }"
+                    + "             FILTER((LANG(?programLabel)) = \"" + language + "\") ."
                     + "             ?managingAuthority <http://www.w3.org/2000/01/rdf-schema#label> ?managingAuthorityLabel. } "
-                    + " OPTIONAL { ?s0 wdt:P1368 ?program ."
-                    + "             ?program wdt:P1750 ?source2 . }"
                     + " OPTIONAL { ?s0 wdt:P888 ?category ."
                     + "             OPTIONAL { ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
-                    + "                         FILTER((LANG(?categoryLabel)) = \""
-                    + language
-                    + "\") }"
+                    + "                         FILTER((LANG(?categoryLabel)) = \"" + language + "\") }"
                     + " OPTIONAL { ?category wdt:P869 ?categoryID . } }"
                     + " OPTIONAL {"
                     + "                 ?s0 wdt:P1848 ?theme."
                     + "                 ?theme wdt:P1105 ?themeId. "
                     + "                 ?theme <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabel. "
-                    + "                 FILTER((LANG(?themeLabel)) = \""
-                    + language
-                    + "\") } "
+                    + "                 FILTER((LANG(?themeLabel)) = \"" + language + "\") } "
                     + " OPTIONAL {"
                     + "           ?s0 wdt:P888 ?category."
                     + "           OPTIONAL { "
                     + "                 ?category wdt:P1848 ?themeInferred."
                     + "                 ?themeInferred wdt:P1105 ?themeIdInferred. "
                     + "                 ?themeInferred <http://www.w3.org/2000/01/rdf-schema#label> ?themeLabelInferred . "
-                    + "                 FILTER((LANG(?themeLabelInferred)) = \""
-                    + language
-                    + "\") } } "
+                    + "                 FILTER((LANG(?themeLabelInferred)) = \"" + language + "\") } } "
                     + " OPTIONAL {?s0 wdt:P1848 ?theme.  "
                     + "           ?theme wdt:P1849 ?policy."
                     + "           ?policy wdt:P1747 ?policyId. "
                     + "           ?policy <http://www.w3.org/2000/01/rdf-schema#label> ?policyLabel. "
-                    + "           FILTER((LANG(?policyLabel)) = \""
-                    + language
-                    + "\") } "
+                    + "           FILTER((LANG(?policyLabel)) = \"" + language + "\") } "
                     + " OPTIONAL {?s0 wdt:P1584 ?fund.  "
                     + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
-                    + "           FILTER((LANG(?fundLabel)) = \""
-                    + language
-                    + "\") }"
+                    + "           FILTER((LANG(?fundLabel)) = \"" + language + "\") }"
                     + "           OPTIONAL {?fund wdt:P67 ?fundWebsite .} "
                     + "} "
                     + " OPTIONAL { ?s0 wdt:P889 ?beneficiaryLink . "
@@ -289,6 +256,8 @@ public class ProjectController {
             HashSet<String> policyLabels = new HashSet<>();
             HashSet<String> policyIds = new HashSet<>();
 
+
+            HashMap<String, HashMap<String, Object>> tmpPrograms = new HashMap<>();
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
 
@@ -405,7 +374,19 @@ public class ProjectController {
                             "fundWebsite",
                             querySolution.getBinding("fundWebsite").getValue().stringValue());
                 }
-                HashMap<String, String> program = new HashMap<>();
+                HashMap<String, Object> program;
+                String programQID = querySolution.getBinding("program").getValue().stringValue();
+                if (!tmpPrograms.containsKey(programQID)) {
+                    tmpPrograms.put(programQID, new HashMap<>());
+                }
+                program = tmpPrograms.get(programQID);
+
+                if (querySolution.getBinding("program") != null) {
+                    program.put(
+                            "link",
+                            querySolution.getBinding("program").getValue().stringValue()
+                    );
+                }
                 if (querySolution.getBinding("programLabel") != null) {
                     program.put(
                             "programLabel",
@@ -425,12 +406,15 @@ public class ProjectController {
                     );
                 }
                 if (querySolution.getBinding("source2") != null) {
-                    program.put(
-                            "programWebsite", querySolution.getBinding("source2").getValue().stringValue());
+                    if (!program.containsKey("programWebsite")) {
+                        program.put("programWebsite", new ArrayList<String>());
+                    }
+                    ((ArrayList<String>) program.get("programWebsite")).add(
+                            querySolution.getBinding("source2").getValue().stringValue()
+                    );
                 }
                 program.put("programmingPeriodLabel", "2014-2020");
 
-                programs.add(program);
 
                 if (querySolution.getBinding("themeId") != null) {
                     String themeId = querySolution.getBinding("themeId").getValue().stringValue();
@@ -604,6 +588,8 @@ public class ProjectController {
                                     .stringValue());
                 }
             }
+            programs.addAll(tmpPrograms.values());
+
             while (resultSetCoords.hasNext()) {
                 BindingSet querySolution = resultSetCoords.next();
 
@@ -665,7 +651,6 @@ public class ProjectController {
                         regionId = "EL";
                     }
                 }
-                System.err.println(regionId);
                 if (regionId != null) {
                     JSONArray geoJsons = (JSONArray) result.get("geoJson");
                     String regionLabel = (String) result.get("region");
