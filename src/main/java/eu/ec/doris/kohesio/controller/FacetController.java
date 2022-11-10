@@ -3,35 +3,21 @@ package eu.ec.doris.kohesio.controller;
 
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
-
 import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.io.BufferedReader;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
-import java.text.DecimalFormat;
-import java.util.*;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -96,14 +82,12 @@ public class FacetController {
                     filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407315> .";
                 }
 
-                String query =
-                        "SELECT DISTINCT ?region ?regionLabel ?country ?nuts_code where {" +
-                                filter +
-                                " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } " +
-                                " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?nuts_code } " +
-                                " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
-                                "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
-                                "}";
+                String query = "SELECT DISTINCT ?region ?country ?nuts_code ?regionLabel (LANG(?regionLabel) AS ?lang) WHERE {"
+                        + filter
+                        + " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel ."
+                        + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } "
+                        + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?nuts_code } "
+                        + "}";
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
@@ -111,6 +95,12 @@ public class FacetController {
                     if (nutsRegion.containsKey(key)) {
                         Nut nut = nutsRegion.get(key);
                         nut.type.add(g);
+                        if (querySolution.getBinding("regionLabel") != null) {
+                            nut.name.put(
+                                    querySolution.getBinding("lang").getValue().stringValue(),
+                                    querySolution.getBinding("regionLabel").getValue().stringValue()
+                            );
+                        }
                     } else {
                         Nut nut = new Nut();
                         nut.uri = key;
@@ -120,7 +110,10 @@ public class FacetController {
                             nut = nutsRegion.get(key);
                         }
                         if (querySolution.getBinding("regionLabel") != null) {
-                            nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
+                            nut.name.put(
+                                    querySolution.getBinding("lang").getValue().stringValue(),
+                                    querySolution.getBinding("regionLabel").getValue().stringValue()
+                            );
                         }
                         if (querySolution.getBinding("country") != null) {
                             nut.country = querySolution.getBinding("country").getValue().stringValue();
@@ -131,6 +124,7 @@ public class FacetController {
                         nutsRegion.put(key, nut);
                     }
                 }
+
             }
             //retrieving the narrower concept
             for (String key : nutsRegion.keySet()) {
@@ -160,7 +154,7 @@ public class FacetController {
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407315> . }";
                 }
-                if (query.equals("") == false) {
+                if (!query.equals("")) {
                     TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
                     logger.debug("Is empty result set: " + resultSet.hasNext());
                     while (resultSet.hasNext()) {
@@ -176,8 +170,7 @@ public class FacetController {
                     }
                 }
             }
-
-            //retriving the geoJson geometries
+// retrieving the geoJson geometries
             for (String key : nutsRegion.keySet()) {
                 String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
                 if (nutsRegion.get(key).type.contains("continent")) {
@@ -203,7 +196,7 @@ public class FacetController {
             }
 
             // skipping regions that are statistical only
-            gran = new ArrayList<String>();
+            gran = new ArrayList<>();
             gran.add("nuts2");
             gran.add("nuts1");
             gran.add("country");
@@ -227,6 +220,7 @@ public class FacetController {
                     }
                 }
             }
+
         }
     }
 

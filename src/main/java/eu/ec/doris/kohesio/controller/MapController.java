@@ -174,7 +174,7 @@ public class MapController {
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
-                element.put("regionLabel", facetController.nutsRegion.get(r).name);
+                element.put("regionLabel", facetController.nutsRegion.get(r).name.get(language));
                 element.put("geoJson", facetController.nutsRegion.get(r).geoJson);
                 element.put("count", 0);
                 subRegions.put(r, element);
@@ -209,7 +209,7 @@ public class MapController {
 
             JSONObject result = new JSONObject();
             result.put("region", granularityRegion);
-            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name);
+            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
             result.put("subregions", resultList);
 
