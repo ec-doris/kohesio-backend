@@ -238,7 +238,7 @@ public class FacetController {
             JSONObject element = new JSONObject();
 
             element.put("instance", nutQid.uri);
-            element.put("name", nutQid.nutsCode + " - " + nutQid.name);
+            element.put("name", nutQid.nutsCode + " - " + nutQid.name.get(language));
             element.put("country", nutQid.country);
             element.put("nuts_code", nutQid.nutsCode);
             jsonValues.add(element);
@@ -250,7 +250,7 @@ public class FacetController {
                 JSONObject element = new JSONObject();
 
                 element.put("instance", nut.uri);
-                element.put("name", nut.nutsCode + " - " + nut.name);
+                element.put("name", nut.nutsCode + " - " + nut.name.get(language));
                 element.put("country", nut.country);
                 element.put("nuts_code", nut.nutsCode);
                 jsonValues.add(element);
@@ -263,7 +263,7 @@ public class FacetController {
                         JSONObject element = new JSONObject();
 
                         element.put("instance", nut.uri);
-                        element.put("name", nut.nutsCode + " - " + nut.name);
+                        element.put("name", nut.nutsCode + " - " + nut.name.get(language));
                         element.put("country", nut.country);
                         element.put("nuts_code", nut.nutsCode);
                         jsonValues.add(element);
@@ -276,7 +276,7 @@ public class FacetController {
                     JSONObject element = new JSONObject();
 
                     element.put("instance", nut.uri);
-                    element.put("name", nut.nutsCode + " - " + nut.name);
+                    element.put("name", nut.nutsCode + " - " + nut.name.get(language));
                     element.put("country", nut.country);
                     element.put("nuts_code", nut.nutsCode);
                     jsonValues.add(element);
