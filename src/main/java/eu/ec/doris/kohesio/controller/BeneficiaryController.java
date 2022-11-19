@@ -350,6 +350,7 @@ public class BeneficiaryController {
                     + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                     + keywords.replace("\"", "\\\"")
                     + "\" ; "
+                    + " <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Ben> ; "
                     + "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet ] . ";
         }
 
