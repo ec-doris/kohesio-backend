@@ -113,7 +113,7 @@ public class MapController {
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, null,region, granularityRegion, null, limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, language, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, null,region, granularityRegion, null, limit, offset);
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
         int numResults = 0;
@@ -365,6 +365,7 @@ public class MapController {
 
         String search = filtersGenerator.filterProject(
                 expandedQueryText,
+                language,
                 country,
                 theme,
                 fund,
