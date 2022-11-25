@@ -10,7 +10,9 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.security.Principal;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -31,6 +33,9 @@ public class StartUp {
     public void initialize() throws Exception {
         if (initialize)
             facetController.initialize("en");
+        System.out.println("Welcome to the Kohesio-backend!");
+        System.out.println("Open swagger documentation at http://localhost:" + port + "/swagger-ui.html");
+
     }
 
 }

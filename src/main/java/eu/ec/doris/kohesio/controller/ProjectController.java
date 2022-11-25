@@ -909,6 +909,7 @@ public class ProjectController {
         }
         String search = filtersGenerator.filterProject(
                 expandedQueryText,
+                language,
                 country,
                 theme,
                 fund,
@@ -1320,7 +1321,7 @@ public class ProjectController {
 
             }
         }
-        String search = filtersGenerator.filterProject(expandedQueryText, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, limit, offset);
 
         //computing the number of results
         String searchCount = search;

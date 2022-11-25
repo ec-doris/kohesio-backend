@@ -115,7 +115,7 @@ public class MapController {
         }
 
         String search = filtersGenerator.filterProject(
-                expandedQueryText, c, theme, fund, program, categoryOfIntervention,
+                expandedQueryText, language, c, theme, fund, program, categoryOfIntervention,
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                 endDateAfter, latitude, longitude, null,region, granularityRegion,
@@ -372,6 +372,7 @@ public class MapController {
 
         String search = filtersGenerator.filterProject(
                 expandedQueryText,
+                language,
                 country,
                 theme,
                 fund,

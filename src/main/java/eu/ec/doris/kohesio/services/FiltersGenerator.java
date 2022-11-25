@@ -16,6 +16,7 @@ public class FiltersGenerator {
     SimilarityService similarityService;
 
     public String filterProject(String keywords,
+                                String language,
                                 String country,
                                 String theme,
                                 String fund,
@@ -58,9 +59,10 @@ public class FiltersGenerator {
                     "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                             + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                             + keywords.replace("\"", "\\\"")
-                            + "\"; " +
+                            + "\"; "
+                            + " <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Proj_"+language+"> "
 //                            "<http://www.openrdf.org/contrib/lucenesail#snippet> ?description"+
-                            "] .";
+                            + "] .";
 
         }
 //        if(keywords != null) {
