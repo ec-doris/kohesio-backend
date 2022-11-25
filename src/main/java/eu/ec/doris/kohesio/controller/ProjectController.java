@@ -895,7 +895,7 @@ public class ProjectController {
         String expandedQueryText = null;
         if (keywords != null) {
             long start = System.nanoTime();
-            expandedQuery = similarityService.expandQuery(keywords);
+            expandedQuery = similarityService.expandQuery(keywords, language);
             expandedQueryText = expandedQuery.getExpandedQuery();
             logger.info("Expansion time " + (System.nanoTime() - start) / 1000000);
         }
@@ -1307,7 +1307,7 @@ public class ProjectController {
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
         if (keywords != null) {
-            expandedQuery = similarityService.expandQuery(keywords);
+            expandedQuery = similarityService.expandQuery(keywords, language);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
