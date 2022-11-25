@@ -105,8 +105,7 @@ public class SimilarityService {
                     .set("parameters", mapper.createObjectNode().put("lang", language));
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.add("x-api-key", x_api_key);
-            logger.info("==="+x_api_key+"===");
+            headers.add("x-api-key", x_api_key.trim());
             HttpEntity<String> request = new HttpEntity<>(mapper.writer().writeValueAsString(payload), headers);
 
             RestTemplate restTemplate = new RestTemplate();
@@ -120,8 +119,7 @@ public class SimilarityService {
                         String word = hits.get(i).asText();
                         similarWords.add(new SimilarWord(word.replace("_", " ")));
                     }
-                }
-                else{
+                } else {
                     logger.error("Error in HTTP response: " + response);
                 }
             } else {
