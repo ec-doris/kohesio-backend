@@ -118,7 +118,7 @@ public class MapController {
                 expandedQueryText, language, c, theme, fund, program, categoryOfIntervention,
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
-                endDateAfter, latitude, longitude, null,region, granularityRegion,
+                endDateAfter, latitude, longitude, null, region, granularityRegion,
                 interreg, limit, offset
         );
         //computing the number of results
@@ -135,15 +135,15 @@ public class MapController {
         logger.debug("Number of results {}", numResults);
         if (
                 (latitude != null && longitude != null)
-                ||
-                (
-                    (
-                        granularityRegion == null ||
-                        (!(granularityRegion != null && "https://linkedopendata.eu/entity/Q11".equals(facetController.nutsRegion.get(granularityRegion).country)))
-                    )
-                        && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
+                        ||
+                        (
+                                (
+                                        granularityRegion == null ||
+                                                (!(granularityRegion != null && "https://linkedopendata.eu/entity/Q11".equals(facetController.nutsRegion.get(granularityRegion).country)))
+                                )
+                                        && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
 
-                )
+                        )
 //                ||
 //                    (
 //                        granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q2".equals(facetController.nutsRegion.get(granularityRegion).country))
@@ -174,7 +174,11 @@ public class MapController {
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
-                element.put("regionLabel", facetController.nutsRegion.get(r).name.get(language));
+                String regionLabel = facetController.nutsRegion.get(r).name.get(language);
+                if (regionLabel == null) {
+                    regionLabel = facetController.nutsRegion.get(r).name.get("en");
+                }
+                element.put("regionLabel", regionLabel);
                 element.put("geoJson", facetController.nutsRegion.get(r).geoJson);
                 element.put("count", 0);
                 subRegions.put(r, element);
@@ -225,8 +229,7 @@ public class MapController {
             if ("country".equals(facetController.nutsRegion.get(granularityRegion).granularity)) {
                 optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry20M> ?o . ";
 
-            }
-            else {
+            } else {
                 optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . ";
             }
             //check if granularity region is a country, if yes the filter is not needed
@@ -238,7 +241,7 @@ public class MapController {
                 }
             }
             // this is a hack to show brittany
-            if ((latitude == null || longitude == null) ) {
+            if ((latitude == null || longitude == null)) {
                 optional += "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
             }
         }
@@ -524,7 +527,7 @@ public class MapController {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null,400, null);
+        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null, 400, null);
         JSONObject mod = result.getBody();
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
