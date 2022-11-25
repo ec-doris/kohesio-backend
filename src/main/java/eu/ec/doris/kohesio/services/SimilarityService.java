@@ -106,6 +106,7 @@ public class SimilarityService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.add("x-api-key", x_api_key);
+            logger.info("==="+x_api_key+"===");
             HttpEntity<String> request = new HttpEntity<>(mapper.writer().writeValueAsString(payload), headers);
 
             RestTemplate restTemplate = new RestTemplate();
