@@ -984,7 +984,7 @@ public class ProjectController {
 
         search += " " + orderQuery;
 
-        String mainQuery = "SELECT DISTINCT ?s0 WHERE { " + search + " } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        String mainQuery = "SELECT DISTINCT ?s0 WHERE { {" + search + " ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } UNION { " + search + "} } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout);
         StringBuilder values = new StringBuilder();
         int indexLimit = 0;
@@ -1014,7 +1014,7 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }}"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode . }}"
