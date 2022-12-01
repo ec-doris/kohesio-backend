@@ -16,7 +16,7 @@ public class Project {
     ArrayList<String> copyrightImages;
     ArrayList<String> coordinates;
     ArrayList<String> objectiveIds;
-    ArrayList<String> countryCodes;
+    ArrayList<String> countrycode;
 
     public String getLink() {
         return link;
@@ -114,12 +114,12 @@ public class Project {
         this.objectiveIds = objectiveIds;
     }
 
-    public ArrayList<String> getCountryCodes() {
-        return countryCodes;
+    public ArrayList<String> getCountrycode() {
+        return countrycode;
     }
 
-    public void setCountryCodes(ArrayList<String> countryCodes) {
-        this.countryCodes = countryCodes;
+    public void setCountrycode(ArrayList<String> countrycode) {
+        this.countrycode = countrycode;
     }
 
     public ArrayList<String> getCopyrightImages() {

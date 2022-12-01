@@ -1047,7 +1047,7 @@ public class ProjectController {
                 project.setCopyrightImages(new ArrayList<>());
                 project.setCoordinates(new ArrayList<>());
                 project.setObjectiveIds(new ArrayList<>());
-                project.setCountryCodes(new ArrayList<>());
+                project.setCountrycode(new ArrayList<>());
 
                 resultMap.put(
                         iriItem,
@@ -1138,7 +1138,7 @@ public class ProjectController {
                 }
             }
             if (querySolution.getBinding("countryCode") != null) {
-                ArrayList<String> countryCodes = project.getCountryCodes();
+                ArrayList<String> countryCodes = project.getCountrycode();
                 String value = querySolution.getBinding("countryCode").getValue().stringValue();
                 if (!countryCodes.contains(value)) {
                     countryCodes.add(value);
@@ -1436,7 +1436,7 @@ public class ProjectController {
                 cell.setCellValue(project.getEndTimes().get(0));
             }
             cell = row.createCell(6);
-            cell.setCellValue(String.join("|", project.getCountryCodes()));
+            cell.setCellValue(String.join("|", project.getCountrycode()));
 
             cell = row.createCell(7);
             if (project.getDescriptions().size() > 0) {
@@ -1518,7 +1518,7 @@ public class ProjectController {
                                 String.join("|", project.getEuBudgets()),
                                 String.join("|", project.getStartTimes()),
                                 String.join("|", project.getEndTimes()),
-                                String.join("|", project.getCountryCodes()),
+                                String.join("|", project.getCountrycode()),
                                 String.join("|", project.getDescriptions())
                         )
                 );
