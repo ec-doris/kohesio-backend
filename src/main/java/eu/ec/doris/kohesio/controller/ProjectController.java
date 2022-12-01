@@ -1005,7 +1005,7 @@ public class ProjectController {
             }
         }
         query =
-                "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countrycode ?description WHERE { "
+                "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countryCode ?description WHERE { "
                         + " VALUES ?s0 { " + values + " }"
                         + " OPTIONAL { ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \"" + language + "\") }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description . FILTER((LANG(?description)) = \"" + language + "\") }"
@@ -1016,173 +1016,146 @@ public class ProjectController {
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }}"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countrycode . }}"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . }}"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.}}}"
-//                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?summary. FILTER(LANG(?summary)=\"" + language + "\") }"
                         + "} ";
 
 
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false);
 
-        ArrayList<Project> resultList = new ArrayList<Project>();
-        String previewsKey = "";
-        Set<String> snippet = new HashSet<>();
-        Set<String> label = new HashSet<>();
-        Set<String> description = new HashSet<>();
-        Set<String> startTime = new HashSet<>();
-        Set<String> endTime = new HashSet<>();
-        Set<String> euBudget = new HashSet<>();
-        Set<String> totalBudget = new HashSet<>();
-        Set<String> image = new HashSet<>();
-        Set<String> imageCopyright = new HashSet<>();
-        Set<String> coordinates = new HashSet<>();
-        Set<String> objectiveId = new HashSet<>();
-        Set<String> countrycode = new HashSet<>();
-//        Set<String> summary = new HashSet<>();
+        HashMap<String, Project> resultMap = new HashMap<>();
         ArrayList<String> similarWords = new ArrayList<>();
 
-        boolean hasEntry = resultSet.hasNext();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
-            String currentKey = querySolution.getBinding("s0").getValue().stringValue();
-            if (!previewsKey.equals(currentKey)) {
-                if (!previewsKey.equals("")) {
-                    Project project = new Project();
-                    project.setItem(previewsKey.replace("https://linkedopendata.eu/entity/", ""));
-                    project.setLink(previewsKey);
-                    project.setSnippet(new ArrayList<String>(snippet));
-                    project.setLabels(new ArrayList<String>(label));
-                    project.setDescriptions(new ArrayList<String>(description));
-                    project.setStartTimes(new ArrayList<String>(startTime));
-                    project.setEndTimes(new ArrayList<String>(endTime));
-                    project.setEuBudgets(new ArrayList<String>(euBudget));
-                    project.setTotalBudgets(new ArrayList<String>(totalBudget));
-                    project.setImages(new ArrayList<String>(image));
-                    project.setCopyrightImages(new ArrayList<>(imageCopyright));
-                    project.setCoordinates(new ArrayList<String>(coordinates));
-                    project.setObjectiveIds(new ArrayList<String>(objectiveId));
-                    project.setCountrycode(new ArrayList<String>(countrycode));
-//                    project.setSummary(new ArrayList<>(summary));
-                    resultList.add(project);
-                    snippet = new HashSet<>();
-                    label = new HashSet<>();
-                    description = new HashSet<>();
-                    startTime = new HashSet<>();
-                    endTime = new HashSet<>();
-                    euBudget = new HashSet<>();
-                    totalBudget = new HashSet<>();
-                    image = new HashSet<>();
-                    imageCopyright = new HashSet<>();
-                    coordinates = new HashSet<>();
-                    objectiveId = new HashSet<>();
-                    countrycode = new HashSet<>();
-//                    summary = new HashSet<>();
-                    similarWords = new ArrayList<>();
-                }
-                previewsKey = querySolution.getBinding("s0").getValue().stringValue();
-            }
-            if (querySolution.getBinding("snippet") != null) {
-                String s = ((Literal) querySolution.getBinding("snippet").getValue()).getLabel();
-                if (!s.endsWith(".")) {
-                    s += "...";
-                }
-                snippet.add(s);
-            }
+            String iriItem = querySolution.getBinding("s0").getValue().stringValue();
+            if (!resultMap.containsKey(iriItem)) {
 
+                Project project = new Project();
+                project.setItem(iriItem.replace("https://linkedopendata.eu/entity/", ""));
+                project.setLink(iriItem);
 
-            if (querySolution.getBinding("label") != null)
-                label.add(((Literal) querySolution.getBinding("label").getValue()).getLabel());
-            if (querySolution.getBinding("description") != null && expandedQuery == null)
-                description.add(((Literal) querySolution.getBinding("description").getValue()).getLabel());
-            if (querySolution.getBinding("startTime") != null)
-                startTime.add(
-                        ((Literal) querySolution.getBinding("startTime").getValue()).getLabel().split("T")[0]);
-            if (querySolution.getBinding("endTime") != null)
-                endTime.add(
-                        ((Literal) querySolution.getBinding("endTime").getValue()).getLabel().split("T")[0]);
+                project.setSnippet(new ArrayList<>());
+                project.setLabels(new ArrayList<>());
+                project.setDescriptions(new ArrayList<>());
+                project.setStartTimes(new ArrayList<>());
+                project.setEndTimes(new ArrayList<>());
+                project.setEuBudgets(new ArrayList<>());
+                project.setTotalBudgets(new ArrayList<>());
+                project.setImages(new ArrayList<>());
+                project.setCopyrightImages(new ArrayList<>());
+                project.setCoordinates(new ArrayList<>());
+                project.setObjectiveIds(new ArrayList<>());
+                project.setCountryCodes(new ArrayList<>());
+
+                resultMap.put(
+                        iriItem,
+                        project
+                );
+            }
+            Project project = resultMap.get(iriItem);
+            if (querySolution.getBinding("label") != null) {
+                ArrayList<String> labels = project.getLabels();
+                String value = querySolution.getBinding("label").getValue().stringValue();
+                if (!labels.contains(value)) {
+                    labels.add(value);
+                }
+            }
+            if (querySolution.getBinding("startTime") != null) {
+                ArrayList<String> startTimes = project.getStartTimes();
+                String value = querySolution.getBinding("startTime").getValue().stringValue().split("T")[0];
+                if (!startTimes.contains(value)) {
+                    startTimes.add(value);
+                }
+            }
+            if (querySolution.getBinding("endTime") != null) {
+                ArrayList<String> endTimes = project.getEndTimes();
+                String value = querySolution.getBinding("endTime").getValue().stringValue().split("T")[0];
+                if (!endTimes.contains(value)) {
+                    endTimes.add(value);
+                }
+            }
             if (querySolution.getBinding("endTime") == null && querySolution.getBinding("expectedEndTime") != null) {
-                endTime.add(((Literal) querySolution.getBinding("expectedEndTime").getValue()).stringValue().split("T")[0]);
+                ArrayList<String> endTimes = project.getEndTimes();
+                String value = querySolution.getBinding("expectedEndTime").getValue().stringValue().split("T")[0];
+                if (!endTimes.contains(value)) {
+                    endTimes.add(value);
+                }
             }
-            if (querySolution.getBinding("euBudget") != null)
-                euBudget.add(
-                        String.valueOf(
-                                Precision.round(((Literal) querySolution.getBinding("euBudget").getValue()).doubleValue(), 2)));
-            if (querySolution.getBinding("totalBudget") != null)
-                totalBudget.add(String.valueOf(
-                        Precision.round(((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue(), 2)));
-
+            if (querySolution.getBinding("totalBudget") != null) {
+                ArrayList<String> totalBudgets = project.getTotalBudgets();
+                String value = String.valueOf(
+                        Precision.round(
+                                ((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue(), 2
+                        )
+                );
+                if (!totalBudgets.contains(value)) {
+                    totalBudgets.add(value);
+                }
+            }
+            if (querySolution.getBinding("euBudget") != null) {
+                ArrayList<String> euBudgets = project.getEuBudgets();
+                String value = String.valueOf(
+                        Precision.round(
+                                ((Literal) querySolution.getBinding("euBudget").getValue()).doubleValue(), 2
+                        )
+                );
+                if (!euBudgets.contains(value)) {
+                    euBudgets.add(value);
+                }
+            }
             if (querySolution.getBinding("image") != null) {
-                image.add(querySolution.getBinding("image").getValue().stringValue());
+                ArrayList<String> images = project.getImages();
+                String value = querySolution.getBinding("image").getValue().stringValue();
+                if (!images.contains(value)) {
+                    images.add(value);
+                }
             }
             if (querySolution.getBinding("imageCopyright") != null) {
-                imageCopyright.add("© " + querySolution.getBinding("imageCopyright").getValue().stringValue());
+                ArrayList<String> copyrightImages = project.getCopyrightImages();
+                String value = "© " + querySolution.getBinding("image").getValue().stringValue();
+                if (!copyrightImages.contains(value)) {
+                    copyrightImages.add(value);
+                }
             }
             if (querySolution.getBinding("coordinates") != null) {
-                coordinates.add(
-                        ((Literal) querySolution.getBinding("coordinates").getValue())
-                                .getLabel()
-                                .replace("Point(", "")
-                                .replace(")", "")
-                                .replace(" ", ","));
+                ArrayList<String> coordinates = project.getCoordinates();
+                String value = ((Literal) querySolution.getBinding("coordinates").getValue())
+                        .getLabel()
+                        .replace("Point(", "")
+                        .replace(")", "")
+                        .replace(" ", ",");
+                if (!coordinates.contains(value)) {
+                    coordinates.add(value);
+                }
             }
-            if (querySolution.getBinding("objectiveId") != null)
-                objectiveId.add(((Literal) querySolution.getBinding("objectiveId").getValue()).getLabel());
-            if (querySolution.getBinding("countrycode") != null)
-                countrycode.add(((Literal) querySolution.getBinding("countrycode").getValue()).getLabel());
-//            if (querySolution.getBinding("summary") != null)
-//                summary.add(querySolution.getBinding("summary").getValue().stringValue());
-
-            // try to create the snippet based on the given expanded query
-            if (expandedQuery != null) {
-                StringBuilder textInput = new StringBuilder();
-                if (querySolution.getBinding("label") != null) {
-                    String labelText = ((Literal) querySolution.getBinding("label").getValue()).getLabel();
-                    textInput.append(labelText);
+            if (querySolution.getBinding("objectiveId") != null) {
+                ArrayList<String> objectiveIds = project.getObjectiveIds();
+                String value = querySolution.getBinding("objectiveId").getValue().stringValue();
+                if (!objectiveIds.contains(value)) {
+                    objectiveIds.add(value);
                 }
-                textInput.append("<br/>");
-
-                if (querySolution.getBinding("description") != null) {
-                    String descriptionText = ((Literal) querySolution.getBinding("description").getValue()).getLabel();
-                    textInput.append(descriptionText);
+            }
+            if (querySolution.getBinding("countryCode") != null) {
+                ArrayList<String> countryCodes = project.getCountryCodes();
+                String value = querySolution.getBinding("countryCode").getValue().stringValue();
+                if (!countryCodes.contains(value)) {
+                    countryCodes.add(value);
                 }
-                String snippetText = getSnippet(expandedQuery.getExpandedQuery(), textInput.toString());
-                // replace the description with the snippet text
-                description.add(snippetText);
-
+            }
+            if (querySolution.getBinding("description") != null) {
+                ArrayList<String> descriptions = project.getDescriptions();
+                String value = querySolution.getBinding("description").getValue().stringValue();
+                if (!descriptions.contains(value)) {
+                    descriptions.add(value);
+                }
             }
         }
-        if (hasEntry) {
-            Project project = new Project();
-            project.setItem(previewsKey.replace("https://linkedopendata.eu/entity/", ""));
-            project.setLink(previewsKey);
-            project.setSnippet(new ArrayList<String>(snippet));
-            project.setLabels(new ArrayList<String>(label));
-            project.setDescriptions(new ArrayList<String>(description));
-            project.setStartTimes(new ArrayList<String>(startTime));
-            project.setEndTimes(new ArrayList<String>(endTime));
-            project.setEuBudgets(new ArrayList<String>(euBudget));
-            project.setTotalBudgets(new ArrayList<String>(totalBudget));
-            project.setImages(new ArrayList<String>(image));
-            project.setCopyrightImages(new ArrayList<>(imageCopyright));
-            project.setCoordinates(new ArrayList<String>(coordinates));
-            project.setObjectiveIds(new ArrayList<String>(objectiveId));
-            project.setCountrycode(new ArrayList<String>(countrycode));
-//            project.setSummary(new ArrayList<String>(summary));
-            resultList.add(project);
-        }
+
         ProjectList projectList = new ProjectList();
-        int upperLimit = 990;
-        if (keywords != null)
-            upperLimit = 90;
-//        if (offset <= upperLimit) {
-//            for (int i = inputOffset; i < Math.min(resultList.size(), inputOffset + inputLimit); i++) {
-//                projectList.getList().add(resultList.get(i));
-//            }
-//        } else {
-//            projectList.setList(resultList);
-//        }
-        projectList.setList(resultList);
+
+        projectList.setList(new ArrayList<>(resultMap.values()));
         projectList.setNumberResults(numResults);
 
         if (expandedQuery != null && expandedQuery.getKeywords() != null) {
@@ -1191,7 +1164,7 @@ public class ProjectController {
             }
         }
         projectList.setSimilarWords(similarWords);
-        return new ResponseEntity<ProjectList>(projectList, HttpStatus.OK);
+        return new ResponseEntity<>(projectList, HttpStatus.OK);
     }
 
     private String getSnippet(String queryText, String text) {
@@ -1463,7 +1436,7 @@ public class ProjectController {
                 cell.setCellValue(project.getEndTimes().get(0));
             }
             cell = row.createCell(6);
-            cell.setCellValue(String.join("|", project.getCountrycode()));
+            cell.setCellValue(String.join("|", project.getCountryCodes()));
 
             cell = row.createCell(7);
             if (project.getDescriptions().size() > 0) {
@@ -1545,7 +1518,7 @@ public class ProjectController {
                                 String.join("|", project.getEuBudgets()),
                                 String.join("|", project.getStartTimes()),
                                 String.join("|", project.getEndTimes()),
-                                String.join("|", project.getCountrycode()),
+                                String.join("|", project.getCountryCodes()),
                                 String.join("|", project.getDescriptions())
                         )
                 );
