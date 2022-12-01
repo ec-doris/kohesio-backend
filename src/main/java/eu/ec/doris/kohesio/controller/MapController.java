@@ -87,7 +87,7 @@ public class MapController {
             @RequestParam(value = "nuts3", required = false) String nuts3,
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
-            @RequestParam(value = "interreg", defaultValue = "0") Boolean interreg,
+            @RequestParam(value = "interreg", required = false) Boolean interreg,
             Integer timeout,
             Principal principal)
             throws Exception {
