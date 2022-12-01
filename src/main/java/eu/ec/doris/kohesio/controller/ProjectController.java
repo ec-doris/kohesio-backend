@@ -1025,6 +1025,7 @@ public class ProjectController {
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false);
 
         HashMap<String, Project> resultMap = new HashMap<>();
+        ArrayList<Project> orderedResult  = new ArrayList<>();
         ArrayList<String> similarWords = new ArrayList<>();
 
         while (resultSet.hasNext()) {
@@ -1053,6 +1054,7 @@ public class ProjectController {
                         iriItem,
                         project
                 );
+                orderedResult.add(project);
             }
             Project project = resultMap.get(iriItem);
             if (querySolution.getBinding("label") != null) {
@@ -1155,7 +1157,7 @@ public class ProjectController {
 
         ProjectList projectList = new ProjectList();
 
-        projectList.setList(new ArrayList<>(resultMap.values()));
+        projectList.setList(orderedResult);
         projectList.setNumberResults(numResults);
 
         if (expandedQuery != null && expandedQuery.getKeywords() != null) {
