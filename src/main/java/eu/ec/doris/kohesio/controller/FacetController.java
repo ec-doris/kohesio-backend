@@ -840,13 +840,15 @@ public class FacetController {
         logger.info("Get list of outermost regions");
         String query = "PREFIX wd: <https://linkedopendata.eu/entity/>"
                 + " PREFIX wdt: <https://linkedopendata.eu/prop/direct/>"
-                + " SELECT ?instance ?instanceLabel ?country ?countryLabel WHERE { ";
+                + " SELECT ?instance ?instanceLabel ?instanceLabel_en ?country ?countryLabel WHERE { ";
         if (qid != null) {
             query += " VALUES ?instance { <" + qid + "> }";
         }
         query += " VALUES ?instance {wd:Q203 wd:Q204 wd:Q205 wd:Q206 wd:Q201 wd:Q2576740 wd:Q198 wd:Q209} "
-                + " ?instance rdfs:label ?instanceLabel . "
-                + " FILTER (lang(?instanceLabel)=\"" + language + "\") . "
+                + " OPTIONAL { ?instance rdfs:label ?instanceLabel . "
+                + " FILTER (lang(?instanceLabel)=\"" + language + "\") .} "
+                + " ?instance rdfs:label ?instanceLabel_en . "
+                + " FILTER (lang(?instanceLabel_en)=\"en\") . "
                 + " ?instance wdt:P32 ?country . "
                 + " ?country rdfs:label ?countryLabel . "
                 + " FILTER (lang(?countryLabel)=\"" + language + "\") . "
@@ -857,7 +859,12 @@ public class FacetController {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
             element.put("instance", querySolution.getBinding("instance").getValue().toString());
-            element.put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
+            if (querySolution.getBinding("instanceLabel") != null) {
+                element.put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
+            }
+            else {
+                element.put("instanceLabel", querySolution.getBinding("instanceLabel_en").getValue().stringValue());
+            }
             element.put("country", querySolution.getBinding("country").getValue().toString());
             element.put("countryLabel", querySolution.getBinding("countryLabel").getValue().stringValue());
             result.add(element);
