@@ -3,35 +3,21 @@ package eu.ec.doris.kohesio.controller;
 
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
-
 import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.io.BufferedReader;
-
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
-import java.text.DecimalFormat;
-import java.util.*;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")
@@ -55,6 +41,11 @@ public class FacetController {
 
     @Autowired
     HttpReqRespUtils httpReqRespUtils;
+
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
 
     HashMap<String, Nut> nutsRegion = null;
 
@@ -91,13 +82,12 @@ public class FacetController {
                     filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407315> .";
                 }
 
-                String query =
-                        "SELECT DISTINCT ?region ?regionLabel ?country where {" +
-                                filter +
-                                " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } " +
-                                " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel . " +
-                                "             FILTER((LANG(?regionLabel)) = \"" + language + "\") . " +
-                                "}";
+                String query = "SELECT DISTINCT ?region ?country ?nuts_code ?regionLabel (LANG(?regionLabel) AS ?lang) WHERE {"
+                        + filter
+                        + " ?region <http://www.w3.org/2000/01/rdf-schema#label> ?regionLabel ."
+                        + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } "
+                        + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?nuts_code } "
+                        + "}";
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
@@ -105,6 +95,12 @@ public class FacetController {
                     if (nutsRegion.containsKey(key)) {
                         Nut nut = nutsRegion.get(key);
                         nut.type.add(g);
+                        if (querySolution.getBinding("regionLabel") != null) {
+                            nut.name.put(
+                                    querySolution.getBinding("lang").getValue().stringValue(),
+                                    querySolution.getBinding("regionLabel").getValue().stringValue()
+                            );
+                        }
                     } else {
                         Nut nut = new Nut();
                         nut.uri = key;
@@ -114,14 +110,21 @@ public class FacetController {
                             nut = nutsRegion.get(key);
                         }
                         if (querySolution.getBinding("regionLabel") != null) {
-                            nut.name = querySolution.getBinding("regionLabel").getValue().stringValue();
+                            nut.name.put(
+                                    querySolution.getBinding("lang").getValue().stringValue(),
+                                    querySolution.getBinding("regionLabel").getValue().stringValue()
+                            );
                         }
                         if (querySolution.getBinding("country") != null) {
                             nut.country = querySolution.getBinding("country").getValue().stringValue();
                         }
+                        if (querySolution.getBinding("nuts_code") != null) {
+                            nut.nutsCode = querySolution.getBinding("nuts_code").getValue().stringValue();
+                        }
                         nutsRegion.put(key, nut);
                     }
                 }
+
             }
             //retrieving the narrower concept
             for (String key : nutsRegion.keySet()) {
@@ -151,7 +154,7 @@ public class FacetController {
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407315> . }";
                 }
-                if (query.equals("") == false) {
+                if (!query.equals("")) {
                     TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
                     logger.debug("Is empty result set: " + resultSet.hasNext());
                     while (resultSet.hasNext()) {
@@ -167,8 +170,7 @@ public class FacetController {
                     }
                 }
             }
-
-            //retriving the geoJson geometries
+// retrieving the geoJson geometries
             for (String key : nutsRegion.keySet()) {
                 String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
                 if (nutsRegion.get(key).type.contains("continent")) {
@@ -194,7 +196,7 @@ public class FacetController {
             }
 
             // skipping regions that are statistical only
-            gran = new ArrayList<String>();
+            gran = new ArrayList<>();
             gran.add("nuts2");
             gran.add("nuts1");
             gran.add("country");
@@ -218,18 +220,29 @@ public class FacetController {
                     }
                 }
             }
+
         }
     }
 
     @GetMapping(value = "facet/eu/nuts3")
-    public JSONArray facetNuts1(
+    public JSONArray facetNuts(
             @RequestParam(value = "country", required = false) String country,
             @RequestParam(value = "region", required = false) String region,
-            @RequestParam(value = "language", defaultValue = "en") String language
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid
     ) throws Exception {
         initialize(language);
         List<JSONObject> jsonValues = new ArrayList<>();
-        if (region != null && nutsRegion.containsKey(region)) {
+        if (qid != null && nutsRegion.containsKey(qid)) {
+            Nut nutQid = nutsRegion.get(qid);
+            JSONObject element = new JSONObject();
+
+            element.put("instance", nutQid.uri);
+            element.put("name", nutQid.nutsCode + " - " + nutQid.name.get(language));
+            element.put("country", nutQid.country);
+            element.put("nuts_code", nutQid.nutsCode);
+            jsonValues.add(element);
+        } else if (region != null && nutsRegion.containsKey(region)) {
             Nut nutRegion = nutsRegion.get(region);
 
             nutRegion.narrower.forEach(s -> {
@@ -237,8 +250,9 @@ public class FacetController {
                 JSONObject element = new JSONObject();
 
                 element.put("instance", nut.uri);
-                element.put("name", nut.name);
+                element.put("name", nut.nutsCode + " - " + nut.name.get(language));
                 element.put("country", nut.country);
+                element.put("nuts_code", nut.nutsCode);
                 jsonValues.add(element);
 
             });
@@ -249,8 +263,9 @@ public class FacetController {
                         JSONObject element = new JSONObject();
 
                         element.put("instance", nut.uri);
-                        element.put("name", nut.name);
+                        element.put("name", nut.nutsCode + " - " + nut.name.get(language));
                         element.put("country", nut.country);
+                        element.put("nuts_code", nut.nutsCode);
                         jsonValues.add(element);
                     }
                 }
@@ -261,8 +276,9 @@ public class FacetController {
                     JSONObject element = new JSONObject();
 
                     element.put("instance", nut.uri);
-                    element.put("name", nut.name);
+                    element.put("name", nut.nutsCode + " - " + nut.name.get(language));
                     element.put("country", nut.country);
+                    element.put("nuts_code", nut.nutsCode);
                     jsonValues.add(element);
                 }
             });
@@ -375,12 +391,17 @@ public class FacetController {
 
     @GetMapping(value = "/facet/eu/countries", produces = "application/json")
     public JSONArray facetEuCountries(
-            @RequestParam(value = "language", defaultValue = "en") String language)
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid
+    )
             throws Exception {
         logger.info("Get list of countries");
         List<JSONObject> jsonValues = new ArrayList<JSONObject>();
-        String query = "SELECT DISTINCT ?country WHERE { 	" +
-                " <https://linkedopendata.eu/entity/Q1>  <https://linkedopendata.eu/prop/direct/P104> ?country . }";
+        String query = "SELECT DISTINCT ?country WHERE {";
+        if (qid != null) {
+            query += " VALUES ?country { <" + qid + "> }";
+        }
+        query += " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?country . }";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -437,28 +458,56 @@ public class FacetController {
     }
 
     @GetMapping(value = "/facet/eu/regions", produces = "application/json")
-    public JSONArray facetEuRegions( //
-                                     @RequestParam(value = "country", required = false) String country,
-                                     @RequestParam(value = "language", defaultValue = "en") String language)
+    public JSONArray facetEuRegions(
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid
+    )
             throws Exception {
         initialize(language);
         logger.info("Get EU regions");
         List<JSONObject> jsonValues = new ArrayList<JSONObject>();
-        if (nutsRegion.containsKey(country)) {
+        if (qid != null && nutsRegion.containsKey(qid)) {
+            JSONObject element = new JSONObject();
+            element.put("region", qid);
+            String query = "SELECT ?instanceLabel ?instanceLabelEn WHERE {"
+                    + " VALUES ?region { <" + qid + "> }"
+                    + " OPTIONAL { ?region rdfs:label ?instanceLabel ."
+                    + " FILTER (lang(?instanceLabel)=\"" + language + "\") }"
+                    + " OPTIONAL { ?region rdfs:label ?instanceLabelEn . FILTER(LANG(?instanceLabelEn)=\"en\")}"
+                    + "}";
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+            while (resultSet.hasNext()) {
+                BindingSet querySolution = resultSet.next();
+                if (querySolution.getBinding("instanceLabel") != null) {
+                    element.put("name", querySolution.getBinding("instanceLabel").getValue().stringValue());
+                } else {
+                    element.put("name", querySolution.getBinding("instanceLabelEn").getValue().stringValue());
+                }
+            }
+            jsonValues.add(element);
+        } else if (nutsRegion.containsKey(country)) {
             for (String region : nutsRegion.get(country).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", region);
-                String query = "select ?instanceLabel where { "
-                        + " <" + region + "> rdfs:label ?instanceLabel . "
-                        + " FILTER (lang(?instanceLabel)=\""
+                String query = "SELECT ?instanceLabel ?instanceLabelEn WHERE { "
+                        + " VALUES ?region { <" + region + "> } "
+                        + " OPTIONAL { ?region rdfs:label ?instanceLabel . "
+                        + "   FILTER (lang(?instanceLabel)=\""
                         + language
-                        + "\")"
+                        + "\") } "
+                        + " OPTIONAL { ?region rdfs:label ?instanceLabelEn . FILTER (lang(?instanceLabelEn)=\"en\")  } "
                         + "}";
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
-                    element.put("name", querySolution.getBinding("instanceLabel").getValue().stringValue());
+                    if (querySolution.getBinding("instanceLabel") != null) {
+                        element.put("name", querySolution.getBinding("instanceLabel").getValue().stringValue());
+                    } else {
+                        element.put("name", querySolution.getBinding("instanceLabelEn").getValue().stringValue());
+                    }
                 }
+                System.out.println(element.toJSONString());
                 jsonValues.add(element);
             }
         }
@@ -513,20 +562,24 @@ public class FacetController {
 
 
     @GetMapping(value = "/facet/eu/funds", produces = "application/json")
-    public JSONArray facetEuFunds( //
-                                   @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
+    public JSONArray facetEuFunds(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid
+    ) throws Exception {
         logger.info("Get list of EU funds");
-        String query =
-                ""
-                        + "select ?fund ?fundLabel ?id where { "
-                        + " ?fund <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2504365> . "
-                        + " ?fund <https://linkedopendata.eu/prop/direct/P1583> ?id ."
+        String query = "SELECT ?fund ?fundLabel ?id WHERE {";
 
-                        + " ?fund rdfs:label ?fundLabel . "
-                        + " FILTER (lang(?fundLabel)=\""
-                        + language
-                        + "\")"
-                        + "} order by ?id ";
+        if (qid != null) {
+            query += " VALUES ?fund { <" + qid + "> }";
+        }
+
+        query += " ?fund <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2504365> . "
+                + " ?fund <https://linkedopendata.eu/prop/direct/P1583> ?id ."
+                + " ?fund rdfs:label ?fundLabel . "
+                + " FILTER (LANG(?fundLabel)=\""
+                + language
+                + "\")"
+                + "} ORDER BY ?id ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
@@ -540,30 +593,32 @@ public class FacetController {
     }
 
 
-    public JSONArray facetPolicyObjective( //
-                                           @RequestParam(value = "language", defaultValue = "en") String language
+    public JSONArray facetPolicyObjective(
+            @RequestParam(value = "language", defaultValue = "en") String language
     ) throws Exception {
-        return facetPolicyObjective(language, null);
+        return facetPolicyObjective(language, null, null);
     }
 
     @GetMapping(value = "/facet/eu/policy_objectives", produces = "application/json")
-    public JSONArray facetPolicyObjective( //
-                                           @RequestParam(value = "language", defaultValue = "en") String language,
-                                           @RequestParam(value = "theme", required = false) String theme
+    public JSONArray facetPolicyObjective(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "theme", required = false) String theme,
+            @RequestParam(value = "qid", required = false) String qid
     ) throws Exception {
         logger.info("Get list of policy objectives");
-        String query =
-                ""
-                        + "SELECT ?po ?poLabel ?id ?to ?toId { "
-                        + " { SELECT DISTINCT ?po ?poLabel ?id WHERE { "
-                        + " ?po <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2547986> . "
-                        + " ?po rdfs:label ?poLabel . "
-                        + " ?po  <https://linkedopendata.eu/prop/direct/P1747> ?id ."
-                        + " FILTER(LANG(?poLabel)=\""
-                        + language
-                        + "\")"
-                        + " ?po <https://linkedopendata.eu/prop/direct/P1848> ?to ."
-                        + " ?to <https://linkedopendata.eu/prop/direct/P1105> ?toId .";
+        String query = "SELECT ?po ?poLabel ?id ?to ?toId WHERE { ";
+        if (qid != null) {
+            query += " VALUES ?po { <" + qid + "> }";
+        }
+        query += " { SELECT DISTINCT ?po ?poLabel ?id WHERE { "
+                + " ?po <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2547986> . "
+                + " ?po rdfs:label ?poLabel . "
+                + " ?po  <https://linkedopendata.eu/prop/direct/P1747> ?id ."
+                + " FILTER(LANG(?poLabel)=\""
+                + language
+                + "\")"
+                + " ?po <https://linkedopendata.eu/prop/direct/P1848> ?to ."
+                + " ?to <https://linkedopendata.eu/prop/direct/P1105> ?toId .";
         if (theme != null) {
             query += " FILTER (?to = <" + theme + "> )";
         }
@@ -603,26 +658,29 @@ public class FacetController {
 
 
     @GetMapping(value = "/facet/eu/categoriesOfIntervention", produces = "application/json")
-    public JSONArray facetEuCategoryOfIntervention( //
-                                                    @RequestParam(value = "language", defaultValue = "en") String language) throws Exception {
+    public JSONArray facetEuCategoryOfIntervention(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid
+    ) throws Exception {
 
         logger.info("Get list of intervention field...");
-        String query =
-                ""
-                        + "select ?instance ?instanceLabel ?id ?areaOfIntervention ?areaOfInterventionLabel ?areaOfInterventionId where { "
-                        + " ?instance <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q200769> . "
-                        + " ?instance <https://linkedopendata.eu/prop/direct/P869>  ?id . "
-                        + " ?instance <https://linkedopendata.eu/prop/direct/P178453>  ?areaOfIntervention . "
-                        + " ?areaOfIntervention <https://linkedopendata.eu/prop/direct/P178454> ?areaOfInterventionId . "
-                        + " ?areaOfIntervention rdfs:label ?areaOfInterventionLabel . "
-                        + " FILTER (lang(?areaOfInterventionLabel)=\""
-                        + language
-                        + "\")"
-                        + " ?instance rdfs:label ?instanceLabel . "
-                        + " FILTER (lang(?instanceLabel)=\""
-                        + language
-                        + "\")"
-                        + "} order by ?id";
+        String query = "SELECT ?instance ?instanceLabel ?id ?areaOfIntervention ?areaOfInterventionLabel ?areaOfInterventionId WHERE { ";
+        if (qid != null) {
+            query += " VALUES ?areaOfIntervention { <" + qid + "> }";
+        }
+        query += " ?instance <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q200769> . "
+                + " ?instance <https://linkedopendata.eu/prop/direct/P869>  ?id . "
+                + " ?instance <https://linkedopendata.eu/prop/direct/P178453>  ?areaOfIntervention . "
+                + " ?areaOfIntervention <https://linkedopendata.eu/prop/direct/P178454> ?areaOfInterventionId . "
+                + " ?areaOfIntervention rdfs:label ?areaOfInterventionLabel . "
+                + " FILTER (lang(?areaOfInterventionLabel)=\""
+                + language
+                + "\")"
+                + " ?instance rdfs:label ?instanceLabel . "
+                + " FILTER (lang(?instanceLabel)=\""
+                + language
+                + "\")"
+                + "} order by ?id";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 5);
         JSONArray result = new JSONArray();
         String areaOfIntervention = "";
@@ -670,18 +728,21 @@ public class FacetController {
     }
 
     @GetMapping(value = "/facet/eu/programs", produces = "application/json")
-    public JSONArray facetEuPrograms( //
-                                      @RequestParam(value = "language", defaultValue = "en") String language,
-                                      @RequestParam(value = "country", required = false) String country,
-                                      @RequestParam(value = "fund", required = false) String fund)
+    public JSONArray facetEuPrograms(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "fund", required = false) String fund,
+            @RequestParam(value = "qid", required = false) String qid
+    )
             throws Exception {
         logger.info("Get list of programs");
-        String query =
-                ""
-                        + "select ?program ?programLabel ?cci ?fund { "
-                        + " ?program <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2463047> . "
-                        + " ?program <https://linkedopendata.eu/prop/direct/P1367>  ?cci . "
-                        + " OPTIONAL{ ?program <https://linkedopendata.eu/prop/direct/P1584> ?fund .}";
+        String query = "SELECT ?program ?programLabel ?cci ?fund WHERE { ";
+        if (qid != null) {
+            query += " VALUES ?program { <" + qid + "> }";
+        }
+        query += " ?program <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q2463047> . "
+                + " ?program <https://linkedopendata.eu/prop/direct/P1367>  ?cci . "
+                + " OPTIONAL{ ?program <https://linkedopendata.eu/prop/direct/P1584> ?fund .}";
 
         if (country != null) {
             query += " ?program <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
@@ -733,21 +794,23 @@ public class FacetController {
     @GetMapping(value = "/facet/eu/thematic_objectives", produces = "application/json")
     public JSONArray facetEuThematicObjective( //
                                                @RequestParam(value = "language", defaultValue = "en") String language,
-                                               @RequestParam(value = "policy", required = false) String policy
+                                               @RequestParam(value = "policy", required = false) String policy,
+                                               @RequestParam(value = "qid", required = false) String qid
     ) throws Exception {
 
         logger.info("Get list of thematic objectives");
-        String query =
-                ""
-                        + "SELECT ?to ?toLabel ?id ?policy ?policyId { "
-                        + " ?to <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q236700> . "
-                        + " ?to <https://linkedopendata.eu/prop/direct/P1105>  ?id . "
-                        + " ?to rdfs:label ?toLabel . "
-                        + " FILTER (LANG(?toLabel)=\""
-                        + language
-                        + "\")"
-                        + " OPTIONAL{?to <https://linkedopendata.eu/prop/direct/P1849> ?policy . "
-                        + " ?policy <https://linkedopendata.eu/prop/direct/P1747> ?policyId . }";
+        String query = "SELECT ?to ?toLabel ?id ?policy ?policyId WHERE { ";
+        if (qid != null) {
+            query += " VALUES ?to { <" + qid + "> }";
+        }
+        query += " ?to <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q236700> . "
+                + " ?to <https://linkedopendata.eu/prop/direct/P1105>  ?id . "
+                + " ?to rdfs:label ?toLabel . "
+                + " FILTER (LANG(?toLabel)=\""
+                + language
+                + "\")"
+                + " OPTIONAL{?to <https://linkedopendata.eu/prop/direct/P1849> ?policy . "
+                + " ?policy <https://linkedopendata.eu/prop/direct/P1747> ?policyId . }";
 
         if (policy != null) {
             query += " FILTER(?policy = <" + policy + "> ) . ";
@@ -768,9 +831,51 @@ public class FacetController {
         return result;
     }
 
+    @GetMapping(value = "/facet/eu/outermost_regions", produces = "application/json")
+    public JSONArray facetOutermostRegions( //
+                                            @RequestParam(value = "language", defaultValue = "en") String language,
+                                            @RequestParam(value = "qid", required = false) String qid
+    ) throws Exception {
+
+        logger.info("Get list of outermost regions");
+        String query = "PREFIX wd: <https://linkedopendata.eu/entity/>"
+                + " PREFIX wdt: <https://linkedopendata.eu/prop/direct/>"
+                + " SELECT ?instance ?instanceLabel ?instanceLabel_en ?country ?countryLabel WHERE { ";
+        if (qid != null) {
+            query += " VALUES ?instance { <" + qid + "> }";
+        }
+        query += " VALUES ?instance {wd:Q203 wd:Q204 wd:Q205 wd:Q206 wd:Q201 wd:Q2576740 wd:Q198 wd:Q209} "
+                + " OPTIONAL { ?instance rdfs:label ?instanceLabel . "
+                + " FILTER (lang(?instanceLabel)=\"" + language + "\") .} "
+                + " ?instance rdfs:label ?instanceLabel_en . "
+                + " FILTER (lang(?instanceLabel_en)=\"en\") . "
+                + " ?instance wdt:P32 ?country . "
+                + " ?country rdfs:label ?countryLabel . "
+                + " FILTER (lang(?countryLabel)=\"" + language + "\") . "
+                + " } ";
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        JSONArray result = new JSONArray();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            JSONObject element = new JSONObject();
+            element.put("instance", querySolution.getBinding("instance").getValue().toString());
+            if (querySolution.getBinding("instanceLabel") != null) {
+                element.put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
+            }
+            else {
+                element.put("instanceLabel", querySolution.getBinding("instanceLabel_en").getValue().stringValue());
+            }
+            element.put("country", querySolution.getBinding("country").getValue().toString());
+            element.put("countryLabel", querySolution.getBinding("countryLabel").getValue().stringValue());
+            result.add(element);
+        }
+        return result;
+    }
+
+
     public JSONArray facetEuThematicObjective( //
                                                @RequestParam(value = "language", defaultValue = "en") String language
     ) throws Exception {
-        return facetEuThematicObjective(language, null);
+        return facetEuThematicObjective(language, null, null);
     }
 }

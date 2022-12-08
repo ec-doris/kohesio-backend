@@ -36,20 +36,25 @@ public class GeneralController {
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
 
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
+
     @GetMapping(value = "/facet/eu/search/general", produces = "application/json")
     public ResponseEntity euSearchGeneral(
             @RequestParam(value = "language", defaultValue = "en") String language,
             @RequestParam(value = "keywords", required = false) String keywords,
-            @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
-            @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
-            @RequestParam(value = "orderNumProjects", required = false) Boolean orderNumProjects,
+//            @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+//            @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+//            @RequestParam(value = "orderNumProjects", required = false) Boolean orderNumProjects,
             @RequestParam(value = "limit", defaultValue = "200") int limit,
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             Principal principal
     )
             throws Exception {
         logger.info("General search: language {}, keywords {}", language, keywords);
-        logger.info("Order: EuBudget {}, TotalBudget {}, Number {}", orderEuBudget, orderTotalBudget, orderNumProjects);
+//        logger.info("Order: EuBudget {}, TotalBudget {}, Number {}", orderEuBudget, orderTotalBudget, orderNumProjects);
 
         String search = "";
         if (keywords != null) {
@@ -62,44 +67,24 @@ public class GeneralController {
                 keywordsBuilder.append(words[words.length - 1]);
                 keywords = keywordsBuilder.toString();
             }
-            search += "?general <http://www.openrdf.org/contrib/lucenesail#matches> [ "
-                    + "<http://www.openrdf.org/contrib/lucenesail#query> \""
-                    + keywords.replace("\"", "\\\"") + "\" ; "
-                    //+ "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet; "
-                    + "<http://www.openrdf.org/contrib/lucenesail#score> ?score "
-                    + " ] . ";
+            search += " { " +
+                    " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . " +
+                    " ?general <http://www.openrdf.org/contrib/lucenesail#matches> [ " +
+                    " <http://www.openrdf.org/contrib/lucenesail#score> ?score ;" +
+                    " <http://www.openrdf.org/contrib/lucenesail#query> \"" + keywords.replace("\"", "\\\"") + "\"; <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Ben> " +
+                    "  ] . " +
+                    "  } UNION { " +
+                    " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . " +
+                    " ?general <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ?general <http://www.openrdf.org/contrib/lucenesail#matches> [ " +
+                    " <http://www.openrdf.org/contrib/lucenesail#score> ?score ;\n" +
+                    " <http://www.openrdf.org/contrib/lucenesail#query> \"" + keywords.replace("\"", "\\\"") + "\"; <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Proj_" + language + "> " +
+                    "  ] . }";
         }
 
         search += " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . "
                 + " FILTER(?type=<https://linkedopendata.eu/entity/Q9934>||?type=<https://linkedopendata.eu/entity/Q196899>) "//" VALUES(?type){(<https://linkedopendata.eu/entity/Q9934>) (<https://linkedopendata.eu/entity/Q196899>)} "
 
         ;
-
-        //String orderBy = "ORDER BY DESC(?score)";
-
-        String orderBy = "";
-
-        if (orderEuBudget != null) {
-            if (orderEuBudget) {
-                orderBy = "ORDER BY ASC(?totalEuBudget)";
-            } else {
-                orderBy = "ORDER BY DESC(?totalEuBudget)";
-            }
-        }
-        if (orderTotalBudget != null) {
-            if (orderTotalBudget) {
-                orderBy = "ORDER BY ASC(?totalBudget)";
-            } else {
-                orderBy = "ORDER BY DESC(?totalBudget)";
-            }
-        }
-        if (orderNumProjects != null) {
-            if (orderNumProjects) {
-                orderBy = "ORDER BY ASC(?numberProjects)";
-            } else {
-                orderBy = "ORDER BY DESC(?numberProjects)";
-            }
-        }
 
         String queryCount = "SELECT (COUNT(DISTINCT ?general) as ?c) { " + search + "} ";
         logger.debug(queryCount);
@@ -113,14 +98,12 @@ public class GeneralController {
         String labelsFilter = getGeneralLangLabelsFilter();
         String query =
                 "SELECT ?general ?generalLabel ?generalLabel_en ?country ?countryLabel ?countryCode ?link ?summary ?image ?imageSummary ?imageCopyright ?type ?typeLabel ?transliteration { "
-                        + " { SELECT DISTINCT ?general ?score { "
+                        + " { SELECT DISTINCT ?general ?score ?type { "
                         + search
-                        + "} "
-                        + orderBy
+                        + "} ORDER BY DESC(?score)"
                         + " LIMIT " + limit
                         + " OFFSET " + offset
                         + "} "
-                        + " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . "
                         + " ?type <http://www.w3.org/2000/01/rdf-schema#label> ?typeLabel . "
                         + " FILTER(LANG(?typeLabel) = \"" + language + "\" ) "
                         + " VALUES(?type){(<https://linkedopendata.eu/entity/Q9934>) (<https://linkedopendata.eu/entity/Q196899>)} "
@@ -144,7 +127,7 @@ public class GeneralController {
                         + " OPTIONAL { ?general <https://linkedopendata.eu/prop/P7> ?generalStatement . "
                         + "  ?generalStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
                         + " }"
-                        + "} ORDER BY DESC(?score)";
+                        + "}";
 
         logger.debug(query);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);

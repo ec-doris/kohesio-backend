@@ -56,6 +56,11 @@ public class MapController {
     @Autowired
     FacetController facetController;
 
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
+
     @GetMapping(value = "/facet/eu/search/project/map", produces = "application/json")
     public ResponseEntity euSearchProjectMap(
             @RequestParam(value = "language", defaultValue = "en") String language,
@@ -82,10 +87,11 @@ public class MapController {
             @RequestParam(value = "nuts3", required = false) String nuts3,
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
+            @RequestParam(value = "interreg", required = false) Boolean interreg,
             Integer timeout,
             Principal principal)
             throws Exception {
-        logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout);
+        logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg);
         facetController.initialize(language);
         if (timeout == null) {
             timeout = 300;
@@ -104,11 +110,17 @@ public class MapController {
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
         if (keywords != null) {
-            expandedQuery = similarityService.expandQuery(keywords);
+            expandedQuery = similarityService.expandQuery(keywords, language);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
-        String search = filtersGenerator.filterProject(expandedQueryText, c, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, null,region, granularityRegion, null, limit, offset);
+        String search = filtersGenerator.filterProject(
+                expandedQueryText, language, c, theme, fund, program, categoryOfIntervention,
+                policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
+                budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
+                endDateAfter, latitude, longitude, null, region, granularityRegion,
+                interreg, limit, offset
+        );
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
         int numResults = 0;
@@ -123,15 +135,15 @@ public class MapController {
         logger.debug("Number of results {}", numResults);
         if (
                 (latitude != null && longitude != null)
-                ||
-                (
-                    (
-                        granularityRegion == null ||
-                        (!(granularityRegion != null && "https://linkedopendata.eu/entity/Q11".equals(facetController.nutsRegion.get(granularityRegion).country)))
-                    )
-                        && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
+                        ||
+                        (
+                                (
+                                        granularityRegion == null ||
+                                                (!(granularityRegion != null && "https://linkedopendata.eu/entity/Q11".equals(facetController.nutsRegion.get(granularityRegion).country)))
+                                )
+                                        && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
 
-                )
+                        )
 //                ||
 //                    (
 //                        granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q2".equals(facetController.nutsRegion.get(granularityRegion).country))
@@ -162,7 +174,11 @@ public class MapController {
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
-                element.put("regionLabel", facetController.nutsRegion.get(r).name);
+                String regionLabel = facetController.nutsRegion.get(r).name.get(language);
+                if (regionLabel == null) {
+                    regionLabel = facetController.nutsRegion.get(r).name.get("en");
+                }
+                element.put("regionLabel", regionLabel);
                 element.put("geoJson", facetController.nutsRegion.get(r).geoJson);
                 element.put("count", 0);
                 subRegions.put(r, element);
@@ -197,7 +213,7 @@ public class MapController {
 
             JSONObject result = new JSONObject();
             result.put("region", granularityRegion);
-            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name);
+            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
             result.put("subregions", resultList);
 
@@ -213,20 +229,19 @@ public class MapController {
             if ("country".equals(facetController.nutsRegion.get(granularityRegion).granularity)) {
                 optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry20M> ?o . ";
 
-            }
-            else {
+            } else {
                 optional += " ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . ";
             }
             //check if granularity region is a country, if yes the filter is not needed
             boolean isCountry = false;
-            for (Object jsonObject : facetController.facetEuCountries("en")) {
+            for (Object jsonObject : facetController.facetEuCountries("en", null)) {
                 JSONObject o = (JSONObject) jsonObject;
                 if (granularityRegion.equals(o.get("instance"))) {
                     isCountry = true;
                 }
             }
             // this is a hack to show brittany
-            if ((latitude == null || longitude == null) ) {
+            if ((latitude == null || longitude == null)) {
                 optional += "FILTER (<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, ?o)) . ";
             }
         }
@@ -354,12 +369,13 @@ public class MapController {
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
         if (keywords != null) {
-            expandedQuery = similarityService.expandQuery(keywords);
+            expandedQuery = similarityService.expandQuery(keywords, language);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
 
         String search = filtersGenerator.filterProject(
                 expandedQueryText,
+                language,
                 country,
                 theme,
                 fund,
@@ -511,7 +527,7 @@ public class MapController {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, 400, null);
+        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null, 400, null);
         JSONObject mod = result.getBody();
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);

@@ -10,6 +10,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.math3.util.Precision;
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -24,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ReactiveAdapterRegistry;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +57,11 @@ public class BeneficiaryController {
 
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
+
+    @ModelAttribute
+    public void setVaryResponseHeader(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+    }
 
     @GetMapping(value = "/facet/eu/beneficiary", produces = "application/json")
     public ResponseEntity euBenfeciaryId(@RequestParam(value = "id") String id,
@@ -206,10 +213,10 @@ public class BeneficiaryController {
             }
             JSONArray images = new JSONArray();
             if (querySolution.getBinding("image") != null) {
-                images.add(querySolution.getBinding("image").getValue().stringValue().replace("http://commons.wikimedia.org/","https://commons.wikimedia.org/"));
+                images.add(querySolution.getBinding("image").getValue().stringValue().replace("http://commons.wikimedia.org/", "https://commons.wikimedia.org/"));
             }
             if (querySolution.getBinding("logo") != null) {
-                images.add(querySolution.getBinding("logo").getValue().stringValue().replace("http://commons.wikimedia.org/","https://commons.wikimedia.org/"));
+                images.add(querySolution.getBinding("logo").getValue().stringValue().replace("http://commons.wikimedia.org/", "https://commons.wikimedia.org/"));
             }
             result.put("images", images);
         }
@@ -311,7 +318,6 @@ public class BeneficiaryController {
         logger.info("Beneficiary search: language {}, name {}, country {}, region {}, latitude {}, longitude {}, fund {}, program {}, orderEuBudget {}, orderTotalBudget {}, orderNumProjects {}, timeout {}", language, keywords, country, region, latitude, longitude, fund, program, orderEuBudget, orderTotalBudget, orderNumProjects, timeout);
 
 
-
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset != Integer.MIN_VALUE) {
@@ -324,6 +330,12 @@ public class BeneficiaryController {
             inputOffset = 0;
         }
         String search = "";
+
+        search += "?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
+                + "?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
+                + "OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget.} "
+                + "OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget.} ";
+
         if (keywords != null) {
             if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
                 String[] words = keywords.split(" ");
@@ -334,16 +346,16 @@ public class BeneficiaryController {
                 keywordsBuilder.append(words[words.length - 1]);
                 keywords = keywordsBuilder.toString();
             }
-            search +=
-                    "?beneficiary <http://www.openrdf.org/contrib/lucenesail#matches> [ "
-                            + "<http://www.openrdf.org/contrib/lucenesail#query> \""
-                            + keywords.replace("\"", "\\\"")
-                            + "\" ; "
-                            + "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet ] . ";
+            search += "?beneficiary <http://www.openrdf.org/contrib/lucenesail#matches> [ "
+                    + "<http://www.openrdf.org/contrib/lucenesail#query> \""
+                    + keywords.replace("\"", "\\\"")
+                    + "\" ; "
+                    + " <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Ben> ; "
+                    + "<http://www.openrdf.org/contrib/lucenesail#snippet> ?snippet ] . ";
         }
 
         if (country != null) {
-            search += "?beneficiary <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+            search += " VALUES ?country { <" + country + "> } ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. ";
         }
 
         if (region != null) {
@@ -351,13 +363,10 @@ public class BeneficiaryController {
         }
 
         if (latitude != null && longitude != null) {
-            search +=
-                    "?project <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                            + "FILTER ( <http://www.opengis.net/def/function/geosparql/distance>(\"POINT("
-                            + longitude
-                            + " "
-                            + latitude
-                            + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)< 100000) . ";
+            search += "?project <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
+                    + "FILTER ( <http://www.opengis.net/def/function/geosparql/distance>(\"POINT("
+                    + longitude + " " + latitude
+                    + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)< 100000) . ";
         }
 
         if (fund != null) {
@@ -368,23 +377,18 @@ public class BeneficiaryController {
             search += "?project <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
         }
 
-        search += "   ?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
-                + "   ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
 
         if (beneficiaryType != null) {
             if (beneficiaryType.equals("private")) {
                 search += "?beneficiary <https://linkedopendata.eu/prop/P35> ?blank_class . "
-                        + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630487> .";
+                        + "?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630487>. ";
             } else if (beneficiaryType.equals("public")) {
                 search += "?beneficiary <https://linkedopendata.eu/prop/P35> ?blank_class . "
-                        + " ?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630486> .";
+                        + "?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630486>. ";
             }
         }
-        String queryCount = "SELECT (COUNT(DISTINCT ?beneficiary) AS ?c) { \n" +
-                search
-                + " }";
+        String queryCount = "SELECT (COUNT(DISTINCT ?beneficiary) AS ?c) { " + search + " }";
         logger.debug(queryCount);
-
 
 
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
@@ -392,166 +396,169 @@ public class BeneficiaryController {
         if (countResultSet.hasNext()) {
             BindingSet querySolution = countResultSet.next();
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
-            //System.out.println(querySolution.getBinding("beneficiary").getValue());
         }
 
-        search += "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget .} "
-                + "   OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } ";
 
         String orderBy = "";
 
         if (orderTotalBudget != null) {
             if (orderTotalBudget) {
-                orderBy = "order by asc(?totalBudget)";
+                orderBy = " ORDER BY ASC(?totalBudget) ";
             } else {
-                orderBy = "order by desc(?totalBudget)";
+                orderBy = " ORDER BY DESC(?totalBudget) ";
             }
         }
         if (orderEuBudget != null) {
             if (orderEuBudget) {
-                orderBy = "order by asc(?totalEuBudget)";
+                orderBy = " ORDER BY ASC(?totalEuBudget) ";
             } else {
-                orderBy = "order by desc(?totalEuBudget)";
+                orderBy = " ORDER BY DESC(?totalEuBudget) ";
             }
         }
         if (orderNumProjects != null) {
             if (orderNumProjects) {
-                orderBy = "order by asc(?numberProjects)";
+                orderBy = " ORDER BY ASC(?numberProjects)";
             } else {
-                orderBy = "order by desc(?numberProjects)";
+                orderBy = " ORDER BY DESC(?numberProjects)";
             }
         }
         String labelsFilter = getBeneficiaryLabelsFilter();
 
-        String countryInfo = " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
-                + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } ";
-        // enforce a country if the filter is on the country
-        if (country!=null){
-            countryInfo = " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country . "
-                        + " FILTER (?country = <"+country+"> )"
-                        + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } ";
+        String countryInfo = "OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country. "
+                + "?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . } ";
+
+
+        String mainQuery = "SELECT ?beneficiary (COUNT(DISTINCT ?project) AS ?numberProjects) (SUM(?budget) AS ?totalBudget) (SUM(?euBudget) AS ?totalEuBudget) { "
+                + search
+                + "} GROUP BY ?beneficiary " +
+                orderBy
+                + " LIMIT " + limit
+                + " OFFSET " + offset;
+
+        HashMap<String, Beneficiary> beneficiaries = new HashMap<>();
+
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout);
+        StringBuilder values = new StringBuilder();
+        int indexLimit = 0;
+        int indexOffset = 0;
+        while (resultSet.hasNext()) {
+
+            BindingSet querySolution = resultSet.next();
+            if (offset == 0) {
+                if (indexOffset < inputOffset) {
+                    indexOffset++;
+                } else {
+                    if (indexLimit < inputLimit) {
+                        String uri = querySolution.getBinding("beneficiary").getValue().stringValue();
+                        Beneficiary beneficiary = new Beneficiary();
+                        beneficiary.setId(uri);
+                        if (querySolution.getBinding("numberProjects") != null) {
+                            beneficiary.setNumberProjects(
+                                    ((Literal) querySolution.getBinding("numberProjects").getValue()).intValue());
+                        }
+                        if (querySolution.getBinding("totalEuBudget") != null) {
+
+                            double val = ((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue();
+                            if (val != 0) {
+                                beneficiary.setEuBudget(
+                                        String.valueOf(
+                                                Precision.round(
+                                                        val,
+                                                        2)));
+                            } else {
+                                beneficiary.setEuBudget("");
+                            }
+                        }
+                        if (querySolution.getBinding("totalBudget") != null) {
+                            double val = ((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue();
+                            if (val != 0) {
+                                beneficiary.setBudget(
+                                        String.valueOf(
+                                                Precision.round(
+                                                        val,
+                                                        2)));
+                            } else {
+                                // meaning that there is no budgets for associated projects  ( sum(budgets) = 0  and budgets= [] )
+                                beneficiary.setBudget("");
+                            }
+                        }
+                        beneficiaries.put(uri, beneficiary);
+                        values.append(" ").append("<").append(uri).append(">");
+                        indexLimit++;
+                    }
+                }
+            } else {
+                values.append(" ").append("<").append(querySolution.getBinding("beneficiary").getValue().stringValue()).append(">");
+            }
         }
 
-
-        String query =
-                "SELECT ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?numberProjects ?totalEuBudget ?totalBudget ?link ?transliteration { "
-                        + " { SELECT ?beneficiary (COUNT(DISTINCT ?project) AS ?numberProjects) (SUM(?budget) AS ?totalBudget) (SUM(?euBudget) AS ?totalEuBudget) { "
-                        + search
-                        + "} GROUP BY ?beneficiary " +
-                        orderBy
-                        + " LIMIT " + limit
-                        + " OFFSET " + offset
-                        + "} "
-                        + "  OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel_en ."
-                        + "              FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } "
-                        + " OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
-                        + "            ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country .   "
-                        + labelsFilter
-                        + " }"
-                        + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P1> ?link. } "
-                        + countryInfo
-                        + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/P7> ?benefStatement . "
-                        + "  ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
-                        + " }"
-                        + "} ";
+        String query = "SELECT ?beneficiary ?beneficiaryLabel ?beneficiaryLabel_en ?country ?countryCode ?link ?transliteration { "
+                + " VALUES ?beneficiary { " + values + " }"
+                + "  OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel_en ."
+                + "              FILTER(LANG(?beneficiaryLabel_en) = \"" + language + "\" ) } "
+                + " OPTIONAL { ?beneficiary <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabel . "
+                + "            ?beneficiary <https://linkedopendata.eu/prop/direct/P32> ?country .   "
+                + labelsFilter
+                + " }"
+                + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/direct/P1> ?link. } "
+                + countryInfo
+                + " OPTIONAL { ?beneficiary <https://linkedopendata.eu/prop/P7> ?benefStatement . "
+                + "  ?benefStatement <https://linkedopendata.eu/prop/qualifier/P4393> ?transliteration ."
+                + " }"
+                + "} ";
         logger.debug(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false);
 
-        ArrayList<Beneficiary> beneficiaries = new ArrayList<Beneficiary>();
         if (resultSet != null) {
-            Beneficiary beneficary = new Beneficiary();
             String previewsKey = "";
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 String currentKey = querySolution.getBinding("beneficiary").getValue().stringValue();
-                if (!previewsKey.equals(currentKey)) {
-                    if (!previewsKey.equals("")) {
-                        beneficary.computeCofinancingRate();
-                        beneficiaries.add(beneficary);
-                    }
-                    beneficary = new Beneficiary();
-                    beneficary.setId(currentKey);
-                    previewsKey = currentKey;
-                }
+                Beneficiary beneficiary = beneficiaries.get(currentKey);
+                beneficiary.computeCofinancingRate();
 
                 if (querySolution.getBinding("beneficiaryLabel") != null) {
-                    beneficary.setLabel(
-                            ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).getLabel());
+                    beneficiary.setLabel(
+                            ((Literal) querySolution.getBinding("beneficiaryLabel").getValue()).getLabel()
+                    );
                 }
 
                 if (querySolution.getBinding("beneficiaryLabel_en") != null && !querySolution.getBinding("beneficiaryLabel_en").equals("")) {
-                    beneficary.setLabel(
-                            ((Literal) querySolution.getBinding("beneficiaryLabel_en").getValue()).getLabel());
+                    beneficiary.setLabel(
+                            ((Literal) querySolution.getBinding("beneficiaryLabel_en").getValue()).getLabel()
+                    );
                 }
 
                 if (querySolution.getBinding("country") != null) {
-                    beneficary.setCountry(querySolution.getBinding("country").getValue().stringValue());
+                    beneficiary.setCountry(
+                            querySolution.getBinding("country").getValue().stringValue()
+                    );
                 }
 
                 if (querySolution.getBinding("countryCode") != null) {
-                    beneficary.setCountryCode(
+                    beneficiary.setCountryCode(
                             ((Literal) querySolution.getBinding("countryCode").getValue()).stringValue());
                 }
 
-                if (querySolution.getBinding("numberProjects") != null) {
-                    beneficary.setNumberProjects(
-                            ((Literal) querySolution.getBinding("numberProjects").getValue()).intValue());
-                }
-
-                if (querySolution.getBinding("totalEuBudget") != null) {
-
-                    double val = ((Literal) querySolution.getBinding("totalEuBudget").getValue()).doubleValue();
-                    if (val != 0) {
-                        beneficary.setEuBudget(
-                                String.valueOf(
-                                        Precision.round(
-                                                val,
-                                                2)));
-                    } else {
-                        beneficary.setEuBudget("");
-                    }
-                }
-
-                if (querySolution.getBinding("totalBudget") != null) {
-                    double val = ((Literal) querySolution.getBinding("totalBudget").getValue()).doubleValue();
-                    if (val != 0) {
-                        beneficary.setBudget(
-                                String.valueOf(
-                                        Precision.round(
-                                                val,
-                                                2)));
-                    } else {
-                        // meaning that there is no budgets for associated projects  ( sum(budgets) = 0  and budgets= [] )
-                        beneficary.setBudget("");
-                    }
-                }
-
                 if (querySolution.getBinding("link") != null) {
-                    beneficary.setLink(
+                    beneficiary.setLink(
                             "http://wikidata.org/entity/"
                                     + ((Literal) querySolution.getBinding("link").getValue()).getLabel());
                 }
 
                 if (querySolution.getBinding("transliteration") != null && querySolution.getBinding("beneficiaryLabel_en") == null) {
-                    beneficary.setTransliteration(
+                    beneficiary.setTransliteration(
                             querySolution.getBinding("transliteration").getValue().stringValue()
                     );
                 }
+
             }
-            if (!previewsKey.equals("")) {
-                beneficary.computeCofinancingRate();
-                beneficiaries.add(beneficary);
-            }
+
         }
         BeneficiaryList finalRes = new BeneficiaryList();
         finalRes.setNumberResults(numResults);
-        if (offset <= 1000 - inputLimit) {
-            for (int i = inputOffset; i < Math.min(beneficiaries.size(), inputOffset + inputLimit); i++) {
-                finalRes.getList().add(beneficiaries.get(i));
-            }
-        } else {
-            finalRes.setList(beneficiaries);
-        }
+        finalRes.setList(new ArrayList<>(beneficiaries.values()));
+
         return new ResponseEntity<BeneficiaryList>(finalRes, HttpStatus.OK);
     }
 
@@ -674,17 +681,17 @@ public class BeneficiaryController {
                 cell.setCellValue(beneficiary.getLabel());
             }
             cell = row.createCell(1);
-            cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellType(CellType.NUMERIC);
             if (!"".equals(beneficiary.getBudget())) {
                 cell.setCellValue(Double.parseDouble(beneficiary.getBudget()));
             }
             cell = row.createCell(2);
-            cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellType(CellType.NUMERIC);
             if (!"".equals(beneficiary.getEuBudget())) {
                 cell.setCellValue(Double.parseDouble(beneficiary.getEuBudget()));
             }
             cell = row.createCell(3);
-            cell.setCellType(HSSFCell.CELL_TYPE_NUMERIC);
+            cell.setCellType(CellType.NUMERIC);
             cell.setCellValue(beneficiary.getNumberProjects());
         }
         ByteArrayOutputStream fileOut = new ByteArrayOutputStream();
@@ -779,7 +786,7 @@ public class BeneficiaryController {
             }
             labelsFilter += " LANG(?beneficiaryLabel) = \"" + languageCode.get(languageCode.size() - 1) + "\" && ?country = " + countryQID + " ) ";
             if (count < countriesCodeMapping.size() - 1)
-                labelsFilter += "|| \n";
+                labelsFilter += "|| ";
             count++;
         }
         labelsFilter += ")";

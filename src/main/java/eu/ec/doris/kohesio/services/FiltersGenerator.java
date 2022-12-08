@@ -16,6 +16,7 @@ public class FiltersGenerator {
     SimilarityService similarityService;
 
     public String filterProject(String keywords,
+                                String language,
                                 String country,
                                 String theme,
                                 String fund,
@@ -58,9 +59,10 @@ public class FiltersGenerator {
                     "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
                             + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                             + keywords.replace("\"", "\\\"")
-                            + "\"; " +
+                            + "\"; "
+                            + " <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Proj_"+language+"> "
 //                            "<http://www.openrdf.org/contrib/lucenesail#snippet> ?description"+
-                            "] .";
+                            + "] .";
 
         }
 //        if(keywords != null) {
@@ -217,7 +219,7 @@ public class FiltersGenerator {
         mapping.put("<https://linkedopendata.eu/entity/Q11>", Arrays.asList("sv")); // sweden
         mapping.put("<https://linkedopendata.eu/entity/Q7>", Arrays.asList("es")); // spain
         mapping.put("<https://linkedopendata.eu/entity/Q22>", Arrays.asList("de")); // germany
-        mapping.put("<https://linkedopendata.eu/entity/Q31>", Arrays.asList("el")); // cyprus
+        mapping.put("<https://linkedopendata.eu/entity/Q31>", Arrays.asList("el","en")); // cyprus
         mapping.put("<https://linkedopendata.eu/entity/Q17>", Arrays.asList("el")); // greece
         mapping.put("<https://linkedopendata.eu/entity/Q25>", Arrays.asList("cs")); // czech republic
         mapping.put("<https://linkedopendata.eu/entity/Q13>", Arrays.asList("pl")); // poland
@@ -225,7 +227,7 @@ public class FiltersGenerator {
         mapping.put("<https://linkedopendata.eu/entity/Q20>", Arrays.asList("fr")); // france
         mapping.put("<https://linkedopendata.eu/entity/Q2>", Arrays.asList("en")); // ireland
         mapping.put("<https://linkedopendata.eu/entity/Q32>", Arrays.asList("en")); // malta
-        mapping.put("<https://linkedopendata.eu/entity/Q8>", Arrays.asList("fr", "nl", "de")); // belgium
+        mapping.put("<https://linkedopendata.eu/entity/Q8>", Arrays.asList("fr", "nl", "de", "en")); // belgium
 
         return mapping;
     }

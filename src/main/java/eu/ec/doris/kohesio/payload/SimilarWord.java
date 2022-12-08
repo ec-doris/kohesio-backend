@@ -3,6 +3,9 @@ package eu.ec.doris.kohesio.payload;
 public class SimilarWord {
     String word;
     double score;
+    public SimilarWord(String word){
+        this.word = word;
+    }
     public SimilarWord(String word,double score){
         this.word = word;
         this.score = score;
