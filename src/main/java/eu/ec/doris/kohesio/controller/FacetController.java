@@ -847,11 +847,11 @@ public class FacetController {
         query += " VALUES ?instance {wd:Q203 wd:Q204 wd:Q205 wd:Q206 wd:Q201 wd:Q2576740 wd:Q198 wd:Q209} "
                 + " OPTIONAL { ?instance rdfs:label ?instanceLabel . "
                 + " FILTER (lang(?instanceLabel)=\"" + language + "\") .} "
-                + " ?instance rdfs:label ?instanceLabel_en . "
+                + " OPTIONAL { ?instance rdfs:label ?instanceLabel_en . "
                 + " FILTER (lang(?instanceLabel_en)=\"en\") . "
                 + " ?instance wdt:P32 ?country . "
                 + " ?country rdfs:label ?countryLabel . "
-                + " FILTER (lang(?countryLabel)=\"" + language + "\") . "
+                + " FILTER (lang(?countryLabel)=\"" + language + "\") } . "
                 + " } ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
         JSONArray result = new JSONArray();
