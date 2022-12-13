@@ -76,7 +76,7 @@ public class GeneralController {
                     "  } UNION { " +
                     " ?general <https://linkedopendata.eu/prop/direct/P35> ?type . " +
                     " ?general <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ?general <http://www.openrdf.org/contrib/lucenesail#matches> [ " +
-                    " <http://www.openrdf.org/contrib/lucenesail#score> ?score ;\n" +
+                    " <http://www.openrdf.org/contrib/lucenesail#score> ?score ; " +
                     " <http://www.openrdf.org/contrib/lucenesail#query> \"" + keywords.replace("\"", "\\\"") + "\"; <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Proj_" + language + "> " +
                     "  ] . }";
         }
@@ -97,23 +97,23 @@ public class GeneralController {
 
         String labelsFilter = getGeneralLangLabelsFilter();
         String query =
-                "SELECT ?general ?generalLabel ?generalLabel_en ?country ?countryLabel ?countryCode ?link ?summary ?image ?imageSummary ?imageCopyright ?type ?typeLabel ?transliteration { "
+                "SELECT ?general ?generalLabel ?generalLabel_en ?country ?countryLabel ?countryCode ?link ?summary ?image ?imageSummary ?imageCopyright ?type ?typeLabel ?typeLabel_en ?transliteration { "
                         + " { SELECT DISTINCT ?general ?score ?type { "
                         + search
                         + "} ORDER BY DESC(?score)"
                         + " LIMIT " + limit
                         + " OFFSET " + offset
                         + "} "
-                        + " ?type <http://www.w3.org/2000/01/rdf-schema#label> ?typeLabel . "
-                        + " FILTER(LANG(?typeLabel) = \"" + language + "\" ) "
+                        + " OPTIONAL { ?type <http://www.w3.org/2000/01/rdf-schema#label> ?typeLabel .  FILTER(LANG(?typeLabel) = \"" + language + "\" ) }"
+                        + " ?type <http://www.w3.org/2000/01/rdf-schema#label> ?typeLabel_en .  FILTER(LANG(?typeLabel_en) = \"en\" ) "
                         + " VALUES(?type){(<https://linkedopendata.eu/entity/Q9934>) (<https://linkedopendata.eu/entity/Q196899>)} "
-                        + "  OPTIONAL { ?general <http://www.w3.org/2000/01/rdf-schema#label> ?generalLabel_en ."
-                        + "              FILTER(LANG(?generalLabel_en) = \"" + language + "\" ) } "
+
                         + " OPTIONAL { ?general <https://linkedopendata.eu/prop/direct/P32> ?country . "
                         + "            ?country <http://www.w3.org/2000/01/rdf-schema#label> ?countryLabel . "
                         + "            FILTER(LANG(?countryLabel) = \"" + language + "\" ) "
                         + "            ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . "
                         + " } "
+                        + " OPTIONAL { ?general <http://www.w3.org/2000/01/rdf-schema#label> ?generalLabel_en . FILTER(LANG(?generalLabel_en) = \"en\" ) } "
                         + " OPTIONAL { ?general <http://www.w3.org/2000/01/rdf-schema#label> ?generalLabel . "
                         + "            ?general <https://linkedopendata.eu/prop/direct/P32> ?country . "
                         + labelsFilter
@@ -152,7 +152,7 @@ public class GeneralController {
                             querySolution.getBinding("generalLabel").getValue().stringValue()
                     );
                 }
-                if (querySolution.getBinding("generalLabel_en") != null) {
+                else if (querySolution.getBinding("generalLabel_en") != null) {
                     general.setLabel(
                             querySolution.getBinding("generalLabel_en").getValue().stringValue()
                     );
@@ -211,8 +211,11 @@ public class GeneralController {
                     general.setTypeLabel(
                             querySolution.getBinding("typeLabel").getValue().stringValue()
                     );
+                } else if (querySolution.getBinding("typeLabel_en") != null) {
+                    general.setTypeLabel(
+                            querySolution.getBinding("typeLabel_en").getValue().stringValue()
+                    );
                 }
-//                generals.add(general);
                 if (!generals.containsKey(general.getItem())) {
                     generals.put(general.getItem(), general);
                 }
