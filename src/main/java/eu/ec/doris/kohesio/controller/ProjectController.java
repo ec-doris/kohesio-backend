@@ -373,47 +373,47 @@ public class ProjectController {
                             "fundWebsite",
                             querySolution.getBinding("fundWebsite").getValue().stringValue());
                 }
-                HashMap<String, Object> program;
-                String programQID = querySolution.getBinding("program").getValue().stringValue();
-                if (!tmpPrograms.containsKey(programQID)) {
-                    tmpPrograms.put(programQID, new HashMap<>());
-                }
-                program = tmpPrograms.get(programQID);
 
+                HashMap<String, Object> program;
                 if (querySolution.getBinding("program") != null) {
+                    String programQID = querySolution.getBinding("program").getValue().stringValue();
+                    if (!tmpPrograms.containsKey(programQID)) {
+                        tmpPrograms.put(programQID, new HashMap<>());
+                    }
+                    program = tmpPrograms.get(programQID);
                     program.put(
                             "link",
                             querySolution.getBinding("program").getValue().stringValue()
                     );
-                }
-                if (querySolution.getBinding("programLabel") != null) {
-                    program.put(
-                            "programLabel",
-                            ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
 
-                    if (querySolution.getBinding("program_cci") != null) {
+                    if (querySolution.getBinding("programLabel") != null) {
                         program.put(
-                                "programFullLabel",
-                                ((Literal) querySolution.getBinding("program_cci").getValue()).stringValue() + " - " + ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
-                    }
+                                "programLabel",
+                                ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
 
-                }
-                if (querySolution.getBinding("programInfoRegioUrl") != null) {
-                    program.put(
-                            "programInfoRegioUrl",
-                            querySolution.getBinding("programInfoRegioUrl").getValue().stringValue()
-                    );
-                }
-                if (querySolution.getBinding("source2") != null) {
-                    if (!program.containsKey("programWebsite")) {
-                        program.put("programWebsite", new ArrayList<String>());
-                    }
-                    ((ArrayList<String>) program.get("programWebsite")).add(
-                            querySolution.getBinding("source2").getValue().stringValue()
-                    );
-                }
-                program.put("programmingPeriodLabel", "2014-2020");
+                        if (querySolution.getBinding("program_cci") != null) {
+                            program.put(
+                                    "programFullLabel",
+                                    ((Literal) querySolution.getBinding("program_cci").getValue()).stringValue() + " - " + ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
+                        }
 
+                    }
+                    if (querySolution.getBinding("programInfoRegioUrl") != null) {
+                        program.put(
+                                "programInfoRegioUrl",
+                                querySolution.getBinding("programInfoRegioUrl").getValue().stringValue()
+                        );
+                    }
+                    if (querySolution.getBinding("source2") != null) {
+                        if (!program.containsKey("programWebsite")) {
+                            program.put("programWebsite", new ArrayList<String>());
+                        }
+                        ((ArrayList<String>) program.get("programWebsite")).add(
+                                querySolution.getBinding("source2").getValue().stringValue()
+                        );
+                    }
+                    program.put("programmingPeriodLabel", "2014-2020");
+                }
 
                 if (querySolution.getBinding("themeId") != null) {
                     String themeId = querySolution.getBinding("themeId").getValue().stringValue();
