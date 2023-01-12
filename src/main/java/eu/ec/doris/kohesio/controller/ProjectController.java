@@ -819,7 +819,7 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null,
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null,
                 timeout, principal
         );
     }
@@ -857,6 +857,7 @@ public class ProjectController {
             @RequestParam(value = "radius", required = false) Long radius,
             @RequestParam(value = "nuts3", required = false) String nuts3,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
+            @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             Integer timeout,
             Principal principal
     )
@@ -929,6 +930,7 @@ public class ProjectController {
                 region,
                 nuts3,
                 interreg,
+                highlighted,
                 limit,
                 offset
         );
@@ -1295,7 +1297,7 @@ public class ProjectController {
 
             }
         }
-        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, null,limit, offset);
 
         //computing the number of results
         String searchCount = search;
