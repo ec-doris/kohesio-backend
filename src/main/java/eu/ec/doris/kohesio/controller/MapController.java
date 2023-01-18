@@ -2,6 +2,7 @@ package eu.ec.doris.kohesio.controller;
 
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
+import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.payload.NutsRegion;
 import eu.ec.doris.kohesio.services.ExpandedQuery;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
@@ -213,7 +214,9 @@ public class MapController {
             }
 
             JSONObject result = new JSONObject();
+
             result.put("region", granularityRegion);
+            result.put("upperRegions", findUpperRegions(granularityRegion));
             result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
             result.put("subregions", resultList);
@@ -324,6 +327,7 @@ public class MapController {
 
         JSONObject result = new JSONObject();
         result.put("list", resultList);
+        result.put("upperRegions", findUpperRegions(granularityRegion));
         if (granularityRegion != null) {
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
         } else if (country != null && region == null) {
@@ -532,7 +536,7 @@ public class MapController {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null, null,400, null);
+        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null, null, 400, null);
         JSONObject mod = result.getBody();
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
@@ -682,4 +686,26 @@ public class MapController {
 //        return search;
 //    }
 
+    private JSONArray findUpperRegions(String region) {
+        JSONArray upperRegions = new JSONArray();
+        String upperRegion = null;
+
+        do {
+            upperRegion = findUpperRegion(region);
+            if (upperRegion != null) {
+                upperRegions.add(upperRegion);
+            }
+            region = upperRegion;
+        } while (!"https://linkedopendata.eu/entity/Q1".equals(region) && upperRegion != null);
+        return upperRegions;
+    }
+    private String findUpperRegion(String region) {
+        for (String key: facetController.nutsRegion.keySet()) {
+            Nut n = facetController.nutsRegion.get(key);
+            if (n.narrower.contains(region)){
+                return n.uri;
+            }
+        }
+        return null;
+    }
 }
