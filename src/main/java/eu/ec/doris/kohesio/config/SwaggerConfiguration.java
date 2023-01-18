@@ -15,7 +15,10 @@ public class SwaggerConfiguration implements ApplicationListener<ApplicationPrep
     public void onApplicationEvent(final ApplicationPreparedEvent event) {
         ConfigurableEnvironment environment = event.getApplicationContext().getEnvironment();
         Properties props = new Properties();
-        props.put("springdoc.swagger-ui.path", swaggerPath());
+        props.put("springdoc.swagger-ui.path", "/api/swagger-ui.html");
+        props.put("springdoc.api-docs.path", "/api/v3/api-docs");
+
+
         environment.getPropertySources()
                 .addFirst(new PropertiesPropertySource("programmatically", props));
     }
