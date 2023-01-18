@@ -373,47 +373,47 @@ public class ProjectController {
                             "fundWebsite",
                             querySolution.getBinding("fundWebsite").getValue().stringValue());
                 }
-                HashMap<String, Object> program;
-                String programQID = querySolution.getBinding("program").getValue().stringValue();
-                if (!tmpPrograms.containsKey(programQID)) {
-                    tmpPrograms.put(programQID, new HashMap<>());
-                }
-                program = tmpPrograms.get(programQID);
 
+                HashMap<String, Object> program;
                 if (querySolution.getBinding("program") != null) {
+                    String programQID = querySolution.getBinding("program").getValue().stringValue();
+                    if (!tmpPrograms.containsKey(programQID)) {
+                        tmpPrograms.put(programQID, new HashMap<>());
+                    }
+                    program = tmpPrograms.get(programQID);
                     program.put(
                             "link",
                             querySolution.getBinding("program").getValue().stringValue()
                     );
-                }
-                if (querySolution.getBinding("programLabel") != null) {
-                    program.put(
-                            "programLabel",
-                            ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
 
-                    if (querySolution.getBinding("program_cci") != null) {
+                    if (querySolution.getBinding("programLabel") != null) {
                         program.put(
-                                "programFullLabel",
-                                ((Literal) querySolution.getBinding("program_cci").getValue()).stringValue() + " - " + ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
-                    }
+                                "programLabel",
+                                ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
 
-                }
-                if (querySolution.getBinding("programInfoRegioUrl") != null) {
-                    program.put(
-                            "programInfoRegioUrl",
-                            querySolution.getBinding("programInfoRegioUrl").getValue().stringValue()
-                    );
-                }
-                if (querySolution.getBinding("source2") != null) {
-                    if (!program.containsKey("programWebsite")) {
-                        program.put("programWebsite", new ArrayList<String>());
-                    }
-                    ((ArrayList<String>) program.get("programWebsite")).add(
-                            querySolution.getBinding("source2").getValue().stringValue()
-                    );
-                }
-                program.put("programmingPeriodLabel", "2014-2020");
+                        if (querySolution.getBinding("program_cci") != null) {
+                            program.put(
+                                    "programFullLabel",
+                                    ((Literal) querySolution.getBinding("program_cci").getValue()).stringValue() + " - " + ((Literal) querySolution.getBinding("programLabel").getValue()).stringValue());
+                        }
 
+                    }
+                    if (querySolution.getBinding("programInfoRegioUrl") != null) {
+                        program.put(
+                                "programInfoRegioUrl",
+                                querySolution.getBinding("programInfoRegioUrl").getValue().stringValue()
+                        );
+                    }
+                    if (querySolution.getBinding("source2") != null) {
+                        if (!program.containsKey("programWebsite")) {
+                            program.put("programWebsite", new ArrayList<String>());
+                        }
+                        ((ArrayList<String>) program.get("programWebsite")).add(
+                                querySolution.getBinding("source2").getValue().stringValue()
+                        );
+                    }
+                    program.put("programmingPeriodLabel", "2014-2020");
+                }
 
                 if (querySolution.getBinding("themeId") != null) {
                     String themeId = querySolution.getBinding("themeId").getValue().stringValue();
@@ -819,7 +819,7 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null,
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null,
                 timeout, principal
         );
     }
@@ -857,6 +857,7 @@ public class ProjectController {
             @RequestParam(value = "radius", required = false) Long radius,
             @RequestParam(value = "nuts3", required = false) String nuts3,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
+            @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             Integer timeout,
             Principal principal
     )
@@ -929,6 +930,7 @@ public class ProjectController {
                 region,
                 nuts3,
                 interreg,
+                highlighted,
                 limit,
                 offset
         );
@@ -1295,7 +1297,7 @@ public class ProjectController {
 
             }
         }
-        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, null,limit, offset);
 
         //computing the number of results
         String searchCount = search;

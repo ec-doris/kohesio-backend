@@ -361,7 +361,7 @@ public class CacheController {
 
     void recursiveMap(String granularityRegion) throws Exception {
         logger.debug("Resolving for region: " + granularityRegion);
-        ResponseEntity responseEntity = mapController.euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, granularityRegion, null, null, 0, null, 400, null);
+        ResponseEntity responseEntity = mapController.euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, granularityRegion, null, null, 0, null, null, 400, null);
         logger.debug("Response result: " + responseEntity.getBody());
         if (((JSONObject) responseEntity.getBody()).get("subregions") instanceof JSONArray) {
             for (Object element : (JSONArray) ((JSONObject) responseEntity.getBody()).get("subregions")) {
