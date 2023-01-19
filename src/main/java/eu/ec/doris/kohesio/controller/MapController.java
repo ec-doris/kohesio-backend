@@ -216,6 +216,9 @@ public class MapController {
             JSONObject result = new JSONObject();
 
             result.put("region", granularityRegion);
+            if (granularityRegion==null) {
+                granularityRegion = "https://linkedopendata.eu/entity/Q1";
+            }
             result.put("upperRegions", findUpperRegions(granularityRegion, language));
             result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
@@ -696,8 +699,8 @@ public class MapController {
             upperRegion = findUpperRegion(region, lang);
             if (upperRegion != null) {
                 upperRegions.add(upperRegion);
+                region = (String) upperRegion.get("region");
             }
-            region = (String) upperRegion.get("region");
         } while (!"https://linkedopendata.eu/entity/Q1".equals(region) && upperRegion != null);
         return upperRegions;
     }
