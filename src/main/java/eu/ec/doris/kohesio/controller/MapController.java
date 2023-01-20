@@ -216,7 +216,7 @@ public class MapController {
             JSONObject result = new JSONObject();
 
             result.put("region", granularityRegion);
-            if (granularityRegion==null) {
+            if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
             }
             result.put("upperRegions", findUpperRegions(granularityRegion, language));
@@ -704,14 +704,19 @@ public class MapController {
         } while (!"https://linkedopendata.eu/entity/Q1".equals(region) && upperRegion != null);
         return upperRegions;
     }
+
     private JSONObject findUpperRegion(String region, String lang) {
-        for (String key: facetController.nutsRegion.keySet()) {
+        for (String key : facetController.nutsRegion.keySet()) {
             Nut n = facetController.nutsRegion.get(key);
-            if (n.narrower.contains(region)){
-                JSONObject o = new JSONObject();
-                o.put("region", n.uri);
-                o.put("regionLabel", n.name.get(lang));
-                return o;
+            if (n.narrower.contains(region)) {
+                String query = "ASK { <" + n.uri + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }";
+                boolean resultSet = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, query, 20);
+                if (!resultSet) {
+                    JSONObject o = new JSONObject();
+                    o.put("region", n.uri);
+                    o.put("regionLabel", n.name.get(lang));
+                    return o;
+                }
             }
         }
         return null;
