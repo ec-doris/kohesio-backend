@@ -759,6 +759,14 @@ public class FacetController {
             query += " UNION { ?program <https://linkedopendata.eu/prop/direct/P2316> <" + region + ">.}";
         }
 
+        if (interreg != null) {
+
+            if (interreg) {
+                query += " FILTER((SUBSTR(?cci, 5 , 2 )) = \"TC\") ";
+            } else {
+                query += " FILTER((SUBSTR(?cci, 5 , 2 )) != \"TC\") ";
+            }
+        }
 
         query +=
                 " ?program rdfs:label ?programLabel . "
