@@ -163,7 +163,7 @@ public class CacheController {
             }
 
             // cache the programs
-            JSONArray programs = facetController.facetEuPrograms("en", country, null, null);
+            JSONArray programs = facetController.facetEuPrograms("en", country, null, null, null, null);
             for (Object program : programs) {
                 try {
                     String p = ((JSONObject) program).get("instance").toString();

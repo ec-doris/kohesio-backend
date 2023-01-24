@@ -732,11 +732,13 @@ public class FacetController {
             @RequestParam(value = "language", defaultValue = "en") String language,
             @RequestParam(value = "country", required = false) String country,
             @RequestParam(value = "fund", required = false) String fund,
-            @RequestParam(value = "qid", required = false) String qid
+            @RequestParam(value = "qid", required = false) String qid,
+            @RequestParam(value = "region", required = false) String region,
+            @RequestParam(value = "interreg", required = false) Boolean interreg
     )
             throws Exception {
         logger.info("Get list of programs");
-        String query = "SELECT ?program ?programLabel ?cci ?fund WHERE { ";
+        String query = "SELECT DISTINCT ?program ?programLabel ?cci ?fund WHERE { ";
         if (qid != null) {
             query += " VALUES ?program { <" + qid + "> }";
         }
@@ -751,6 +753,12 @@ public class FacetController {
             query += " ?program <https://linkedopendata.eu/prop/direct/P1584> ?fundFilter .";
             query += " FILTER(?fundFilter =<" + fund + ">) ";
         }
+        if (region != null) {
+            query += " { ?program <https://linkedopendata.eu/prop/direct/P2316> ?nuts. ";
+            query += " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . }";
+            query += " UNION { ?program <https://linkedopendata.eu/prop/direct/P2316> <" + region + ">.}";
+        }
+
 
         query +=
                 " ?program rdfs:label ?programLabel . "
@@ -861,8 +869,7 @@ public class FacetController {
             element.put("instance", querySolution.getBinding("instance").getValue().toString());
             if (querySolution.getBinding("instanceLabel") != null) {
                 element.put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
-            }
-            else {
+            } else {
                 element.put("instanceLabel", querySolution.getBinding("instanceLabel_en").getValue().stringValue());
             }
             element.put("country", querySolution.getBinding("country").getValue().toString());
