@@ -760,11 +760,12 @@ public class FacetController {
         }
 
         if (interreg != null) {
-
             if (interreg) {
-                query += " FILTER((SUBSTR(?cci, 5 , 2 )) = \"TC\") ";
+//                query += " FILTER((SUBSTR(?cci, 5 , 2 )) = \"TC\") ";
+                query += " ?program <https://linkedopendata.eu/prop/direct/P579160> <https://linkedopendata.eu/entity/Q4554132> . ";
             } else {
-                query += " FILTER((SUBSTR(?cci, 5 , 2 )) != \"TC\") ";
+//                query += " FILTER((SUBSTR(?cci, 5 , 2 )) != \"TC\") ";
+                query += " FILTER NOT EXISTS {?program <https://linkedopendata.eu/prop/direct/P579160> <https://linkedopendata.eu/entity/Q4554132> .} ";
             }
         }
 
