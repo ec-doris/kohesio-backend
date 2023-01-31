@@ -895,7 +895,7 @@ public class FacetController {
         return facetEuThematicObjective(language, null, null);
     }
 
-    @GetMapping(value = "/facet/eu/lop_metadata", produces = "application/json")
+    @GetMapping(value = "/facet/eu/loo_metadata", produces = "application/json")
     public JSONArray facetLopMetadata(
             @RequestParam(value = "language", defaultValue = "en") String language
     ) throws Exception {
