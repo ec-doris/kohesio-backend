@@ -732,11 +732,13 @@ public class FacetController {
             @RequestParam(value = "language", defaultValue = "en") String language,
             @RequestParam(value = "country", required = false) String country,
             @RequestParam(value = "fund", required = false) String fund,
-            @RequestParam(value = "qid", required = false) String qid
+            @RequestParam(value = "qid", required = false) String qid,
+            @RequestParam(value = "region", required = false) String region,
+            @RequestParam(value = "interreg", required = false) Boolean interreg
     )
             throws Exception {
         logger.info("Get list of programs");
-        String query = "SELECT ?program ?programLabel ?cci ?fund WHERE { ";
+        String query = "SELECT DISTINCT ?program ?programLabel ?cci ?fund WHERE { ";
         if (qid != null) {
             query += " VALUES ?program { <" + qid + "> }";
         }
@@ -750,6 +752,21 @@ public class FacetController {
         if (fund != null) {
             query += " ?program <https://linkedopendata.eu/prop/direct/P1584> ?fundFilter .";
             query += " FILTER(?fundFilter =<" + fund + ">) ";
+        }
+        if (region != null) {
+            query += " { ?program <https://linkedopendata.eu/prop/direct/P2316> ?nuts. ";
+            query += " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . }";
+            query += " UNION { ?program <https://linkedopendata.eu/prop/direct/P2316> <" + region + ">.}";
+        }
+
+        if (interreg != null) {
+            if (interreg) {
+//                query += " FILTER((SUBSTR(?cci, 5 , 2 )) = \"TC\") ";
+                query += " ?program <https://linkedopendata.eu/prop/direct/P579160> <https://linkedopendata.eu/entity/Q4554132> . ";
+            } else {
+//                query += " FILTER((SUBSTR(?cci, 5 , 2 )) != \"TC\") ";
+                query += " FILTER NOT EXISTS {?program <https://linkedopendata.eu/prop/direct/P579160> <https://linkedopendata.eu/entity/Q4554132> .} ";
+            }
         }
 
         query +=
@@ -861,8 +878,7 @@ public class FacetController {
             element.put("instance", querySolution.getBinding("instance").getValue().toString());
             if (querySolution.getBinding("instanceLabel") != null) {
                 element.put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
-            }
-            else {
+            } else {
                 element.put("instanceLabel", querySolution.getBinding("instanceLabel_en").getValue().stringValue());
             }
             element.put("country", querySolution.getBinding("country").getValue().toString());
@@ -877,5 +893,67 @@ public class FacetController {
                                                @RequestParam(value = "language", defaultValue = "en") String language
     ) throws Exception {
         return facetEuThematicObjective(language, null, null);
+    }
+
+    @GetMapping(value = "/facet/eu/loo_metadata", produces = "application/json")
+    public JSONArray facetLopMetadata(
+            @RequestParam(value = "language", defaultValue = "en") String language
+    ) throws Exception {
+        String query = "SELECT ?list_of_operation_label ?list_of_operation_label_en ?list_of_operation_id ?list_of_operation_qid ?list_of_operation_url ?list_of_operation_first_ingestion ?list_of_operation_last_update ?cci WHERE {"
+                + "  ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
+                + "    <https://linkedopendata.eu/prop/direct/P578950> ?list_of_operation_id; "
+                + "    rdfs:label ?list_of_operation_label_en; "
+                + "    <https://linkedopendata.eu/prop/direct/P578951> ?list_of_operation_url; "
+                + "    <https://linkedopendata.eu/prop/direct/P579181> ?prg. "
+                + "  FILTER((LANG(?list_of_operation_label_en)) = \"en\") "
+                + "  ?prg <https://linkedopendata.eu/prop/direct/P1367> ?cci. "
+                + "  OPTIONAL { ?list_of_operation_qid rdfs:label ?list_of_operation_label. FILTER((LANG(?list_of_operation_label)) = \"" + language + "\")} "
+                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579182> ?list_of_operation_first_ingestion. } "
+                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } "
+                + "}";
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        HashMap<String, JSONObject> resultMap = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            String instanceQid = querySolution.getBinding("list_of_operation_qid").getValue().stringValue();
+            JSONObject element;
+            if (resultMap.containsKey(instanceQid)) {
+                element = resultMap.get(instanceQid);
+            } else {
+                element = new JSONObject();
+                element.put("instance", instanceQid);
+                element.put(
+                        "instanceLabel",
+                        querySolution.getBinding(
+                                "list_of_operation_label"
+                        ) != null ? querySolution.getBinding(
+                                "list_of_operation_label"
+                        ).getValue().stringValue() : querySolution.getBinding(
+                                "list_of_operation_label_en"
+                        ).getValue().stringValue()
+                );
+                element.put("id", querySolution.getBinding("list_of_operation_id").getValue().stringValue());
+                element.put("url", querySolution.getBinding("list_of_operation_url").getValue().stringValue());
+
+                if (querySolution.getBinding("list_of_operation_first_ingestion") != null) {
+                    element.put("first_ingestion", querySolution.getBinding("list_of_operation_first_ingestion").getValue().stringValue());
+                } else {
+                    element.put("first_ingestion", null);
+                }
+                if (querySolution.getBinding("list_of_operation_last_update") != null) {
+                    element.put("last_update", querySolution.getBinding("list_of_operation_last_update").getValue().stringValue());
+                } else {
+                    element.put("last_update", null);
+                }
+                element.put("ccis", new JSONArray());
+                resultMap.put(instanceQid, element);
+            }
+            ((JSONArray) element.get("ccis")).add(querySolution.getBinding("cci").getValue().stringValue());
+        }
+        JSONArray result = new JSONArray();
+        resultMap.forEach((s, jsonObject) -> {
+            result.add(jsonObject);
+        });
+        return result;
     }
 }

@@ -2,6 +2,7 @@ package eu.ec.doris.kohesio.controller;
 
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
+import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.payload.NutsRegion;
 import eu.ec.doris.kohesio.services.ExpandedQuery;
 import eu.ec.doris.kohesio.services.FiltersGenerator;
@@ -88,6 +89,7 @@ public class MapController {
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
+            @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             Integer timeout,
             Principal principal)
             throws Exception {
@@ -119,7 +121,7 @@ public class MapController {
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
-                interreg, limit, offset
+                interreg, highlighted, limit, offset
         );
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
@@ -151,7 +153,7 @@ public class MapController {
 //                    )
 //                )
         ) {
-            return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
+            return mapReturnCoordinates(language, search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
         } else {
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -203,7 +205,7 @@ public class MapController {
             }
             // this happens when we have for example nuts 1 information but not nuts 2 information for the projects
             if (!foundNextNutsLevel) {
-                return mapReturnCoordinates(search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
+                return mapReturnCoordinates(language, search, country, region, granularityRegion, latitude, longitude, limit, offset, timeout);
             }
 
             JSONArray resultList = new JSONArray();
@@ -212,7 +214,12 @@ public class MapController {
             }
 
             JSONObject result = new JSONObject();
+
             result.put("region", granularityRegion);
+            if (granularityRegion == null) {
+                granularityRegion = "https://linkedopendata.eu/entity/Q1";
+            }
+            result.put("upperRegions", findUpperRegions(granularityRegion, language));
             result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
             result.put("subregions", resultList);
@@ -221,7 +228,7 @@ public class MapController {
         }
     }
 
-    ResponseEntity<JSONObject> mapReturnCoordinates(String search, String country, String region, String granularityRegion, String latitude, String longitude, Integer limit, Integer offset, int timeout) throws Exception {
+    ResponseEntity<JSONObject> mapReturnCoordinates(String language, String search, String country, String region, String granularityRegion, String latitude, String longitude, Integer limit, Integer offset, int timeout) throws Exception {
         logger.debug("granularityRegion {}, limit {}", granularityRegion, limit);
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
@@ -323,6 +330,9 @@ public class MapController {
 
         JSONObject result = new JSONObject();
         result.put("list", resultList);
+        result.put("upperRegions", findUpperRegions(granularityRegion, language));
+        result.put("region", granularityRegion);
+        result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
         if (granularityRegion != null) {
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
         } else if (country != null && region == null) {
@@ -361,6 +371,9 @@ public class MapController {
             @RequestParam(value = "limit", required = false, defaultValue = "1000") Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
             @RequestParam(value = "coordinate", required = true) String coordinate,
+            @RequestParam(value = "interreg", required = false) Boolean interreg,
+            @RequestParam(value = "highlighted", required = false) Boolean highlighted,
+
             Principal principal)
             throws Exception {
         logger.info("Search project map point: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
@@ -395,7 +408,8 @@ public class MapController {
                 null,
                 region,
                 granularityRegion,
-                null,
+                interreg,
+                highlighted,
                 limit,
                 offset
         );
@@ -527,7 +541,7 @@ public class MapController {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null, 400, null);
+        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null, null, 400, null);
         JSONObject mod = result.getBody();
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
@@ -677,4 +691,34 @@ public class MapController {
 //        return search;
 //    }
 
+    private JSONArray findUpperRegions(String region, String lang) {
+        JSONArray upperRegions = new JSONArray();
+        JSONObject upperRegion = null;
+
+        do {
+            upperRegion = findUpperRegion(region, lang);
+            if (upperRegion != null) {
+                upperRegions.add(upperRegion);
+                region = (String) upperRegion.get("region");
+            }
+        } while (!"https://linkedopendata.eu/entity/Q1".equals(region) && upperRegion != null);
+        return upperRegions;
+    }
+
+    private JSONObject findUpperRegion(String region, String lang) {
+        for (String key : facetController.nutsRegion.keySet()) {
+            Nut n = facetController.nutsRegion.get(key);
+            if (n.narrower.contains(region)) {
+                String query = "ASK { <" + n.uri + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }";
+                boolean resultSet = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, query, 20);
+                if (!resultSet) {
+                    JSONObject o = new JSONObject();
+                    o.put("region", n.uri);
+                    o.put("regionLabel", n.name.get(lang));
+                    return o;
+                }
+            }
+        }
+        return null;
+    }
 }

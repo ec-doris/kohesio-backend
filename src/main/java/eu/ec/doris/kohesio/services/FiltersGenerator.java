@@ -37,6 +37,7 @@ public class FiltersGenerator {
                                 String region,
                                 String granularityRegion,
                                 Boolean interreg,
+                                Boolean highlighted,
                                 Integer limit,
                                 Integer offset) throws IOException {
         String search = "";
@@ -121,6 +122,14 @@ public class FiltersGenerator {
         if (interreg != null && !interreg) {
             search +=
                     "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId . } FILTER(!BOUND(?keepId))";
+        }
+        if (highlighted != null && highlighted) {
+            search +=
+                    "?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . ";
+        }
+        if (highlighted != null && !highlighted) {
+            search +=
+                    "FILTER(NOT EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . } )";
         }
 
         if (budgetSmallerThen != null || budgetBiggerThen != null) {
