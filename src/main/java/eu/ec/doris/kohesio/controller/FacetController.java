@@ -755,8 +755,8 @@ public class FacetController {
         }
         if (region != null) {
             query += " { ?program <https://linkedopendata.eu/prop/direct/P2316> ?nuts. ";
-            query += " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + region + "> . }";
-            query += " UNION { ?program <https://linkedopendata.eu/prop/direct/P2316> <" + region + ">.}";
+            query += " <" + region + "> <https://linkedopendata.eu/prop/direct/P1845>*  ?nuts. } ";
+            query += " UNION { ?program <https://linkedopendata.eu/prop/direct/P2316> <" + region + ">.} ";
         }
 
         if (interreg != null) {
