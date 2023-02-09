@@ -897,7 +897,8 @@ public class FacetController {
 
     @GetMapping(value = "/facet/eu/loo_metadata", produces = "application/json")
     public JSONArray facetLopMetadata(
-            @RequestParam(value = "language", defaultValue = "en") String language
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "country", required = false) String country
     ) throws Exception {
         String query = "SELECT ?list_of_operation_label ?list_of_operation_label_en ?list_of_operation_id ?list_of_operation_qid ?list_of_operation_url ?list_of_operation_first_ingestion ?list_of_operation_last_update ?cci WHERE {"
                 + "  ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
@@ -909,8 +910,11 @@ public class FacetController {
                 + "  ?prg <https://linkedopendata.eu/prop/direct/P1367> ?cci. "
                 + "  OPTIONAL { ?list_of_operation_qid rdfs:label ?list_of_operation_label. FILTER((LANG(?list_of_operation_label)) = \"" + language + "\")} "
                 + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579182> ?list_of_operation_first_ingestion. } "
-                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } "
-                + "}";
+                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } ";
+        if (country != null) {
+            query += "?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+        }
+        query += "}";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
         HashMap<String, JSONObject> resultMap = new HashMap<>();
         while (resultSet.hasNext()) {
