@@ -688,7 +688,7 @@ public class FacetController {
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
 
-            String key =  querySolution.getBinding("areaOfIntervention").getValue().stringValue();
+            String key = querySolution.getBinding("areaOfIntervention").getValue().stringValue();
             JSONObject element;
             if (resultMap.containsKey(key)) {
                 element = resultMap.get(key);
@@ -723,15 +723,15 @@ public class FacetController {
                 label = label.substring(0, 200) + " ...";
             }
             option.put("instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + label);
-            if (!((JSONArray)element.get("options")).contains(option)) {
-                ((JSONArray)element.get("options")).add(option);
+            if (!((JSONArray) element.get("options")).contains(option)) {
+                ((JSONArray) element.get("options")).add(option);
             }
         }
         JSONArray result = new JSONArray();
         resultMap.forEach((s, jsonObject) -> {
             result.add(jsonObject);
         });
-        result.sort(Comparator.comparing(o -> ((String) ((JSONObject)((JSONArray)((JSONObject) o).get("options")).get(0)).get("instanceLabel"))));
+        result.sort(Comparator.comparing(o -> ((String) ((JSONObject) ((JSONArray) ((JSONObject) o).get("options")).get(0)).get("instanceLabel"))));
         return result;
     }
 
@@ -993,6 +993,8 @@ public class FacetController {
             }
             result.add(jsonObject);
         });
+        result.sort(Comparator.comparing(o -> ((String) ((JSONObject) ((JSONObject) o).get("country")).get("code"))));
+
         return result;
     }
 }
