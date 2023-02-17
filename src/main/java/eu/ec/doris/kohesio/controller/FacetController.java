@@ -664,62 +664,74 @@ public class FacetController {
     ) throws Exception {
 
         logger.info("Get list of intervention field...");
-        String query = "SELECT ?instance ?instanceLabel ?id ?areaOfIntervention ?areaOfInterventionLabel ?areaOfInterventionId WHERE { ";
+        String query = "SELECT ?instance ?instanceLabel ?id ?kohesioCategory ?kohesioCategoryLabel ?areaOfIntervention ?areaOfInterventionLabel ?areaOfInterventionId WHERE { ";
         if (qid != null) {
             query += " VALUES ?areaOfIntervention { <" + qid + "> }";
         }
         query += " ?instance <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q200769> . "
-                + " ?instance <https://linkedopendata.eu/prop/direct/P869> ?id . "
-                + " ?instance <https://linkedopendata.eu/prop/direct/P178453> ?areaOfIntervention . "
-                + " ?areaOfIntervention <https://linkedopendata.eu/prop/direct/P178454> ?areaOfInterventionId . "
-                + " ?areaOfIntervention rdfs:label ?areaOfInterventionLabel . "
-                + " FILTER (lang(?areaOfInterventionLabel)=\"" + language + "\")"
-                + " ?instance rdfs:label ?instanceLabel . "
+                + " ?instance <https://linkedopendata.eu/prop/direct/P869> ?id ; "
+                + "   <https://linkedopendata.eu/prop/direct/P178453> ?areaOfIntervention ; "
+                + "   <https://linkedopendata.eu/prop/direct/P579321> ?kohesioCategory ; "
+                + "   rdfs:label ?instanceLabel. "
                 + " FILTER (lang(?instanceLabel)=\"" + language + "\")"
+                + " ?kohesioCategory rdfs:label ?kohesioCategoryLabel_en"
+                + " FILTER (lang(?kohesioCategoryLabel_en)=\"en\")"
+                + " OPTIONAL { ?kohesioCategory rdfs:label ?kohesioCategoryLabel_lg. FILTER (lang(?kohesioCategoryLabel_lg)=\"" + language + "\") }"
+                + " BIND(IF(BOUND(?kohesioCategoryLabel_lg),?kohesioCategoryLabel_lg,?kohesioCategoryLabel_en) AS ?kohesioCategoryLabel)"
+                + " ?areaOfIntervention <https://linkedopendata.eu/prop/direct/P178454> ?areaOfInterventionId ; "
+                + "    rdfs:label ?areaOfInterventionLabel . "
+                + " FILTER (lang(?areaOfInterventionLabel)=\"" + language + "\")"
                 + "} ORDER BY ?id";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 5);
-        JSONArray result = new JSONArray();
-        String areaOfIntervention = "";
-        String areaOfInterventionLabel = "";
-        String areaOfInterventionId = "";
-        JSONArray subset = new JSONArray();
+
+        HashMap<String, JSONObject> resultMap = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
-            JSONObject element = new JSONObject();
-            element.put("instance", querySolution.getBinding("instance").getValue().toString());
+
+            String key =  querySolution.getBinding("areaOfIntervention").getValue().toString();
+            JSONObject element;
+            if (resultMap.containsKey(key)) {
+                element = resultMap.get(key);
+            } else {
+                element = new JSONObject();
+                resultMap.put(key, element);
+                element.put("areaOfIntervention", key);
+                element.put(
+                        "areaOfInterventionLabel",
+                        querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue()
+                );
+                element.put(
+                        "areaOfInterventionId",
+                        querySolution.getBinding("areaOfInterventionId").getValue().toString()
+                );
+                element.put("options", new JSONArray());
+                JSONObject kohesioCategory = new JSONObject();
+                kohesioCategory.put(
+                        "instance",
+                        querySolution.getBinding("kohesioCategory").getValue().toString()
+                );
+                kohesioCategory.put(
+                        "instanceLabel",
+                        querySolution.getBinding("kohesioCategoryLabel").getValue().toString()
+                );
+                element.put("kohesioCategory", kohesioCategory);
+            }
+            JSONObject option = new JSONObject();
+            option.put("instance", querySolution.getBinding("instance").getValue().toString());
             String label = querySolution.getBinding("instanceLabel").getValue().stringValue();
             if (label.length() >= 200) {
                 label = label.substring(0, 200) + " ...";
             }
-            element.put(
-                    "instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + label);
-            if (areaOfIntervention.equals("")) {
-                areaOfIntervention = querySolution.getBinding("areaOfIntervention").getValue().toString();
-                areaOfInterventionLabel = querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue();
-                areaOfInterventionId = querySolution.getBinding("areaOfInterventionId").getValue().toString();
-            }
-            if (areaOfIntervention.equals(querySolution.getBinding("areaOfIntervention").getValue().toString())) {
-                subset.add(element);
-            } else {
-                subset.add(element);
-                JSONObject newElement = new JSONObject();
-                newElement.put("areaOfIntervention", areaOfIntervention);
-                newElement.put("areaOfInterventionLabel", areaOfInterventionLabel);
-                newElement.put("areaOfInterventionId", areaOfInterventionId);
-                newElement.put("options", subset);
-                areaOfIntervention = querySolution.getBinding("areaOfIntervention").getValue().toString();
-                areaOfInterventionLabel = querySolution.getBinding("areaOfInterventionLabel").getValue().stringValue();
-                areaOfInterventionId = querySolution.getBinding("areaOfInterventionId").getValue().toString();
-                subset = new JSONArray();
-                result.add(newElement);
+            option.put("instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + label);
+            if (!((JSONArray)element.get("options")).contains(option)) {
+                ((JSONArray)element.get("options")).add(option);
             }
         }
-        JSONObject newElement = new JSONObject();
-        newElement.put("areaOfIntervention", areaOfIntervention);
-        newElement.put("areaOfInterventionLabel", areaOfInterventionLabel);
-        newElement.put("areaOfInterventionId", areaOfInterventionId);
-        newElement.put("options", subset);
-        result.add(newElement);
+        JSONArray result = new JSONArray();
+        resultMap.forEach((s, jsonObject) -> {
+            result.add(jsonObject);
+        });
+        result.sort(Comparator.comparing(o -> ((String) ((JSONObject)((JSONArray)((JSONObject) o).get("options")).get(0)).get("instanceLabel"))));
         return result;
     }
 
@@ -970,14 +982,13 @@ public class FacetController {
 
         JSONArray result = new JSONArray();
         resultMap.forEach((s, jsonObject) -> {
-            if (((JSONArray)jsonObject.get("country")).size() > 1) {
+            if (((JSONArray) jsonObject.get("country")).size() > 1) {
                 JSONObject objectCountry = new JSONObject();
                 objectCountry.put("qid", null);
                 objectCountry.put("label", "European Territorial Cooperation");
                 objectCountry.put("code", "TC");
                 jsonObject.put("country", objectCountry);
-            }
-            else {
+            } else {
                 jsonObject.put("country", ((JSONArray) jsonObject.get("country")).get(0));
             }
             result.add(jsonObject);
