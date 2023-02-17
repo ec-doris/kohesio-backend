@@ -668,19 +668,15 @@ public class FacetController {
         if (qid != null) {
             query += " VALUES ?areaOfIntervention { <" + qid + "> }";
         }
-        query += " ?instance <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q200769> . "
-                + " ?instance <https://linkedopendata.eu/prop/direct/P869>  ?id . "
-                + " ?instance <https://linkedopendata.eu/prop/direct/P178453>  ?areaOfIntervention . "
+        query += " ?instance <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q200769> . "
+                + " ?instance <https://linkedopendata.eu/prop/direct/P869> ?id . "
+                + " ?instance <https://linkedopendata.eu/prop/direct/P178453> ?areaOfIntervention . "
                 + " ?areaOfIntervention <https://linkedopendata.eu/prop/direct/P178454> ?areaOfInterventionId . "
                 + " ?areaOfIntervention rdfs:label ?areaOfInterventionLabel . "
-                + " FILTER (lang(?areaOfInterventionLabel)=\""
-                + language
-                + "\")"
+                + " FILTER (lang(?areaOfInterventionLabel)=\"" + language + "\")"
                 + " ?instance rdfs:label ?instanceLabel . "
-                + " FILTER (lang(?instanceLabel)=\""
-                + language
-                + "\")"
-                + "} order by ?id";
+                + " FILTER (lang(?instanceLabel)=\"" + language + "\")"
+                + "} ORDER BY ?id";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 5);
         JSONArray result = new JSONArray();
         String areaOfIntervention = "";
@@ -896,26 +892,31 @@ public class FacetController {
     }
 
     @GetMapping(value = "/facet/eu/loo_metadata", produces = "application/json")
-    public JSONArray facetLopMetadata(
+    public JSONArray facetLooMetadata(
             @RequestParam(value = "language", defaultValue = "en") String language,
             @RequestParam(value = "country", required = false) String country
     ) throws Exception {
-        String query = "SELECT ?list_of_operation_label ?list_of_operation_label_en ?list_of_operation_id ?list_of_operation_qid ?list_of_operation_url ?list_of_operation_first_ingestion ?list_of_operation_last_update ?cci WHERE {"
-                + "  ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
-                + "    <https://linkedopendata.eu/prop/direct/P578950> ?list_of_operation_id; "
+        String query = "SELECT DISTINCT ?list_of_operation_label ?list_of_operation_id "
+                + " ?list_of_operation_qid ?list_of_operation_url ?list_of_operation_first_ingestion "
+                + " ?list_of_operation_last_update ?cci ?country ?countryLabel ?countryCode "
+                + " WHERE {"
+                + " ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
+                + "   <https://linkedopendata.eu/prop/direct/P578950> ?list_of_operation_id; "
                 + "    rdfs:label ?list_of_operation_label_en; "
                 + "    <https://linkedopendata.eu/prop/direct/P578951> ?list_of_operation_url; "
                 + "    <https://linkedopendata.eu/prop/direct/P579181> ?prg. "
                 + "  FILTER((LANG(?list_of_operation_label_en)) = \"en\") "
                 + "  ?prg <https://linkedopendata.eu/prop/direct/P1367> ?cci. "
-                + "  OPTIONAL { ?list_of_operation_qid rdfs:label ?list_of_operation_label. FILTER((LANG(?list_of_operation_label)) = \"" + language + "\")} "
+                + "  OPTIONAL { ?list_of_operation_qid rdfs:label ?list_of_operation_label_lg. FILTER((LANG(?list_of_operation_label_lg)) = \"" + language + "\")} "
                 + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579182> ?list_of_operation_first_ingestion. } "
-                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } ";
+                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } "
+                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> ?country. ?country rdfs:label ?countryLabel; <https://linkedopendata.eu/prop/direct/P173> ?countryCode. FILTER(LANG(?countryLabel) = \"" + language + "\")}. "
+                + "  BIND(IF(BOUND(?list_of_operation_label_lg), ?list_of_operation_label_lg, ?list_of_operation_label_en) AS ?list_of_operation_label) ";
         if (country != null) {
             query += "?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
         }
         query += "}";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
         HashMap<String, JSONObject> resultMap = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -928,13 +929,7 @@ public class FacetController {
                 element.put("instance", instanceQid);
                 element.put(
                         "instanceLabel",
-                        querySolution.getBinding(
-                                "list_of_operation_label"
-                        ) != null ? querySolution.getBinding(
-                                "list_of_operation_label"
-                        ).getValue().stringValue() : querySolution.getBinding(
-                                "list_of_operation_label_en"
-                        ).getValue().stringValue()
+                        querySolution.getBinding("list_of_operation_label").getValue().stringValue()
                 );
                 element.put("id", querySolution.getBinding("list_of_operation_id").getValue().stringValue());
                 element.put("url", querySolution.getBinding("list_of_operation_url").getValue().stringValue());
@@ -949,13 +944,42 @@ public class FacetController {
                 } else {
                     element.put("last_update", null);
                 }
+                if (querySolution.getBinding("list_of_operation_last_update") != null) {
+                    element.put("last_update", querySolution.getBinding("list_of_operation_last_update").getValue().stringValue());
+                } else {
+                    element.put("last_update", null);
+                }
                 element.put("ccis", new JSONArray());
+                element.put("country", new JSONArray());
                 resultMap.put(instanceQid, element);
             }
-            ((JSONArray) element.get("ccis")).add(querySolution.getBinding("cci").getValue().stringValue());
+            if (!((JSONArray) element.get("ccis")).contains(querySolution.getBinding("cci").getValue().stringValue())) {
+                ((JSONArray) element.get("ccis")).add(querySolution.getBinding("cci").getValue().stringValue());
+            }
+            if (querySolution.getBinding("country") != null) {
+                JSONObject objectCountry = new JSONObject();
+                objectCountry.put("qid", querySolution.getBinding("country").getValue().stringValue());
+                objectCountry.put("label", querySolution.getBinding("countryLabel").getValue().stringValue());
+                objectCountry.put("code", querySolution.getBinding("countryCode").getValue().stringValue());
+
+                if (!((JSONArray) element.get("country")).contains(objectCountry)) {
+                    ((JSONArray) element.get("country")).add(objectCountry);
+                }
+            }
         }
+
         JSONArray result = new JSONArray();
         resultMap.forEach((s, jsonObject) -> {
+            if (((JSONArray)jsonObject.get("country")).size() > 1) {
+                JSONObject objectCountry = new JSONObject();
+                objectCountry.put("qid", null);
+                objectCountry.put("label", "European Territorial Cooperation");
+                objectCountry.put("code", "TC");
+                jsonObject.put("country", objectCountry);
+            }
+            else {
+                jsonObject.put("country", ((JSONArray) jsonObject.get("country")).get(0));
+            }
             result.add(jsonObject);
         });
         return result;
