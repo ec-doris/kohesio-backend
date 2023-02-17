@@ -585,7 +585,7 @@ public class FacetController {
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
-            element.put("instance", querySolution.getBinding("fund").getValue().toString());
+            element.put("instance", querySolution.getBinding("fund").getValue().stringValue());
             element.put("instanceLabel", querySolution.getBinding("id").getValue().stringValue() + " - " + querySolution.getBinding("fundLabel").getValue().stringValue());
             result.add(element);
         }
@@ -632,16 +632,16 @@ public class FacetController {
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
-            String instance = querySolution.getBinding("po").getValue().toString();
+            String instance = querySolution.getBinding("po").getValue().stringValue();
             if (tempList.containsKey(instance)) {
                 element = tempList.get(instance);
             } else {
-                element.put("instance", querySolution.getBinding("po").getValue().toString());
+                element.put("instance", querySolution.getBinding("po").getValue().stringValue());
                 element.put("instanceLabel", querySolution.getBinding("poLabel").getValue().stringValue());
                 element.put("id", querySolution.getBinding("id").getValue().stringValue());
                 element.put("theme", new JSONArray());
 
-                tempList.put(querySolution.getBinding("po").getValue().toString(), element);
+                tempList.put(querySolution.getBinding("po").getValue().stringValue(), element);
             }
             JSONObject themeObj = new JSONObject();
             themeObj.put("instance", querySolution.getBinding("to").getValue().stringValue());
@@ -688,7 +688,7 @@ public class FacetController {
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
 
-            String key =  querySolution.getBinding("areaOfIntervention").getValue().toString();
+            String key =  querySolution.getBinding("areaOfIntervention").getValue().stringValue();
             JSONObject element;
             if (resultMap.containsKey(key)) {
                 element = resultMap.get(key);
@@ -702,22 +702,22 @@ public class FacetController {
                 );
                 element.put(
                         "areaOfInterventionId",
-                        querySolution.getBinding("areaOfInterventionId").getValue().toString()
+                        querySolution.getBinding("areaOfInterventionId").getValue().stringValue()
                 );
                 element.put("options", new JSONArray());
                 JSONObject kohesioCategory = new JSONObject();
                 kohesioCategory.put(
                         "instance",
-                        querySolution.getBinding("kohesioCategory").getValue().toString()
+                        querySolution.getBinding("kohesioCategory").getValue().stringValue()
                 );
                 kohesioCategory.put(
                         "instanceLabel",
-                        querySolution.getBinding("kohesioCategoryLabel").getValue().toString()
+                        querySolution.getBinding("kohesioCategoryLabel").getValue().stringValue()
                 );
                 element.put("kohesioCategory", kohesioCategory);
             }
             JSONObject option = new JSONObject();
-            option.put("instance", querySolution.getBinding("instance").getValue().toString());
+            option.put("instance", querySolution.getBinding("instance").getValue().stringValue());
             String label = querySolution.getBinding("instanceLabel").getValue().stringValue();
             if (label.length() >= 200) {
                 label = label.substring(0, 200) + " ...";
@@ -789,7 +789,7 @@ public class FacetController {
             BindingSet querySolution = resultSet.next();
 
             boolean found = false;
-            String program = querySolution.getBinding("program").getValue().toString();
+            String program = querySolution.getBinding("program").getValue().stringValue();
             for (Object o : result) {
                 JSONObject element = (JSONObject) o;
                 if (element.get("instance").equals(program) && (element.containsKey("funds"))) {
@@ -847,7 +847,7 @@ public class FacetController {
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
-            element.put("instance", querySolution.getBinding("to").getValue().toString());
+            element.put("instance", querySolution.getBinding("to").getValue().stringValue());
             element.put("instanceLabel", querySolution.getBinding("toLabel").getValue().stringValue());
             element.put("id", querySolution.getBinding("id").getValue().stringValue());
 //            element.put("policyId", querySolution.getBinding("policyId").getValue().stringValue());
@@ -883,13 +883,13 @@ public class FacetController {
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
-            element.put("instance", querySolution.getBinding("instance").getValue().toString());
+            element.put("instance", querySolution.getBinding("instance").getValue().stringValue());
             if (querySolution.getBinding("instanceLabel") != null) {
                 element.put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
             } else {
                 element.put("instanceLabel", querySolution.getBinding("instanceLabel_en").getValue().stringValue());
             }
-            element.put("country", querySolution.getBinding("country").getValue().toString());
+            element.put("country", querySolution.getBinding("country").getValue().stringValue());
             element.put("countryLabel", querySolution.getBinding("countryLabel").getValue().stringValue());
             result.add(element);
         }
