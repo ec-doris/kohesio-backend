@@ -705,17 +705,21 @@ public class FacetController {
                         querySolution.getBinding("areaOfInterventionId").getValue().stringValue()
                 );
                 element.put("options", new JSONArray());
-                JSONObject kohesioCategory = new JSONObject();
-                kohesioCategory.put(
-                        "instance",
-                        querySolution.getBinding("kohesioCategory").getValue().stringValue()
-                );
-                kohesioCategory.put(
-                        "instanceLabel",
-                        querySolution.getBinding("kohesioCategoryLabel").getValue().stringValue()
-                );
-                element.put("kohesioCategory", kohesioCategory);
+                element.put("kohesioCategory", new JSONArray());
             }
+            JSONObject kohesioCategory = new JSONObject();
+            kohesioCategory.put(
+                    "instance",
+                    querySolution.getBinding("kohesioCategory").getValue().stringValue()
+            );
+            kohesioCategory.put(
+                    "instanceLabel",
+                    querySolution.getBinding("kohesioCategoryLabel").getValue().stringValue()
+            );
+            if (!((JSONArray) element.get("kohesioCategory")).contains(kohesioCategory)) {
+                ((JSONArray) element.get("kohesioCategory")).add(kohesioCategory);
+            }
+
             JSONObject option = new JSONObject();
             option.put("instance", querySolution.getBinding("instance").getValue().stringValue());
             String label = querySolution.getBinding("instanceLabel").getValue().stringValue();
