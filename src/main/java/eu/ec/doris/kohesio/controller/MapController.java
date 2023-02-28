@@ -90,6 +90,7 @@ public class MapController {
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
+            @RequestParam(value = "cci", required = false) String cci,
             Integer timeout,
             Principal principal)
             throws Exception {
@@ -121,7 +122,7 @@ public class MapController {
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
-                interreg, highlighted, limit, offset
+                interreg, highlighted, cci, limit, offset
         );
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
@@ -332,6 +333,11 @@ public class MapController {
         result.put("list", resultList);
         result.put("upperRegions", findUpperRegions(granularityRegion, language));
         result.put("region", granularityRegion);
+
+        if (granularityRegion == null) {
+            granularityRegion = "https://linkedopendata.eu/entity/Q1";
+        }
+
         result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
         if (granularityRegion != null) {
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
@@ -373,6 +379,7 @@ public class MapController {
             @RequestParam(value = "coordinate", required = true) String coordinate,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
+            @RequestParam(value = "cci", required = false) String cci,
 
             Principal principal)
             throws Exception {
@@ -410,6 +417,7 @@ public class MapController {
                 granularityRegion,
                 interreg,
                 highlighted,
+                cci,
                 limit,
                 offset
         );
@@ -541,7 +549,7 @@ public class MapController {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null, null, 400, null);
+        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null, null, null, 400, null);
         JSONObject mod = result.getBody();
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);

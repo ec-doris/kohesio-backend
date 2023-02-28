@@ -107,7 +107,7 @@ public class ProjectController {
                     + "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime "
                     + "?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube "
                     + "?video ?tweet ?coordinates  ?countryLabel ?countryCode ?program ?programLabel ?program_cci "
-                    + "?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId "
+                    + "?programInfoRegioUrl ?categoryLabel ?categoryID ?fund ?fundId ?fundLabel ?fundWebsite ?themeId "
                     + "?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel "
                     + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
                     + "?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite "
@@ -166,10 +166,10 @@ public class ProjectController {
                     + "           ?policy wdt:P1747 ?policyId. "
                     + "           ?policy <http://www.w3.org/2000/01/rdf-schema#label> ?policyLabel. "
                     + "           FILTER((LANG(?policyLabel)) = \"" + language + "\") } "
-                    + " OPTIONAL {?s0 wdt:P1584 ?fund.  "
-                    + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
-                    + "           FILTER((LANG(?fundLabel)) = \"" + language + "\") }"
-                    + "           OPTIONAL {?fund wdt:P67 ?fundWebsite .} "
+                    + " OPTIONAL {?s0 wdt:P1584 ?fund. "
+                    + "           ?fund wdt:P1583 ?fundId."
+                    + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. FILTER((LANG(?fundLabel)) = \"" + language + "\") }"
+                    + "           OPTIONAL {?fund wdt:P67 ?fundWebsite . } "
                     + "} "
                     + " OPTIONAL { ?s0 wdt:P889 ?beneficiaryLink . "
                     + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabelRight . "
@@ -222,10 +222,12 @@ public class ProjectController {
             result.put("fundLabel", "");
             result.put("fundWebsite", "");
 
+
             HashSet<HashMap> programs = new HashSet<>();
+            HashSet<HashMap> funds = new HashSet<>();
 
+            result.put("funds", funds);
             result.put("program", programs);
-
             result.put("themeIds", new JSONArray());
             result.put("themeLabels", new JSONArray());
             result.put("policyIds", new JSONArray());
@@ -256,6 +258,7 @@ public class ProjectController {
             HashSet<String> policyIds = new HashSet<>();
 
 
+            HashMap<String, JSONObject> tmpFunds = new HashMap<>();
             HashMap<String, HashMap<String, Object>> tmpPrograms = new HashMap<>();
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
@@ -361,19 +364,46 @@ public class ProjectController {
                         result.put("categoryIDs", interventionFieldsIDSet);
                     }
                 }
+                if (querySolution.getBinding("fund") != null) {
+                    JSONObject fund;
+                    if (tmpFunds.containsKey(querySolution.getBinding("fund").getValue().stringValue())) {
+                        fund = tmpFunds.get(querySolution.getBinding("fund").getValue().stringValue());
+                    } else {
+                        fund = new JSONObject();
+                        tmpFunds.put(querySolution.getBinding("fund").getValue().stringValue(), fund);
+                    }
+                    fund.put(
+                            "id",
+                            querySolution.getBinding("fundId").getValue().stringValue()
+                    );
+                    if (querySolution.getBinding("fundLabel") != null) {
+                        fund.put(
+                                "label",
+                                querySolution.getBinding("fundLabel").getValue().stringValue()
+                        );
+                        fund.put(
+                                "fullLabel",
+                                querySolution.getBinding("fundId").getValue().stringValue()
+                                        + " - "
+                                        + querySolution.getBinding("fundLabel").getValue().stringValue()
+                        );
+                    } else {
+                        fund.put(
+                                "fullLabel",
+                                querySolution.getBinding("fundId").getValue().stringValue()
+                        );
+                    }
+                    if (querySolution.getBinding("fundWebsite") != null) {
+                        fund.put(
+                                "website",
+                                querySolution.getBinding("fundWebsite").getValue().stringValue()
+                        );
+                    }
+                    if (querySolution.getBinding("fundId") != null) {
 
-                if (querySolution.getBinding("fundLabel") != null) {
-                    result.put(
-                            "fundLabel",
-                            ((Literal) querySolution.getBinding("fundLabel").getValue()).stringValue());
+                    }
+
                 }
-
-                if (querySolution.getBinding("fundWebsite") != null) {
-                    result.put(
-                            "fundWebsite",
-                            querySolution.getBinding("fundWebsite").getValue().stringValue());
-                }
-
                 HashMap<String, Object> program;
                 if (querySolution.getBinding("program") != null) {
                     String programQID = querySolution.getBinding("program").getValue().stringValue();
@@ -588,6 +618,7 @@ public class ProjectController {
                 }
             }
             programs.addAll(tmpPrograms.values());
+            funds.addAll(tmpFunds.values());
 
             while (resultSetCoords.hasNext()) {
                 BindingSet querySolution = resultSetCoords.next();
@@ -819,7 +850,7 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null,
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null, null,
                 timeout, principal
         );
     }
@@ -858,6 +889,7 @@ public class ProjectController {
             @RequestParam(value = "nuts3", required = false) String nuts3,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
+            @RequestParam(value = "cci", required = false) String cci,
             Integer timeout,
             Principal principal
     )
@@ -931,6 +963,7 @@ public class ProjectController {
                 nuts3,
                 interreg,
                 highlighted,
+                cci,
                 limit,
                 offset
         );
@@ -1027,7 +1060,7 @@ public class ProjectController {
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false);
 
         HashMap<String, Project> resultMap = new HashMap<>();
-        ArrayList<Project> orderedResult  = new ArrayList<>();
+        ArrayList<Project> orderedResult = new ArrayList<>();
         ArrayList<String> similarWords = new ArrayList<>();
 
         while (resultSet.hasNext()) {
@@ -1297,7 +1330,7 @@ public class ProjectController {
 
             }
         }
-        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, null,limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, null, null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
