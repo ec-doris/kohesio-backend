@@ -113,7 +113,9 @@ public class FiltersGenerator {
         }
 
         if (cci != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . ?program <https://linkedopendata.eu/prop/direct/P1367> \"" + cci + "\" ";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
+                    + " ?program <https://linkedopendata.eu/prop/direct/P1367> \"" + cci + "\" . "
+            ;
         }
 
         if (categoryOfIntervention != null) {
@@ -122,8 +124,7 @@ public class FiltersGenerator {
         }
 
         if (interreg != null && interreg) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId . ";
+            search += "?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId . ";
         }
         if (interreg != null && !interreg) {
             search +=
