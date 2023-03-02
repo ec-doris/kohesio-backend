@@ -341,13 +341,12 @@ public class MapController {
                 BindingSet querySolution = resultSetProgramNuts.next();
                 programCountry.add(querySolution.getBinding("c").getValue().stringValue());
             }
-            if (programCountry.size() != 0) {
+            if (programCountry.size() == 1) {
                 granularityRegion = programCountry.get(0);
             } else {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
             }
         }
-        // todo
         if (granularityRegion == null) {
             granularityRegion = "https://linkedopendata.eu/entity/Q1";
         }
