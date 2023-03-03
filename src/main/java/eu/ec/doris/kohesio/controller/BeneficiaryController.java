@@ -64,10 +64,11 @@ public class BeneficiaryController {
     }
 
     @GetMapping(value = "/facet/eu/beneficiary", produces = "application/json")
-    public ResponseEntity euBenfeciaryId(@RequestParam(value = "id") String id,
-                                         @RequestParam(value = "language", defaultValue = "en") String language,
-                                         @RequestParam(value = "page", defaultValue = "0") int page,
-                                         @RequestParam(value = "pageSize", defaultValue = "100") int pageSize
+    public ResponseEntity euBenfeciaryId(
+            @RequestParam(value = "id") String id,
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "pageSize", defaultValue = "100") int pageSize
     ) throws Exception {
 
         logger.info("Beneficiary search by ID: id {}, language {}", id, language);
@@ -147,15 +148,15 @@ public class BeneficiaryController {
                 "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n " +
                 "} ORDER BY DESC(?euBudget) LIMIT " + pageSize + "OFFSET " + pageSize * page;
 
-        String query4 = "SELECT ?fundLabel (sum(?euBudget) as ?totalEuBudget) WHERE {\n" +
-                " VALUES ?s0 { <" +
-                id +
-                "> }   \n" +
-                "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
-                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
-                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
-                "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n" +
-                " } GROUP BY ?fundLabel ORDER BY DESC(?totalEuBudget)";
+        String query4 = "SELECT ?fundLabel (sum(?euBudget) as ?totalEuBudget) WHERE { "
+                + " VALUES ?s0 { <" + id + "> } "
+                + "  ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
+                + "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 . "
+                + "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } "
+                + "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . "
+                + "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } "
+                + " } GROUP BY ?fundLabel ORDER BY DESC(?totalEuBudget)"
+                ;
 
         TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query1, 30);
         JSONObject result = new JSONObject();
