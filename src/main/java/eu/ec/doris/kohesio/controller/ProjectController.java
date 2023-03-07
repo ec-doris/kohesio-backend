@@ -1017,8 +1017,12 @@ public class ProjectController {
         }
 
         search += " " + orderQuery;
-
-        String mainQuery = "SELECT DISTINCT ?s0 WHERE { {" + search + " ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } UNION { " + search + "} } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        String mainQuery;
+        if ("".equals(orderQuery)) {
+            mainQuery = "SELECT DISTINCT ?s0 WHERE { {" + search + " ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } UNION { " + search + "} } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        } else {
+            mainQuery = "SELECT DISTINCT ?s0 WHERE {" + search + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        }
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout);
         StringBuilder values = new StringBuilder();
         int indexLimit = 0;
