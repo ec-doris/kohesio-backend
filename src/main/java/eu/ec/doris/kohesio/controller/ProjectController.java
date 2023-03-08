@@ -75,6 +75,9 @@ public class ProjectController {
     @Value("${kohesio.directory}")
     String cacheDirectory;
 
+    @Autowired
+    FacetController facetController;
+
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
         response.setHeader("Access-Control-Allow-Origin", "*");
@@ -719,7 +722,7 @@ public class ProjectController {
                         // exception for Greece to use EL as nuts code and not GR
                         countryCode = "EL";
                     }
-                    if (!regionIDs.contains(countryCode)) {
+                    if (!regionIDs.contains(countryCode) && regionIDs.size() < 1) {
                         // check if the regioId has already been seen - could be that a project is contained in multiple geometries
                         regionIDs.add(countryCode);
                         query =
@@ -734,7 +737,6 @@ public class ProjectController {
                         logger.debug("Retrieving nuts geometry");
                         TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5, "projectDetail");
 
-                        NutsRegion nutsRegion = new NutsRegion();
                         while (resultSet2.hasNext()) {
                             BindingSet querySolution2 = resultSet2.next();
                             if (querySolution2.getBinding("geoJson") != null) {
@@ -744,7 +746,17 @@ public class ProjectController {
                     }
                 }
             }
-
+            JSONArray geoJsons = (JSONArray) result.get("geoJson");
+            facetController.initialize(language);
+            regionIDs.forEach(s -> {
+                facetController.nutsRegion.forEach((s1, nut) -> {
+                    if (nut.nutsCode.equals(s)) {
+                        if (!geoJsons.contains(nut.geoJson)) {
+                            geoJsons.add(nut.geoJson);
+                        }
+                    }
+                });
+            });
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
                 result.put("regionText", "Multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
@@ -1017,8 +1029,12 @@ public class ProjectController {
         }
 
         search += " " + orderQuery;
-
-        String mainQuery = "SELECT DISTINCT ?s0 WHERE { {" + search + " ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } UNION { " + search + "} } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        String mainQuery;
+        if ("".equals(orderQuery)) {
+            mainQuery = "SELECT DISTINCT ?s0 WHERE { {" + search + " ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } UNION { " + search + "} } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        } else {
+            mainQuery = "SELECT DISTINCT ?s0 WHERE {" + search + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        }
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout, "projectSearch");
         StringBuilder values = new StringBuilder();
         int indexLimit = 0;
