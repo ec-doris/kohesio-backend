@@ -75,6 +75,9 @@ public class ProjectController {
     @Value("${kohesio.directory}")
     String cacheDirectory;
 
+    @Autowired
+    FacetController facetController;
+
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
         response.setHeader("Access-Control-Allow-Origin", "*");
@@ -734,7 +737,6 @@ public class ProjectController {
                         logger.debug("Retrieving nuts geometry");
                         TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
 
-                        NutsRegion nutsRegion = new NutsRegion();
                         while (resultSet2.hasNext()) {
                             BindingSet querySolution2 = resultSet2.next();
                             if (querySolution2.getBinding("geoJson") != null) {
@@ -744,8 +746,17 @@ public class ProjectController {
                     }
                 }
             }
-            System.err.println(regionIDs.size());
-            System.err.println(regionIDs);
+            JSONArray geoJsons = (JSONArray) result.get("geoJson");
+            facetController.initialize(language);
+            regionIDs.forEach(s -> {
+                facetController.nutsRegion.forEach((s1, nut) -> {
+                    if (nut.nutsCode.equals(s)) {
+                        if (!geoJsons.contains(nut.geoJson)) {
+                            geoJsons.add(nut.geoJson);
+                        }
+                    }
+                });
+            });
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
                 result.put("regionText", "Multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
