@@ -130,7 +130,7 @@ public class MapController {
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
         int numResults = 0;
         if (limit == null || limit > 2000) {
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
 
             if (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
@@ -172,7 +172,7 @@ public class MapController {
                                 + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region . "
                                 + " } GROUP BY ?region ";
             }
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
 
 
             HashMap<String, JSONObject> subRegions = new HashMap<>();
@@ -288,7 +288,7 @@ public class MapController {
                             + optional
                             + "} ";
         }
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
 //        JSONArray resultList = new JSONArray();
 //        while (resultSet.hasNext()) {
 //            BindingSet querySolution = resultSet.next();
@@ -335,7 +335,7 @@ public class MapController {
                     + " ?prg <https://linkedopendata.eu/prop/direct/P1367> \"" + cci + "\". "
                     + " ?prg <https://linkedopendata.eu/prop/direct/P32> ?c."
                     + "}";
-            TupleQueryResult resultSetProgramNuts = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryProgramNuts, timeout);
+            TupleQueryResult resultSetProgramNuts = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryProgramNuts, timeout, "point");
             List<String> programCountry = new ArrayList<>();
             while (resultSetProgramNuts.hasNext()) {
                 BindingSet querySolution = resultSetProgramNuts.next();
@@ -456,7 +456,7 @@ public class MapController {
                         + "\") } ."
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . } "
                         + "} ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30, "point");
 
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
@@ -494,7 +494,7 @@ public class MapController {
                         + "> } "
 
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. } }";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
 
         String coo = "";
         while (resultSet.hasNext()) {
@@ -526,7 +526,7 @@ public class MapController {
                         + "          ?contained3 rdfs:label ?label3 . "
                         + "          ?contained3 <http://nuts.de/id> ?id3 . }}} "
                         + "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+        resultSet = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5, "facet");
 
         NutsRegion nutsRegion = new NutsRegion();
         while (resultSet.hasNext()) {

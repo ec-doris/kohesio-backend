@@ -158,7 +158,7 @@ public class BeneficiaryController {
                 + " } GROUP BY ?fundLabel ORDER BY DESC(?totalEuBudget)"
                 ;
 
-        TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query1, 30);
+        TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query1, 30, "beneficiaryDetail");
         JSONObject result = new JSONObject();
         result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
         while (resultSet1.hasNext()) {
@@ -221,7 +221,7 @@ public class BeneficiaryController {
             }
             result.put("images", images);
         }
-        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query2, 30);
+        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query2, 30, "beneficiaryDetail");
         while (resultSet2.hasNext()) {
             BindingSet querySolution = resultSet2.next();
             if (querySolution.getBinding("totalEuBudget") != null) {
@@ -241,7 +241,7 @@ public class BeneficiaryController {
             }
         }
         JSONArray projects = new JSONArray();
-        TupleQueryResult resultSet3 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query3, 30);
+        TupleQueryResult resultSet3 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query3, 30, "beneficiaryDetail");
         if (resultSet3 != null) {
             while (resultSet3.hasNext()) {
                 JSONObject project = new JSONObject();
@@ -271,7 +271,7 @@ public class BeneficiaryController {
             }
         }
         JSONArray budgetsPerFund = new JSONArray();
-        TupleQueryResult resultSet4 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query4, 30);
+        TupleQueryResult resultSet4 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query4, 30, "beneficiaryDetail");
         if (resultSet4 != null) {
             while (resultSet4.hasNext()) {
                 JSONObject budgetPerFund = new JSONObject();
@@ -392,7 +392,7 @@ public class BeneficiaryController {
         logger.debug(queryCount);
 
 
-        TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout);
+        TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout, "beneficiarySearch");
         int numResults = 0;
         if (countResultSet.hasNext()) {
             BindingSet querySolution = countResultSet.next();
@@ -438,7 +438,7 @@ public class BeneficiaryController {
 
         HashMap<String, Beneficiary> beneficiaries = new HashMap<>();
 
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout, "beneficiarySearch");
         StringBuilder values = new StringBuilder();
         int indexLimit = 0;
         int indexOffset = 0;
@@ -508,7 +508,7 @@ public class BeneficiaryController {
                 + " }"
                 + "} ";
         logger.debug(query);
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false, "beneficiarySearch");
 
         if (resultSet != null) {
             String previewsKey = "";
@@ -741,7 +741,7 @@ public class BeneficiaryController {
         result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
 
         JSONArray projects = new JSONArray();
-        TupleQueryResult resultSet3 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query3, 30);
+        TupleQueryResult resultSet3 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query3, 30, "beneficiaryProject");
         if (resultSet3 != null) {
             while (resultSet3.hasNext()) {
                 JSONObject project = new JSONObject();
