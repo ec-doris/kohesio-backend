@@ -719,7 +719,7 @@ public class ProjectController {
                         // exception for Greece to use EL as nuts code and not GR
                         countryCode = "EL";
                     }
-                    if (!regionIDs.contains(countryCode)) {
+                    if (!regionIDs.contains(countryCode) && regionIDs.size() < 1) {
                         // check if the regioId has already been seen - could be that a project is contained in multiple geometries
                         regionIDs.add(countryCode);
                         query =
@@ -744,7 +744,8 @@ public class ProjectController {
                     }
                 }
             }
-
+            System.err.println(regionIDs.size());
+            System.err.println(regionIDs);
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
                 result.put("regionText", "Multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
