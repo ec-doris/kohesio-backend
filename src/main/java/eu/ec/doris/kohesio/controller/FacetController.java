@@ -88,7 +88,7 @@ public class FacetController {
                         + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } "
                         + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?nuts_code } "
                         + "}";
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30, "facet");
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     String key = querySolution.getBinding("region").getValue().stringValue();
@@ -155,7 +155,7 @@ public class FacetController {
                                     " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407315> . }";
                 }
                 if (!query.equals("")) {
-                    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30);
+                    TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30, "facet");
                     logger.debug("Is empty result set: " + resultSet.hasNext());
                     while (resultSet.hasNext()) {
                         BindingSet querySolution = resultSet.next();
@@ -188,7 +188,7 @@ public class FacetController {
                                 "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
                                 geometry +
                                 " }";
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20, "facet");
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
@@ -315,7 +315,7 @@ public class FacetController {
         String query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "} ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberProjects", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -323,7 +323,7 @@ public class FacetController {
         query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> . "
                 + "} ";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "statistics");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberBeneficiaries", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -345,7 +345,7 @@ public class FacetController {
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236692> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120, "statistics");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("lowCarbonEconomy", ((Literal) querySolution.getBinding("c").getValue()).doubleValue());
@@ -356,7 +356,7 @@ public class FacetController {
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236693> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120, "statistics");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("climateChangeAdaptation", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -367,7 +367,7 @@ public class FacetController {
                 "?category <https://linkedopendata.eu/prop/direct/P1848> <https://linkedopendata.eu/entity/Q236694> .   " +
                 " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120, "statistics");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("enviromentProtection", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -378,7 +378,7 @@ public class FacetController {
                 " ?category <https://linkedopendata.eu/prop/direct/P1849> <https://linkedopendata.eu/entity/Q2547987> . " +
                 "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . " +
                 "}";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120, "statistics");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             themes.put("greenerAndCarbonFreeEurope", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -402,7 +402,7 @@ public class FacetController {
             query += " VALUES ?country { <" + qid + "> }";
         }
         query += " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?country . }";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20, "facet");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
@@ -417,7 +417,7 @@ public class FacetController {
                     + language
                     + "\")"
                     + "}";
-            resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+            resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 jsonValues.get(i).put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
@@ -425,7 +425,7 @@ public class FacetController {
             query = "select ?instanceImage where { "
                     + " <" + jsonValues.get(i).get("instance") + "> <https://linkedopendata.eu/prop/direct/P21> ?instanceImage . "
                     + "}";
-            resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+            resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 jsonValues.get(i).put("instanceImage", querySolution.getBinding("instanceImage").getValue().stringValue());
@@ -476,7 +476,7 @@ public class FacetController {
                     + " FILTER (lang(?instanceLabel)=\"" + language + "\") }"
                     + " OPTIONAL { ?region rdfs:label ?instanceLabelEn . FILTER(LANG(?instanceLabelEn)=\"en\")}"
                     + "}";
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 if (querySolution.getBinding("instanceLabel") != null) {
@@ -498,7 +498,7 @@ public class FacetController {
                         + "\") } "
                         + " OPTIONAL { ?region rdfs:label ?instanceLabelEn . FILTER (lang(?instanceLabelEn)=\"en\")  } "
                         + "}";
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     if (querySolution.getBinding("instanceLabel") != null) {
@@ -580,7 +580,7 @@ public class FacetController {
                 + language
                 + "\")"
                 + "} ORDER BY ?id ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -626,7 +626,7 @@ public class FacetController {
                 + " ?po <https://linkedopendata.eu/prop/direct/P1848> ?to ."
                 + " ?to <https://linkedopendata.eu/prop/direct/P1105> ?toId ."
                 + " } ORDER BY ?id";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
         HashMap<String, JSONObject> tempList = new HashMap<>();
 
         while (resultSet.hasNext()) {
@@ -682,7 +682,7 @@ public class FacetController {
                 + "    rdfs:label ?areaOfInterventionLabel . "
                 + " FILTER (lang(?areaOfInterventionLabel)=\"" + language + "\")"
                 + "} ORDER BY ?id";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 5);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 5, "facet");
 
         HashMap<String, JSONObject> resultMap = new HashMap<>();
         while (resultSet.hasNext()) {
@@ -787,7 +787,7 @@ public class FacetController {
                         + language
                         + "\")"
                         + "} order by ?cci ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -846,7 +846,7 @@ public class FacetController {
         }
         query += "} ORDER BY ?id ";
 
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -882,7 +882,7 @@ public class FacetController {
                 + " ?country rdfs:label ?countryLabel . "
                 + " FILTER (lang(?countryLabel)=\"" + language + "\") } . "
                 + " } ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -932,7 +932,7 @@ public class FacetController {
             query += "?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
         }
         query += "}";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
         HashMap<String, JSONObject> resultMap = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -1028,7 +1028,7 @@ public class FacetController {
             query += " ?kc <https://linkedopendata.eu/prop/direct/P579320> ?ifi. VALUES ?ifi { <" + id + "> }";
         }
         query += "}";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
         HashMap<String, JSONObject> resultMap = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
