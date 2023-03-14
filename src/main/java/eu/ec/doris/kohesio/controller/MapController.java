@@ -349,14 +349,14 @@ public class MapController {
                     programNuts.add(querySolution.getBinding("nuts").getValue().stringValue());
                 }
             }
-//            if (programNuts.size() == 1) {
-//                granularityRegion = programNuts.get(0);
-//            } else if (programCountry.size() == 1) {
-//                granularityRegion = programCountry.get(0);
-//            } else {
-//                granularityRegion = "https://linkedopendata.eu/entity/Q1";
-//            }
-            granularityRegion = getSmallestCommonNuts(programNuts);
+            if (programNuts.size() == 1) {
+                granularityRegion = programNuts.get(0);
+            } else if (programCountry.size() == 1) {
+                granularityRegion = programCountry.get(0);
+            } else {
+                granularityRegion = "https://linkedopendata.eu/entity/Q1";
+            }
+//            granularityRegion = getSmallestCommonNuts(programNuts);
             System.err.println(granularityRegion);
             System.err.println(programNuts);
             System.err.println(programCountry);
