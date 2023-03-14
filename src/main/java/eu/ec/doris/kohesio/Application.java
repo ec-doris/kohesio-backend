@@ -1,5 +1,7 @@
 package eu.ec.doris.kohesio;
 
+import eu.ec.doris.kohesio.config.SwaggerConfiguration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +19,9 @@ public class Application {
 
   public static void main(String[] args) {
     System.setProperty("https.protocols", "TLSv1,TLSv1.1,TLSv1.2");
-    SpringApplication.run(eu.ec.doris.kohesio.Application.class, args);
+    SpringApplication application = new SpringApplication(eu.ec.doris.kohesio.Application.class);
+    application.addListeners(new SwaggerConfiguration());
+    application.run(args);
   }
 
 }

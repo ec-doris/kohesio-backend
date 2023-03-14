@@ -75,6 +75,9 @@ public class ProjectController {
     @Value("${kohesio.directory}")
     String cacheDirectory;
 
+    @Autowired
+    FacetController facetController;
+
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
         response.setHeader("Access-Control-Allow-Origin", "*");
@@ -107,7 +110,7 @@ public class ProjectController {
                     + "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime "
                     + "?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube "
                     + "?video ?tweet ?coordinates  ?countryLabel ?countryCode ?program ?programLabel ?program_cci "
-                    + "?programInfoRegioUrl ?categoryLabel ?categoryID ?fundLabel ?fundWebsite ?themeId "
+                    + "?programInfoRegioUrl ?categoryLabel ?categoryID ?fund ?fundId ?fundLabel ?fundWebsite ?themeId "
                     + "?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel "
                     + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
                     + "?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite "
@@ -166,10 +169,10 @@ public class ProjectController {
                     + "           ?policy wdt:P1747 ?policyId. "
                     + "           ?policy <http://www.w3.org/2000/01/rdf-schema#label> ?policyLabel. "
                     + "           FILTER((LANG(?policyLabel)) = \"" + language + "\") } "
-                    + " OPTIONAL {?s0 wdt:P1584 ?fund.  "
-                    + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. "
-                    + "           FILTER((LANG(?fundLabel)) = \"" + language + "\") }"
-                    + "           OPTIONAL {?fund wdt:P67 ?fundWebsite .} "
+                    + " OPTIONAL {?s0 wdt:P1584 ?fund. "
+                    + "           ?fund wdt:P1583 ?fundId."
+                    + "           OPTIONAL {?fund <http://www.w3.org/2000/01/rdf-schema#label> ?fundLabel. FILTER((LANG(?fundLabel)) = \"" + language + "\") }"
+                    + "           OPTIONAL {?fund wdt:P67 ?fundWebsite . } "
                     + "} "
                     + " OPTIONAL { ?s0 wdt:P889 ?beneficiaryLink . "
                     + "          OPTIONAL {?beneficiaryLink <http://www.w3.org/2000/01/rdf-schema#label> ?beneficiaryLabelRight . "
@@ -201,9 +204,9 @@ public class ProjectController {
                     + "FILTER(STRLEN(STR(?regionId))>=5) "
                     + "}";
 
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 3, false);
-            TupleQueryResult resultSetCoords = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCoordinates, 3, false);
-            TupleQueryResult resultSetRegion = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryRegion, 3, false);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 3, false, "projectDetail");
+            TupleQueryResult resultSetCoords = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCoordinates, 3, false, "projectDetail");
+            TupleQueryResult resultSetRegion = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryRegion, 3, false, "projectDetail");
 
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
@@ -222,10 +225,12 @@ public class ProjectController {
             result.put("fundLabel", "");
             result.put("fundWebsite", "");
 
+
             HashSet<HashMap> programs = new HashSet<>();
+            HashSet<HashMap> funds = new HashSet<>();
 
+            result.put("funds", funds);
             result.put("program", programs);
-
             result.put("themeIds", new JSONArray());
             result.put("themeLabels", new JSONArray());
             result.put("policyIds", new JSONArray());
@@ -256,6 +261,7 @@ public class ProjectController {
             HashSet<String> policyIds = new HashSet<>();
 
 
+            HashMap<String, JSONObject> tmpFunds = new HashMap<>();
             HashMap<String, HashMap<String, Object>> tmpPrograms = new HashMap<>();
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
@@ -361,19 +367,46 @@ public class ProjectController {
                         result.put("categoryIDs", interventionFieldsIDSet);
                     }
                 }
+                if (querySolution.getBinding("fund") != null) {
+                    JSONObject fund;
+                    if (tmpFunds.containsKey(querySolution.getBinding("fund").getValue().stringValue())) {
+                        fund = tmpFunds.get(querySolution.getBinding("fund").getValue().stringValue());
+                    } else {
+                        fund = new JSONObject();
+                        tmpFunds.put(querySolution.getBinding("fund").getValue().stringValue(), fund);
+                    }
+                    fund.put(
+                            "id",
+                            querySolution.getBinding("fundId").getValue().stringValue()
+                    );
+                    if (querySolution.getBinding("fundLabel") != null) {
+                        fund.put(
+                                "label",
+                                querySolution.getBinding("fundLabel").getValue().stringValue()
+                        );
+                        fund.put(
+                                "fullLabel",
+                                querySolution.getBinding("fundId").getValue().stringValue()
+                                        + " - "
+                                        + querySolution.getBinding("fundLabel").getValue().stringValue()
+                        );
+                    } else {
+                        fund.put(
+                                "fullLabel",
+                                querySolution.getBinding("fundId").getValue().stringValue()
+                        );
+                    }
+                    if (querySolution.getBinding("fundWebsite") != null) {
+                        fund.put(
+                                "website",
+                                querySolution.getBinding("fundWebsite").getValue().stringValue()
+                        );
+                    }
+                    if (querySolution.getBinding("fundId") != null) {
 
-                if (querySolution.getBinding("fundLabel") != null) {
-                    result.put(
-                            "fundLabel",
-                            ((Literal) querySolution.getBinding("fundLabel").getValue()).stringValue());
+                    }
+
                 }
-
-                if (querySolution.getBinding("fundWebsite") != null) {
-                    result.put(
-                            "fundWebsite",
-                            querySolution.getBinding("fundWebsite").getValue().stringValue());
-                }
-
                 HashMap<String, Object> program;
                 if (querySolution.getBinding("program") != null) {
                     String programQID = querySolution.getBinding("program").getValue().stringValue();
@@ -588,6 +621,7 @@ public class ProjectController {
                 }
             }
             programs.addAll(tmpPrograms.values());
+            funds.addAll(tmpFunds.values());
 
             while (resultSetCoords.hasNext()) {
                 BindingSet querySolution = resultSetCoords.next();
@@ -667,7 +701,7 @@ public class ProjectController {
                                         + "?s <http://nuts.de/geoJson> ?geoJson . "
                                         + "}";
                         logger.debug("Retrieving nuts geometry");
-                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5, "projectDetail");
 
                         NutsRegion nutsRegion = new NutsRegion();
                         while (resultSet2.hasNext()) {
@@ -688,7 +722,7 @@ public class ProjectController {
                         // exception for Greece to use EL as nuts code and not GR
                         countryCode = "EL";
                     }
-                    if (!regionIDs.contains(countryCode)) {
+                    if (!regionIDs.contains(countryCode) && regionIDs.size() < 1) {
                         // check if the regioId has already been seen - could be that a project is contained in multiple geometries
                         regionIDs.add(countryCode);
                         query =
@@ -701,9 +735,8 @@ public class ProjectController {
                                         + "?s <http://nuts.de/geoJson> ?geoJson . "
                                         + "}";
                         logger.debug("Retrieving nuts geometry");
-                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5, "projectDetail");
 
-                        NutsRegion nutsRegion = new NutsRegion();
                         while (resultSet2.hasNext()) {
                             BindingSet querySolution2 = resultSet2.next();
                             if (querySolution2.getBinding("geoJson") != null) {
@@ -713,7 +746,17 @@ public class ProjectController {
                     }
                 }
             }
-
+            JSONArray geoJsons = (JSONArray) result.get("geoJson");
+            facetController.initialize(language);
+            regionIDs.forEach(s -> {
+                facetController.nutsRegion.forEach((s1, nut) -> {
+                    if (nut.nutsCode.equals(s)) {
+                        if (!geoJsons.contains(nut.geoJson)) {
+                            geoJsons.add(nut.geoJson);
+                        }
+                    }
+                });
+            });
             if (regionIDs.size() > 1) {
                 // means multiple region - change regionText
                 result.put("regionText", "Multiple locations, " + String.join(", ", (JSONArray) result.get("countryLabel")));
@@ -819,7 +862,7 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null,
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null, null,
                 timeout, principal
         );
     }
@@ -857,6 +900,8 @@ public class ProjectController {
             @RequestParam(value = "radius", required = false) Long radius,
             @RequestParam(value = "nuts3", required = false) String nuts3,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
+            @RequestParam(value = "highlighted", required = false) Boolean highlighted,
+            @RequestParam(value = "cci", required = false) String cci,
             Integer timeout,
             Principal principal
     )
@@ -929,6 +974,8 @@ public class ProjectController {
                 region,
                 nuts3,
                 interreg,
+                highlighted,
+                cci,
                 limit,
                 offset
         );
@@ -975,16 +1022,20 @@ public class ProjectController {
 
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
         // count the results with the applied filters
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "projectSearch");
         if (resultSet != null && resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
         }
 
         search += " " + orderQuery;
-
-        String mainQuery = "SELECT DISTINCT ?s0 WHERE { {" + search + " ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } UNION { " + search + "} } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout);
+        String mainQuery;
+        if ("".equals(orderQuery)) {
+            mainQuery = "SELECT DISTINCT ?s0 WHERE { {" + search + " ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } UNION { " + search + "} } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        } else {
+            mainQuery = "SELECT DISTINCT ?s0 WHERE {" + search + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+        }
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout, "projectSearch");
         StringBuilder values = new StringBuilder();
         int indexLimit = 0;
         int indexOffset = 0;
@@ -1022,10 +1073,10 @@ public class ProjectController {
                         + "} ";
 
 
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false, "projectSearch");
 
         HashMap<String, Project> resultMap = new HashMap<>();
-        ArrayList<Project> orderedResult  = new ArrayList<>();
+        ArrayList<Project> orderedResult = new ArrayList<>();
         ArrayList<String> similarWords = new ArrayList<>();
 
         while (resultSet.hasNext()) {
@@ -1295,7 +1346,7 @@ public class ProjectController {
 
             }
         }
-        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, limit, offset);
+        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, null, null, limit, offset);
 
         //computing the number of results
         String searchCount = search;
@@ -1305,7 +1356,7 @@ public class ProjectController {
                 + language
                 + "\") "
                 + "} ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 25);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 25, "projectSearchImage");
         int numResults = 0;
         if (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -1329,7 +1380,7 @@ public class ProjectController {
                         + limit
                         + " offset "
                         + offset;
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "projectSearchImage");
 
         JSONArray resultList = new JSONArray();
         Set<String> images = new HashSet<>();

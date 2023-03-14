@@ -1,5 +1,7 @@
 package eu.ec.doris.kohesio.services;
 
+import com.opencsv.CSVWriter;
+
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryResults;
@@ -30,11 +32,11 @@ public class SPARQLQueryService {
     @Value("${kohesio.directory}")
     String location;
 
-    public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout) throws Exception {
-        return this.executeAndCacheQuery(sparqlEndpoint, query, timeout, true);
+    public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, String type) throws Exception {
+        return this.executeAndCacheQuery(sparqlEndpoint, query, timeout, true, type);
     }
 
-    public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache) {
+    public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache, String type) {
         query = spaceCleaner.matcher(query).replaceAll(" ");
         logger.info("Executing given query: " + query);
         long start = System.nanoTime();
@@ -88,6 +90,14 @@ public class SPARQLQueryService {
             long end = System.nanoTime();
             logger.info("Was NOT cached " + query );
             logger.info("Time "+ (end - start) / 1000000);
+
+
+//            try (CSVWriter writer2 = new CSVWriter(new FileWriter("/Users/Dennis/Downloads/queries.csv", true))) {
+//                String[] entry = {query, type, Long.toString((end - start)/ 1000000)};
+//                writer2.writeNext(entry);
+//            }
+
+
             return tupleQueryResultHandler.getQueryResult();
         } catch (QueryEvaluationException e) {
             logger.error("Query Evaluation Exception: [" + e.getMessage() + "]");

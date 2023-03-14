@@ -88,7 +88,7 @@ public class GeneralController {
 
         String queryCount = "SELECT (COUNT(DISTINCT ?general) as ?c) { " + search + "} ";
         logger.debug(queryCount);
-        TupleQueryResult resultCount = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 120);
+        TupleQueryResult resultCount = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, 120, "search");
         int numResults = 0;
         if (resultCount.hasNext()) {
             BindingSet querySolution = resultCount.next();
@@ -130,7 +130,7 @@ public class GeneralController {
                         + "}";
 
         logger.debug(query);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 120, "search");
 //        ArrayList<General> generals = new ArrayList<>();
         HashMap<String, General> generals = new HashMap<>();
 
