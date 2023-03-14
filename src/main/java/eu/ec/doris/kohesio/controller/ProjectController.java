@@ -204,9 +204,9 @@ public class ProjectController {
                     + "FILTER(STRLEN(STR(?regionId))>=5) "
                     + "}";
 
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 3, false);
-            TupleQueryResult resultSetCoords = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCoordinates, 3, false);
-            TupleQueryResult resultSetRegion = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryRegion, 3, false);
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 3, false, "projectDetail");
+            TupleQueryResult resultSetCoords = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCoordinates, 3, false, "projectDetail");
+            TupleQueryResult resultSetRegion = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryRegion, 3, false, "projectDetail");
 
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
@@ -701,7 +701,7 @@ public class ProjectController {
                                         + "?s <http://nuts.de/geoJson> ?geoJson . "
                                         + "}";
                         logger.debug("Retrieving nuts geometry");
-                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5, "projectDetail");
 
                         NutsRegion nutsRegion = new NutsRegion();
                         while (resultSet2.hasNext()) {
@@ -735,7 +735,7 @@ public class ProjectController {
                                         + "?s <http://nuts.de/geoJson> ?geoJson . "
                                         + "}";
                         logger.debug("Retrieving nuts geometry");
-                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5);
+                        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(getSparqlEndpointNuts, query, 5, "projectDetail");
 
                         while (resultSet2.hasNext()) {
                             BindingSet querySolution2 = resultSet2.next();
@@ -1022,7 +1022,7 @@ public class ProjectController {
 
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
         // count the results with the applied filters
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "projectSearch");
         if (resultSet != null && resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
@@ -1035,7 +1035,7 @@ public class ProjectController {
         } else {
             mainQuery = "SELECT DISTINCT ?s0 WHERE {" + search + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
         }
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout, "projectSearch");
         StringBuilder values = new StringBuilder();
         int indexLimit = 0;
         int indexOffset = 0;
@@ -1073,7 +1073,7 @@ public class ProjectController {
                         + "} ";
 
 
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false, "projectSearch");
 
         HashMap<String, Project> resultMap = new HashMap<>();
         ArrayList<Project> orderedResult = new ArrayList<>();
@@ -1356,7 +1356,7 @@ public class ProjectController {
                 + language
                 + "\") "
                 + "} ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 25);
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 25, "projectSearchImage");
         int numResults = 0;
         if (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -1380,7 +1380,7 @@ public class ProjectController {
                         + limit
                         + " offset "
                         + offset;
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "projectSearchImage");
 
         JSONArray resultList = new JSONArray();
         Set<String> images = new HashSet<>();
