@@ -331,21 +331,33 @@ public class MapController {
             resultList.add(point);
         }
         if (cci != null) {
-            String queryProgramNuts = "SELECT DISTINCT ?c WHERE { "
+            String queryProgramNuts = "SELECT DISTINCT ?country ?nuts WHERE { "
                     + " ?prg <https://linkedopendata.eu/prop/direct/P1367> \"" + cci + "\". "
-                    + " ?prg <https://linkedopendata.eu/prop/direct/P32> ?c."
+                    + " ?prg <https://linkedopendata.eu/prop/direct/P32> ?country."
+                    + " ?prg <https://linkedopendata.eu/prop/direct/P2316> ?nuts."
                     + "}";
             TupleQueryResult resultSetProgramNuts = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryProgramNuts, timeout, "point");
             List<String> programCountry = new ArrayList<>();
+            List<String> programNuts = new ArrayList<>();
             while (resultSetProgramNuts.hasNext()) {
                 BindingSet querySolution = resultSetProgramNuts.next();
-                programCountry.add(querySolution.getBinding("c").getValue().stringValue());
+                if (!programCountry.contains(querySolution.getBinding("country").getValue().stringValue())) {
+                    programCountry.add(querySolution.getBinding("country").getValue().stringValue());
+                }
+                if (!programNuts.contains(querySolution.getBinding("nuts").getValue().stringValue())) {
+                    programNuts.add(querySolution.getBinding("nuts").getValue().stringValue());
+                }
             }
-            if (programCountry.size() == 1) {
+            if (programNuts.size() == 1) {
+                granularityRegion = programNuts.get(0);
+            } else if (programCountry.size() == 1) {
                 granularityRegion = programCountry.get(0);
             } else {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
             }
+            System.err.println(granularityRegion);
+            System.err.println(programNuts);
+            System.err.println(programCountry);
         }
         if (granularityRegion == null) {
             granularityRegion = "https://linkedopendata.eu/entity/Q1";
