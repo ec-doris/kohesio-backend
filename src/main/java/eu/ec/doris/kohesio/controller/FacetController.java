@@ -929,41 +929,42 @@ public class FacetController {
 //                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> ?country. ?country rdfs:label ?countryLabel; <https://linkedopendata.eu/prop/direct/P173> ?countryCode. FILTER(LANG(?countryLabel) = \"" + language + "\")}. "
 //                + "  BIND(IF(BOUND(?list_of_operation_label_lg), ?list_of_operation_label_lg, ?list_of_operation_label_en) AS ?list_of_operation_label) ";
 
-        String query = "SELECT DISTINCT ?list_of_operation_label ?list_of_operation_id ?list_of_operation_qid ?list_of_operation_url ?list_of_operation_first_ingestion ?list_of_operation_last_update ?cci ?country ?countryLabel ?countryCode WHERE { "
-                + "  { "
-                + "    SELECT DISTINCT ?list_of_operation_qid ?list_of_operation_id ?list_of_operation_url ?list_of_operation_label ?cci ?country ?list_of_operation_first_ingestion ?list_of_operation_last_update WHERE { "
-                + "      ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
-                + "        <https://linkedopendata.eu/prop/direct/P578950> ?list_of_operation_id; "
-                + "        rdfs:label ?list_of_operation_label_en; "
-                + "        <https://linkedopendata.eu/prop/direct/P578951> ?list_of_operation_url; "
-                + "        <https://linkedopendata.eu/prop/direct/P579181> ?prg. "
-                + "      FILTER((LANG(?list_of_operation_label_en)) = \"en\") "
-                + "      ?prg <https://linkedopendata.eu/prop/direct/P1367> ?cci. "
-                + "      OPTIONAL { "
-                + "        ?list_of_operation_qid rdfs:label ?list_of_operation_label_lg. "
-                + "        FILTER((LANG(?list_of_operation_label_lg)) = \"" + language + "\") "
-                + "        BIND(IF(BOUND(?list_of_operation_label_lg), ?list_of_operation_label_lg, ?list_of_operation_label_en) AS ?list_of_operation_label) "
-                + "      } ";
-        if (country != null) {
-            query += "      ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
-        } else {
-            query += "      OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> ?country. } ";
-        }
-        query += "      OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579182> ?list_of_operation_first_ingestion. } "
-                + "      OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } "
-                + "    } "
+        String query1 = "SELECT DISTINCT ?list_of_operation_label ?list_of_operation_id ?list_of_operation_qid ?list_of_operation_url ?list_of_operation_first_ingestion ?list_of_operation_last_update ?cci ?country WHERE { "
+                + "  ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
+                + "    <https://linkedopendata.eu/prop/direct/P578950> ?list_of_operation_id; "
+                + "    rdfs:label ?list_of_operation_label_en; "
+                + "    <https://linkedopendata.eu/prop/direct/P578951> ?list_of_operation_url. "
+                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579181> ?prg. "
+                + "    FILTER((LANG(?list_of_operation_label_en)) = \"en\") "
+                + "    ?prg <https://linkedopendata.eu/prop/direct/P1367> ?cci. "
                 + "  } "
                 + "  OPTIONAL { "
-                + "    ?country rdfs:label ?countryLabel; "
-                + "      <https://linkedopendata.eu/prop/direct/P173> ?countryCode. "
-                + "    FILTER((LANG(?countryLabel)) = \"" + language + "\") "
+                + "    ?list_of_operation_qid rdfs:label ?list_of_operation_label_lg. "
+                + "    FILTER((LANG(?list_of_operation_label_lg)) = \"" + language + "\") "
                 + "  } "
+                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579182> ?list_of_operation_first_ingestion. } "
+                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } "
+                + "  BIND(IF(BOUND(?list_of_operation_label_lg), ?list_of_operation_label_lg, ?list_of_operation_label_en) AS ?list_of_operation_label) ";
+        if (country != null) {
+            query1 += " ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+        }
+        query1 += "} ";
+
+        String query2 = "SELECT DISTINCT ?list_of_operation_qid ?country ?countryLabel ?countryCode WHERE { ";
+        if (country != null) {
+            query2 += " VALUES ?country {<" + country + "> } ";
+        }
+        query2 += "  ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
+                + "    <https://linkedopendata.eu/prop/direct/P32> ?country. "
+                + "  ?country rdfs:label ?countryLabel; "
+                + "    <https://linkedopendata.eu/prop/direct/P173> ?countryCode. "
+                + "  FILTER((LANG(?countryLabel)) = \"" + language + "\") "
                 + "}";
-        query += "}";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
+        TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query1, 10, "facet");
+
         HashMap<String, JSONObject> resultMap = new HashMap<>();
-        while (resultSet.hasNext()) {
-            BindingSet querySolution = resultSet.next();
+        while (resultSet1.hasNext()) {
+            BindingSet querySolution = resultSet1.next();
             String instanceQid = querySolution.getBinding("list_of_operation_qid").getValue().stringValue();
             JSONObject element;
             if (resultMap.containsKey(instanceQid)) {
@@ -997,17 +998,27 @@ public class FacetController {
                 element.put("country", new JSONArray());
                 resultMap.put(instanceQid, element);
             }
-            if (!((JSONArray) element.get("ccis")).contains(querySolution.getBinding("cci").getValue().stringValue())) {
+            if (querySolution.getBinding("cci") != null && !((JSONArray) element.get("ccis")).contains(querySolution.getBinding("cci").getValue().stringValue())) {
                 ((JSONArray) element.get("ccis")).add(querySolution.getBinding("cci").getValue().stringValue());
             }
-            if (querySolution.getBinding("country") != null) {
-                JSONObject objectCountry = new JSONObject();
-                objectCountry.put("qid", querySolution.getBinding("country").getValue().stringValue());
-                objectCountry.put("label", querySolution.getBinding("countryLabel").getValue().stringValue());
-                objectCountry.put("code", querySolution.getBinding("countryCode").getValue().stringValue());
+        }
 
-                if (!((JSONArray) element.get("country")).contains(objectCountry)) {
-                    ((JSONArray) element.get("country")).add(objectCountry);
+        TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query2, 10, "facet");
+        while (resultSet2.hasNext()) {
+            BindingSet querySolution = resultSet2.next();
+            String instanceQid = querySolution.getBinding("list_of_operation_qid").getValue().stringValue();
+            JSONObject element;
+            if (resultMap.containsKey(instanceQid)) {
+                element = resultMap.get(instanceQid);
+                if (querySolution.getBinding("country") != null) {
+                    JSONObject objectCountry = new JSONObject();
+                    objectCountry.put("qid", querySolution.getBinding("country").getValue().stringValue());
+                    objectCountry.put("label", querySolution.getBinding("countryLabel").getValue().stringValue());
+                    objectCountry.put("code", querySolution.getBinding("countryCode").getValue().stringValue());
+
+                    if (!((JSONArray) element.get("country")).contains(objectCountry)) {
+                        ((JSONArray) element.get("country")).add(objectCountry);
+                    }
                 }
             }
         }
