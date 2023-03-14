@@ -912,27 +912,55 @@ public class FacetController {
             @RequestParam(value = "language", defaultValue = "en") String language,
             @RequestParam(value = "country", required = false) String country
     ) throws Exception {
-        String query = "SELECT DISTINCT ?list_of_operation_label ?list_of_operation_id "
-                + " ?list_of_operation_qid ?list_of_operation_url ?list_of_operation_first_ingestion "
-                + " ?list_of_operation_last_update ?cci ?country ?countryLabel ?countryCode "
-                + " WHERE {"
-                + " ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
-                + "   <https://linkedopendata.eu/prop/direct/P578950> ?list_of_operation_id; "
-                + "    rdfs:label ?list_of_operation_label_en; "
-                + "    <https://linkedopendata.eu/prop/direct/P578951> ?list_of_operation_url; "
-                + "    <https://linkedopendata.eu/prop/direct/P579181> ?prg. "
-                + "  FILTER((LANG(?list_of_operation_label_en)) = \"en\") "
-                + "  ?prg <https://linkedopendata.eu/prop/direct/P1367> ?cci. "
-                + "  OPTIONAL { ?list_of_operation_qid rdfs:label ?list_of_operation_label_lg. FILTER((LANG(?list_of_operation_label_lg)) = \"" + language + "\")} "
-                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579182> ?list_of_operation_first_ingestion. } "
-                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } "
-                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> ?country. ?country rdfs:label ?countryLabel; <https://linkedopendata.eu/prop/direct/P173> ?countryCode. FILTER(LANG(?countryLabel) = \"" + language + "\")}. "
-                + "  BIND(IF(BOUND(?list_of_operation_label_lg), ?list_of_operation_label_lg, ?list_of_operation_label_en) AS ?list_of_operation_label) ";
+//        String query = "SELECT DISTINCT ?list_of_operation_label ?list_of_operation_id "
+//                + " ?list_of_operation_qid ?list_of_operation_url ?list_of_operation_first_ingestion "
+//                + " ?list_of_operation_last_update ?cci ?country ?countryLabel ?countryCode "
+//                + " WHERE {"
+//                + " ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
+//                + "   <https://linkedopendata.eu/prop/direct/P578950> ?list_of_operation_id; "
+//                + "    rdfs:label ?list_of_operation_label_en; "
+//                + "    <https://linkedopendata.eu/prop/direct/P578951> ?list_of_operation_url; "
+//                + "    <https://linkedopendata.eu/prop/direct/P579181> ?prg. "
+//                + "  FILTER((LANG(?list_of_operation_label_en)) = \"en\") "
+//                + "  ?prg <https://linkedopendata.eu/prop/direct/P1367> ?cci. "
+//                + "  OPTIONAL { ?list_of_operation_qid rdfs:label ?list_of_operation_label_lg. FILTER((LANG(?list_of_operation_label_lg)) = \"" + language + "\")} "
+//                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579182> ?list_of_operation_first_ingestion. } "
+//                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } "
+//                + "  OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> ?country. ?country rdfs:label ?countryLabel; <https://linkedopendata.eu/prop/direct/P173> ?countryCode. FILTER(LANG(?countryLabel) = \"" + language + "\")}. "
+//                + "  BIND(IF(BOUND(?list_of_operation_label_lg), ?list_of_operation_label_lg, ?list_of_operation_label_en) AS ?list_of_operation_label) ";
+
+        String query = "SELECT DISTINCT ?list_of_operation_label ?list_of_operation_id ?list_of_operation_qid ?list_of_operation_url ?list_of_operation_first_ingestion ?list_of_operation_last_update ?cci ?country ?countryLabel ?countryCode WHERE { "
+                + "  { "
+                + "    SELECT DISTINCT ?list_of_operation_qid ?list_of_operation_id ?list_of_operation_url ?list_of_operation_label ?cci ?country ?list_of_operation_first_ingestion ?list_of_operation_last_update WHERE { "
+                + "      ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4552790>; "
+                + "        <https://linkedopendata.eu/prop/direct/P578950> ?list_of_operation_id; "
+                + "        rdfs:label ?list_of_operation_label_en; "
+                + "        <https://linkedopendata.eu/prop/direct/P578951> ?list_of_operation_url; "
+                + "        <https://linkedopendata.eu/prop/direct/P579181> ?prg. "
+                + "      FILTER((LANG(?list_of_operation_label_en)) = \"en\") "
+                + "      ?prg <https://linkedopendata.eu/prop/direct/P1367> ?cci. "
+                + "      OPTIONAL { "
+                + "        ?list_of_operation_qid rdfs:label ?list_of_operation_label_lg. "
+                + "        FILTER((LANG(?list_of_operation_label_lg)) = \"" + language + "\") "
+                + "        BIND(IF(BOUND(?list_of_operation_label_lg), ?list_of_operation_label_lg, ?list_of_operation_label_en) AS ?list_of_operation_label) "
+                + "      } ";
         if (country != null) {
-            query += "?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+            query += "      ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+        } else {
+            query += "      OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P32> ?country. } ";
         }
-        query += "}";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10);
+        query += "      OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579182> ?list_of_operation_first_ingestion. } "
+                + "      OPTIONAL { ?list_of_operation_qid <https://linkedopendata.eu/prop/direct/P579183> ?list_of_operation_last_update. } "
+                + "    } "
+                + "  } "
+                + "  OPTIONAL { "
+                + "    ?country rdfs:label ?countryLabel; "
+                + "      <https://linkedopendata.eu/prop/direct/P173> ?countryCode. "
+                + "    FILTER((LANG(?countryLabel)) = \"" + language + "\") "
+                + "  } "
+                + "}";
+
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 100, false);
         HashMap<String, JSONObject> resultMap = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
