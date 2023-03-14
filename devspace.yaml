@@ -1,0 +1,81 @@
+version: v1beta11
+
+vars:
+  - name: APP_IMAGE
+    value: maven:3.6.0-jdk-11-slim
+  - name: QANSWER_ENDPOINT
+    value: https://eu.the-qa-company.com/api/endpoint/commission/eu/sparql
+  - name: QANSWER_ENDPOINT_NUTS
+    value: https://eu.the-qa-company.com/api/endpoint/commission/eu/sparql
+  - name: KOHESIO_PUBLIC_URL
+    value: kohesio.local.europa.eu
+  - name: SIMILARITY_SERVICE_API_KEY
+    value: test
+
+deployments:
+  - name: kohesio-backend
+    helm:
+      componentChart: true
+      values:
+        containers:
+          - name: maven
+            image: ${APP_IMAGE}
+            workingDir: /app
+            command:
+              - "/bin/sh"
+            args:
+              - "-c"
+              - |
+                sleep 99999999;
+            env:
+              - name: QANSWER_ENDPOINT
+                value: ${QANSWER_ENDPOINT}
+              - name: QANSWER_ENDPOINT_NUTS
+                value: ${QANSWER_ENDPOINT_NUTS}
+              - name: KOHESIO_PUBLIC_URL
+                value: ${KOHESIO_PUBLIC_URL}
+              - name: SIMILARITY_SERVICE_API_KEY
+                value: ${SIMILARITY_SERVICE_API_KEY}
+        service:
+          ports:
+            - port: 5678
+
+dev:
+  sync:
+    - imageSelector: ${APP_IMAGE}
+      containerPath: /app
+      excludePaths:
+        - .git/
+        - .github/
+        - .idea/
+        - .devspace/
+        - devspace/
+        - README.md
+        - target
+      uploadExcludePaths:
+        - Dockerfile
+        - devspace.yaml
+        - deploy/
+        - node_modules/
+        - dist/
+        - target
+  terminal:
+    imageSelector: ${APP_IMAGE}
+    command: ["mvn spring-boot:run -Dspring-boot.run.arguments='--spring.config.location=src/main/resources/config/application-k8s-prod.properties'"]
+
+hooks:
+  - command: |
+      mvn clean install
+    container:
+      imageSelector: ${APP_IMAGE}
+    events: ["after:initialSync:*"]
+
+commands:
+  - name: start-app
+    description: Run the application on local
+    command: devspace enter -c maven -- mvn spring-boot:run -Dspring-boot.run.arguments="--spring.config.location=src/main/resources/config/application-k8s-prod.properties"
+    appendArgs: true
+  - name: install-dependencies
+    description: Install maven dependencies
+    command: devspace enter -c maven -- mvn clean install
+    appendArgs: true

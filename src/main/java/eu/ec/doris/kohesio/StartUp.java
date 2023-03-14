@@ -34,7 +34,7 @@ public class StartUp {
         if (initialize)
             facetController.initialize("en");
         System.out.println("Welcome to the Kohesio-backend!");
-        System.out.println("Open swagger documentation at http://localhost:" + port + "/swagger-ui.html");
+        System.out.println("Open swagger documentation at http://localhost:" + port + "/api/swagger-ui.html");
 
     }
 

@@ -15,30 +15,33 @@ public class FiltersGenerator {
     @Autowired
     SimilarityService similarityService;
 
-    public String filterProject(String keywords,
-                                String language,
-                                String country,
-                                String theme,
-                                String fund,
-                                String program,
-                                String categoryOfIntervention,
-                                String policyObjective,
-                                Long budgetBiggerThen,
-                                Long budgetSmallerThen,
-                                Long budgetEUBiggerThen,
-                                Long budgetEUSmallerThen,
-                                String startDateBefore,
-                                String startDateAfter,
-                                String endDateBefore,
-                                String endDateAfter,
-                                String latitude,
-                                String longitude,
-                                Long radius,
-                                String region,
-                                String granularityRegion,
-                                Boolean interreg,
-                                Integer limit,
-                                Integer offset) throws IOException {
+    public String filterProject(
+            String keywords,
+            String language,
+            String country,
+            String theme,
+            String fund,
+            String program,
+            String categoryOfIntervention,
+            String policyObjective,
+            Long budgetBiggerThen,
+            Long budgetSmallerThen,
+            Long budgetEUBiggerThen,
+            Long budgetEUSmallerThen,
+            String startDateBefore,
+            String startDateAfter,
+            String endDateBefore,
+            String endDateAfter,
+            String latitude,
+            String longitude,
+            Long radius,
+            String region,
+            String granularityRegion,
+            Boolean interreg,
+            Boolean highlighted,
+            String cci,
+            Integer limit,
+            Integer offset) throws IOException {
         String search = "";
 
         search +=
@@ -60,7 +63,7 @@ public class FiltersGenerator {
                             + "<http://www.openrdf.org/contrib/lucenesail#query> \""
                             + keywords.replace("\"", "\\\"")
                             + "\"; "
-                            + " <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Proj_"+language+"> "
+                            + " <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Proj_" + language + "> "
 //                            "<http://www.openrdf.org/contrib/lucenesail#snippet> ?description"+
                             + "] .";
 
@@ -109,18 +112,31 @@ public class FiltersGenerator {
             search += "?s0 <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
         }
 
+        if (cci != null) {
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
+                    + " ?program <https://linkedopendata.eu/prop/direct/P1367> \"" + cci + "\" . "
+            ;
+        }
+
         if (categoryOfIntervention != null) {
             search +=
                     "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention + "> . ";
         }
 
         if (interreg != null && interreg) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId . ";
+            search += "?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId . ";
         }
         if (interreg != null && !interreg) {
             search +=
                     "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId . } FILTER(!BOUND(?keepId))";
+        }
+        if (highlighted != null && highlighted) {
+            search +=
+                    "?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . ";
+        }
+        if (highlighted != null && !highlighted) {
+            search +=
+                    "FILTER(NOT EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . } )";
         }
 
         if (budgetSmallerThen != null || budgetBiggerThen != null) {
@@ -219,7 +235,7 @@ public class FiltersGenerator {
         mapping.put("<https://linkedopendata.eu/entity/Q11>", Arrays.asList("sv")); // sweden
         mapping.put("<https://linkedopendata.eu/entity/Q7>", Arrays.asList("es")); // spain
         mapping.put("<https://linkedopendata.eu/entity/Q22>", Arrays.asList("de")); // germany
-        mapping.put("<https://linkedopendata.eu/entity/Q31>", Arrays.asList("el","en")); // cyprus
+        mapping.put("<https://linkedopendata.eu/entity/Q31>", Arrays.asList("el", "en")); // cyprus
         mapping.put("<https://linkedopendata.eu/entity/Q17>", Arrays.asList("el")); // greece
         mapping.put("<https://linkedopendata.eu/entity/Q25>", Arrays.asList("cs")); // czech republic
         mapping.put("<https://linkedopendata.eu/entity/Q13>", Arrays.asList("pl")); // poland
