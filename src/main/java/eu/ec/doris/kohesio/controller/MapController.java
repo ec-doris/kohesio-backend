@@ -27,6 +27,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -331,21 +332,35 @@ public class MapController {
             resultList.add(point);
         }
         if (cci != null) {
-            String queryProgramNuts = "SELECT DISTINCT ?c WHERE { "
+            String queryProgramNuts = "SELECT DISTINCT ?country ?nuts WHERE { "
                     + " ?prg <https://linkedopendata.eu/prop/direct/P1367> \"" + cci + "\". "
-                    + " ?prg <https://linkedopendata.eu/prop/direct/P32> ?c."
+                    + " ?prg <https://linkedopendata.eu/prop/direct/P32> ?country."
+                    + " ?prg <https://linkedopendata.eu/prop/direct/P2316> ?nuts."
                     + "}";
             TupleQueryResult resultSetProgramNuts = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryProgramNuts, timeout, "point");
             List<String> programCountry = new ArrayList<>();
+            List<String> programNuts = new ArrayList<>();
             while (resultSetProgramNuts.hasNext()) {
                 BindingSet querySolution = resultSetProgramNuts.next();
-                programCountry.add(querySolution.getBinding("c").getValue().stringValue());
+                if (!programCountry.contains(querySolution.getBinding("country").getValue().stringValue())) {
+                    programCountry.add(querySolution.getBinding("country").getValue().stringValue());
+                }
+                if (!programNuts.contains(querySolution.getBinding("nuts").getValue().stringValue())) {
+                    programNuts.add(querySolution.getBinding("nuts").getValue().stringValue());
+                }
             }
-            if (programCountry.size() == 1) {
+            if (programNuts.size() == 1) {
+                granularityRegion = programNuts.get(0);
+            } else if (programCountry.size() == 1) {
                 granularityRegion = programCountry.get(0);
             } else {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
             }
+//            granularityRegion = getSmallestCommonNuts(programNuts);
+            System.err.println(granularityRegion);
+            System.err.println(programNuts);
+            System.err.println(programCountry);
+            System.err.println(findUpperRegions(granularityRegion, language));
         }
         if (granularityRegion == null) {
             granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -366,7 +381,41 @@ public class MapController {
         } else {
             result.put("geoJson", "");
         }
-        return new ResponseEntity<JSONObject>((JSONObject) result, HttpStatus.OK);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    private String getSmallestCommonNuts(List<String> nuts) {
+        if (nuts.size() == 0) {
+            return null;
+        }
+        if (nuts.size() == 1) {
+            return nuts.get(0);
+        }
+        HashMap<String, List<String>> upperNuts = new HashMap<>();
+        nuts.forEach(s1 -> {
+            upperNuts.put(s1, new ArrayList<>());
+        });
+        facetController.nutsRegion.forEach((s, nut) -> {
+            nuts.forEach(s1 -> {
+                if (nut.narrower.contains(s1)) {
+                    if (!upperNuts.get(s1).contains(s)) {
+                        upperNuts.get(s1).add(s);
+                    }
+                }
+            });
+        });
+        boolean found = true;
+        List<String> newNuts = new ArrayList<>();
+        for (Map.Entry<String, List<String>> entry : upperNuts.entrySet()) {
+            entry.getValue().forEach(s -> {
+                if (!newNuts.contains(s)){
+                    newNuts.add(s);
+                }
+            });
+
+//            found &= entry.getValue().size() == 1;
+        }
+        return getSmallestCommonNuts(newNuts);
     }
 
     @GetMapping(value = "/facet/eu/search/project/map/point", produces = "application/json")
@@ -576,7 +625,7 @@ public class MapController {
 
     private JSONArray findUpperRegions(String region, String lang) {
         JSONArray upperRegions = new JSONArray();
-        JSONObject upperRegion = null;
+        JSONObject upperRegion;
 
         do {
             upperRegion = findUpperRegion(region, lang);
