@@ -425,7 +425,7 @@ public class BeneficiaryController {
             if (orderEuBudget) {
                 orderBy = " ORDER BY ASC(?totalEuBudget) ";
                 orderComparator = Comparator.comparing(beneficiary -> {
-                    if (!"".equals(((Beneficiary) beneficiary).getBudget())) {
+                    if (!"".equals(((Beneficiary) beneficiary).getEuBudget())) {
                         return Double.parseDouble(((Beneficiary) beneficiary).getEuBudget());
                     }
                     return 0.;
@@ -433,7 +433,7 @@ public class BeneficiaryController {
             } else {
                 orderBy = " ORDER BY DESC(?totalEuBudget) ";
                 orderComparator = Comparator.comparing(beneficiary -> {
-                    if (!"".equals(((Beneficiary) beneficiary).getBudget())) {
+                    if (!"".equals(((Beneficiary) beneficiary).getEuBudget())) {
                         return Double.parseDouble(((Beneficiary) beneficiary).getEuBudget());
                     }
                     return 0.;
