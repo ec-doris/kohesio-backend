@@ -405,19 +405,39 @@ public class BeneficiaryController {
         if (orderTotalBudget != null) {
             if (orderTotalBudget) {
                 orderBy = " ORDER BY ASC(?totalBudget) ";
-                orderComparator = Comparator.comparing(beneficiary -> Double.parseDouble(((Beneficiary) beneficiary).getBudget()));
+                orderComparator = Comparator.comparing(beneficiary -> {
+                    if (!"".equals(((Beneficiary) beneficiary).getBudget())) {
+                        return Double.parseDouble(((Beneficiary) beneficiary).getBudget());
+                    }
+                    return 0.;
+                });
             } else {
                 orderBy = " ORDER BY DESC(?totalBudget) ";
-                orderComparator = Comparator.comparing(beneficiary -> Double.parseDouble(((Beneficiary) beneficiary).getBudget())).reversed();
+                orderComparator = Comparator.comparing(beneficiary -> {
+                    if (!"".equals(((Beneficiary) beneficiary).getBudget())) {
+                        return Double.parseDouble(((Beneficiary) beneficiary).getBudget());
+                    }
+                    return 0.;
+                }).reversed();
             }
         }
         if (orderEuBudget != null) {
             if (orderEuBudget) {
                 orderBy = " ORDER BY ASC(?totalEuBudget) ";
-                orderComparator = Comparator.comparing(beneficiary -> Double.parseDouble(((Beneficiary) beneficiary).getEuBudget()));
+                orderComparator = Comparator.comparing(beneficiary -> {
+                    if (!"".equals(((Beneficiary) beneficiary).getBudget())) {
+                        return Double.parseDouble(((Beneficiary) beneficiary).getEuBudget());
+                    }
+                    return 0.;
+                });
             } else {
                 orderBy = " ORDER BY DESC(?totalEuBudget) ";
-                orderComparator = Comparator.comparing(beneficiary -> Double.parseDouble(((Beneficiary) beneficiary).getEuBudget())).reversed();
+                orderComparator = Comparator.comparing(beneficiary -> {
+                    if (!"".equals(((Beneficiary) beneficiary).getBudget())) {
+                        return Double.parseDouble(((Beneficiary) beneficiary).getEuBudget());
+                    }
+                    return 0.;
+                }).reversed();
             }
         }
         if (orderNumProjects != null) {
