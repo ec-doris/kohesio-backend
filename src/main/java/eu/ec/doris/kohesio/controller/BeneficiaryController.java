@@ -86,7 +86,7 @@ public class BeneficiaryController {
 //            } else {
             JSONObject result = new JSONObject();
             result.put("message", "Bad Request - beneficiary ID not found");
-            return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
 //            }
         }
 
@@ -155,8 +155,7 @@ public class BeneficiaryController {
                 + "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } "
                 + "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . "
                 + "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } "
-                + " } GROUP BY ?fundLabel ORDER BY DESC(?totalEuBudget)"
-                ;
+                + " } GROUP BY ?fundLabel ORDER BY DESC(?totalEuBudget)";
 
         TupleQueryResult resultSet1 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query1, 30, "beneficiaryDetail");
         JSONObject result = new JSONObject();
@@ -294,24 +293,23 @@ public class BeneficiaryController {
     }
 
     @GetMapping(value = "/facet/eu/search/beneficiaries", produces = "application/json")
-    public ResponseEntity euSearchBeneficiaries( //
-                                                 @RequestParam(value = "language", defaultValue = "en") String language,
-                                                 @RequestParam(value = "name", required = false) String keywords, //
-                                                 @RequestParam(value = "country", required = false) String country, //
-                                                 @RequestParam(value = "region", required = false) String region, //
-                                                 @RequestParam(value = "latitude", required = false) String latitude, //
-                                                 @RequestParam(value = "longitude", required = false) String longitude, //
-                                                 @RequestParam(value = "fund", required = false) String fund, //
-                                                 @RequestParam(value = "program", required = false) String program, //
-                                                 @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType, //
-
-                                                 @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
-                                                 @RequestParam(value = "orderTotalBudget", defaultValue = "false") Boolean orderTotalBudget,
-                                                 @RequestParam(value = "orderNumProjects", required = false) Boolean orderNumProjects,
-                                                 @RequestParam(value = "limit", defaultValue = "200") int limit,
-                                                 @RequestParam(value = "offset", defaultValue = "0") int offset,
-                                                 Principal principal)
-            throws Exception {
+    public ResponseEntity euSearchBeneficiaries(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "name", required = false) String keywords,
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "region", required = false) String region,
+            @RequestParam(value = "latitude", required = false) String latitude,
+            @RequestParam(value = "longitude", required = false) String longitude,
+            @RequestParam(value = "fund", required = false) String fund,
+            @RequestParam(value = "program", required = false) String program,
+            @RequestParam(value = "beneficiaryType", required = false) String beneficiaryType,
+            @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+            @RequestParam(value = "orderTotalBudget", defaultValue = "false") Boolean orderTotalBudget,
+            @RequestParam(value = "orderNumProjects", required = false) Boolean orderNumProjects,
+            @RequestParam(value = "limit", defaultValue = "200") int limit,
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            Principal principal
+    ) throws Exception {
         int timeout = 20;
         if (keywords == null) {
             timeout = 500;
@@ -333,9 +331,7 @@ public class BeneficiaryController {
         String search = "";
 
         search += "?project <https://linkedopendata.eu/prop/direct/P889> ?beneficiary . "
-                + "?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
-                + "OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget.} "
-                + "OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget.} ";
+                + "?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
 
         if (keywords != null) {
             if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
@@ -388,11 +384,15 @@ public class BeneficiaryController {
                         + "?blank_class <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q2630486>. ";
             }
         }
-        String queryCount = "SELECT (COUNT(DISTINCT ?beneficiary) AS ?c) { " + search + " }";
+        String queryCount = "SELECT (COUNT(DISTINCT ?beneficiary) AS ?c) WHERE { " + search + " }";
         logger.debug(queryCount);
 
 
         TupleQueryResult countResultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCount, timeout, "beneficiarySearch");
+
+        search += "OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget.} "
+                + "OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P474> ?budget.} ";
+
         int numResults = 0;
         if (countResultSet.hasNext()) {
             BindingSet querySolution = countResultSet.next();
@@ -401,26 +401,52 @@ public class BeneficiaryController {
 
 
         String orderBy = "";
-
+        Comparator<Object> orderComparator = null;
         if (orderTotalBudget != null) {
             if (orderTotalBudget) {
                 orderBy = " ORDER BY ASC(?totalBudget) ";
+                orderComparator = Comparator.comparing(beneficiary -> {
+                    if (!"".equals(((Beneficiary) beneficiary).getBudget())) {
+                        return Double.parseDouble(((Beneficiary) beneficiary).getBudget());
+                    }
+                    return 0.;
+                });
             } else {
                 orderBy = " ORDER BY DESC(?totalBudget) ";
+                orderComparator = Comparator.comparing(beneficiary -> {
+                    if (!"".equals(((Beneficiary) beneficiary).getBudget())) {
+                        return Double.parseDouble(((Beneficiary) beneficiary).getBudget());
+                    }
+                    return 0.;
+                }).reversed();
             }
         }
         if (orderEuBudget != null) {
             if (orderEuBudget) {
                 orderBy = " ORDER BY ASC(?totalEuBudget) ";
+                orderComparator = Comparator.comparing(beneficiary -> {
+                    if (!"".equals(((Beneficiary) beneficiary).getEuBudget())) {
+                        return Double.parseDouble(((Beneficiary) beneficiary).getEuBudget());
+                    }
+                    return 0.;
+                });
             } else {
                 orderBy = " ORDER BY DESC(?totalEuBudget) ";
+                orderComparator = Comparator.comparing(beneficiary -> {
+                    if (!"".equals(((Beneficiary) beneficiary).getEuBudget())) {
+                        return Double.parseDouble(((Beneficiary) beneficiary).getEuBudget());
+                    }
+                    return 0.;
+                }).reversed();
             }
         }
         if (orderNumProjects != null) {
             if (orderNumProjects) {
                 orderBy = " ORDER BY ASC(?numberProjects)";
+                orderComparator = Comparator.comparing(beneficiary -> ((Beneficiary) beneficiary).getNumberProjects());
             } else {
                 orderBy = " ORDER BY DESC(?numberProjects)";
+                orderComparator = Comparator.comparing(beneficiary -> ((Beneficiary) beneficiary).getNumberProjects()).reversed();
             }
         }
         String labelsFilter = getBeneficiaryLabelsFilter();
@@ -552,15 +578,17 @@ public class BeneficiaryController {
                             querySolution.getBinding("transliteration").getValue().stringValue()
                     );
                 }
-
             }
-
         }
         BeneficiaryList finalRes = new BeneficiaryList();
         finalRes.setNumberResults(numResults);
-        finalRes.setList(new ArrayList<>(beneficiaries.values()));
+        List<Beneficiary> tmpRes = new ArrayList<>(beneficiaries.values());
+        if (orderComparator != null) {
+            tmpRes.sort(orderComparator);
+        }
+        finalRes.setList(new ArrayList<>(tmpRes));
 
-        return new ResponseEntity<BeneficiaryList>(finalRes, HttpStatus.OK);
+        return new ResponseEntity<>(finalRes, HttpStatus.OK);
     }
 
     @GetMapping(value = "/facet/eu/search/beneficiaries/csv", produces = "application/json")
