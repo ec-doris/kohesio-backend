@@ -89,11 +89,12 @@ public class FiltersGenerator {
         }
 
         if (theme != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                            + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
-                            + theme
-                            + "> . ";
+//            search +=
+//                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+//                            + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
+//                            + theme
+//                            + "> . ";
+            search += "?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> . ";
         }
 
         if (policyObjective != null) {
