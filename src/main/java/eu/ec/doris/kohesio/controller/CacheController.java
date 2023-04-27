@@ -20,7 +20,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/wikibase")
 public class CacheController {
     private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
 

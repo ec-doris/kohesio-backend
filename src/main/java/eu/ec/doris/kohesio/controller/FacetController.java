@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/wikibase")
 public class FacetController {
     private static final Logger logger = LoggerFactory.getLogger(FacetController.class);
 
