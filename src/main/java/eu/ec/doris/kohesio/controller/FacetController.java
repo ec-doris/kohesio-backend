@@ -1123,4 +1123,58 @@ public class FacetController {
         });
         return result;
     }
+
+    @GetMapping(value = "/facet/eu/priority_axis", produces = "application/json")
+    public JSONArray facetEuPriorityAxis(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid,
+            @RequestParam(value = "program", required = false) String program
+    ) throws Exception {
+        String query = "SELECT ?pa ?paLabel (LANG(?paLabel) AS ?lang) ?prg ?tcso ?paid WHERE { "
+                + "  ?pa <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4403959>;"
+                + "    <https://linkedopendata.eu/prop/direct/P1368> ?prg;"
+                + "    <https://linkedopendata.eu/prop/direct/P577569> ?tcso;"
+                + "    <https://linkedopendata.eu/prop/direct/P563213> ?paid;"
+                + "    rdfs:label ?paLabel."
+                + "}";
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
+        HashMap<String, JSONObject> resultMap = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            String key = querySolution.getBinding("pa").getValue().stringValue();
+            JSONObject element;
+            if (resultMap.containsKey(key)) {
+                element = resultMap.get(key);
+            } else {
+                element = new JSONObject();
+                resultMap.put(key, element);
+                element.put("instance", key);
+                element.put(
+                        "label",
+                        new JSONObject()
+                );
+            }
+            ((JSONObject) element.get("label")).put(
+                    querySolution.getBinding("lang").getValue().stringValue(),
+                    querySolution.getBinding("paLabel").getValue().stringValue()
+            );
+            element.put(
+                    "program",
+                    querySolution.getBinding("prg").getValue().stringValue()
+            );
+            element.put(
+                    "totalCostOfSelectedOperations",
+                    querySolution.getBinding("tcso").getValue().stringValue()
+            );
+            element.put(
+                    "priorityAxisID",
+                    querySolution.getBinding("paid").getValue().stringValue()
+            );
+        }
+        JSONArray result = new JSONArray();
+        resultMap.forEach((s, jsonObject) -> {
+            result.add(jsonObject);
+        });
+        return result;
+    }
 }
