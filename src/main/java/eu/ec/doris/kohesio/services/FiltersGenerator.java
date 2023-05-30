@@ -97,14 +97,9 @@ public class FiltersGenerator {
 
 //            search += "?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> . ";
 
-            search += "{"
-                    + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934>;"
-                    + " <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">."
-                    + " } UNION { "
-                    + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934>; "
-                    + " <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                    + " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">. "
-                    + " } ";
+            search += "{ ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">. } UNION { "
+                    + " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+                    + " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">. } ";
         }
 
         if (policyObjective != null) {

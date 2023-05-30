@@ -1128,15 +1128,37 @@ public class FacetController {
     public JSONArray facetEuPriorityAxis(
             @RequestParam(value = "language", defaultValue = "en") String language,
             @RequestParam(value = "qid", required = false) String qid,
+            @RequestParam(value = "country", required = false) String country,
             @RequestParam(value = "program", required = false) String program
     ) throws Exception {
-        String query = "SELECT ?pa ?paLabel (LANG(?paLabel) AS ?lang) ?prg ?tcso ?paid WHERE { "
-                + "  ?pa <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4403959>;"
-                + "    <https://linkedopendata.eu/prop/direct/P1368> ?prg;"
-                + "    <https://linkedopendata.eu/prop/direct/P577569> ?tcso;"
-                + "    <https://linkedopendata.eu/prop/direct/P563213> ?paid;"
-                + "    rdfs:label ?paLabel."
+        String queryFilter = "SELECT DISTINCT ?pa ?prg ?country WHERE {"
+                + "  ?pa <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4403959>."
+                + "  ?pa <https://linkedopendata.eu/prop/direct/P1368> ?prg."
+                + "  ?prg <https://linkedopendata.eu/prop/direct/P32> ?country."
+                ;
+        if (qid != null) {
+            queryFilter += " VALUES ?pa { <" + qid + "> }";
+        }
+        if (program != null) {
+            queryFilter += " ?pa <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> .";
+        }
+        if (country != null) {
+            queryFilter +=  " ?prg <https://linkedopendata.eu/prop/direct/P32> <" + country + "> .";
+        }
+        queryFilter += "}";
+        String query = "SELECT DISTINCT ?pa ?paLabel ?prg ?country ?countryLabel ?countryCode ?tcso ?paid WHERE { "
+                + "  { " + queryFilter + " }"
+                + "  { SELECT DISTINCT ?country ?countryCode WHERE { ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode. } } "
+
+                + "  ?pa <https://linkedopendata.eu/prop/direct/P577569> ?tcso."
+                + "  ?pa <https://linkedopendata.eu/prop/direct/P563213> ?paid."
+                + "  ?pa rdfs:label ?paLabel."
+                + "  FILTER((LANG(?paLabel)) = \"" + language + "\")"
+                + "  ?country rdfs:label ?countryLabel. "
+                + "  FILTER((LANG(?countryLabel)) = \"" + language + "\") "
                 + "}";
+
+
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
         HashMap<String, JSONObject> resultMap = new HashMap<>();
         while (resultSet.hasNext()) {
@@ -1149,15 +1171,22 @@ public class FacetController {
                 element = new JSONObject();
                 resultMap.put(key, element);
                 element.put("instance", key);
+                element.put("instanceLabel", querySolution.getBinding("paLabel").getValue().stringValue());
                 element.put(
-                        "label",
-                        new JSONObject()
+                        "countries",
+                        new JSONArray()
+                );
+
+            }
+            JSONObject objectCountry = new JSONObject();
+            objectCountry.put("qid", querySolution.getBinding("country").getValue().stringValue());
+            objectCountry.put("label", querySolution.getBinding("countryLabel").getValue().stringValue());
+            objectCountry.put("code", querySolution.getBinding("countryCode").getValue().stringValue());
+            if (!((JSONArray) element.get("countries")).contains(objectCountry)) {
+                ((JSONArray) element.get("countries")).add(
+                        objectCountry
                 );
             }
-            ((JSONObject) element.get("label")).put(
-                    querySolution.getBinding("lang").getValue().stringValue(),
-                    querySolution.getBinding("paLabel").getValue().stringValue()
-            );
             element.put(
                     "program",
                     querySolution.getBinding("prg").getValue().stringValue()
