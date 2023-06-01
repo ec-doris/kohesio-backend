@@ -94,6 +94,7 @@ public class MapController {
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             @RequestParam(value = "cci", required = false) String cci,
+            @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
             Integer timeout,
             Principal principal)
             throws Exception {
@@ -125,7 +126,7 @@ public class MapController {
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
-                interreg, highlighted, cci, limit, offset
+                interreg, highlighted, cci, kohesioCategory, limit, offset
         );
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
@@ -408,7 +409,7 @@ public class MapController {
         List<String> newNuts = new ArrayList<>();
         for (Map.Entry<String, List<String>> entry : upperNuts.entrySet()) {
             entry.getValue().forEach(s -> {
-                if (!newNuts.contains(s)){
+                if (!newNuts.contains(s)) {
                     newNuts.add(s);
                 }
             });
@@ -447,9 +448,9 @@ public class MapController {
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             @RequestParam(value = "cci", required = false) String cci,
-
-            Principal principal)
-            throws Exception {
+            @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
+            Principal principal
+    ) throws Exception {
         logger.info("Search project map point: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
         facetController.initialize(language);
 
@@ -485,6 +486,7 @@ public class MapController {
                 interreg,
                 highlighted,
                 cci,
+                kohesioCategory,
                 limit,
                 offset
         );
@@ -616,7 +618,22 @@ public class MapController {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
-        ResponseEntity<JSONObject> result = euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, coordinates2.getLatitude(), coordinates2.getLongitude(), null, null, null, 2000, 0, null, null, null, 400, null);
+        ResponseEntity<JSONObject> result = euSearchProjectMap(
+                "en", null,
+                null, null,
+                null, null,
+                null, null,
+                null, null,
+                null, null,
+                null, null,
+                null, null,
+                coordinates2.getLatitude(), coordinates2.getLongitude(),
+                null, null,
+                null, 2000,
+                0, null,
+                null, null, null,
+                400, null
+        );
         JSONObject mod = result.getBody();
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);

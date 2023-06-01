@@ -862,7 +862,7 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null, null,
+                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null, null, null,
                 timeout, principal
         );
     }
@@ -902,6 +902,7 @@ public class ProjectController {
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             @RequestParam(value = "cci", required = false) String cci,
+            @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
             Integer timeout,
             Principal principal
     )
@@ -976,6 +977,7 @@ public class ProjectController {
                 interreg,
                 highlighted,
                 cci,
+                kohesioCategory,
                 limit,
                 offset
         );
@@ -1346,7 +1348,21 @@ public class ProjectController {
 
             }
         }
-        String search = filtersGenerator.filterProject(expandedQueryText, language, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, radius, region, null, null, null, null, limit, offset);
+        String search = filtersGenerator.filterProject(
+                expandedQueryText, language,
+                country, theme,
+                fund, program,
+                categoryOfIntervention, policyObjective,
+                budgetBiggerThen, budgetSmallerThen,
+                budgetEUBiggerThen, budgetEUSmallerThen,
+                startDateBefore, startDateAfter,
+                endDateBefore, endDateAfter,
+                latitude, longitude,
+                radius, region,
+                null, null,
+                null, null,
+                null, limit, offset
+        );
 
         //computing the number of results
         String searchCount = search;
