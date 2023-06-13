@@ -95,6 +95,7 @@ public class MapController {
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             @RequestParam(value = "cci", required = false) String cci,
             @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
+            @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
             Integer timeout,
             Principal principal)
             throws Exception {
@@ -126,7 +127,7 @@ public class MapController {
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
-                interreg, highlighted, cci, kohesioCategory, limit, offset
+                interreg, highlighted, cci, kohesioCategory, projectTypes, limit, offset
         );
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
@@ -449,6 +450,7 @@ public class MapController {
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             @RequestParam(value = "cci", required = false) String cci,
             @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
+            @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
             Principal principal
     ) throws Exception {
         logger.info("Search project map point: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
@@ -487,6 +489,7 @@ public class MapController {
                 highlighted,
                 cci,
                 kohesioCategory,
+                projectTypes,
                 limit,
                 offset
         );
@@ -632,6 +635,7 @@ public class MapController {
                 null, 2000,
                 0, null,
                 null, null, null,
+                null,
                 400, null
         );
         JSONObject mod = result.getBody();

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FiltersGenerator {
@@ -41,6 +42,7 @@ public class FiltersGenerator {
             Boolean highlighted,
             String cci,
             String kohesioCategory,
+            List<String> projectTypes,
             Integer limit,
             Integer offset) throws IOException {
         String search = "";
@@ -217,9 +219,18 @@ public class FiltersGenerator {
         }
 
         if (kohesioCategory != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category."
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category."
                     + " ?category <https://linkedopendata.eu/prop/direct/P579321> <" + kohesioCategory + "> . "
             ;
+        }
+
+        if (projectTypes != null) {
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P35> ";
+            search += String.join(
+                    ",",
+                    projectTypes.stream().map((projectType) -> "<" + projectType + ">").collect(Collectors.toList())
+            );
+            search += ". ";
         }
 
         return search;

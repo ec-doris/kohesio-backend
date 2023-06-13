@@ -863,6 +863,7 @@ public class ProjectController {
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
                 orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null, null, null,
+                null,
                 timeout, principal
         );
     }
@@ -903,6 +904,7 @@ public class ProjectController {
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             @RequestParam(value = "cci", required = false) String cci,
             @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
+            @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
             Integer timeout,
             Principal principal
     )
@@ -978,6 +980,7 @@ public class ProjectController {
                 highlighted,
                 cci,
                 kohesioCategory,
+                projectTypes,
                 limit,
                 offset
         );
@@ -1361,7 +1364,8 @@ public class ProjectController {
                 radius, region,
                 null, null,
                 null, null,
-                null, limit, offset
+                null, null,
+                limit, offset
         );
 
         //computing the number of results

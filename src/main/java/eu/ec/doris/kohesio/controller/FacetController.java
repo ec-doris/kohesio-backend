@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/wikibase")
@@ -1134,8 +1135,7 @@ public class FacetController {
         String queryFilter = "SELECT DISTINCT ?pa ?prg ?country WHERE {"
                 + "  ?pa <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4403959>."
                 + "  ?pa <https://linkedopendata.eu/prop/direct/P1368> ?prg."
-                + "  ?prg <https://linkedopendata.eu/prop/direct/P32> ?country."
-                ;
+                + "  ?prg <https://linkedopendata.eu/prop/direct/P32> ?country.";
         if (qid != null) {
             queryFilter += " VALUES ?pa { <" + qid + "> }";
         }
@@ -1143,7 +1143,7 @@ public class FacetController {
             queryFilter += " ?pa <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> .";
         }
         if (country != null) {
-            queryFilter +=  " ?prg <https://linkedopendata.eu/prop/direct/P32> <" + country + "> .";
+            queryFilter += " ?prg <https://linkedopendata.eu/prop/direct/P32> <" + country + "> .";
         }
         queryFilter += "}";
         String query = "SELECT DISTINCT ?pa ?paLabel ?prg ?country ?countryLabel ?countryCode ?tcso ?paid WHERE { "
@@ -1204,6 +1204,39 @@ public class FacetController {
         resultMap.forEach((s, jsonObject) -> {
             result.add(jsonObject);
         });
+        return result;
+    }
+
+
+    public List<String> projectTypes = Arrays.asList(
+            "https://linkedopendata.eu/entity/Q3402194",
+            "https://linkedopendata.eu/entity/Q6714233"
+    );
+
+    @GetMapping(value = "/facet/eu/project_types", produces = "application/json")
+    public JSONArray facetEuProjectTypes(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid
+    ) throws Exception {
+
+        String join = this.projectTypes.stream().map(s -> "<" + s + ">").collect(Collectors.joining(" "));
+
+        String query = "SELECT DISTINCT ?type ?typeLabel WHERE {"
+                + " VALUES ?type { "
+                + join
+                +" }"
+                + " ?type rdfs:label ?typeLabel."
+                + " FILTER((LANG(?typeLabel)) = \"" + language + "\")"
+                + "}";
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
+        JSONArray result = new JSONArray();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            JSONObject element = new JSONObject();
+            element.put("instance", querySolution.getBinding("type").getValue().stringValue());
+            element.put("instanceLabel", querySolution.getBinding("typeLabel").getValue().stringValue());
+            result.add(element);
+        }
         return result;
     }
 }
