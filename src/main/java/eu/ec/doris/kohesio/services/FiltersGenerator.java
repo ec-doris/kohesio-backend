@@ -43,6 +43,7 @@ public class FiltersGenerator {
             String cci,
             String kohesioCategory,
             List<String> projectTypes,
+            String priorityAxis,
             Integer limit,
             Integer offset) throws IOException {
         String search = "";
@@ -89,6 +90,10 @@ public class FiltersGenerator {
 //        }
         if (country != null && region == null) {
             search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
+        }
+
+        if (priorityAxis != null) {
+            search += "?s0 <https://linkedopendata.eu/prop/direct/P574247> <" + priorityAxis + "> . ";
         }
 
         if (theme != null) {
