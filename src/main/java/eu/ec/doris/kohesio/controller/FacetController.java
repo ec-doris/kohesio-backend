@@ -1171,7 +1171,7 @@ public class FacetController {
                 element = new JSONObject();
                 resultMap.put(key, element);
                 element.put("instance", key);
-                element.put("instanceLabel", querySolution.getBinding("paLabel").getValue().stringValue());
+                element.put("instanceLabel", querySolution.getBinding("paid").getValue().stringValue() + " - " + querySolution.getBinding("paLabel").getValue().stringValue());
                 element.put(
                         "countries",
                         new JSONArray()
@@ -1224,7 +1224,7 @@ public class FacetController {
         String query = "SELECT DISTINCT ?type ?typeLabel WHERE {"
                 + " VALUES ?type { "
                 + join
-                +" }"
+                + " }"
                 + " ?type rdfs:label ?typeLabel."
                 + " FILTER((LANG(?typeLabel)) = \"" + language + "\")"
                 + "}";
