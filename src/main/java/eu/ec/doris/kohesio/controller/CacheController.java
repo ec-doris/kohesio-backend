@@ -230,7 +230,8 @@ public class CacheController {
             try {
                 JSONArray interventionFileds = (JSONArray) ((JSONObject) areaOfIntervention).get("options");
                 for (Object intervention : interventionFileds) {
-                    String t = ((JSONObject) intervention).get("instance").toString();
+                    List<String> t = new ArrayList<>();
+                    t.add(((JSONObject) intervention).get("instance").toString());
                     projectController.euSearchProject("en", null, null, null, null, null,
                             t, null, null, null,
                             null, null, null, null, null,

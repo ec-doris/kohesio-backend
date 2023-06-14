@@ -73,8 +73,7 @@ public class MapController {
             @RequestParam(value = "theme", required = false) String theme,
             @RequestParam(value = "fund", required = false) String fund,
             @RequestParam(value = "program", required = false) String program,
-            @RequestParam(value = "categoryOfIntervention", required = false)
-            String categoryOfIntervention,
+            @RequestParam(value = "categoryOfIntervention", required = false) List<String> categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
             @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
             @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -428,8 +427,7 @@ public class MapController {
             @RequestParam(value = "theme", required = false) String theme,
             @RequestParam(value = "fund", required = false) String fund,
             @RequestParam(value = "program", required = false) String program,
-            @RequestParam(value = "categoryOfIntervention", required = false)
-            String categoryOfIntervention,
+            @RequestParam(value = "categoryOfIntervention", required = false) List<String> categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
             @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
             @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,

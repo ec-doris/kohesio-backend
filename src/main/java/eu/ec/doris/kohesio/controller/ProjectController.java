@@ -834,7 +834,7 @@ public class ProjectController {
             String theme,
             String fund,
             String program,
-            String categoryOfIntervention,
+            List<String> categoryOfIntervention,
             String policyObjective,
             Long budgetBiggerThen,
             Long budgetSmallerThen,
@@ -876,8 +876,7 @@ public class ProjectController {
             @RequestParam(value = "theme", required = false) String theme,
             @RequestParam(value = "fund", required = false) String fund,
             @RequestParam(value = "program", required = false) String program,
-            @RequestParam(value = "categoryOfIntervention", required = false)
-            String categoryOfIntervention,
+            @RequestParam(value = "categoryOfIntervention", required = false) List<String> categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
             @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
             @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -887,7 +886,6 @@ public class ProjectController {
             @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
             @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
             @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
-
             @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
             @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
             @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
@@ -1036,9 +1034,9 @@ public class ProjectController {
         search += " " + orderQuery;
         String mainQuery;
         if ("".equals(orderQuery)) {
-            mainQuery = "SELECT DISTINCT ?s0 WHERE { {" + search + " ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } UNION { " + search + "} } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+            mainQuery = "SELECT DISTINCT ?s0 WHERE { { SELECT DISTINCT ?s0 WHERE {" + search + " ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } } UNION { SELECT DISTINCT ?s0 WHERE { " + search + "} } } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
         } else {
-            mainQuery = "SELECT DISTINCT ?s0 WHERE {" + search + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
+            mainQuery = "SELECT DISTINCT ?s0 WHERE { " + search + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
         }
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout, "projectSearch");
         StringBuilder values = new StringBuilder();
@@ -1312,8 +1310,7 @@ public class ProjectController {
             @RequestParam(value = "theme", required = false) String theme,
             @RequestParam(value = "fund", required = false) String fund,
             @RequestParam(value = "program", required = false) String program,
-            @RequestParam(value = "categoryOfIntervention", required = false)
-            String categoryOfIntervention,
+            @RequestParam(value = "categoryOfIntervention", required = false) List<String> categoryOfIntervention,
             @RequestParam(value = "policyObjective", required = false) String policyObjective,
             @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
             @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
@@ -1424,37 +1421,36 @@ public class ProjectController {
 
 
     @GetMapping(value = "/facet/eu/search/project/excel", produces = "application/json")
-    public ResponseEntity<byte[]> euSearchProjectExcel( //
-                                                        @RequestParam(value = "language", defaultValue = "en") String language,
-                                                        @RequestParam(value = "keywords", required = false) String keywords, //
-                                                        @RequestParam(value = "country", required = false) String country,
-                                                        @RequestParam(value = "theme", required = false) String theme,
-                                                        @RequestParam(value = "fund", required = false) String fund,
-                                                        @RequestParam(value = "program", required = false) String program,
-                                                        @RequestParam(value = "categoryOfIntervention", required = false)
-                                                        String categoryOfIntervention,
-                                                        @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                                        @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
-                                                        @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
-                                                        @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
-                                                        @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
-                                                        @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
-                                                        @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
-                                                        @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
-                                                        @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+    public ResponseEntity<byte[]> euSearchProjectExcel(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "keywords", required = false) String keywords, //
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "theme", required = false) String theme,
+            @RequestParam(value = "fund", required = false) String fund,
+            @RequestParam(value = "program", required = false) String program,
+            @RequestParam(value = "categoryOfIntervention", required = false) List<String> categoryOfIntervention,
+            @RequestParam(value = "policyObjective", required = false) String policyObjective,
+            @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+            @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+            @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+            @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
+            @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
+            @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
+            @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
+            @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
 
-                                                        @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
-                                                        @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
-                                                        @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
-                                                        @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+            @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
+            @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
+            @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+            @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
 
-                                                        @RequestParam(value = "latitude", required = false) String latitude,
-                                                        @RequestParam(value = "longitude", required = false) String longitude,
-                                                        @RequestParam(value = "region", required = false) String region,
-                                                        @RequestParam(value = "limit", defaultValue = "1000") int limit,
-                                                        @RequestParam(value = "offset", defaultValue = "0") int offset,
-                                                        Principal principal,
-                                                        @Context HttpServletResponse response)
+            @RequestParam(value = "latitude", required = false) String latitude,
+            @RequestParam(value = "longitude", required = false) String longitude,
+            @RequestParam(value = "region", required = false) String region,
+            @RequestParam(value = "limit", defaultValue = "1000") int limit,
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            Principal principal,
+            @Context HttpServletResponse response)
             throws Exception {
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
         final int MAX_LIMIT = 2000;
@@ -1529,37 +1525,36 @@ public class ProjectController {
     }
 
     @GetMapping(value = "/facet/eu/search/project/csv", produces = "application/json")
-    public void euSearchProjectCSV( //
-                                    @RequestParam(value = "language", defaultValue = "en") String language,
-                                    @RequestParam(value = "keywords", required = false) String keywords, //
-                                    @RequestParam(value = "country", required = false) String country,
-                                    @RequestParam(value = "theme", required = false) String theme,
-                                    @RequestParam(value = "fund", required = false) String fund,
-                                    @RequestParam(value = "program", required = false) String program,
-                                    @RequestParam(value = "categoryOfIntervention", required = false)
-                                    String categoryOfIntervention,
-                                    @RequestParam(value = "policyObjective", required = false) String policyObjective,
-                                    @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
-                                    @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
-                                    @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
-                                    @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
-                                    @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
-                                    @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
-                                    @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
-                                    @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
+    public void euSearchProjectCSV(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "keywords", required = false) String keywords, //
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "theme", required = false) String theme,
+            @RequestParam(value = "fund", required = false) String fund,
+            @RequestParam(value = "program", required = false) String program,
+            @RequestParam(value = "categoryOfIntervention", required = false) List<String> categoryOfIntervention,
+            @RequestParam(value = "policyObjective", required = false) String policyObjective,
+            @RequestParam(value = "budgetBiggerThan", required = false) Long budgetBiggerThen,
+            @RequestParam(value = "budgetSmallerThan", required = false) Long budgetSmallerThen,
+            @RequestParam(value = "budgetEUBiggerThan", required = false) Long budgetEUBiggerThen,
+            @RequestParam(value = "budgetEUSmallerThan", required = false) Long budgetEUSmallerThen,
+            @RequestParam(value = "startDateBefore", required = false) String startDateBefore,
+            @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
+            @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
+            @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
 
-                                    @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
-                                    @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
-                                    @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
-                                    @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+            @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
+            @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
+            @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
+            @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
 
-                                    @RequestParam(value = "latitude", required = false) String latitude,
-                                    @RequestParam(value = "longitude", required = false) String longitude,
-                                    @RequestParam(value = "region", required = false) String region,
-                                    @RequestParam(value = "limit", defaultValue = "1000") int limit,
-                                    @RequestParam(value = "offset", defaultValue = "0") int offset,
-                                    Principal principal,
-                                    @Context HttpServletResponse response)
+            @RequestParam(value = "latitude", required = false) String latitude,
+            @RequestParam(value = "longitude", required = false) String longitude,
+            @RequestParam(value = "region", required = false) String region,
+            @RequestParam(value = "limit", defaultValue = "1000") int limit,
+            @RequestParam(value = "offset", defaultValue = "0") int offset,
+            Principal principal,
+            @Context HttpServletResponse response)
             throws Exception {
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
         final int MAX_LIMIT = 2000;

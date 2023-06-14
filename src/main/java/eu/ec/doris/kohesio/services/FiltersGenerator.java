@@ -23,7 +23,7 @@ public class FiltersGenerator {
             String theme,
             String fund,
             String program,
-            String categoryOfIntervention,
+            List<String> categoryOfIntervention,
             String policyObjective,
             Long budgetBiggerThen,
             Long budgetSmallerThen,
@@ -128,8 +128,12 @@ public class FiltersGenerator {
         }
 
         if (categoryOfIntervention != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention + "> . ";
+            search += "?s0 <https://linkedopendata.eu/prop/direct/P888> ?categoryOfIntervention . ";
+            search += "VALUES ?categoryOfIntervention {";
+            for (String category : categoryOfIntervention) {
+                search += "<" + category + "> ";
+            }
+            search += "}";
         }
 
         if (interreg != null && interreg) {
