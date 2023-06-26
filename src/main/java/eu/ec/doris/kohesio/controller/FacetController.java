@@ -18,9 +18,10 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/wikibase")
 public class FacetController {
     private static final Logger logger = LoggerFactory.getLogger(FacetController.class);
 
@@ -1121,6 +1122,121 @@ public class FacetController {
         resultMap.forEach((s, jsonObject) -> {
             result.add(jsonObject);
         });
+        return result;
+    }
+
+    @GetMapping(value = "/facet/eu/priority_axis", produces = "application/json")
+    public JSONArray facetEuPriorityAxis(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid,
+            @RequestParam(value = "country", required = false) String country,
+            @RequestParam(value = "program", required = false) String program
+    ) throws Exception {
+        String queryFilter = "SELECT DISTINCT ?pa ?prg ?country WHERE {"
+                + "  ?pa <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4403959>."
+                + "  ?pa <https://linkedopendata.eu/prop/direct/P1368> ?prg."
+                + "  ?prg <https://linkedopendata.eu/prop/direct/P32> ?country.";
+        if (qid != null) {
+            queryFilter += " VALUES ?pa { <" + qid + "> }";
+        }
+        if (program != null) {
+            queryFilter += " ?pa <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> .";
+        }
+        if (country != null) {
+            queryFilter += " ?prg <https://linkedopendata.eu/prop/direct/P32> <" + country + "> .";
+        }
+        queryFilter += "}";
+        String query = "SELECT DISTINCT ?pa ?paLabel ?prg ?country ?countryLabel ?countryCode ?tcso ?paid WHERE { "
+                + "  { " + queryFilter + " }"
+                + "  { SELECT DISTINCT ?country ?countryCode WHERE { ?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode. } } "
+
+                + "  ?pa <https://linkedopendata.eu/prop/direct/P577569> ?tcso."
+                + "  ?pa <https://linkedopendata.eu/prop/direct/P563213> ?paid."
+                + "  ?pa rdfs:label ?paLabel."
+                + "  FILTER((LANG(?paLabel)) = \"" + language + "\")"
+                + "  ?country rdfs:label ?countryLabel. "
+                + "  FILTER((LANG(?countryLabel)) = \"" + language + "\") "
+                + "}";
+
+
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 15, "facet");
+        HashMap<String, JSONObject> resultMap = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            String key = querySolution.getBinding("pa").getValue().stringValue();
+            JSONObject element;
+            if (resultMap.containsKey(key)) {
+                element = resultMap.get(key);
+            } else {
+                element = new JSONObject();
+                resultMap.put(key, element);
+                element.put("instance", key);
+                element.put("instanceLabel", querySolution.getBinding("paid").getValue().stringValue() + " - " + querySolution.getBinding("paLabel").getValue().stringValue());
+                element.put(
+                        "countries",
+                        new JSONArray()
+                );
+
+            }
+            JSONObject objectCountry = new JSONObject();
+            objectCountry.put("qid", querySolution.getBinding("country").getValue().stringValue());
+            objectCountry.put("label", querySolution.getBinding("countryLabel").getValue().stringValue());
+            objectCountry.put("code", querySolution.getBinding("countryCode").getValue().stringValue());
+            if (!((JSONArray) element.get("countries")).contains(objectCountry)) {
+                ((JSONArray) element.get("countries")).add(
+                        objectCountry
+                );
+            }
+            element.put(
+                    "program",
+                    querySolution.getBinding("prg").getValue().stringValue()
+            );
+            element.put(
+                    "totalCostOfSelectedOperations",
+                    querySolution.getBinding("tcso").getValue().stringValue()
+            );
+            element.put(
+                    "priorityAxisID",
+                    querySolution.getBinding("paid").getValue().stringValue()
+            );
+        }
+        JSONArray result = new JSONArray();
+        resultMap.forEach((s, jsonObject) -> {
+            result.add(jsonObject);
+        });
+        return result;
+    }
+
+
+    public List<String> projectTypes = Arrays.asList(
+            "https://linkedopendata.eu/entity/Q3402194",
+            "https://linkedopendata.eu/entity/Q6714233"
+    );
+
+    @GetMapping(value = "/facet/eu/project_types", produces = "application/json")
+    public JSONArray facetEuProjectTypes(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid
+    ) throws Exception {
+
+        String join = this.projectTypes.stream().map(s -> "<" + s + ">").collect(Collectors.joining(" "));
+
+        String query = "SELECT DISTINCT ?type ?typeLabel WHERE {"
+                + " VALUES ?type { "
+                + join
+                + " }"
+                + " ?type rdfs:label ?typeLabel."
+                + " FILTER((LANG(?typeLabel)) = \"" + language + "\")"
+                + "}";
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
+        JSONArray result = new JSONArray();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            JSONObject element = new JSONObject();
+            element.put("instance", querySolution.getBinding("type").getValue().stringValue());
+            element.put("instanceLabel", querySolution.getBinding("typeLabel").getValue().stringValue());
+            result.add(element);
+        }
         return result;
     }
 }
