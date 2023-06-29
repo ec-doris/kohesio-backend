@@ -1204,6 +1204,7 @@ public class FacetController {
         resultMap.forEach((s, jsonObject) -> {
             result.add(jsonObject);
         });
+        result.sort(Comparator.comparing(o -> ((String) ((JSONObject) o).get("instanceLabel"))));
         return result;
     }
 
