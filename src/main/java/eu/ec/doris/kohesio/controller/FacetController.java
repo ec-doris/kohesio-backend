@@ -1125,6 +1125,114 @@ public class FacetController {
         return result;
     }
 
+
+    private List<String> programOfPriorityAxisToInclude = Arrays.asList(
+            "https://linkedopendata.eu/entity/Q2463060",
+            "https://linkedopendata.eu/entity/Q2463061",
+            "https://linkedopendata.eu/entity/Q2463062",
+            "https://linkedopendata.eu/entity/Q2463063",
+            "https://linkedopendata.eu/entity/Q2463064",
+            "https://linkedopendata.eu/entity/Q2463065",
+            "https://linkedopendata.eu/entity/Q2463066",
+            "https://linkedopendata.eu/entity/Q2463067",
+            "https://linkedopendata.eu/entity/Q2463071",
+            "https://linkedopendata.eu/entity/Q2463074",
+            "https://linkedopendata.eu/entity/Q2463075",
+            "https://linkedopendata.eu/entity/Q2463076",
+            "https://linkedopendata.eu/entity/Q2463078",
+            "https://linkedopendata.eu/entity/Q2463079",
+            "https://linkedopendata.eu/entity/Q2463080",
+            "https://linkedopendata.eu/entity/Q2463081",
+            "https://linkedopendata.eu/entity/Q2463313",
+            "https://linkedopendata.eu/entity/Q2463314",
+            "https://linkedopendata.eu/entity/Q2463326",
+            "https://linkedopendata.eu/entity/Q2463327",
+            "https://linkedopendata.eu/entity/Q2463330",
+            "https://linkedopendata.eu/entity/Q2463331",
+            "https://linkedopendata.eu/entity/Q2463332",
+            "https://linkedopendata.eu/entity/Q2463333",
+            "https://linkedopendata.eu/entity/Q2463334",
+            "https://linkedopendata.eu/entity/Q2463335",
+            "https://linkedopendata.eu/entity/Q2463336",
+            "https://linkedopendata.eu/entity/Q2463337",
+            "https://linkedopendata.eu/entity/Q2463338",
+            "https://linkedopendata.eu/entity/Q2463339",
+            "https://linkedopendata.eu/entity/Q2463340",
+            "https://linkedopendata.eu/entity/Q2463341",
+            "https://linkedopendata.eu/entity/Q2463342",
+            "https://linkedopendata.eu/entity/Q2463343",
+            "https://linkedopendata.eu/entity/Q2463344",
+            "https://linkedopendata.eu/entity/Q2463345",
+            "https://linkedopendata.eu/entity/Q2463346",
+            "https://linkedopendata.eu/entity/Q2463347",
+            "https://linkedopendata.eu/entity/Q2463348",
+            "https://linkedopendata.eu/entity/Q2463349",
+            "https://linkedopendata.eu/entity/Q2463350",
+            "https://linkedopendata.eu/entity/Q2463351",
+            "https://linkedopendata.eu/entity/Q2463352",
+            "https://linkedopendata.eu/entity/Q2463353",
+            "https://linkedopendata.eu/entity/Q2463354",
+            "https://linkedopendata.eu/entity/Q2463355",
+            "https://linkedopendata.eu/entity/Q2463356",
+            "https://linkedopendata.eu/entity/Q2463357",
+            "https://linkedopendata.eu/entity/Q2463358",
+            "https://linkedopendata.eu/entity/Q2463359",
+            "https://linkedopendata.eu/entity/Q2463361",
+            "https://linkedopendata.eu/entity/Q2463363",
+            "https://linkedopendata.eu/entity/Q2463365",
+            "https://linkedopendata.eu/entity/Q2463367",
+            "https://linkedopendata.eu/entity/Q2463369",
+            "https://linkedopendata.eu/entity/Q2463371",
+            "https://linkedopendata.eu/entity/Q2463373",
+            "https://linkedopendata.eu/entity/Q2463375",
+            "https://linkedopendata.eu/entity/Q2463377",
+            "https://linkedopendata.eu/entity/Q2463379",
+            "https://linkedopendata.eu/entity/Q2463381",
+            "https://linkedopendata.eu/entity/Q2463383",
+            "https://linkedopendata.eu/entity/Q2463385",
+            "https://linkedopendata.eu/entity/Q2463387",
+            "https://linkedopendata.eu/entity/Q2463389",
+            "https://linkedopendata.eu/entity/Q2463391",
+            "https://linkedopendata.eu/entity/Q2463393",
+            "https://linkedopendata.eu/entity/Q2463395",
+            "https://linkedopendata.eu/entity/Q2463416",
+            "https://linkedopendata.eu/entity/Q2463420",
+            "https://linkedopendata.eu/entity/Q2463421",
+            "https://linkedopendata.eu/entity/Q2463422",
+            "https://linkedopendata.eu/entity/Q2463423",
+            "https://linkedopendata.eu/entity/Q2463424",
+            "https://linkedopendata.eu/entity/Q2463425",
+            "https://linkedopendata.eu/entity/Q2463426",
+            "https://linkedopendata.eu/entity/Q2463427",
+            "https://linkedopendata.eu/entity/Q2463428",
+            "https://linkedopendata.eu/entity/Q2463429",
+            "https://linkedopendata.eu/entity/Q2463430",
+            "https://linkedopendata.eu/entity/Q2463431",
+            "https://linkedopendata.eu/entity/Q2463432",
+            "https://linkedopendata.eu/entity/Q2463433",
+            "https://linkedopendata.eu/entity/Q2463434",
+            "https://linkedopendata.eu/entity/Q2463435",
+            "https://linkedopendata.eu/entity/Q2463436",
+            "https://linkedopendata.eu/entity/Q2463437",
+            "https://linkedopendata.eu/entity/Q2463438",
+            "https://linkedopendata.eu/entity/Q2463439",
+            "https://linkedopendata.eu/entity/Q2463440",
+            "https://linkedopendata.eu/entity/Q2463441",
+            "https://linkedopendata.eu/entity/Q2463444",
+            "https://linkedopendata.eu/entity/Q2463447",
+            "https://linkedopendata.eu/entity/Q2463450",
+            "https://linkedopendata.eu/entity/Q2463453",
+            "https://linkedopendata.eu/entity/Q2463454",
+            "https://linkedopendata.eu/entity/Q2463457",
+            "https://linkedopendata.eu/entity/Q2463458",
+            "https://linkedopendata.eu/entity/Q2463461",
+            "https://linkedopendata.eu/entity/Q2463462",
+            "https://linkedopendata.eu/entity/Q2463505",
+            "https://linkedopendata.eu/entity/Q2463686",
+            "https://linkedopendata.eu/entity/Q2614809",
+            "https://linkedopendata.eu/entity/Q2614820"
+    );
+
     @GetMapping(value = "/facet/eu/priority_axis", produces = "application/json")
     public JSONArray facetEuPriorityAxis(
             @RequestParam(value = "language", defaultValue = "en") String language,
@@ -1141,6 +1249,9 @@ public class FacetController {
         }
         if (program != null) {
             queryFilter += " ?pa <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> .";
+            if (!programOfPriorityAxisToInclude.contains(program)) {
+                return new JSONArray();
+            }
         }
         if (country != null) {
             queryFilter += " ?prg <https://linkedopendata.eu/prop/direct/P32> <" + country + "> .";
@@ -1204,6 +1315,7 @@ public class FacetController {
         resultMap.forEach((s, jsonObject) -> {
             result.add(jsonObject);
         });
+        result.sort(Comparator.comparing(o -> ((String) ((JSONObject) o).get("instanceLabel"))));
         return result;
     }
 
