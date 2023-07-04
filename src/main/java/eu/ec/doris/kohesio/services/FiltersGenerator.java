@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FiltersGenerator {
@@ -22,7 +23,7 @@ public class FiltersGenerator {
             String theme,
             String fund,
             String program,
-            String categoryOfIntervention,
+            List<String> categoryOfIntervention,
             String policyObjective,
             Long budgetBiggerThen,
             Long budgetSmallerThen,
@@ -40,6 +41,9 @@ public class FiltersGenerator {
             Boolean interreg,
             Boolean highlighted,
             String cci,
+            String kohesioCategory,
+            List<String> projectTypes,
+            String priorityAxis,
             Integer limit,
             Integer offset) throws IOException {
         String search = "";
@@ -88,12 +92,31 @@ public class FiltersGenerator {
             search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
         }
 
+        if (priorityAxis != null) {
+            search += "?s0 <https://linkedopendata.eu/prop/direct/P574247> <" + priorityAxis + "> . ";
+        }
+
         if (theme != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                            + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
-                            + theme
-                            + "> . ";
+//            search +=
+//                    "?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+//                            + "?category <https://linkedopendata.eu/prop/direct/P1848> <"
+//                            + theme
+//                            + "> . ";
+
+//            search += "?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> . ";
+
+            // this is not scaling
+//            search += "{ ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">. } UNION { "
+//                    + " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+//                    + " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">. } ";
+
+
+            // avoid repeating this triple for performance reasons
+            if (policyObjective == null){
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
+            }
+            search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">.  ";
+
         }
 
         if (policyObjective != null) {
@@ -119,8 +142,12 @@ public class FiltersGenerator {
         }
 
         if (categoryOfIntervention != null) {
-            search +=
-                    "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention + "> . ";
+            search += "?s0 <https://linkedopendata.eu/prop/direct/P888> ?categoryOfIntervention . ";
+            search += "VALUES ?categoryOfIntervention {";
+            for (String category : categoryOfIntervention) {
+                search += "<" + category + "> ";
+            }
+            search += "}";
         }
 
         if (interreg != null && interreg) {
@@ -207,6 +234,21 @@ public class FiltersGenerator {
 //                    + "< 100000) . ";
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
                     + " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < " + (radius * 1000) + ")";
+        }
+
+        if (kohesioCategory != null) {
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category."
+                    + " ?category <https://linkedopendata.eu/prop/direct/P579321> <" + kohesioCategory + "> . "
+            ;
+        }
+
+        if (projectTypes != null) {
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P35> ";
+            search += String.join(
+                    ",",
+                    projectTypes.stream().map((projectType) -> "<" + projectType + ">").collect(Collectors.toList())
+            );
+            search += ". ";
         }
 
         return search;

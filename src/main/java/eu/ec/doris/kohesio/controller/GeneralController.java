@@ -21,7 +21,7 @@ import java.security.Principal;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/wikibase")
 
 
 public class GeneralController {

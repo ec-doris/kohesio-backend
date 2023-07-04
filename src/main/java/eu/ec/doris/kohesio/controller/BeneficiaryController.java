@@ -42,7 +42,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/wikibase")
 
 public class BeneficiaryController {
     private static final Logger logger = LoggerFactory.getLogger(BeneficiaryController.class);

@@ -20,7 +20,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/wikibase")
 public class CacheController {
     private static final Logger logger = LoggerFactory.getLogger(CacheController.class);
 
@@ -230,7 +230,8 @@ public class CacheController {
             try {
                 JSONArray interventionFileds = (JSONArray) ((JSONObject) areaOfIntervention).get("options");
                 for (Object intervention : interventionFileds) {
-                    String t = ((JSONObject) intervention).get("instance").toString();
+                    List<String> t = new ArrayList<>();
+                    t.add(((JSONObject) intervention).get("instance").toString());
                     projectController.euSearchProject("en", null, null, null, null, null,
                             t, null, null, null,
                             null, null, null, null, null,
@@ -361,7 +362,23 @@ public class CacheController {
 
     void recursiveMap(String granularityRegion) throws Exception {
         logger.debug("Resolving for region: " + granularityRegion);
-        ResponseEntity responseEntity = mapController.euSearchProjectMap("en", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, granularityRegion, null, null, 0, null, null, null, 400, null);
+        ResponseEntity responseEntity = mapController.euSearchProjectMap(
+                "en", null,
+                null, null,
+                null, null,
+                null, null,
+                null, null,
+                null, null,
+                null, null,
+                null, null,
+                null, null,
+                null, granularityRegion,
+                null, null,
+                0, null,
+                null, null, null,
+                null, null,
+                400, null
+        );
         logger.debug("Response result: " + responseEntity.getBody());
         if (((JSONObject) responseEntity.getBody()).get("subregions") instanceof JSONArray) {
             for (Object element : (JSONArray) ((JSONObject) responseEntity.getBody()).get("subregions")) {
