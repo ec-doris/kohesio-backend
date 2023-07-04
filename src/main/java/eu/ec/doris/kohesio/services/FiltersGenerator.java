@@ -105,9 +105,13 @@ public class FiltersGenerator {
 
 //            search += "?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> . ";
 
-            search += "{ ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">. } UNION { "
-                    + " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
-                    + " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">. } ";
+            // this is not scaling
+//            search += "{ ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">. } UNION { "
+//                    + " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+//                    + " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">. } ";
+
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+                    + " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + ">.  ";
         }
 
         if (policyObjective != null) {
