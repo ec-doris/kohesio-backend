@@ -894,8 +894,16 @@ public class FacetController {
             } else {
                 element.put("instanceLabel", querySolution.getBinding("instanceLabel_en").getValue().stringValue());
             }
-            element.put("country", querySolution.getBinding("country").getValue().stringValue());
-            element.put("countryLabel", querySolution.getBinding("countryLabel").getValue().stringValue());
+            // this is a hack because the data was not fine, can be removed
+            if (querySolution.getBinding("instance").getValue().stringValue().equals("https://linkedopendata.eu/entity/Q205")){
+                element.put("country", "https://linkedopendata.eu/entity/Q7");
+                element.put("countryLabel", "Spain");
+            } else {
+                element.put("country", querySolution.getBinding("country").getValue().stringValue());
+                element.put("countryLabel", querySolution.getBinding("countryLabel").getValue().stringValue());
+            }
+
+
             result.add(element);
         }
         return result;
