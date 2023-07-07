@@ -788,7 +788,7 @@ public class FacetController {
                         + language
                         + "\")"
                         + "} order by ?cci ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 4, "facet");
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
