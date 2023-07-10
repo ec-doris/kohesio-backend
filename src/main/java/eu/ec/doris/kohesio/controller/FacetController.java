@@ -1335,8 +1335,7 @@ public class FacetController {
 
     @GetMapping(value = "/facet/eu/project_types", produces = "application/json")
     public JSONArray facetEuProjectTypes(
-            @RequestParam(value = "language", defaultValue = "en") String language,
-            @RequestParam(value = "qid", required = false) String qid
+            @RequestParam(value = "language", defaultValue = "en") String language
     ) throws Exception {
 
         String join = this.projectTypes.stream().map(s -> "<" + s + ">").collect(Collectors.joining(" "));
