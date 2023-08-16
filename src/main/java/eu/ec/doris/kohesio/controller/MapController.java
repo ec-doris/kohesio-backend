@@ -372,8 +372,12 @@ public class MapController {
         result.put("upperRegions", findUpperRegions(granularityRegion, language));
         result.put("region", granularityRegion);
 
-
-        result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+        if (facetController.nutsRegion.get(granularityRegion).name.containsKey(language)) {
+            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+        }
+        else {
+            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get("en"));
+        }
         if (granularityRegion != null) {
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
         } else if (country != null && region == null) {
@@ -668,7 +672,12 @@ public class MapController {
                 if (!resultSet) {
                     JSONObject o = new JSONObject();
                     o.put("region", n.uri);
-                    o.put("regionLabel", n.name.get(lang));
+                    if (n.name.containsKey(lang)) {
+                        o.put("regionLabel", n.name.get(lang));
+                    }
+                    else {
+                        o.put("regionLabel", n.name.get("en"));
+                    }
                     return o;
                 }
             }
