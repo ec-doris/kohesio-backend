@@ -7,7 +7,9 @@ public class Project {
     String item;
     ArrayList<String> snippet;
     ArrayList<String> labels;
+    ArrayList<String> originalLabels;
     ArrayList<String> descriptions;
+    ArrayList<String> orignalDescriptions;
     ArrayList<String> startTimes;
     ArrayList<String> endTimes;
     ArrayList<String> euBudgets;
@@ -17,6 +19,22 @@ public class Project {
     ArrayList<String> coordinates;
     ArrayList<String> objectiveIds;
     ArrayList<String> countrycode;
+
+    public ArrayList<String> getOrignalDescriptions() {
+        return orignalDescriptions;
+    }
+
+    public void setOrignalDescriptions(ArrayList<String> orignalDescriptions) {
+        this.orignalDescriptions = orignalDescriptions;
+    }
+
+    public ArrayList<String> getOriginalLabels() {
+        return originalLabels;
+    }
+
+    public void setOriginalLabels(ArrayList<String> originalLabels) {
+        this.originalLabels = originalLabels;
+    }
 
     public String getLink() {
         return link;
