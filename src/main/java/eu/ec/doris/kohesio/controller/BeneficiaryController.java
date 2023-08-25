@@ -132,21 +132,19 @@ public class BeneficiaryController {
                 "  \n" +
                 "} GROUP BY ?s0";
 
-        String query3 = "SELECT ?project ?label ?euBudget ?budget ?startTime ?endTime ?fundLabel WHERE {\n" +
-                " VALUES ?s0 { <" +
-                id +
-                "> } " +
-                "  ?project <http://www.w3.org/2000/01/rdf-schema#label> ?label .\n" +
-                "  FILTER (lang(?label)=\"" + language + "\") .\n" +
-                "  ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . \n" +
-                "  ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 .  \n" +
-                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } \n" +
-                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } \n" +
-                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . } \n" +
-                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } \n" +
-                "  OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . \n" +
-                "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } \n " +
-                "} ORDER BY DESC(?euBudget) LIMIT " + pageSize + "OFFSET " + pageSize * page;
+        String query3 = "SELECT ?project ?label ?euBudget ?budget ?startTime ?endTime ?fundLabel WHERE { "
+                + " VALUES ?s0 { <" + id + "> } "
+                + " ?project <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
+                + " ?project <https://linkedopendata.eu/prop/direct/P889> ?s0 . "
+                + " OPTIONAL { ?project <http://www.w3.org/2000/01/rdf-schema#label> ?label . FILTER (lang(?label)=\"" + language + "\") . } "
+                + " OPTIONAL { ?project <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER(LANG(?curatedLabel) = \"" + language + "\") }"
+                + " OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P474> ?budget . } "
+                + " OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P835> ?euBudget . } "
+                + " OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P20> ?startTime . } "
+                + " OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P33> ?endTime . } "
+                + " OPTIONAL {?project <https://linkedopendata.eu/prop/direct/P1584> ?fund . "
+                + "            ?fund <https://linkedopendata.eu/prop/direct/P1583> ?fundLabel } "
+                + "} ORDER BY DESC(?euBudget) LIMIT " + pageSize + " OFFSET " + pageSize * page;
 
         String query4 = "SELECT ?fundLabel (sum(?euBudget) as ?totalEuBudget) WHERE { "
                 + " VALUES ?s0 { <" + id + "> } "
@@ -248,9 +246,21 @@ public class BeneficiaryController {
                 if (querySolution.getBinding("project") != null) {
                     project.put("project", querySolution.getBinding("project").getValue().stringValue());
                 }
-                if (querySolution.getBinding("label") != null) {
+                if (querySolution.getBinding("curatedLabel") != null) {
+                    project.put("label", ((Literal) querySolution.getBinding("curatedLabel").getValue()).getLabel());
+                    if (querySolution.getBinding("label") != null) {
+                        project.put("originalLabel", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+                    } else {
+                        project.put("originalLabel", null);
+                    }
+                } else if (querySolution.getBinding("label") != null) {
                     project.put("label", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+                    project.put("originalLabel", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+                } else {
+                    project.put("label", null);
+                    project.put("originalLabel", null);
                 }
+
                 if (querySolution.getBinding("euBudget") != null) {
                     project.put("euBudget", df2.format(((Literal) querySolution.getBinding("euBudget").getValue()).doubleValue()));
                 }
