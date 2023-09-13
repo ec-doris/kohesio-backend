@@ -372,8 +372,12 @@ public class MapController {
         result.put("upperRegions", findUpperRegions(granularityRegion, language));
         result.put("region", granularityRegion);
 
-
-        result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+        if (facetController.nutsRegion.get(granularityRegion).name.containsKey(language)) {
+            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+        }
+        else {
+            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get("en"));
+        }
         if (granularityRegion != null) {
             result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
         } else if (country != null && region == null) {
@@ -499,16 +503,14 @@ public class MapController {
             limitS = "LIMIT " + limit;
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> \"Point(" + coordinate.replace(",", " ") + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral> . ";
         String query =
-                "SELECT DISTINCT ?s0 ?label ?infoRegioID WHERE { "
+                "SELECT DISTINCT ?s0 ?label ?curatedLabel ?infoRegioID WHERE { "
                         + " { SELECT ?s0 where { "
                         + search
                         + " } "
                         + limitS
                         + " } "
-                        + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. "
-                        + "             FILTER((LANG(?label)) = \""
-                        + language
-                        + "\") } ."
+                        + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. " + " FILTER((LANG(?label)) = \"" + language + "\") } ."
+                        + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel. " + " FILTER((LANG(?curatedLabel)) = \"" + language + "\") } ."
                         + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . } "
                         + "} ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30, "point");
@@ -519,8 +521,19 @@ public class MapController {
 
             JSONObject item = new JSONObject();
             item.put("item", querySolution.getBinding("s0").getValue().stringValue());
-            if (querySolution.getBinding("label") != null) {
+            if (querySolution.getBinding("curatedLabel") != null) {
+                item.put("label", ((Literal) querySolution.getBinding("curatedLabel").getValue()).getLabel());
+                if (querySolution.getBinding("label") != null) {
+                    item.put("originalLabel", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+                } else {
+                    item.put("originalLabel", null);
+                }
+            } else if (querySolution.getBinding("label") != null) {
                 item.put("label", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+                item.put("originalLabel", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+            } else {
+                item.put("label", null);
+                item.put("originalLabel", null);
             }
             if (querySolution.getBinding("infoRegioID") != null) {
                 item.put("isHighlighted", true);
@@ -668,7 +681,12 @@ public class MapController {
                 if (!resultSet) {
                     JSONObject o = new JSONObject();
                     o.put("region", n.uri);
-                    o.put("regionLabel", n.name.get(lang));
+                    if (n.name.containsKey(lang)) {
+                        o.put("regionLabel", n.name.get(lang));
+                    }
+                    else {
+                        o.put("regionLabel", n.name.get("en"));
+                    }
                     return o;
                 }
             }
