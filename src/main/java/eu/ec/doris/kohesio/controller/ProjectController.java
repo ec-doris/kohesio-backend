@@ -84,10 +84,10 @@ public class ProjectController {
     }
 
     @GetMapping(value = "/facet/eu/project", produces = "application/json")
-    public ResponseEntity
-    euProjectID( //
-                 @RequestParam(value = "id") String id,
-                 @RequestParam(value = "language", defaultValue = "en") String language)
+    public ResponseEntity euProjectID(
+            @RequestParam(value = "id") String id,
+            @RequestParam(value = "language", defaultValue = "en") String language
+    )
             throws Exception {
 
         logger.info("Project search by ID: id {}, language {}", id, language);
@@ -281,8 +281,7 @@ public class ProjectController {
                 if (querySolution.getBinding("label") != null) {
                     result.put("label", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
                     result.put("originalLabel", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
-                }
-                else {
+                } else {
                     result.put("originalLabel", "");
                 }
                 if (querySolution.hasBinding("curatedLabel")) {
@@ -824,7 +823,7 @@ public class ProjectController {
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity<?> entity = new HttpEntity<>(headers);
 
-        String urlTemplate = UriComponentsBuilder.fromHttpUrl("https://nominatim.openstreetmap.org/search/search")
+        String urlTemplate = UriComponentsBuilder.fromHttpUrl("https://nominatim.openstreetmap.org/search")
                 .queryParam("q", town)
                 .queryParam("format", "json")
                 .queryParam("addressdetails", "1")
