@@ -88,8 +88,8 @@ public class SPARQLQueryService {
             sparqlResultsJSONParser.parseQueryResult(
                     new FileInputStream(location + "/facet/cache/" + query.hashCode()));
             long end = System.nanoTime();
-            logger.info("Was NOT cached " + query );
-            logger.info("Time "+ (end - start) / 1000000);
+            logger.info("Was NOT cached " + query);
+            logger.info("Time " + (end - start) / 1000000);
 
 
 //            try (CSVWriter writer2 = new CSVWriter(new FileWriter("/Users/Dennis/Downloads/queries.csv", true))) {
@@ -117,5 +117,15 @@ public class SPARQLQueryService {
 
         BooleanQuery booleanQuery = repo.getConnection().prepareBooleanQuery(query);
         return booleanQuery.evaluate();
+    }
+
+    public void executeUpdateQuery(String sparqlEndpoint, String query, int timeout) {
+        Map<String, String> additionalHttpHeaders = new HashMap();
+        additionalHttpHeaders.put("timeout", String.valueOf(timeout));
+        SPARQLRepository repo = new SPARQLRepository(sparqlEndpoint, sparqlEndpoint);
+        repo.setAdditionalHttpHeaders(additionalHttpHeaders);
+        repo.getConnection()
+                .prepareUpdate(query)
+                .execute();
     }
 }
