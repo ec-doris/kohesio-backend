@@ -8,6 +8,8 @@ import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
+import io.kubernetes.client.openapi.models.V1ReplicationController;
+import io.kubernetes.client.openapi.models.V1ReplicationControllerList;
 import io.kubernetes.client.util.ClientBuilder;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
@@ -16,10 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -35,7 +34,7 @@ public class UpdateController {
     String sparqlEndpoint;
 
 
-    @GetMapping(value = "/project", produces = "application/json")
+    @PostMapping(value = "/project", produces = "application/json")
     public ResponseEntity updateProject(
             @RequestParam(value = "id") String id,
             @RequestParam(value = "label", required = false) String label,
@@ -115,7 +114,8 @@ public class UpdateController {
         CoreV1Api api = new CoreV1Api();
 
         // list all pods in all namespaces
-        V1PodList list = api.listPodForAllNamespaces(
+        V1ReplicationControllerList list = api.listNamespacedReplicationController(
+                "kohesio",
                 null,
                 null,
                 null,
@@ -128,7 +128,8 @@ public class UpdateController {
                 null
         );
 
-        for (V1Pod item : list.getItems()) {
+
+        for (V1ReplicationController item : list.getItems()) {
             System.out.println(item.getMetadata().getName());
         }
     }
