@@ -1,6 +1,9 @@
 package eu.ec.doris.kohesio.controller;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.ec.doris.kohesio.payload.MonolingualString;
+import eu.ec.doris.kohesio.payload.Update;
 import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -8,9 +11,12 @@ import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
-import io.kubernetes.client.openapi.models.V1ReplicationController;
-import io.kubernetes.client.openapi.models.V1ReplicationControllerList;
 import io.kubernetes.client.util.ClientBuilder;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +27,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/wikibase/update")
@@ -34,15 +42,21 @@ public class UpdateController {
     String sparqlEndpoint;
 
 
-    @PostMapping(value = "/project", produces = "application/json")
-    public ResponseEntity updateProject(
-            @RequestParam(value = "id") String id,
-            @RequestParam(value = "label", required = false) String label,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "language", defaultValue = "en") String language
+    @PostMapping(value = "/projectUpdate", produces = "application/json")
+    public ResponseEntity<JSONObject> updateProject(
+            @org.springframework.web.bind.annotation.RequestBody Update updatePayload
     ) throws Exception {
+        String id = updatePayload.getId();
+        List<MonolingualString> labels = updatePayload.getLabels();
+        List<MonolingualString> descriptions = updatePayload.getDescriptions();
 
-        logger.info("Project search by ID: id {}, language {}", id, language);
+        logger.info("Project update by ID: id {}", id);
+        for (MonolingualString label : labels) {
+            logger.info("label {}, language {}", label.getText(), label.getLanguage());
+        }
+        for (MonolingualString desccription : descriptions) {
+            logger.info("description {}, language {}", desccription.getText(), desccription.getLanguage());
+        }
 
         String queryCheck = "ASK { <"
                 + id
@@ -53,25 +67,34 @@ public class UpdateController {
             result.put("message", "Bad Request - project ID not found");
             return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
         } else {
-            String tripleToDelete = "";
-            String tripleToInsert = "";
-            String tripleToWhere = "";
-            if (label != null) {
-                tripleToDelete = "<" + id + "> <https://linkedopendata.eu/prop/direct/P581563> ?o . ";
-                tripleToWhere = "<" + id + "> <https://linkedopendata.eu/prop/direct/P581563> ?o . FILTER (LANG(?o) = \"" + language + "\")";
-                tripleToInsert = "<" + id + "> <https://linkedopendata.eu/prop/direct/P581563> \"" + label + "\"@" + language + " . ";
-            }
-            if (description != null) {
-                tripleToDelete = "<" + id + "> <https://linkedopendata.eu/prop/direct/P581562> ?o . ";
-                tripleToWhere = "<" + id + "> <https://linkedopendata.eu/prop/direct/P581562> ?o . FILTER (LANG(?o) = \"" + language + "\")";
 
-                tripleToInsert = "<" + id + "> <https://linkedopendata.eu/prop/direct/P581562> \"" + description + "\"@" + language + " . ";
-            }
+            StringBuilder tripleToDelete = new StringBuilder();
+            StringBuilder tripleToInsert = new StringBuilder();
+            StringBuilder tripleToWhere = new StringBuilder();
+            for (MonolingualString labelObject : labels) {
+                String language = labelObject.getLanguage();
+                String label = labelObject.getText();
 
-            if (tripleToDelete.isEmpty() || tripleToInsert.isEmpty()) {
+                if (label != null) {
+                    tripleToDelete.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . ");
+                    tripleToWhere.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . FILTER (LANG(?o) = \"").append(language).append("\") ");
+                    tripleToInsert.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581563> \"").append(label).append("\"@").append(language).append(" . ");
+                }
+            }
+            for (MonolingualString descriptionObject : descriptions) {
+                String language = descriptionObject.getLanguage();
+                String description = descriptionObject.getText();
+
+                if (description != null) {
+                    tripleToDelete.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . ");
+                    tripleToWhere.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . FILTER (LANG(?o) = \"").append(language).append("\") ");
+                    tripleToInsert.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581562> \"").append(description).append("\"@").append(language).append(" . ");
+                }
+            }
+            if ((tripleToDelete.length() == 0) || (tripleToInsert.length() == 0)) {
                 JSONObject result = new JSONObject();
                 result.put("message", "Bad Request - nothing to update");
-                return new ResponseEntity<JSONObject>(result, HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(result, HttpStatus.BAD_REQUEST);
             }
             String queryDelete = "DELETE {" + tripleToDelete + "}"
                     + " WHERE { "
@@ -82,40 +105,28 @@ public class UpdateController {
 
             System.err.println(queryDelete);
             System.err.println(queryInsert);
-            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryDelete, 20);
-            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryInsert, 20);
+//            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryDelete, 20);
+//            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryInsert, 20);
 
             JSONObject result = new JSONObject();
-            result.put("message", queryDelete + " " + queryInsert);
-            return new ResponseEntity<JSONObject>(result, HttpStatus.OK);
+            result.put("message", "entity updated");
+            return new ResponseEntity<>(result, HttpStatus.OK);
         }
     }
 
-    @GetMapping(value = "/pods", produces = "application/json")
-    public void getPods() throws IOException, ApiException {
-
-        // loading the in-cluster config, including:
-        //   1. service-account CA
-        //   2. service-account bearer-token
-        //   3. service-account namespace
-        //   4. master endpoints(ip, port) from pre-set environment variables
+    @PostMapping(value = "/project", produces = "application/json")
+    public void propagateUpdateProject(
+            @org.springframework.web.bind.annotation.RequestBody Update updatePayload
+    ) throws IOException, ApiException {
+        logger.info("Propagate update project");
         ApiClient client = ClientBuilder.cluster().build();
-//        ApiClient client = ClientBuilder.defaultClient();
-        System.err.println("client: " + client.getBasePath());
-        System.err.println("client: " + client);
 
-        // if you prefer not to refresh service account token, please use:
-//        ApiClient client = ClientBuilder.oldCluster().build();
-
-        // set the global default api-client to the in-cluster one from above
         Configuration.setDefaultApiClient(client);
 
-        // the CoreV1Api loads default api-client from global configuration.
         CoreV1Api api = new CoreV1Api();
-
         // list all pods in all namespaces
-        V1ReplicationControllerList list = api.listNamespacedReplicationController(
-                "kohesio",
+        V1PodList list = api.listNamespacedPod(
+                "development",
                 null,
                 null,
                 null,
@@ -127,10 +138,33 @@ public class UpdateController {
                 null,
                 null
         );
-
-
-        for (V1ReplicationController item : list.getItems()) {
-            System.out.println(item.getMetadata().getName());
+        List<Response> responses = new ArrayList<>();
+        for (V1Pod item : list.getItems()) {
+            String ip = item.getStatus().getPodIP();
+            String phase = item.getStatus().getPhase();
+            String port = item.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort().toString();
+            if (phase.equals("Running")) {
+                String url = "http://" + ip + ":" + port + "/wikibase/update/projectUpdate";
+                OkHttpClient httpClient = client.getHttpClient();
+                ObjectMapper objectMapper = new ObjectMapper();
+                RequestBody requestBody = RequestBody.create(
+                        okhttp3.MediaType.parse("application/json"),
+                        objectMapper.writeValueAsString(updatePayload)
+                );
+                Request request = new Request.Builder()
+                        .url(url)
+                        .post(requestBody)
+                        .build();
+                Call call = httpClient.newCall(request);
+//                Response response = call.execute();
+//                responses.add(response);
+            }
+        }
+        for (Response response : responses) {
+            System.out.println(response.code());
+            if (response.code() != 200) {
+                throw new RuntimeException("Error while propagating update");
+            }
         }
     }
 }
