@@ -145,7 +145,10 @@ public class UpdateController {
             String phase = item.getStatus().getPhase();
             String port = null;
             for (V1Container container : item.getSpec().getContainers()) {
-                if ("kohesio-backend-container".equals(container.getName())) {
+                if (
+                        "kohesio-backend-container".equals(container.getName()) &&
+                                !"openjdk:11-jre-slim".equals(container.getImage())
+                ) {
                     port = container.getPorts().get(0).getContainerPort().toString();
                     System.out.println("IP: " + ip + " phase: " + phase + " port: " + port);
                     break;
