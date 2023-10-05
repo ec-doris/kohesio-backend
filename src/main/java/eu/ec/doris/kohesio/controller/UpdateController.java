@@ -55,12 +55,12 @@ public class UpdateController {
         List<MonolingualString> descriptions = updatePayload.getDescriptions();
 
         logger.info("Project update by ID: id {}", id);
-        for (MonolingualString label : labels) {
-            logger.info("label {}, language {}", label.getText(), label.getLanguage());
-        }
-        for (MonolingualString desccription : descriptions) {
-            logger.info("description {}, language {}", desccription.getText(), desccription.getLanguage());
-        }
+//        for (MonolingualString label : labels) {
+//            logger.info("label {}, language {}", label.getText(), label.getLanguage());
+//        }
+//        for (MonolingualString description : descriptions) {
+//            logger.info("description {}, language {}", description.getText(), description.getLanguage());
+//        }
 
         String queryCheck = "ASK { <"
                 + id
@@ -75,24 +75,28 @@ public class UpdateController {
             StringBuilder tripleToDelete = new StringBuilder();
             StringBuilder tripleToInsert = new StringBuilder();
             StringBuilder tripleToWhere = new StringBuilder();
-            for (MonolingualString labelObject : labels) {
-                String language = labelObject.getLanguage();
-                String label = labelObject.getText();
+            if (labels != null) {
+                for (MonolingualString labelObject : labels) {
+                    String language = labelObject.getLanguage();
+                    String label = labelObject.getText();
 
-                if (label != null) {
-                    tripleToDelete.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . ");
-                    tripleToWhere.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . FILTER (LANG(?o) = \"").append(language).append("\") ");
-                    tripleToInsert.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581563> \"").append(label).append("\"@").append(language).append(" . ");
+                    if (label != null) {
+                        tripleToDelete.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . ");
+                        tripleToWhere.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . FILTER (LANG(?o) = \"").append(language).append("\") ");
+                        tripleToInsert.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581563> \"").append(label).append("\"@").append(language).append(" . ");
+                    }
                 }
             }
-            for (MonolingualString descriptionObject : descriptions) {
-                String language = descriptionObject.getLanguage();
-                String description = descriptionObject.getText();
+            if (descriptions != null) {
+                for (MonolingualString descriptionObject : descriptions) {
+                    String language = descriptionObject.getLanguage();
+                    String description = descriptionObject.getText();
 
-                if (description != null) {
-                    tripleToDelete.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . ");
-                    tripleToWhere.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . FILTER (LANG(?o) = \"").append(language).append("\") ");
-                    tripleToInsert.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581562> \"").append(description).append("\"@").append(language).append(" . ");
+                    if (description != null) {
+                        tripleToDelete.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . ");
+                        tripleToWhere.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . FILTER (LANG(?o) = \"").append(language).append("\") ");
+                        tripleToInsert.append(" <").append(id).append("> <https://linkedopendata.eu/prop/direct/P581562> \"").append(description).append("\"@").append(language).append(" . ");
+                    }
                 }
             }
             if ((tripleToDelete.length() == 0) || (tripleToInsert.length() == 0)) {
