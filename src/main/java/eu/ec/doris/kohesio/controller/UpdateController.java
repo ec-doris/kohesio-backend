@@ -104,10 +104,10 @@ public class UpdateController {
                     + " }";
             String queryInsert = " INSERT DATA {" + tripleToInsert + "}";
 
-            System.err.println(queryDelete);
-            System.err.println(queryInsert);
-//            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryDelete, 20);
-//            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryInsert, 20);
+//            System.err.println(queryDelete);
+//            System.err.println(queryInsert);
+            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryDelete, 20);
+            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryInsert, 20);
 
             JSONObject result = new JSONObject();
             result.put("message", "entity updated");
@@ -173,7 +173,7 @@ public class UpdateController {
             }
         }
         for (Response response : responses) {
-            System.out.println(response.code());
+//            System.out.println(response.code());
             if (response.code() != 200) {
                 throw new RuntimeException("Error while propagating update");
             }
