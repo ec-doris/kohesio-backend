@@ -28,6 +28,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -104,10 +107,10 @@ public class UpdateController {
                     + " }";
             String queryInsert = " INSERT DATA {" + tripleToInsert + "}";
 
-//            System.err.println(queryDelete);
-//            System.err.println(queryInsert);
-            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryDelete, 20);
-            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryInsert, 20);
+            System.err.println(queryDelete);
+            System.err.println(queryInsert);
+//            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryDelete, 20);
+//            sparqlQueryService.executeUpdateQuery(sparqlEndpoint, queryInsert, 20);
 
             JSONObject result = new JSONObject();
             result.put("message", "entity updated");
@@ -121,13 +124,13 @@ public class UpdateController {
     ) throws IOException, ApiException {
         logger.info("Propagate update project");
         ApiClient client = ClientBuilder.cluster().build();
-
+        String namespace = new String(Files.readAllBytes(Paths.get("/var/run/secrets/kubernetes.io/serviceaccount/namespace")), Charset.defaultCharset());
         Configuration.setDefaultApiClient(client);
-
+        System.out.println(namespace);
         CoreV1Api api = new CoreV1Api();
         // list all pods in all namespaces
         V1PodList list = api.listNamespacedPod(
-                "development",
+                namespace,
                 null,
                 null,
                 null,
