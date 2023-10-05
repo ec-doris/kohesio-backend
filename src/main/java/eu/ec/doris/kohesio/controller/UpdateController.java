@@ -142,8 +142,9 @@ public class UpdateController {
         for (V1Pod item : list.getItems()) {
             String ip = item.getStatus().getPodIP();
             String phase = item.getStatus().getPhase();
-            System.out.println(item.getSpec());
-//            String port = item.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort().toString();
+            String port = item.getSpec().getContainers().toString();
+            System.out.println(port);
+
 //            if (phase.equals("Running")) {
 //                String url = "http://" + ip + ":" + port + "/wikibase/update/projectUpdate";
 //                OkHttpClient httpClient = client.getHttpClient();
