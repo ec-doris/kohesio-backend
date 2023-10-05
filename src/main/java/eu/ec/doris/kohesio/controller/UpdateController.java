@@ -142,29 +142,30 @@ public class UpdateController {
         for (V1Pod item : list.getItems()) {
             String ip = item.getStatus().getPodIP();
             String phase = item.getStatus().getPhase();
-            String port = item.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort().toString();
-            if (phase.equals("Running")) {
-                String url = "http://" + ip + ":" + port + "/wikibase/update/projectUpdate";
-                OkHttpClient httpClient = client.getHttpClient();
-                ObjectMapper objectMapper = new ObjectMapper();
-                RequestBody requestBody = RequestBody.create(
-                        okhttp3.MediaType.parse("application/json"),
-                        objectMapper.writeValueAsString(updatePayload)
-                );
-                Request request = new Request.Builder()
-                        .url(url)
-                        .post(requestBody)
-                        .build();
-                Call call = httpClient.newCall(request);
+            System.out.println(item.getSpec());
+//            String port = item.getSpec().getContainers().get(0).getPorts().get(0).getContainerPort().toString();
+//            if (phase.equals("Running")) {
+//                String url = "http://" + ip + ":" + port + "/wikibase/update/projectUpdate";
+//                OkHttpClient httpClient = client.getHttpClient();
+//                ObjectMapper objectMapper = new ObjectMapper();
+//                RequestBody requestBody = RequestBody.create(
+//                        okhttp3.MediaType.parse("application/json"),
+//                        objectMapper.writeValueAsString(updatePayload)
+//                );
+//                Request request = new Request.Builder()
+//                        .url(url)
+//                        .post(requestBody)
+//                        .build();
+//                Call call = httpClient.newCall(request);
 //                Response response = call.execute();
 //                responses.add(response);
-            }
-        }
-        for (Response response : responses) {
-            System.out.println(response.code());
-            if (response.code() != 200) {
-                throw new RuntimeException("Error while propagating update");
-            }
+//            }
+//        }
+//        for (Response response : responses) {
+//            System.out.println(response.code());
+//            if (response.code() != 200) {
+//                throw new RuntimeException("Error while propagating update");
+//            }
         }
     }
 }
