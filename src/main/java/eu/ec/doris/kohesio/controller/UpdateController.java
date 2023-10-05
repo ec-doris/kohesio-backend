@@ -9,6 +9,7 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.util.ClientBuilder;
@@ -142,31 +143,37 @@ public class UpdateController {
         for (V1Pod item : list.getItems()) {
             String ip = item.getStatus().getPodIP();
             String phase = item.getStatus().getPhase();
-            String port = item.getSpec().getContainers().toString();
-            System.out.println(port);
+            String port = null;
+            for (V1Container container : item.getSpec().getContainers()) {
+                if ("kohesio-backend-container".equals(container.getName())) {
+                    port = container.getPorts().toString();
+                    break;
+                }
+            }
+            System.out.println("IP: " + ip + " phase: " + phase + " port: " + port);
 
-//            if (phase.equals("Running")) {
-//                String url = "http://" + ip + ":" + port + "/wikibase/update/projectUpdate";
-//                OkHttpClient httpClient = client.getHttpClient();
-//                ObjectMapper objectMapper = new ObjectMapper();
-//                RequestBody requestBody = RequestBody.create(
-//                        okhttp3.MediaType.parse("application/json"),
-//                        objectMapper.writeValueAsString(updatePayload)
-//                );
-//                Request request = new Request.Builder()
-//                        .url(url)
-//                        .post(requestBody)
-//                        .build();
-//                Call call = httpClient.newCall(request);
-//                Response response = call.execute();
-//                responses.add(response);
-//            }
-//        }
-//        for (Response response : responses) {
-//            System.out.println(response.code());
-//            if (response.code() != 200) {
-//                throw new RuntimeException("Error while propagating update");
-//            }
+            if ("Running".equals(phase) && port != null) {
+                String url = "http://" + ip + ":" + port + "/wikibase/update/projectUpdate";
+                OkHttpClient httpClient = client.getHttpClient();
+                ObjectMapper objectMapper = new ObjectMapper();
+                RequestBody requestBody = RequestBody.create(
+                        okhttp3.MediaType.parse("application/json"),
+                        objectMapper.writeValueAsString(updatePayload)
+                );
+                Request request = new Request.Builder()
+                        .url(url)
+                        .post(requestBody)
+                        .build();
+                Call call = httpClient.newCall(request);
+                Response response = call.execute();
+                responses.add(response);
+            }
+        }
+        for (Response response : responses) {
+            System.out.println(response.code());
+            if (response.code() != 200) {
+                throw new RuntimeException("Error while propagating update");
+            }
         }
     }
 }
