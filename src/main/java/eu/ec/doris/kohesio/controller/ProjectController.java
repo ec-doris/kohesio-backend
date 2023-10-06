@@ -84,10 +84,10 @@ public class ProjectController {
     }
 
     @GetMapping(value = "/facet/eu/project", produces = "application/json")
-    public ResponseEntity
-    euProjectID( //
-                 @RequestParam(value = "id") String id,
-                 @RequestParam(value = "language", defaultValue = "en") String language)
+    public ResponseEntity euProjectID(
+            @RequestParam(value = "id") String id,
+            @RequestParam(value = "language", defaultValue = "en") String language
+    )
             throws Exception {
 
         logger.info("Project search by ID: id {}, language {}", id, language);
@@ -114,8 +114,10 @@ public class ProjectController {
                     + "?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel "
                     + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
                     + "?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite "
-                    + "?beneficiaryString ?source ?source2 ?keepUrl WHERE { "
+                    + "?beneficiaryString ?source ?source2 ?keepUrl ?curatedLabel ?curatedSummary WHERE { "
                     + "VALUES ?s0 { <" + id + "> } "
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581562> ?curatedSummary . FILTER((LANG(?curatedSummary)) = \"" + language + "\") }"
                     + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \"" + language + "\") }"
                     + " OPTIONAL { ?s0 wdt:P836 ?description. FILTER((LANG(?description)) = \"" + language + "\") } "
                     + " OPTIONAL { ?s0 wdt:P1742 ?infoRegioUrl . }"
@@ -278,14 +280,36 @@ public class ProjectController {
 
                 if (querySolution.getBinding("label") != null) {
                     result.put("label", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+                    result.put("originalLabel", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
+                } else {
+                    result.put("originalLabel", "");
+                }
+                if (querySolution.hasBinding("curatedLabel")) {
+                    result.put(
+                            "label",
+                            ((Literal) querySolution.getBinding("curatedLabel").getValue()).getLabel()
+                    );
                 }
 
                 if (querySolution.getBinding("description") != null) {
                     result.put(
                             "description",
-                            ((Literal) querySolution.getBinding("description").getValue()).getLabel());
+                            ((Literal) querySolution.getBinding("description").getValue()).getLabel()
+                    );
+                    result.put(
+                            "originalDescription",
+                            ((Literal) querySolution.getBinding("description").getValue()).getLabel()
+                    );
+                } else {
+                    result.put("originalDescription", "");
                 }
-                //
+                if (querySolution.hasBinding("curatedSummary")) {
+                    result.put(
+                            "description",
+                            ((Literal) querySolution.getBinding("curatedSummary").getValue()).getLabel()
+                    );
+                }
+
                 if (querySolution.getBinding("infoRegioUrl") != null) {
                     result.put(
                             "infoRegioUrl",
@@ -349,7 +373,6 @@ public class ProjectController {
                                     "EL"
                             );
                         }
-
                 }
 
                 if (querySolution.getBinding("categoryLabel") != null) {
@@ -800,7 +823,7 @@ public class ProjectController {
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         HttpEntity<?> entity = new HttpEntity<>(headers);
 
-        String urlTemplate = UriComponentsBuilder.fromHttpUrl("https://nominatim.openstreetmap.org/search/search")
+        String urlTemplate = UriComponentsBuilder.fromHttpUrl("https://nominatim.openstreetmap.org/search")
                 .queryParam("q", town)
                 .queryParam("format", "json")
                 .queryParam("addressdetails", "1")
@@ -1061,8 +1084,10 @@ public class ProjectController {
             }
         }
         query =
-                "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countryCode ?description WHERE { "
+                "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countryCode ?description ?curatedLabel ?curatedSummary WHERE { "
                         + " VALUES ?s0 { " + values + " }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
+                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581562> ?curatedSummary . FILTER((LANG(?curatedSummary)) = \"" + language + "\") }"
                         + " OPTIONAL { ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \"" + language + "\") }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description . FILTER((LANG(?description)) = \"" + language + "\") }"
                         + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
@@ -1095,7 +1120,9 @@ public class ProjectController {
 
                 project.setSnippet(new ArrayList<>());
                 project.setLabels(new ArrayList<>());
+                project.setOriginalLabels(new ArrayList<>());
                 project.setDescriptions(new ArrayList<>());
+                project.setOrignalDescriptions(new ArrayList<>());
                 project.setStartTimes(new ArrayList<>());
                 project.setEndTimes(new ArrayList<>());
                 project.setEuBudgets(new ArrayList<>());
@@ -1115,11 +1142,42 @@ public class ProjectController {
             Project project = resultMap.get(iriItem);
             if (querySolution.getBinding("label") != null) {
                 ArrayList<String> labels = project.getLabels();
+                ArrayList<String> originalLabels = project.getOriginalLabels();
                 String value = querySolution.getBinding("label").getValue().stringValue();
-                if (!labels.contains(value)) {
+                if (!originalLabels.contains(value)) {
+                    originalLabels.add(value);
+                }
+                if (querySolution.getBinding("curatedLabel") != null) {
+                    String valueCur = querySolution.getBinding("curatedLabel").getValue().stringValue();
+                    if (!labels.contains(valueCur)) {
+                        labels.add(valueCur);
+                    } else if (!labels.contains(value)) {
+                        labels.add(value);
+                    }
+                } else if (!labels.contains(value)) {
                     labels.add(value);
                 }
             }
+
+            if (querySolution.getBinding("description") != null) {
+                ArrayList<String> descriptions = project.getDescriptions();
+                ArrayList<String> originalDescriptions = project.getOrignalDescriptions();
+                String value = querySolution.getBinding("description").getValue().stringValue();
+                if (!originalDescriptions.contains(value)) {
+                    originalDescriptions.add(value);
+                }
+                if (querySolution.getBinding("curatedSummary") != null) {
+                    String valueCur = querySolution.getBinding("curatedSummary").getValue().stringValue();
+                    if (!descriptions.contains(valueCur)) {
+                        descriptions.add(valueCur);
+                    } else if (!descriptions.contains(value)) {
+                        descriptions.add(value);
+                    }
+                } else if (!descriptions.contains(value)) {
+                    descriptions.add(value);
+                }
+            }
+
             if (querySolution.getBinding("startTime") != null) {
                 ArrayList<String> startTimes = project.getStartTimes();
                 String value = querySolution.getBinding("startTime").getValue().stringValue().split("T")[0];
@@ -1200,13 +1258,6 @@ public class ProjectController {
                 String value = querySolution.getBinding("countryCode").getValue().stringValue();
                 if (!countryCodes.contains(value)) {
                     countryCodes.add(value);
-                }
-            }
-            if (querySolution.getBinding("description") != null) {
-                ArrayList<String> descriptions = project.getDescriptions();
-                String value = querySolution.getBinding("description").getValue().stringValue();
-                if (!descriptions.contains(value)) {
-                    descriptions.add(value);
                 }
             }
         }
