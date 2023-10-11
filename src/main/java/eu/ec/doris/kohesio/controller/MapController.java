@@ -4,10 +4,7 @@ import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.payload.NutsRegion;
-import eu.ec.doris.kohesio.services.ExpandedQuery;
-import eu.ec.doris.kohesio.services.FiltersGenerator;
-import eu.ec.doris.kohesio.services.SPARQLQueryService;
-import eu.ec.doris.kohesio.services.SimilarityService;
+import eu.ec.doris.kohesio.services.*;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
@@ -60,6 +57,9 @@ public class MapController {
     @Autowired
     FacetController facetController;
 
+    @Autowired
+    NominatimService nominatimService;
+
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
         response.setHeader("Access-Control-Allow-Origin", "*");
@@ -90,6 +90,8 @@ public class MapController {
             @RequestParam(value = "nuts3", required = false) String nuts3,
             @RequestParam(value = "limit", required = false) Integer limit,
             @RequestParam(value = "offset", defaultValue = "0") Integer offset,
+            @RequestParam(value = "town", required = false) String town,
+            @RequestParam(value = "radius", required = false) Long radius,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
             @RequestParam(value = "cci", required = false) String cci,
@@ -121,13 +123,20 @@ public class MapController {
             expandedQuery = similarityService.expandQuery(keywords, language);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
+        if (town != null) {
+            NominatimService.Coordinates tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
+            if (tmpCoordinates != null) {
+                latitude = tmpCoordinates.getLatitude();
+                longitude = tmpCoordinates.getLongitude();
 
+            }
+        }
         String search = filtersGenerator.filterProject(
                 expandedQueryText, language, c, theme, fund, program, categoryOfIntervention,
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
-                interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis,limit, offset
+                interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, limit, offset
         );
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
@@ -374,8 +383,7 @@ public class MapController {
 
         if (facetController.nutsRegion.get(granularityRegion).name.containsKey(language)) {
             result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
-        }
-        else {
+        } else {
             result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get("en"));
         }
         if (granularityRegion != null) {
@@ -648,6 +656,7 @@ public class MapController {
                 null, null,
                 null, 2000,
                 0, null,
+                null, null,
                 null, null, null,
                 null, null,
                 400, null
@@ -683,8 +692,7 @@ public class MapController {
                     o.put("region", n.uri);
                     if (n.name.containsKey(lang)) {
                         o.put("regionLabel", n.name.get(lang));
-                    }
-                    else {
+                    } else {
                         o.put("regionLabel", n.name.get("en"));
                     }
                     return o;
