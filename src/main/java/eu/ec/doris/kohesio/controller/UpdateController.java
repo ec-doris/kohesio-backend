@@ -41,7 +41,6 @@ public class UpdateController {
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
 
-
     public ResponseEntity<JSONObject> updateProject(
             String url,
             Update updatePayload
@@ -78,14 +77,14 @@ public class UpdateController {
                     if (label != null) {
                         tripleToDelete.append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . ")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?label . ")
                         ;
                         tripleToWhere
                                 .append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . FILTER (LANG(?o) = \"")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?label . FILTER (LANG(?label) = \"")
                                 .append(language)
-                                .append("\") ")
+                                .append("\") .")
                         ;
                         tripleToInsert
                                 .append(" <")
@@ -108,12 +107,12 @@ public class UpdateController {
                         tripleToDelete
                                 .append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . ")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?description . ")
                         ;
                         tripleToWhere
                                 .append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . FILTER (LANG(?o) = \"")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?description . FILTER (LANG(?description) = \"")
                                 .append(language)
                                 .append("\") ")
                         ;
@@ -142,6 +141,8 @@ public class UpdateController {
                     + " }";
             String queryInsert = " INSERT DATA {" + tripleToInsert + "}";
 
+            System.err.println(queryDelete);
+            System.err.println(queryInsert);
             sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
             sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
 
