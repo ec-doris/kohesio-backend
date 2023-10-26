@@ -157,8 +157,8 @@ public class UpdateController {
 
             System.err.println(queryDelete);
             System.err.println(queryInsert);
-//            sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
-//            sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
+            sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
+            sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
 
 
             return new ResponseEntity<>(
