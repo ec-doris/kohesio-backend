@@ -173,8 +173,6 @@ public class UpdateController {
             @RequestBody Update updatePayload
     ) throws IOException, ApiException {
         logger.info("Propagate update project {}", updatePayload.getId());
-        if (true)
-            return updateProject(sparqlEndpoint, updatePayload);
         ApiClient client = ClientBuilder.cluster().build();
         String namespace = new String(
                 Files.readAllBytes(
