@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -40,7 +41,6 @@ public class UpdateController {
 
     @Value("${kohesio.sparqlEndpoint}")
     String sparqlEndpoint;
-
 
     public ResponseEntity<JSONObject> updateProject(
             String url,
@@ -66,24 +66,32 @@ public class UpdateController {
                     HttpStatus.BAD_REQUEST
             );
         } else {
-
-            StringBuilder tripleToDelete = new StringBuilder();
-            StringBuilder tripleToInsert = new StringBuilder();
-            StringBuilder tripleToWhere = new StringBuilder();
+            List<UpdateTriple> updateTriples = new ArrayList<>();
             if (labels != null) {
                 for (MonolingualString labelObject : labels) {
                     String language = labelObject.getLanguage();
                     String label = labelObject.getText();
 
+                    StringBuilder tripleToDelete = new StringBuilder();
+                    StringBuilder tripleToInsert = new StringBuilder();
+                    StringBuilder tripleToWhere = new StringBuilder();
                     if (label != null) {
                         tripleToDelete.append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . ")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?label_")
+                                .append(language)
+                                .append(" . ")
                         ;
+
                         tripleToWhere
                                 .append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?o . FILTER (LANG(?o) = \"")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?label_")
+                                .append(language)
+                                .append(" . FILTER (LANG(?label_")
+                                .append(language)
+                                .append(")")
+                                .append(" = \"")
                                 .append(language)
                                 .append("\") ")
                         ;
@@ -96,6 +104,13 @@ public class UpdateController {
                                 .append(language)
                                 .append(" . ")
                         ;
+                        updateTriples.add(
+                                new UpdateTriple(
+                                        tripleToDelete.toString(),
+                                        tripleToInsert.toString(),
+                                        tripleToWhere.toString()
+                                )
+                        );
                     }
                 }
             }
@@ -104,16 +119,26 @@ public class UpdateController {
                     String language = descriptionObject.getLanguage();
                     String description = descriptionObject.getText();
 
+                    StringBuilder tripleToDelete = new StringBuilder();
+                    StringBuilder tripleToInsert = new StringBuilder();
+                    StringBuilder tripleToWhere = new StringBuilder();
                     if (description != null) {
                         tripleToDelete
                                 .append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . ")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?description_")
+                                .append(language)
+                                .append(" . ")
                         ;
                         tripleToWhere
                                 .append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?o . FILTER (LANG(?o) = \"")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?description_")
+                                .append(language)
+                                .append(" . FILTER (LANG(?description_")
+                                .append(language)
+                                .append(")")
+                                .append(" = \"")
                                 .append(language)
                                 .append("\") ")
                         ;
@@ -126,25 +151,31 @@ public class UpdateController {
                                 .append(language)
                                 .append(" . ")
                         ;
+
+                        updateTriples.add(
+                                new UpdateTriple(
+                                        tripleToDelete.toString(),
+                                        tripleToInsert.toString(),
+                                        tripleToWhere.toString()
+                                )
+                        );
                     }
                 }
             }
-            if ((tripleToDelete.length() == 0) || (tripleToInsert.length() == 0)) {
+            if (updateTriples.isEmpty()) {
                 return new ResponseEntity<>(
                         (JSONObject) (new JSONObject().put("message", "Bad Request - nothing to update")),
                         HttpStatus.BAD_REQUEST
                 );
             }
-            String queryDelete = "DELETE {" + tripleToDelete + "}"
-                    + " WHERE { "
-                    + "<" + id + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934>. "
-                    + tripleToWhere
-                    + " }";
-            String queryInsert = " INSERT DATA {" + tripleToInsert + "}";
-
-            sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
-            sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
-
+            for (UpdateTriple updateTriple : updateTriples) {
+                String queryDelete = updateTriple.getDeleteQuery();
+                String queryInsert = updateTriple.getInsertQuery();
+                System.err.println(queryDelete);
+                System.err.println(queryInsert);
+                sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
+                sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
+            }
 
             return new ResponseEntity<>(
                     (JSONObject) (new JSONObject().put("message", "entity updated")),
@@ -208,6 +239,53 @@ public class UpdateController {
                 }
             }
             return lastResponse;
+        }
+    }
+
+    private class UpdateTriple {
+        String tripleToDelete;
+        String tripleToInsert;
+        String tripleToWhere;
+
+        public UpdateTriple(String tripleToDelete, String tripleToInsert, String tripleToWhere) {
+            this.tripleToDelete = tripleToDelete;
+            this.tripleToInsert = tripleToInsert;
+            this.tripleToWhere = tripleToWhere;
+        }
+
+        public String getDeleteQuery() {
+            return "DELETE {" + tripleToDelete + "}"
+                    + " WHERE { "
+                    + tripleToWhere
+                    + " }";
+        }
+
+        public String getInsertQuery() {
+            return "INSERT DATA {" + tripleToInsert + "}";
+        }
+
+        public String getTripleToDelete() {
+            return tripleToDelete;
+        }
+
+        public void setTripleToDelete(String tripleToDelete) {
+            this.tripleToDelete = tripleToDelete;
+        }
+
+        public String getTripleToInsert() {
+            return tripleToInsert;
+        }
+
+        public void setTripleToInsert(String tripleToInsert) {
+            this.tripleToInsert = tripleToInsert;
+        }
+
+        public String getTripleToWhere() {
+            return tripleToWhere;
+        }
+
+        public void setTripleToWhere(String tripleToWhere) {
+            this.tripleToWhere = tripleToWhere;
         }
     }
 }
