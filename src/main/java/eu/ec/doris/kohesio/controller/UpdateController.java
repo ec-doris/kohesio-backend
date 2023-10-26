@@ -77,14 +77,21 @@ public class UpdateController {
                     if (label != null) {
                         tripleToDelete.append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?label . ")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?label_")
+                                .append(language)
+                                .append(" . ")
                         ;
                         tripleToWhere
                                 .append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?label . FILTER (LANG(?label) = \"")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581563> ?label_")
                                 .append(language)
-                                .append("\") .")
+                                .append(" . FILTER (LANG(?label_")
+                                .append(language)
+                                .append(")")
+                                .append(" = \"")
+                                .append(language)
+                                .append("\") ")
                         ;
                         tripleToInsert
                                 .append(" <")
@@ -107,12 +114,19 @@ public class UpdateController {
                         tripleToDelete
                                 .append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?description . ")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?description_")
+                                .append(language)
+                                .append(" . ")
                         ;
                         tripleToWhere
                                 .append(" <")
                                 .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?description . FILTER (LANG(?description) = \"")
+                                .append("> <https://linkedopendata.eu/prop/direct/P581562> ?description_")
+                                .append(language)
+                                .append(" . FILTER (LANG(?description_")
+                                .append(language)
+                                .append(")")
+                                .append(" = \"")
                                 .append(language)
                                 .append("\") ")
                         ;
@@ -139,12 +153,12 @@ public class UpdateController {
                     + "<" + id + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934>. "
                     + tripleToWhere
                     + " }";
-            String queryInsert = " INSERT DATA {" + tripleToInsert + "}";
+            String queryInsert = "INSERT DATA {" + tripleToInsert + "}";
 
             System.err.println(queryDelete);
             System.err.println(queryInsert);
-            sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
-            sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
+//            sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
+//            sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
 
 
             return new ResponseEntity<>(
@@ -159,6 +173,8 @@ public class UpdateController {
             @RequestBody Update updatePayload
     ) throws IOException, ApiException {
         logger.info("Propagate update project {}", updatePayload.getId());
+        if (true)
+            return updateProject(sparqlEndpoint, updatePayload);
         ApiClient client = ClientBuilder.cluster().build();
         String namespace = new String(
                 Files.readAllBytes(
