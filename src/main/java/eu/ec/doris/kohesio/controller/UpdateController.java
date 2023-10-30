@@ -201,7 +201,11 @@ public class UpdateController {
         // list all pods in all namespaces
         if ("development".equals(namespace)) {
             // On dev QAnswer is not in the cluster
-            return updateProject(sparqlEndpoint, updatePayload);
+//            return updateProject(sparqlEndpoint, updatePayload);
+            return new ResponseEntity<>(
+                    (JSONObject) (new JSONObject().put("message", "You are on development environment, no update will be done")),
+                    HttpStatus.SERVICE_UNAVAILABLE
+            );
         } else {
             V1PodList list = api.listNamespacedPod(
                     namespace,
