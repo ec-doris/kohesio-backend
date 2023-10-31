@@ -202,6 +202,7 @@ public class UpdateController {
         if ("development".equals(namespace)) {
             // On dev QAnswer is not in the cluster
 //            return updateProject(sparqlEndpoint, updatePayload);
+            logger.info("You are on development environment, no update will be done");
             return new ResponseEntity<>(
                     (JSONObject) (new JSONObject().put("message", "You are on development environment, no update will be done")),
                     HttpStatus.SERVICE_UNAVAILABLE
