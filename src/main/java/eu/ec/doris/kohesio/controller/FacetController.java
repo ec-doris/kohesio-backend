@@ -1351,7 +1351,7 @@ public class FacetController {
                 + "     FILTER((LANG(?typeLabel)) = \"" + language + "\") "
                 + " }"
                 + "     ?type rdfs:label ?typeLabelEn . "
-                + "     FILTER((LANG(?typeLabelEn)) = \"en\")"
+                + "     FILTER((LANG(?typeLabelEn)) = \"en\" )"
                 + "}";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
