@@ -1331,7 +1331,8 @@ public class FacetController {
 
     public List<String> projectTypes = Arrays.asList(
             "https://linkedopendata.eu/entity/Q3402194",
-            "https://linkedopendata.eu/entity/Q6714233"
+            "https://linkedopendata.eu/entity/Q6714233",
+            "https://linkedopendata.eu/entity/Q6869909"
     );
 
     @GetMapping(value = "/facet/eu/project_types", produces = "application/json")
