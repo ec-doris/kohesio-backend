@@ -314,10 +314,10 @@ public class FacetController {
     public JSONObject facetEuStatistics() throws Exception {
         logger.info("Get EU statistics");
         JSONObject statistics = new JSONObject();
-        String query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
+        String query = "SELECT (COUNT(?s0) AS ?c) WHERE { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "} ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30, "facet");
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 50, "facet");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberProjects", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -325,7 +325,7 @@ public class FacetController {
         query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> . "
                 + "} ";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30, "statistics");
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 50, "statistics");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberBeneficiaries", ((Literal) querySolution.getBinding("c").getValue()).intValue());
