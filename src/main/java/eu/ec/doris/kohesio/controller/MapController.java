@@ -199,9 +199,9 @@ public class MapController {
                     if (regionLabel == null) {
                         regionLabel = facetController.nutsRegion.get(r).name.get("en");
                     }
+                    element.put("regionLabel", regionLabel);
+                    element.put("geoJson", facetController.nutsRegion.get(r).geoJson);
                 }
-                element.put("regionLabel", regionLabel);
-                element.put("geoJson", facetController.nutsRegion.get(r).geoJson);
                 element.put("count", 0);
                 subRegions.put(r, element);
             }
