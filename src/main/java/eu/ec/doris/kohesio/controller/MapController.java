@@ -192,7 +192,7 @@ public class MapController {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
                 String regionLabel = "";
-                if (facetController.nutsRegion.get(r) == null) {
+                if (facetController.nutsRegion.get(r).name == null) {
                     logger.error("Name for "+ r + "should not be null");
                 } else {
                     regionLabel = facetController.nutsRegion.get(r).name.get(language);
