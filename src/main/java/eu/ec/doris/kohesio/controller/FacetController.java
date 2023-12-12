@@ -445,12 +445,7 @@ public class FacetController {
                 String valB = new String();
                 valA = (String) a.get(KEY_NAME);
                 valB = (String) b.get(KEY_NAME);
-                if (valA != null && valB != null){
-                    return valA.compareTo(valB);
-                } else {
-                    return -1;
-                }
-
+                return valA.compareTo(valB);
                 //if you want to change the sort order, simply use the following:
                 //return -valA.compareTo(valB);
             }
