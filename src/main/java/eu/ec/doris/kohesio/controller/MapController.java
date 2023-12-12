@@ -191,14 +191,9 @@ public class MapController {
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
-                String regionLabel = "";
-                if (facetController.nutsRegion.get(r).name == null) {
-                    logger.error("Name for "+ r + "should not be null");
-                } else {
-                    regionLabel = facetController.nutsRegion.get(r).name.get(language);
-                    if (regionLabel == null) {
-                        regionLabel = facetController.nutsRegion.get(r).name.get("en");
-                    }
+                String regionLabel = facetController.nutsRegion.get(r).name.get(language);
+                if (regionLabel == null) {
+                    regionLabel = facetController.nutsRegion.get(r).name.get("en");
                 }
                 element.put("regionLabel", regionLabel);
                 element.put("geoJson", facetController.nutsRegion.get(r).geoJson);
