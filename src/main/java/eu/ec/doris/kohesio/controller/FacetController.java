@@ -314,18 +314,18 @@ public class FacetController {
     public JSONObject facetEuStatistics() throws Exception {
         logger.info("Get EU statistics");
         JSONObject statistics = new JSONObject();
-        String query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
+        String query = "SELECT (COUNT(?s0) AS ?c) WHERE { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . "
                 + "} ";
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20, "facet");
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 50, "facet");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberProjects", ((Literal) querySolution.getBinding("c").getValue()).intValue());
         }
-        query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
+        query = "SELECT (COUNT(?s0) AS ?c) WHERE { "
                 + "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q196899> . "
                 + "} ";
-        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20, "statistics");
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 50, "statistics");
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             statistics.put("numberBeneficiaries", ((Literal) querySolution.getBinding("c").getValue()).intValue());
@@ -1331,7 +1331,8 @@ public class FacetController {
 
     public List<String> projectTypes = Arrays.asList(
             "https://linkedopendata.eu/entity/Q3402194",
-            "https://linkedopendata.eu/entity/Q6714233"
+            "https://linkedopendata.eu/entity/Q6714233",
+            "https://linkedopendata.eu/entity/Q6869909"
     );
 
     @GetMapping(value = "/facet/eu/project_types", produces = "application/json")
@@ -1341,49 +1342,33 @@ public class FacetController {
 
         String join = this.projectTypes.stream().map(s -> "<" + s + ">").collect(Collectors.joining(" "));
 
-//        String query = "SELECT DISTINCT ?type ?typeLabel WHERE {"
-//                + " VALUES ?type { "
-//                + join
-//                + " }"
-//                + " ?type rdfs:label ?typeLabel."
-//                + " FILTER((LANG(?typeLabel)) = \"" + language + "\")"
-//                + "}";
-//        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
+        String query = "SELECT DISTINCT ?type ?typeLabel ?typeLabelEn WHERE {"
+                + " VALUES ?type { "
+                + join
+                + " }"
+                + " OPTIONAL { "
+                + "     ?type rdfs:label ?typeLabel."
+                + "     FILTER((LANG(?typeLabel)) = \"" + language + "\") "
+                + " }"
+                + "     ?type rdfs:label ?typeLabelEn . "
+                + "     FILTER((LANG(?typeLabelEn)) = \"en\" )"
+                + "}";
 
-//        while (resultSet.hasNext()) {
-//            BindingSet querySolution = resultSet.next();
-//            JSONObject element = new JSONObject();
-//            element.put("instance", querySolution.getBinding("type").getValue().stringValue());
-//            element.put("instanceLabel", querySolution.getBinding("typeLabel").getValue().stringValue());
-//            result.add(element);
-//        }
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
 
-        // @todo replace after the next indexing phase
-        JSONArray result = new JSONArray();
-        String jsonString = "[{\"label\":\"Major Projects\",\"L\":\"en\"},{\"label\":\"Grandi Progetti\",\"L\":\"it\"},{\"label\":\"grandes proyectos\",\"L\":\"es\"},{\"label\":\"големи проекти\",\"L\":\"bg\"},{\"label\":\"store projekter\",\"L\":\"da\"},{\"label\":\"Großprojekten\",\"L\":\"de\"},{\"label\":\"suured projektid\",\"L\":\"et\"},{\"label\":\"μεγάλων έργων\",\"L\":\"el\"},{\"label\":\"grands projets\",\"L\":\"fr\"},{\"label\":\"lielie projekti\",\"L\":\"lv\"},{\"label\":\"dideliais projektais\",\"L\":\"lt\"},{\"label\":\"velikih projekata\",\"L\":\"hr\"},{\"label\":\"nagy projektek\",\"L\":\"hu\"},{\"label\":\"proġetti maġġuri\",\"L\":\"mt\"},{\"label\":\"grote projecten\",\"L\":\"nl\"},{\"label\":\"dużych projektów\",\"L\":\"pl\"},{\"label\":\"proiectelor majore\",\"L\":\"pt\"},{\"label\":\"velikih projektov\",\"L\":\"sl\"},{\"label\":\"suuria hankkeita\",\"L\":\"fi\"},{\"label\":\"större projekt\",\"L\":\"sv\"},{\"label\":\"mórthionscadail\",\"L\":\"ga\"},{\"label\":\"proiectelor majore\",\"L\":\"ro\"},{\"label\":\"velkých projektů\",\"L\":\"cs\"},{\"label\":\"veľkých projektov\",\"L\":\"sk\"}]";
-
-        JSONParser parser = new JSONParser();
-        JSONArray jsonArray = (JSONArray) parser.parse(jsonString);
-
-
-        // Iterate through JSON array
-        for (int i = 0; i < jsonArray.size(); i++) {
-            JSONObject obj = (JSONObject) jsonArray.get(i);
-
-            // Check if language matches
-            if (((String)obj.get("L")).equals(language)) {
-                String label = (String)obj.get("label");
-                JSONObject element = new JSONObject();
-                element.put("instance", "https://linkedopendata.eu/entity/Q3402194");
-                element.put("instanceLabel", label);
-                result.add(element);
+        JSONArray jsonArray = new JSONArray();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            JSONObject element = new JSONObject();
+            element.put("instance", querySolution.getBinding("type").getValue().stringValue());
+            if (querySolution.getBinding("typeLabel") != null){
+                element.put("instanceLabel", querySolution.getBinding("typeLabel").getValue().stringValue());
+            } else {
+                element.put("instanceLabel", querySolution.getBinding("typeLabelEn").getValue().stringValue());
             }
-        }
-        JSONObject element = new JSONObject();
-        element.put("instance", "https://linkedopendata.eu/entity/Q6714233");
-        element.put("instanceLabel", "Regio Star");
-        result.add(element);
 
-        return result;
+            jsonArray.add(element);
+        }
+        return jsonArray;
     }
 }
