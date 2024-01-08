@@ -191,6 +191,7 @@ public class MapController {
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
+                logger.info("Finding label for "+r);
                 String regionLabel = facetController.nutsRegion.get(r).name.get(language);
                 if (regionLabel == null) {
                     regionLabel = facetController.nutsRegion.get(r).name.get("en");
