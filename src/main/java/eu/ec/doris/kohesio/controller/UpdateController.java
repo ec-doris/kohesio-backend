@@ -123,6 +123,7 @@ public class UpdateController {
                     StringBuilder tripleToInsert = new StringBuilder();
                     StringBuilder tripleToWhere = new StringBuilder();
                     if (description != null) {
+                        description = description.replace("\"", "\\\"");
                         tripleToDelete
                                 .append(" <")
                                 .append(id)
