@@ -221,16 +221,13 @@ public class FiltersGenerator {
         }
 
         if (theme != null || policyObjective != null){
-            search = " {SELECT ?s0 where {"+search+"} }";
-            search += " { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
-
+            search += "  ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
             if (theme != null) {
-                search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+                search += " ?category <https://linkedopendata.eu/prop/direct/P1848> ?t . FILTER ( ?t =<" + theme + "> ) .  ";
             }
             if (policyObjective != null) {
-                search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+                search += " ?category <https://linkedopendata.eu/prop/direct/P1849> ?p FILTER ( ?p <" + policyObjective + "> ) . ";
             }
-            search += "} ";
         }
 
         return search;
