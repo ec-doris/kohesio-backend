@@ -114,10 +114,11 @@ public class ProjectController {
                     + "?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel "
                     + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
                     + "?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite "
-                    + "?beneficiaryString ?source ?source2 ?keepUrl ?curatedLabel ?curatedSummary WHERE { "
+                    + "?beneficiaryString ?source ?source2 ?keepUrl ?curatedLabel ?curatedSummary ?rawCuratedSummary WHERE { "
                     + "VALUES ?s0 { <" + id + "> } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581562> ?curatedSummary . FILTER((LANG(?curatedSummary)) = \"" + language + "\") }"
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P589596> ?rawCuratedSummary . FILTER((LANG(?rawCuratedSummary)) = \"" + language + "\") }"
                     + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \"" + language + "\") }"
                     + " OPTIONAL { ?s0 wdt:P836 ?description. FILTER((LANG(?description)) = \"" + language + "\") } "
                     + " OPTIONAL { ?s0 wdt:P1742 ?infoRegioUrl . }"
@@ -215,6 +216,7 @@ public class ProjectController {
             result.put("link", id);
             result.put("label", "");
             result.put("description", "");
+            result.put("description_raw", "");
             result.put("startTime", "");
             result.put("endTime", "");
             result.put("budget", "");
@@ -307,6 +309,12 @@ public class ProjectController {
                     result.put(
                             "description",
                             ((Literal) querySolution.getBinding("curatedSummary").getValue()).getLabel()
+                    );
+                }
+                if (querySolution.hasBinding("rawCuratedSummary")) {
+                    result.put(
+                            "description_raw",
+                            ((Literal) querySolution.getBinding("rawCuratedSummary").getValue()).getLabel()
                     );
                 }
 
