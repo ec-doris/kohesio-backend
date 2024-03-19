@@ -981,8 +981,16 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?euBudget)";
             }
         }
+//        if (orderTotalBudget != null) {
+//            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
+//            if (orderTotalBudget) {
+//                orderBy = "ORDER BY ASC(?budget)";
+//            } else {
+//                orderBy = "ORDER BY DESC(?budget)";
+//            }
+//        }
         if (orderTotalBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?budget . ";
             if (orderTotalBudget) {
                 orderBy = "ORDER BY ASC(?budget)";
             } else {
