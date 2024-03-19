@@ -971,23 +971,15 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?startTime)";
             }
         }
-        if (orderEndDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
-            if (orderEndDate) {
-                orderBy = "ORDER BY ASC(?endTime)";
-            } else {
-                orderBy = "ORDER BY DESC(?endTime)";
-            }
-        }
-//        if (orderEuBudget != null) {
-//            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
-//            if (orderEuBudget) {
-//                orderBy = "ORDER BY ASC(?euBudget)";
+//        if (orderEndDate != null) {
+//            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
+//            if (orderEndDate) {
+//                orderBy = "ORDER BY ASC(?endTime)";
 //            } else {
-//                orderBy = "ORDER BY DESC(?euBudget)";
+//                orderBy = "ORDER BY DESC(?endTime)";
 //            }
 //        }
-        if (orderEuBudget != null) {
+        if (orderEndDate != null) {
             orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . ?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?budget2 . ";
             if (orderEuBudget) {
                 orderBy = "ORDER BY ASC(?budget1*?budget2)";
@@ -995,6 +987,15 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?budget1*?budget2)";
             }
         }
+        if (orderEuBudget != null) {
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
+            if (orderEuBudget) {
+                orderBy = "ORDER BY ASC(?euBudget)";
+            } else {
+                orderBy = "ORDER BY DESC(?euBudget)";
+            }
+        }
+
 //        if (orderTotalBudget != null) {
 //            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
 //            if (orderTotalBudget) {
