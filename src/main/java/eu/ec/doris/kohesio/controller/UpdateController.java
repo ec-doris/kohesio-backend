@@ -49,6 +49,7 @@ public class UpdateController {
         String id = updatePayload.getId();
         List<MonolingualString> labels = updatePayload.getLabels();
         List<MonolingualString> descriptions = updatePayload.getDescriptions();
+        List<MonolingualString> descriptionsRaw = updatePayload.getDescriptionsRaw();
 
         logger.info("Project update by ID: id {} on {}", id, url);
 
@@ -163,6 +164,58 @@ public class UpdateController {
                     }
                 }
             }
+
+            if (descriptionsRaw != null) {
+                for (MonolingualString descriptionRawObject: descriptionsRaw) {
+                    String language = descriptionRawObject.getLanguage();
+                    String descriptionRaw = descriptionRawObject.getText();
+
+                    StringBuilder tripleToDelete = new StringBuilder();
+                    StringBuilder tripleToInsert = new StringBuilder();
+                    StringBuilder tripleToWhere = new StringBuilder();
+                    if (descriptionRaw != null) {
+                        descriptionRaw = descriptionRaw.replace("\"", "\\\"");
+                        tripleToDelete
+                                .append(" <")
+                                .append(id)
+                                .append("> <https://linkedopendata.eu/prop/direct/P589596> ?description_raw_")
+                                .append(language)
+                                .append(" . ")
+                        ;
+                        tripleToWhere
+                                .append(" <")
+                                .append(id)
+                                .append("> <https://linkedopendata.eu/prop/direct/P589596> ?description_raw_")
+                                .append(language)
+                                .append(" . FILTER (LANG(?description_raw_")
+                                .append(language)
+                                .append(")")
+                                .append(" = \"")
+                                .append(language)
+                                .append("\") ")
+                        ;
+                        tripleToInsert
+                                .append(" <")
+                                .append(id)
+                                .append("> <https://linkedopendata.eu/prop/direct/P589596> \"")
+                                .append(descriptionRaw)
+                                .append("\"@")
+                                .append(language)
+                                .append(" . ")
+                        ;
+
+                        updateTriples.add(
+                                new UpdateTriple(
+                                        tripleToDelete.toString(),
+                                        tripleToInsert.toString(),
+                                        tripleToWhere.toString()
+                                )
+                        );
+                    }
+                }
+            }
+
+
             if (updateTriples.isEmpty()) {
                 return new ResponseEntity<>(
                         (JSONObject) (new JSONObject().put("message", "Bad Request - nothing to update")),
