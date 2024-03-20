@@ -822,6 +822,8 @@ public class ProjectController {
             Boolean orderEndDate,
             Boolean orderEuBudget,
             Boolean orderTotalBudget,
+            Boolean orderReadability,
+            Boolean orderReadabilityBudget,
 
             String latitude,
             String longitude,
@@ -835,7 +837,7 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null, null, null,
+                orderTotalBudget, orderReadability, orderReadabilityBudget, latitude, longitude, region, limit, offset, null, null, null, null, null, null, null,
                 null, null,
                 timeout, principal
         );
@@ -863,6 +865,8 @@ public class ProjectController {
             @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
             @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
             @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+            @RequestParam(value = "orderReadability", required = false) Boolean orderReadability,
+            @RequestParam(value = "orderReadabilityBudget", required = false) Boolean orderReadabilityBudget,
             @RequestParam(value = "latitude", required = false) String latitude,
             @RequestParam(value = "longitude", required = false) String longitude,
             @RequestParam(value = "region", required = false) String region,
@@ -970,43 +974,37 @@ public class ProjectController {
             } else {
                 orderBy = "ORDER BY DESC(?startTime)";
             }
-        }
-//        if (orderEndDate != null) {
-//            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
-//            if (orderEndDate) {
-//                orderBy = "ORDER BY ASC(?endTime)";
-//            } else {
-//                orderBy = "ORDER BY DESC(?endTime)";
-//            }
-//        }
-        if (orderEndDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . ?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?budget2 . ";
+        } else if (orderEndDate != null) {
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
             if (orderEndDate) {
-                orderBy = "ORDER BY ASC(?budget1*?budget2)";
+                orderBy = "ORDER BY ASC(?endTime)";
             } else {
-                orderBy = "ORDER BY DESC(?budget1*?budget2)";
+                orderBy = "ORDER BY DESC(?endTime)";
             }
-        }
-        if (orderEuBudget != null) {
+        } else if (orderEuBudget != null) {
             orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
             if (orderEuBudget) {
                 orderBy = "ORDER BY ASC(?euBudget)";
             } else {
                 orderBy = "ORDER BY DESC(?euBudget)";
             }
-        }
-
-//        if (orderTotalBudget != null) {
-//            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
-//            if (orderTotalBudget) {
-//                orderBy = "ORDER BY ASC(?budget)";
-//            } else {
-//                orderBy = "ORDER BY DESC(?budget)";
-//            }
-//        }
-        if (orderTotalBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?budget . ";
+        } else if (orderTotalBudget != null) {
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
             if (orderTotalBudget) {
+                orderBy = "ORDER BY ASC(?budget)";
+            } else {
+                orderBy = "ORDER BY DESC(?budget)";
+            }
+        } else if (orderReadabilityBudget != null) {
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . ?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?budget2 . ";
+            if (orderReadabilityBudget) {
+                orderBy = "ORDER BY ASC(?budget1*?budget2)";
+            } else {
+                orderBy = "ORDER BY DESC(?budget1*?budget2)";
+            }
+        } else if (orderReadability != null) {
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?budget . ";
+            if (orderReadability) {
                 orderBy = "ORDER BY ASC(?budget)";
             } else {
                 orderBy = "ORDER BY DESC(?budget)";
@@ -1470,6 +1468,9 @@ public class ProjectController {
             @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
             @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
             @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+            @RequestParam(value = "orderReadability", required = false) Boolean orderReadability,
+            @RequestParam(value = "orderReadabilityBudget", required = false) Boolean orderReadabilityBudget,
+
 
             @RequestParam(value = "latitude", required = false) String latitude,
             @RequestParam(value = "longitude", required = false) String longitude,
@@ -1485,7 +1486,8 @@ public class ProjectController {
         ProjectList projectList = (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
                 categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate,
-                orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.min(limit, MAX_LIMIT),
+                orderEndDate, orderEuBudget, orderTotalBudget, orderReadability, orderReadabilityBudget,
+                latitude, longitude, region, Math.min(limit, MAX_LIMIT),
                 SPECIAL_OFFSET, 30, principal).getBody();
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("project_export");
@@ -1574,6 +1576,9 @@ public class ProjectController {
             @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
             @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
             @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+            @RequestParam(value = "orderReadability", required = false) Boolean orderReadability,
+            @RequestParam(value = "orderReadabilityBudget", required = false) Boolean orderReadabilityBudget,
+
 
             @RequestParam(value = "latitude", required = false) String latitude,
             @RequestParam(value = "longitude", required = false) String longitude,
@@ -1587,11 +1592,14 @@ public class ProjectController {
         final int MAX_LIMIT = 2000;
         // pass a special_offset to skip the caching and query up to the given limit or 10k projects
         ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
+                (ProjectList) euSearchProject(
+                        language, keywords, country, theme, fund, program,
                         categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen,
                         budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
-                        endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude,
-                        longitude, region, Math.min(limit, MAX_LIMIT), SPECIAL_OFFSET, 20, principal).getBody();
+                        endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, orderReadability,
+                        orderReadabilityBudget, latitude, longitude, region, Math.min(limit, MAX_LIMIT),
+                        SPECIAL_OFFSET, 20, principal
+                ).getBody();
         String filename = "project_export.csv";
         try {
             response.setContentType("text/csv");
