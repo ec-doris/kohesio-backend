@@ -40,7 +40,7 @@ public class FiltersGenerator {
             String granularityRegion,
             Boolean interreg,
             Boolean highlighted,
-            String cci,
+            List<String> ccis,
             String kohesioCategory,
             List<String> projectTypes,
             String priorityAxis,
@@ -104,10 +104,15 @@ public class FiltersGenerator {
             search += "?s0 <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> . ";
         }
 
-        if (cci != null) {
+        if (ccis != null) {
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
-                    + " ?program <https://linkedopendata.eu/prop/direct/P1367> \"" + cci + "\" . "
-            ;
+                    + " ?program <https://linkedopendata.eu/prop/direct/P1367> ?cci . "
+                    + "FILTER(?cci IN (";
+            for (String cci : ccis) {
+                search += " \"" + cci + "\",";
+            }
+            search = search.substring(0, search.length() - 1);
+            search += "))";
         }
 
         if (categoryOfIntervention != null) {
