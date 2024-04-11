@@ -891,6 +891,7 @@ public class ProjectController {
                 timeout = 200;
             }
         }
+        System.err.println(ccis);
         logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, program {}, region {}, timeout {}", language, keywords, country, theme, fund, program, region, timeout);
         logger.info("interreg {}", interreg);
         int inputOffset = offset;
@@ -996,19 +997,22 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?budget)";
             }
         } else if (orderReadabilityBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . ?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?budget2 . ";
+            //log uri <http://the-qa-company.com/qendpoint/#log>
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . ?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?readability . ";
             if (orderReadabilityBudget) {
-                orderBy = "ORDER BY ASC(?budget1*?budget2)";
+                orderBy = "ORDER BY ASC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
             } else {
-                orderBy = "ORDER BY DESC(?budget1*?budget2)";
+                orderBy = "ORDER BY DESC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
             }
         } else if (orderReadability != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?budget . ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?readability . ";
             if (orderReadability) {
-                orderBy = "ORDER BY ASC(?budget)";
+                orderBy = "ORDER BY ASC(?readability)";
             } else {
-                orderBy = "ORDER BY DESC(?budget)";
+                orderBy = "ORDER BY DESC(?readability)";
             }
+        } else {
+            orderBy = "ORDER BY DESC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * <http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
         }
 
         // pass cache = false in order to stop caching the semantic search results
