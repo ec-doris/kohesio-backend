@@ -346,10 +346,12 @@ public class MapController {
         if (cci != null) {
             String queryProgramNuts = "SELECT DISTINCT ?country ?nuts WHERE { "
                     + " ?prg <https://linkedopendata.eu/prop/direct/P1367>  ?cci. "
-                    + "VALUES ?cci { ";
+                    + " FILTER(?cci IN ( ";
+//                    + "VALUES ?cci { ";
             for (String c : cci) {
-                queryProgramNuts += "<" + c + "> ";
+                queryProgramNuts += "\"" + c + "\" ";
             }
+            queryProgramNuts += ")).";
             queryProgramNuts += " ?prg <https://linkedopendata.eu/prop/direct/P32> ?country."
                     + " ?prg <https://linkedopendata.eu/prop/direct/P2316> ?nuts."
                     + "}";
