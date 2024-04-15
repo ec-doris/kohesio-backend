@@ -888,7 +888,7 @@ public class ProjectController {
         if (timeout == null) {
             timeout = 20;
             if (keywords == null) {
-                timeout = 200;
+                timeout = 400;
             }
         }
         System.err.println(ccis);
