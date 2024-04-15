@@ -347,14 +347,15 @@ public class MapController {
             String queryProgramNuts = "SELECT DISTINCT ?country ?nuts WHERE { "
                     + " ?prg <https://linkedopendata.eu/prop/direct/P1367>  ?cci. "
                     + " FILTER(?cci IN ( ";
-//                    + "VALUES ?cci { ";
             for (String c : cci) {
-                queryProgramNuts += "\"" + c + "\" ";
+                queryProgramNuts += "\"" + c + "\",";
             }
+            queryProgramNuts = queryProgramNuts.substring(0, queryProgramNuts.length() - 1);
             queryProgramNuts += ")).";
             queryProgramNuts += " ?prg <https://linkedopendata.eu/prop/direct/P32> ?country."
                     + " ?prg <https://linkedopendata.eu/prop/direct/P2316> ?nuts."
                     + "}";
+
             TupleQueryResult resultSetProgramNuts = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryProgramNuts, timeout, "point");
             List<String> programCountry = new ArrayList<>();
             List<String> programNuts = new ArrayList<>();
