@@ -7,6 +7,15 @@ public class Update {
     String id;
     List<MonolingualString> labels;
     List<MonolingualString> descriptions;
+    List<MonolingualString> descriptionsRaw;
+
+    public List<MonolingualString> getDescriptionsRaw() {
+        return descriptionsRaw;
+    }
+
+    public void setDescriptionsRaw(List<MonolingualString> descriptionsRaw) {
+        this.descriptionsRaw = descriptionsRaw;
+    }
 
     public String getId() {
         return id;

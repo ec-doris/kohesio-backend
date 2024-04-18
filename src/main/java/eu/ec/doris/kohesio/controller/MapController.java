@@ -94,7 +94,7 @@ public class MapController {
             @RequestParam(value = "radius", required = false) Long radius,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
-            @RequestParam(value = "cci", required = false) String cci,
+            @RequestParam(value = "cci", required = false) List<String> cci,
             @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
             @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
             @RequestParam(value = "priority_axis", required = false) String priorityAxis,
@@ -191,7 +191,7 @@ public class MapController {
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
                 JSONObject element = new JSONObject();
                 element.put("region", r);
-                logger.info("Finding label for "+r);
+                logger.info("Finding label for " + r);
                 String regionLabel = facetController.nutsRegion.get(r).name.get(language);
                 if (regionLabel == null) {
                     regionLabel = facetController.nutsRegion.get(r).name.get("en");
@@ -244,7 +244,7 @@ public class MapController {
         }
     }
 
-    ResponseEntity<JSONObject> mapReturnCoordinates(String language, String search, String country, String region, String granularityRegion, String latitude, String longitude, String cci, Integer limit, Integer offset, int timeout) throws Exception {
+    ResponseEntity<JSONObject> mapReturnCoordinates(String language, String search, String country, String region, String granularityRegion, String latitude, String longitude, List<String> cci, Integer limit, Integer offset, int timeout) throws Exception {
         logger.debug("granularityRegion {}, limit {}, cci {}", granularityRegion, limit, cci);
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
@@ -345,10 +345,17 @@ public class MapController {
         }
         if (cci != null) {
             String queryProgramNuts = "SELECT DISTINCT ?country ?nuts WHERE { "
-                    + " ?prg <https://linkedopendata.eu/prop/direct/P1367> \"" + cci + "\". "
-                    + " ?prg <https://linkedopendata.eu/prop/direct/P32> ?country."
+                    + " ?prg <https://linkedopendata.eu/prop/direct/P1367>  ?cci. "
+                    + " FILTER(?cci IN ( ";
+            for (String c : cci) {
+                queryProgramNuts += "\"" + c + "\",";
+            }
+            queryProgramNuts = queryProgramNuts.substring(0, queryProgramNuts.length() - 1);
+            queryProgramNuts += ")).";
+            queryProgramNuts += " ?prg <https://linkedopendata.eu/prop/direct/P32> ?country."
                     + " ?prg <https://linkedopendata.eu/prop/direct/P2316> ?nuts."
                     + "}";
+
             TupleQueryResult resultSetProgramNuts = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryProgramNuts, timeout, "point");
             List<String> programCountry = new ArrayList<>();
             List<String> programNuts = new ArrayList<>();
@@ -460,7 +467,7 @@ public class MapController {
             @RequestParam(value = "coordinate", required = true) String coordinate,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
-            @RequestParam(value = "cci", required = false) String cci,
+            @RequestParam(value = "cci", required = false) List<String> cci,
             @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
             @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
             @RequestParam(value = "priority_axis", required = false) String priorityAxis,

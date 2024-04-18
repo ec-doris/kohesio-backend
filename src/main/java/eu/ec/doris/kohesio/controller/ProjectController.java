@@ -114,10 +114,11 @@ public class ProjectController {
                     + "?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel "
                     + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
                     + "?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite "
-                    + "?beneficiaryString ?source ?source2 ?keepUrl ?curatedLabel ?curatedSummary WHERE { "
+                    + "?beneficiaryString ?source ?source2 ?keepUrl ?curatedLabel ?curatedSummary ?rawCuratedSummary WHERE { "
                     + "VALUES ?s0 { <" + id + "> } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581562> ?curatedSummary . FILTER((LANG(?curatedSummary)) = \"" + language + "\") }"
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P589596> ?rawCuratedSummary . FILTER((LANG(?rawCuratedSummary)) = \"" + language + "\") }"
                     + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \"" + language + "\") }"
                     + " OPTIONAL { ?s0 wdt:P836 ?description. FILTER((LANG(?description)) = \"" + language + "\") } "
                     + " OPTIONAL { ?s0 wdt:P1742 ?infoRegioUrl . }"
@@ -215,6 +216,7 @@ public class ProjectController {
             result.put("link", id);
             result.put("label", "");
             result.put("description", "");
+            result.put("description_raw", "");
             result.put("startTime", "");
             result.put("endTime", "");
             result.put("budget", "");
@@ -307,6 +309,12 @@ public class ProjectController {
                     result.put(
                             "description",
                             ((Literal) querySolution.getBinding("curatedSummary").getValue()).getLabel()
+                    );
+                }
+                if (querySolution.hasBinding("rawCuratedSummary")) {
+                    result.put(
+                            "description_raw",
+                            ((Literal) querySolution.getBinding("rawCuratedSummary").getValue()).getLabel()
                     );
                 }
 
@@ -792,8 +800,6 @@ public class ProjectController {
     }
 
 
-
-
     public ResponseEntity euSearchProject(
             String language,
             String keywords, //
@@ -816,6 +822,8 @@ public class ProjectController {
             Boolean orderEndDate,
             Boolean orderEuBudget,
             Boolean orderTotalBudget,
+            Boolean orderReadability,
+            Boolean orderReadabilityBudget,
 
             String latitude,
             String longitude,
@@ -829,7 +837,7 @@ public class ProjectController {
                 language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective,
                 budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore,
                 startDateAfter, endDateBefore, endDateAfter, orderStartDate, orderEndDate, orderEuBudget,
-                orderTotalBudget, latitude, longitude, region, limit, offset, null, null, null, null, null, null, null,
+                orderTotalBudget, orderReadability, orderReadabilityBudget, latitude, longitude, region, limit, offset, null, null, null, null, null, null, null,
                 null, null,
                 timeout, principal
         );
@@ -857,6 +865,8 @@ public class ProjectController {
             @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
             @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
             @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+            @RequestParam(value = "orderReadability", required = false) Boolean orderReadability,
+            @RequestParam(value = "orderReadabilityBudget", required = false) Boolean orderReadabilityBudget,
             @RequestParam(value = "latitude", required = false) String latitude,
             @RequestParam(value = "longitude", required = false) String longitude,
             @RequestParam(value = "region", required = false) String region,
@@ -867,7 +877,7 @@ public class ProjectController {
             @RequestParam(value = "nuts3", required = false) String nuts3,
             @RequestParam(value = "interreg", required = false) Boolean interreg,
             @RequestParam(value = "highlighted", required = false) Boolean highlighted,
-            @RequestParam(value = "cci", required = false) String cci,
+            @RequestParam(value = "cci", required = false) List<String> ccis,
             @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
             @RequestParam(value = "priority_axis", required = false) String priorityAxis,
             @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
@@ -878,9 +888,10 @@ public class ProjectController {
         if (timeout == null) {
             timeout = 20;
             if (keywords == null) {
-                timeout = 200;
+                timeout = 400;
             }
         }
+        System.err.println(ccis);
         logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, program {}, region {}, timeout {}", language, keywords, country, theme, fund, program, region, timeout);
         logger.info("interreg {}", interreg);
         int inputOffset = offset;
@@ -944,7 +955,7 @@ public class ProjectController {
                 nuts3,
                 interreg,
                 highlighted,
-                cci,
+                ccis,
                 kohesioCategory,
                 projectTypes,
                 priorityAxis,
@@ -964,30 +975,45 @@ public class ProjectController {
             } else {
                 orderBy = "ORDER BY DESC(?startTime)";
             }
-        }
-        if (orderEndDate != null) {
+        } else if (orderEndDate != null) {
             orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
             if (orderEndDate) {
                 orderBy = "ORDER BY ASC(?endTime)";
             } else {
                 orderBy = "ORDER BY DESC(?endTime)";
             }
-        }
-        if (orderEuBudget != null) {
+        } else if (orderEuBudget != null) {
             orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
             if (orderEuBudget) {
                 orderBy = "ORDER BY ASC(?euBudget)";
             } else {
                 orderBy = "ORDER BY DESC(?euBudget)";
             }
-        }
-        if (orderTotalBudget != null) {
+        } else if (orderTotalBudget != null) {
             orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
             if (orderTotalBudget) {
                 orderBy = "ORDER BY ASC(?budget)";
             } else {
                 orderBy = "ORDER BY DESC(?budget)";
             }
+        } else if (orderReadabilityBudget != null) {
+            //log uri <http://the-qa-company.com/qendpoint/#log>
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . ";
+            if (orderReadabilityBudget) {
+                orderBy = "ORDER BY ASC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
+            } else {
+                orderBy = "ORDER BY DESC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
+            }
+        } else if (orderReadability != null) {
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/P836> ?o . ?o <https://linkedopendata.eu/prop/qualifier/P590521> ?readability . ";
+            if (orderReadability) {
+                orderBy = "ORDER BY ASC(?readability)";
+            } else {
+                orderBy = "ORDER BY DESC(?readability)";
+            }
+        } else {
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . ";
+            orderBy = "ORDER BY DESC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * <http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
         }
 
         // pass cache = false in order to stop caching the semantic search results
@@ -1027,24 +1053,24 @@ public class ProjectController {
                 values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
             }
         }
-        query =
-                "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countryCode ?description ?curatedLabel ?curatedSummary WHERE { "
-                        + " VALUES ?s0 { " + values + " }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581562> ?curatedSummary . FILTER((LANG(?curatedSummary)) = \"" + language + "\") }"
-                        + " OPTIONAL { ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \"" + language + "\") }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description . FILTER((LANG(?description)) = \"" + language + "\") }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }}"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . }}"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} }"
-                        + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.}}}"
-                        + "} ";
+        query = "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countryCode ?description ?curatedLabel ?curatedSummary ?rawCuratedSummary WHERE { "
+                + " VALUES ?s0 { " + values + " }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581562> ?curatedSummary . FILTER((LANG(?curatedSummary)) = \"" + language + "\") }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P589596> ?rawCuratedSummary . FILTER((LANG(?rawCuratedSummary)) = \"" + language + "\") }"
+                + " OPTIONAL { ?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \"" + language + "\") }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P836> ?description . FILTER((LANG(?description)) = \"" + language + "\") }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P838> ?expectedEndTime . }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }}"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . }}"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} }"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.}}}"
+                + "} ";
 
 
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false, "projectSearch");
@@ -1110,7 +1136,14 @@ public class ProjectController {
                 if (!originalDescriptions.contains(value)) {
                     originalDescriptions.add(value);
                 }
-                if (querySolution.getBinding("curatedSummary") != null) {
+                if (querySolution.getBinding("rawCuratedSummary") != null) {
+                    String valueCur = querySolution.getBinding("rawCuratedSummary").getValue().stringValue();
+                    if (!descriptions.contains(valueCur)) {
+                        descriptions.add(valueCur);
+                    } else if (!descriptions.contains(value)) {
+                        descriptions.add(value);
+                    }
+                } else if (querySolution.getBinding("curatedSummary") != null) {
                     String valueCur = querySolution.getBinding("curatedSummary").getValue().stringValue();
                     if (!descriptions.contains(valueCur)) {
                         descriptions.add(valueCur);
@@ -1440,6 +1473,9 @@ public class ProjectController {
             @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
             @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
             @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+            @RequestParam(value = "orderReadability", required = false) Boolean orderReadability,
+            @RequestParam(value = "orderReadabilityBudget", required = false) Boolean orderReadabilityBudget,
+
 
             @RequestParam(value = "latitude", required = false) String latitude,
             @RequestParam(value = "longitude", required = false) String longitude,
@@ -1455,7 +1491,8 @@ public class ProjectController {
         ProjectList projectList = (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
                 categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate,
-                orderEndDate, orderEuBudget, orderTotalBudget, latitude, longitude, region, Math.min(limit, MAX_LIMIT),
+                orderEndDate, orderEuBudget, orderTotalBudget, orderReadability, orderReadabilityBudget,
+                latitude, longitude, region, Math.min(limit, MAX_LIMIT),
                 SPECIAL_OFFSET, 30, principal).getBody();
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("project_export");
@@ -1544,6 +1581,9 @@ public class ProjectController {
             @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
             @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
             @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
+            @RequestParam(value = "orderReadability", required = false) Boolean orderReadability,
+            @RequestParam(value = "orderReadabilityBudget", required = false) Boolean orderReadabilityBudget,
+
 
             @RequestParam(value = "latitude", required = false) String latitude,
             @RequestParam(value = "longitude", required = false) String longitude,
@@ -1557,11 +1597,14 @@ public class ProjectController {
         final int MAX_LIMIT = 2000;
         // pass a special_offset to skip the caching and query up to the given limit or 10k projects
         ProjectList projectList =
-                (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
+                (ProjectList) euSearchProject(
+                        language, keywords, country, theme, fund, program,
                         categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen,
                         budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
-                        endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, latitude,
-                        longitude, region, Math.min(limit, MAX_LIMIT), SPECIAL_OFFSET, 20, principal).getBody();
+                        endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, orderReadability,
+                        orderReadabilityBudget, latitude, longitude, region, Math.min(limit, MAX_LIMIT),
+                        SPECIAL_OFFSET, 20, principal
+                ).getBody();
         String filename = "project_export.csv";
         try {
             response.setContentType("text/csv");
