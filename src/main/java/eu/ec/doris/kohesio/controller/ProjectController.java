@@ -998,7 +998,7 @@ public class ProjectController {
             }
         } else if (orderReadabilityBudget != null) {
             //log uri <http://the-qa-company.com/qendpoint/#log>
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . OPTIONAL { ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . } ";
             if (orderReadabilityBudget) {
                 orderBy = "ORDER BY ASC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
             } else {
