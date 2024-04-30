@@ -1012,7 +1012,7 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?readability)";
             }
         } else {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . OPTIONAL { ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . } ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P590521> ?readability . } ";
             orderBy = "ORDER BY DESC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * <http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
         }
 
