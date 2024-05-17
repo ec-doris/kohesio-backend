@@ -49,22 +49,20 @@ public class NominatimService {
                 .queryParam("format", "json")
                 .queryParam("addressdetails", "1")
                 .encode().toUriString();
-        System.out.println(urlTemplate);
 
         HttpEntity<String> response = new RestTemplate().exchange(
                 urlTemplate,
                 HttpMethod.GET, entity, String.class
         );
-        System.out.println(response.getBody());
         try {
-            JSONArray JsonArray = (JSONArray) new JSONParser().parse(response.getBody());
-            System.out.println(((JSONObject) JsonArray.get(0)).get("lat"));
-            System.out.println(((JSONObject) JsonArray.get(0)).get("lon"));
+            JSONArray jsonArray = (JSONArray) new JSONParser().parse(response.getBody());
+            if (!jsonArray.isEmpty()) {
 
-            return new Coordinates(
-                    ((JSONObject) JsonArray.get(0)).get("lat").toString(),
-                    ((JSONObject) JsonArray.get(0)).get("lon").toString()
-            );
+                return new Coordinates(
+                        ((JSONObject) jsonArray.get(0)).get("lat").toString(),
+                        ((JSONObject) jsonArray.get(0)).get("lon").toString()
+                );
+            }
         } catch (org.json.simple.parser.ParseException e) {
             e.printStackTrace();
         }
