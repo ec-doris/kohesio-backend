@@ -45,49 +45,20 @@ public class FiltersGenerator {
             List<String> projectTypes,
             String priorityAxis,
             Integer limit,
-            Integer offset) throws IOException {
+            Integer offset
+    ) throws IOException {
         String search = "";
 
-        search +=
-                "   ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
+        search += " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
         if (keywords != null) {
-//            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
-//                String[] words = keywords.split(" ");
-//                StringBuilder keywordsBuilder = new StringBuilder();
-//                for (int i = 0; i < words.length - 1; i++) {
-//                    keywordsBuilder.append(words[i]).append(" AND ");
-//                }
-//                keywordsBuilder.append(words[words.length - 1]);
-//                keywords = keywordsBuilder.toString();
-//            }
-
-
-            search +=
-                    "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
-                            + "<http://www.openrdf.org/contrib/lucenesail#query> \""
-                            + keywords.replace("\"", "\\\"")
-                            + "\"; "
-                            + " <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Proj_" + language + "> "
-//                            "<http://www.openrdf.org/contrib/lucenesail#snippet> ?description"+
-                            + "] .";
+            search += "?s0 <http://www.openrdf.org/contrib/lucenesail#matches> [ "
+                    + "<http://www.openrdf.org/contrib/lucenesail#query> \""
+                    + keywords.replace("\"", "\\\"").replace("!", "\\\\!")
+                    + "\"; "
+                    + " <http://www.openrdf.org/contrib/lucenesail#indexid> <http://the-qa-company.com/modelcustom/Proj_" + language + "> "
+                    + "] .";
 
         }
-//        if(keywords != null) {
-//            SemanticSearchResult semanticSearchResult = getProjectsURIsfromSemanticSearch(keywords, false, 0, 5000);
-//            ArrayList<String> projectsURIs = semanticSearchResult.getProjectsURIs();
-//            if (projectsURIs.size() > 0) {
-//                //search = "";
-//                search += "VALUES ?s0 {";
-//                for (String uri : projectsURIs) {
-//                    String uriStr = "<" + uri + ">";
-//                    search += uriStr + " ";
-//                }
-//                search += "}";
-//                //numResults = semanticSearchResult.getNumberOfResults();
-//            } else {
-//                System.out.println("Semantic search API returned empty result!!");
-//            }
-//        }
         if (country != null && region == null) {
             search += "?s0 <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
         }
@@ -179,16 +150,14 @@ public class FiltersGenerator {
         if (endDateBefore != null || endDateAfter != null) {
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endDate . ";
             if (endDateBefore != null) {
-                search +=
-                        "FILTER( ?endDate <= \""
-                                + endDateBefore
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
+                search += "FILTER( ?endDate <= \""
+                        + endDateBefore
+                        + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
             }
             if (endDateAfter != null) {
-                search +=
-                        "FILTER( ?endDate >= \""
-                                + endDateAfter
-                                + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
+                search += "FILTER( ?endDate >= \""
+                        + endDateAfter
+                        + "T00:00:00Z\"^^<http://www.w3.org/2001/XMLSchema#dateTime>)";
             }
         }
 
@@ -225,7 +194,7 @@ public class FiltersGenerator {
             search += ". ";
         }
 
-        if (theme != null || policyObjective != null){
+        if (theme != null || policyObjective != null) {
             search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
             search += " FILTER EXISTS { ";
             if (theme != null) {
