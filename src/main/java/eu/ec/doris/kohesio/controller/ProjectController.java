@@ -929,6 +929,8 @@ public class ProjectController {
                 latitude = tmpCoordinates.getLatitude();
                 longitude = tmpCoordinates.getLongitude();
 
+            } else {
+                // What should we do
             }
         }
         String search = filtersGenerator.filterProject(

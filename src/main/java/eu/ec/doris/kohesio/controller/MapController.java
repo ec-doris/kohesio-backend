@@ -1,5 +1,6 @@
 package eu.ec.doris.kohesio.controller;
 
+import com.maxmind.geoip2.exception.GeoIp2Exception;
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.payload.Nut;
@@ -650,7 +651,7 @@ public class MapController {
     public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
-        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
+//        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
         ResponseEntity<JSONObject> result = euSearchProjectMap(
                 "en", null,
                 null, null,
@@ -660,7 +661,8 @@ public class MapController {
                 null, null,
                 null, null,
                 null, null,
-                coordinates2.getLatitude(), coordinates2.getLongitude(),
+                "45.44279", "4.375305",
+//                coordinates2.getLatitude(), coordinates2.getLongitude(),
                 null, null,
                 null, 2000,
                 0, null,
@@ -670,7 +672,8 @@ public class MapController {
                 400, null
         );
         JSONObject mod = result.getBody();
-        mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
+//        mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
+        mod.put("coordinates","45.44279, 4.375305");
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
     }
 
