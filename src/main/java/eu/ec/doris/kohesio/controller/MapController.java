@@ -150,43 +150,67 @@ public class MapController {
                 numResults = ((Literal) querySolution.getBinding("c").getValue()).intValue();
             }
         }
-        logger.debug("Number of results {}", numResults);
-        if (
-                (latitude != null && longitude != null)
-                        ||
-                        (
-                                (
-                                        granularityRegion == null ||
-                                                (!(granularityRegion != null && "https://linkedopendata.eu/entity/Q11".equals(facetController.nutsRegion.get(granularityRegion).country)))
-                                )
-                                        && (numResults <= 2000 || (granularityRegion != null && facetController.nutsRegion.get(granularityRegion).narrower.size() == 0))
 
-                        )
-//                ||
-//                    (
-//                        granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q2".equals(facetController.nutsRegion.get(granularityRegion).country))
-//                        && !(granularityRegion != null && "country".equals(facetController.nutsRegion.get(granularityRegion).granularity) && "https://linkedopendata.eu/entity/Q11".equals(facetController.nutsRegion.get(granularityRegion).country)
-//                    )
-//                )
-        ) {
-            return mapReturnCoordinates(language, search, country, region, granularityRegion, latitude, longitude, cci, limit, offset, timeout);
+        logger.debug("Number of results {}", numResults);
+        boolean hasCoordinates = latitude != null && longitude != null;
+        Nut nut = facetController.nutsRegion.get(granularityRegion);
+        boolean isInSweden = nut != null && "https://linkedopendata.eu/entity/Q11".equals(nut.country);
+        boolean hasLowerGranularity = nut != null && !nut.narrower.isEmpty() || granularityRegion == null;
+        logger.debug(
+                "hasCoordinates {}, isInSweden {}, hasLowerGranularity {}, numResults {}, granularityRegion {}",
+                hasCoordinates, isInSweden, hasLowerGranularity, numResults, granularityRegion
+        );
+        if (!hasLowerGranularity || numResults <= 2000 || hasCoordinates) {
+            return mapReturnCoordinates(
+                    language,
+                    search,
+                    country,
+                    region,
+                    granularityRegion,
+                    latitude,
+                    longitude,
+                    cci,
+                    limit,
+                    offset,
+                    timeout
+            );
         } else {
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
-                query =
-                        "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
-                                + search
-                                + " ?s0 <https://linkedopendata.eu/prop/direct/P32> ?region . "
-                                + " } GROUP BY ?region ";
+                query = "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
+                        + " { SELECT DISTINCT ?region { "
+                        + " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?region . "
+                        + " }"
+                        + " }"
+                        + " OPTIONAL {"
+                        + search
+                        + " ?s0 <https://linkedopendata.eu/prop/direct/P32> ?region ."
+                        + " }"
+                        + " } GROUP BY ?region "
+                ;
             } else {
-                query =
-                        "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
-                                + search
-                                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region . "
-                                + " } GROUP BY ?region ";
+                query = "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
+                        + " { SELECT DISTINCT ?region { "
+                        + " { "
+                        + " ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> . "
+                        + " ?region <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . "
+                        + " } UNION { "
+                        + " ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> . "
+                        + " ?region <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . "
+                        + " } UNION { "
+                        + " ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> . "
+                        + " ?region <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . "
+                        + " }"
+                        + " }"
+                        + " }"
+                        + " OPTIONAL {"
+                        + search.replaceAll("[?]s0 +<https://linkedopendata.eu/prop/direct/P1845> +<[^>]+> *. *", "")
+                        + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region ."
+                        + " }"
+                        + " } GROUP BY ?region "
+                ;
             }
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
-
 
             HashMap<String, JSONObject> subRegions = new HashMap<>();
             for (String r : facetController.nutsRegion.get(granularityRegion).narrower) {
@@ -205,8 +229,6 @@ public class MapController {
 
             boolean foundNextNutsLevel = false;
 
-//            System.err.println(facetController.nutsRegion.get(granularityRegion).country);
-//            System.err.println(facetController.nutsRegion.get(granularityRegion).granularity);
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
                 if (subRegions.containsKey(querySolution.getBinding("region").getValue().stringValue())) {
@@ -221,9 +243,10 @@ public class MapController {
                 }
             }
             // this happens when we have for example nuts 1 information but not nuts 2 information for the projects
-            if (!foundNextNutsLevel) {
-                return mapReturnCoordinates(language, search, country, region, granularityRegion, latitude, longitude, cci, limit, offset, timeout);
-            }
+//            if (!foundNextNutsLevel) {
+//                System.err.println("WE ARE HERE");
+//                return mapReturnCoordinates(language, search, country, region, granularityRegion, latitude, longitude, cci, limit, offset, timeout);
+//            }
 
             JSONArray resultList = new JSONArray();
             for (String key : subRegions.keySet()) {
@@ -673,7 +696,7 @@ public class MapController {
         );
         JSONObject mod = result.getBody();
 //        mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
-        mod.put("coordinates","45.44279, 4.375305");
+        mod.put("coordinates", "45.44279, 4.375305");
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
     }
 

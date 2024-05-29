@@ -165,7 +165,7 @@ public class FiltersGenerator {
         if (granularityRegion != null) {
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . ";
         } else if (region != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . ";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . ";
         }
         if (latitude != null && longitude != null) {
             if (radius == null) {
