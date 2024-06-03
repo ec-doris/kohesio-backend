@@ -846,7 +846,7 @@ public class ProjectController {
     @GetMapping(value = "/facet/eu/search/project", produces = "application/json")
     public ResponseEntity euSearchProject(
             @RequestParam(value = "language", defaultValue = "en") String language,
-            @RequestParam(value = "keywords", required = false) String keywords, //
+            @RequestParam(value = "keywords", required = false) String keywords,
             @RequestParam(value = "country", required = false) String country,
             @RequestParam(value = "theme", required = false) String theme,
             @RequestParam(value = "fund", required = false) String fund,
@@ -929,6 +929,8 @@ public class ProjectController {
                 latitude = tmpCoordinates.getLatitude();
                 longitude = tmpCoordinates.getLongitude();
 
+            } else {
+                // What should we do
             }
         }
         String search = filtersGenerator.filterProject(
@@ -1012,7 +1014,7 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?readability)";
             }
         } else {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P590521> ?readability . } ";
             orderBy = "ORDER BY DESC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * <http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
         }
 
@@ -1482,18 +1484,94 @@ public class ProjectController {
             @RequestParam(value = "region", required = false) String region,
             @RequestParam(value = "limit", defaultValue = "1000") int limit,
             @RequestParam(value = "offset", defaultValue = "0") int offset,
-            Principal principal,
-            @Context HttpServletResponse response)
-            throws Exception {
+            @RequestParam(value = "town", required = false) String town,
+            @RequestParam(value = "radius", required = false) Long radius,
+            @RequestParam(value = "nuts3", required = false) String nuts3,
+            @RequestParam(value = "interreg", required = false) Boolean interreg,
+            @RequestParam(value = "highlighted", required = false) Boolean highlighted,
+            @RequestParam(value = "cci", required = false) List<String> ccis,
+            @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
+            @RequestParam(value = "priority_axis", required = false) String priorityAxis,
+            @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
+            Principal principal
+    ) throws Exception {
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
         final int MAX_LIMIT = 2000;
         // pass a special_offset to skip the caching and query up to the given limit or 10k projects
-        ProjectList projectList = (ProjectList) euSearchProject(language, keywords, country, theme, fund, program,
-                categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
-                budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, orderStartDate,
-                orderEndDate, orderEuBudget, orderTotalBudget, orderReadability, orderReadabilityBudget,
-                latitude, longitude, region, Math.min(limit, MAX_LIMIT),
-                SPECIAL_OFFSET, 30, principal).getBody();
+//        ProjectList projectList = (ProjectList) euSearchProject(
+//                language,
+//                keywords,
+//                country,
+//                theme,
+//                fund,
+//                program,
+//                categoryOfIntervention,
+//                policyObjective,
+//                budgetBiggerThen,
+//                budgetSmallerThen,
+//                budgetEUBiggerThen,
+//                budgetEUSmallerThen,
+//                startDateBefore,
+//                startDateAfter,
+//                endDateBefore,
+//                endDateAfter,
+//                orderStartDate,
+//                orderEndDate,
+//                orderEuBudget,
+//                orderTotalBudget,
+//                orderReadability,
+//                orderReadabilityBudget,
+//                latitude,
+//                longitude,
+//                region,
+//                Math.min(limit, MAX_LIMIT),
+//                SPECIAL_OFFSET,
+//                30,
+//                principal
+//        ).getBody();
+
+        ProjectList projectList = (ProjectList) euSearchProject(
+                language,
+                keywords,
+                country,
+                theme,
+                fund,
+                program,
+                categoryOfIntervention,
+                policyObjective,
+                budgetBiggerThen,
+                budgetSmallerThen,
+                budgetEUBiggerThen,
+                budgetEUSmallerThen,
+                startDateBefore,
+                startDateAfter,
+                endDateBefore,
+                endDateAfter,
+                orderStartDate,
+                orderEndDate,
+                orderEuBudget,
+                orderTotalBudget,
+                orderReadability,
+                orderReadabilityBudget,
+                latitude,
+                longitude,
+                region,
+                limit,
+                offset,
+                town,
+                radius,
+                nuts3,
+                interreg,
+                highlighted,
+                ccis,
+                kohesioCategory,
+                priorityAxis,
+                projectTypes,
+                30,
+                principal
+        ).getBody();
+
+
         XSSFWorkbook hwb = new XSSFWorkbook();
         XSSFSheet sheet = hwb.createSheet("project_export");
         int rowNumber = 0;
@@ -1555,7 +1633,7 @@ public class ProjectController {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Content-Type", "application/vnd.ms-excel");
         headers.set("Content-Disposition", "attachment; filename=\"project_export.xlsx\"");
-        return new ResponseEntity<byte[]>(fileOut.toByteArray(), headers, HttpStatus.OK);
+        return new ResponseEntity<>(fileOut.toByteArray(), headers, HttpStatus.OK);
     }
 
     @GetMapping(value = "/facet/eu/search/project/csv", produces = "application/json")
@@ -1590,21 +1668,70 @@ public class ProjectController {
             @RequestParam(value = "region", required = false) String region,
             @RequestParam(value = "limit", defaultValue = "1000") int limit,
             @RequestParam(value = "offset", defaultValue = "0") int offset,
+            @RequestParam(value = "town", required = false) String town,
+            @RequestParam(value = "radius", required = false) Long radius,
+            @RequestParam(value = "nuts3", required = false) String nuts3,
+            @RequestParam(value = "interreg", required = false) Boolean interreg,
+            @RequestParam(value = "highlighted", required = false) Boolean highlighted,
+            @RequestParam(value = "cci", required = false) List<String> ccis,
+            @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
+            @RequestParam(value = "priority_axis", required = false) String priorityAxis,
+            @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
             Principal principal,
-            @Context HttpServletResponse response)
-            throws Exception {
+            @Context HttpServletResponse response
+    ) throws Exception {
         final int SPECIAL_OFFSET = Integer.MIN_VALUE;
         final int MAX_LIMIT = 2000;
         // pass a special_offset to skip the caching and query up to the given limit or 10k projects
-        ProjectList projectList =
-                (ProjectList) euSearchProject(
-                        language, keywords, country, theme, fund, program,
-                        categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen,
-                        budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
-                        endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, orderReadability,
-                        orderReadabilityBudget, latitude, longitude, region, Math.min(limit, MAX_LIMIT),
-                        SPECIAL_OFFSET, 20, principal
-                ).getBody();
+//        ProjectList projectList =
+//                (ProjectList) euSearchProject(
+//                        language, keywords, country, theme, fund, program,
+//                        categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen,
+//                        budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
+//                        endDateAfter, orderStartDate, orderEndDate, orderEuBudget, orderTotalBudget, orderReadability,
+//                        orderReadabilityBudget, latitude, longitude, region, Math.min(limit, MAX_LIMIT),
+//                        SPECIAL_OFFSET, 20, principal
+//                ).getBody();
+        ProjectList projectList = (ProjectList) euSearchProject(
+                language,
+                keywords,
+                country,
+                theme,
+                fund,
+                program,
+                categoryOfIntervention,
+                policyObjective,
+                budgetBiggerThen,
+                budgetSmallerThen,
+                budgetEUBiggerThen,
+                budgetEUSmallerThen,
+                startDateBefore,
+                startDateAfter,
+                endDateBefore,
+                endDateAfter,
+                orderStartDate,
+                orderEndDate,
+                orderEuBudget,
+                orderTotalBudget,
+                orderReadability,
+                orderReadabilityBudget,
+                latitude,
+                longitude,
+                region,
+                limit,
+                offset,
+                town,
+                radius,
+                nuts3,
+                interreg,
+                highlighted,
+                ccis,
+                kohesioCategory,
+                priorityAxis,
+                projectTypes,
+                30,
+                principal
+        ).getBody();
         String filename = "project_export.csv";
         try {
             response.setContentType("text/csv");
@@ -1617,7 +1744,7 @@ public class ProjectController {
                             CSVFormat.DEFAULT.withHeader(
                                     "ID", "PROJECT NAME", "TOTAL BUDGET", "AMOUNT EU SUPPORT", "START DATE", "END DATE", "COUNTRY", "SUMMARY"));
             for (Project project : projectList.getList()) {
-                logger.debug("Project: " + project.getItem());
+                logger.debug("Project: {}", project.getItem());
                 csvPrinter.printRecord(
                         Arrays.asList(
                                 String.join("|", project.getItem()),
