@@ -190,35 +190,92 @@ public class MapController {
                         + " }"
                         + " } GROUP BY ?region "
                 ;
-            } else {
-                query = "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
-                        + " { SELECT DISTINCT ?region { "
-                        + " { "
-                        + " ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> . "
-                        + " ?region <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . "
-                        + " } UNION { "
-                        + " ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> . "
-                        + " ?region <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . "
-                        + " } UNION { "
-                        + " ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> . "
-                        + " ?region <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> . "
-                        + " }"
-                        + " }"
-                        + " }"
-                        + " OPTIONAL {"
-                        + search.replaceAll("[?]s0 +<https://linkedopendata.eu/prop/direct/P1845> +<[^>]+> *. *", "")
-                        + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region ."
-                        + " }"
-                        + " } GROUP BY ?region "
-                ;
-            }
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
 
-            HashMap<String, JSONObject> subRegions2 = new HashMap<>();
-            while (resultSet.hasNext()) {
-                BindingSet querySolution = resultSet.next();
-                JSONObject element = new JSONObject();
-                String uri = querySolution.getBinding("region").getValue().stringValue();
+                HashMap<String, JSONObject> subRegions2 = new HashMap<>();
+                while (resultSet.hasNext()) {
+                    BindingSet querySolution = resultSet.next();
+                    JSONObject element = new JSONObject();
+                    String uri = querySolution.getBinding("region").getValue().stringValue();
+                    Nut n = facetController.nutsRegion.get(uri);
+                    String regionLabel = n.name.get(language);
+                    if (regionLabel == null) {
+                        regionLabel = n.name.get("en");
+                    }
+                    element.put("regionLabel", regionLabel);
+                    element.put("region", uri);
+                    element.put("geoJson", n.geoJson);
+                    element.put("count", ((Literal) querySolution.getBinding("c").getValue()).intValue());
+                    subRegions2.put(uri, element);
+                }
+
+                JSONArray resultList = new JSONArray();
+                for (JSONObject o : subRegions2.values()) {
+                    resultList.add(o);
+                }
+
+                JSONObject result = new JSONObject();
+
+                result.put("region", granularityRegion);
+                result.put("upperRegions", findUpperRegions(granularityRegion, language));
+                result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+                result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
+                result.put("subregions", resultList);
+
+                return new ResponseEntity<>(result, HttpStatus.OK);
+            } else {
+                HashMap<String, JSONObject> r = findLowerRegionCount(granularityRegion, search, language, timeout);
+                JSONArray resultList = new JSONArray();
+                for (JSONObject o : r.values()) {
+                    resultList.add(o);
+                }
+                JSONObject result = new JSONObject();
+
+                result.put("region", granularityRegion);
+                result.put("upperRegions", findUpperRegions(granularityRegion, language));
+                result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+                result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
+                result.put("subregions", resultList);
+                return new ResponseEntity<>(result, HttpStatus.OK);
+            }
+        }
+    }
+
+    private HashMap<String, JSONObject> findLowerRegionCount(String region, String search, String language, int timeout) throws Exception {
+        String query = "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
+                + " { SELECT DISTINCT ?region { "
+                + " { "
+                + " ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> . "
+                + " ?region <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . "
+                + " } UNION { "
+                + " ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> . "
+                + " ?region <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . "
+                + " } UNION { "
+                + " ?region <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> . "
+                + " ?region <https://linkedopendata.eu/prop/direct/P1845> <" + region + "> . "
+                + " }"
+                + " }"
+                + " }"
+                + " OPTIONAL {"
+                + search.replaceAll("[?]s0 +<https://linkedopendata.eu/prop/direct/P1845> +<[^>]+> *. *", "")
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?region ."
+                + " }"
+                + " } GROUP BY ?region ";
+
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
+        HashMap<String, JSONObject> subRegions = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            JSONObject element = new JSONObject();
+            String uri = querySolution.getBinding("region").getValue().stringValue();
+            boolean isStat = sparqlQueryService.executeBooleanQuery(
+                    sparqlEndpoint,
+                    "ASK { <" + uri + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }",
+                    20
+            );
+            if (isStat) {
+                subRegions.putAll(findLowerRegionCount(uri, search, language, timeout));
+            } else {
                 Nut n = facetController.nutsRegion.get(uri);
                 String regionLabel = n.name.get(language);
                 if (regionLabel == null) {
@@ -228,24 +285,10 @@ public class MapController {
                 element.put("region", uri);
                 element.put("geoJson", n.geoJson);
                 element.put("count", ((Literal) querySolution.getBinding("c").getValue()).intValue());
-                subRegions2.put(uri, element);
+                subRegions.put(uri, element);
             }
-
-            JSONArray resultList = new JSONArray();
-            for (JSONObject o : subRegions2.values()) {
-                resultList.add(o);
-            }
-
-            JSONObject result = new JSONObject();
-
-            result.put("region", granularityRegion);
-            result.put("upperRegions", findUpperRegions(granularityRegion, language));
-            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
-            result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
-            result.put("subregions", resultList);
-
-            return new ResponseEntity<>(result, HttpStatus.OK);
         }
+        return subRegions;
     }
 
     ResponseEntity<JSONObject> mapReturnCoordinates(String language, String search, String country, String region, String granularityRegion, String latitude, String longitude, List<String> cci, Integer limit, Integer offset, int timeout) throws Exception {
