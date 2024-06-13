@@ -199,15 +199,26 @@ public class FiltersGenerator {
         }
 
         if (theme != null || policyObjective != null) {
-            search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
-            search += " FILTER EXISTS { ";
-            if (theme != null) {
-                search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+            if (country == null){
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
+                if (theme != null) {
+                    search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+                }
+                if (policyObjective != null) {
+                    search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+                }
+            } else {
+                search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
+                search += " FILTER EXISTS { ";
+                if (theme != null) {
+                    search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+                }
+                if (policyObjective != null) {
+                    search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+                }
+                search += " } } ";
             }
-            if (policyObjective != null) {
-                search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
-            }
-            search += " } } ";
+            
         }
 
         return search;
