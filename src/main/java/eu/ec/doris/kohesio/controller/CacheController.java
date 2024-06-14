@@ -138,7 +138,9 @@ public class CacheController {
                             "en", null, country, null, null, null,
                             null, polic, null, null,
                             null, null, null, null, null,
-                            null, null, null, null, false, null, null,
+                            null, null, null, null,
+                            null, null,
+                            null,
                             null, null, null, 1, 0, 400, null
                     );
                 } catch (Exception e) {
@@ -152,7 +154,7 @@ public class CacheController {
                                 "en", null, country, t, null, null,
                                 null, polic, null, null,
                                 null, null, null, null, null,
-                                null, null, null, null, false, null, null,
+                                null, null, null, null, null, null, null,
                                 null, null, null, 1, 0, 400, null
                         );
                     } catch (Exception e) {
@@ -170,7 +172,7 @@ public class CacheController {
                             "en", null, country, t, null, null,
                             null, null, null, null,
                             null, null, null, null, null,
-                            null, null, null, null, false, null, null,
+                            null, null, null, null, null, null, null,
                             null, null, null, 1, 0, 400, null
                     );
                 } catch (Exception e) {
@@ -187,7 +189,7 @@ public class CacheController {
                             "en", null, country, null, null, p,
                             null, null, null, null,
                             null, null, null, null, null,
-                            null, null, null, null, false, null, null,
+                            null, null, null, null, null, null, null,
                             null, null, null, 1, 0, 400, null
                     );
                 } catch (Exception e) {
@@ -204,7 +206,7 @@ public class CacheController {
                         "en", null, null, null, t, null,
                         null, null, null, null,
                         null, null, null, null, null,
-                        null, null, null, null, false, null, null,
+                        null, null, null, null, null, null, null,
                         null, null, null, 1, 0, 400, null
                 );
             } catch (Exception e) {
@@ -236,11 +238,11 @@ public class CacheController {
                         "en", null, null, null, null, null,
                         null, null, lower_bound.get(i), upper_bound.get(i),
                         null, null, null, null, null,
-                        null, null, null, null, false, null, null,
+                        null, null, null, null, null, null, null,
                         null, null, null, 1, 0, 400, null);
                 projectController.euSearchProject("en", null, null, null, null, null,
                         null, null, null, null, lower_bound.get(i), upper_bound.get(i), null, null, null,
-                        null, null, null, null, false, null, null,
+                        null, null, null, null, null, null, null,
                         null, null, null, 1, 0, 400, null
                 );
             } catch (Exception e) {
@@ -258,7 +260,7 @@ public class CacheController {
                             "en", null, null, null, null, null,
                             t, null, null, null,
                             null, null, null, null, null,
-                            null, null, null, null, false, null, null,
+                            null, null, null, null, null, null, null,
                             null, null, null, 1, 0, 100, null
                     );
                 }

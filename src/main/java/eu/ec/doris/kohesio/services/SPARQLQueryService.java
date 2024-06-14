@@ -38,7 +38,7 @@ public class SPARQLQueryService {
 
     public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache, String type) {
         query = spaceCleaner.matcher(query).replaceAll(" ");
-        logger.info("Executing given query: " + query);
+        logger.info("Executing given query: {}", query);
         long start = System.nanoTime();
 
         File dir = new File(location + "/facet/cache/");

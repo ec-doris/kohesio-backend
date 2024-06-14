@@ -58,7 +58,7 @@ public class FacetController {
     public void initialize(String language) throws Exception {
         logger.info("Initializing Facet Controller...");
         if (nutsRegion == null) {
-            nutsRegion = new HashMap<String, Nut>();
+            nutsRegion = new HashMap<>();
             //computing nuts information
             List<String> gran = new ArrayList<String>();
             gran.add("continent");
@@ -207,8 +207,7 @@ public class FacetController {
                     if (nutsRegion.get(key).type.contains(g)) {
                         List<String> nonStatisticalNuts = new ArrayList<>();
                         for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
-                            String query =
-                                    "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }";
+                            String query = "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }";
                             boolean resultSet = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, query, 20);
                             if (resultSet) {
                                 for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
