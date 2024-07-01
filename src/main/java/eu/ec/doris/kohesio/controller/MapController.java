@@ -158,10 +158,10 @@ public class MapController {
         boolean isInSweden = nut != null && "https://linkedopendata.eu/entity/Q11".equals(nut.country);
         boolean hasLowerGranularity = nut != null && !nut.narrower.isEmpty() || granularityRegion == null;
         boolean isGreekNuts2 = nut != null && "https://linkedopendata.eu/entity/Q17".equals(nut.country) && "nuts2".equals(nut.granularity);
-        logger.debug(
-                "hasCoordinates {}, isInSweden {}, hasLowerGranularity {}, numResults {}, granularityRegion {}",
-                hasCoordinates, isInSweden, hasLowerGranularity, numResults, granularityRegion
-        );
+//        logger.debug(
+//                "hasCoordinates {}, isInSweden {}, hasLowerGranularity {}, numResults {}, granularityRegion {}",
+//                hasCoordinates, isInSweden, hasLowerGranularity, numResults, granularityRegion
+//        );
         if (!hasLowerGranularity || numResults <= 2000 || hasCoordinates || isGreekNuts2) {
             return mapReturnCoordinates(
                     language,
@@ -268,6 +268,9 @@ public class MapController {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
             String uri = querySolution.getBinding("region").getValue().stringValue();
+            if (uri.equals(region)) {
+                continue;
+            }
             boolean isStat = sparqlQueryService.executeBooleanQuery(
                     sparqlEndpoint,
                     "ASK { <" + uri + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }",
