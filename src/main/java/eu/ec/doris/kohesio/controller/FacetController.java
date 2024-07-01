@@ -163,7 +163,7 @@ public class FacetController {
                             logger.debug(querySolution.getBinding("region2").getValue().stringValue());
                             if (!querySolution.getBinding("region2").getValue().stringValue().equals(key)) {
                                 if (!nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue())) {
-                                    if (!Objects.equals(key, querySolution.getBinding("region2").getValue().stringValue())) {
+                                    if (!key.equals(querySolution.getBinding("region2").getValue().stringValue())) {
                                         nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
                                     }
                                 }
