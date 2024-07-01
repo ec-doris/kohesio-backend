@@ -132,29 +132,27 @@ public class FacetController {
             for (String key : nutsRegion.keySet()) {
                 String query = "";
                 if (nutsRegion.get(key).type.contains("continent")) {
-                    query =
-                            "SELECT ?region2 where {" +
-                                    " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?region2 . }";
+                    query = "SELECT ?region2 where {"
+                            + " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104> ?region2 . "
+                            + " }";
                 }
                 if (nutsRegion.get(key).type.contains("country")) {
-                    query =
-                            "SELECT ?region2 where {" +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407317> . " +
-                                    " }";
+                    query = "SELECT ?region2 where {"
+                            + " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . "
+                            + " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407317> . "
+                            + " }";
                 }
                 if (nutsRegion.get(key).type.contains("nuts1")) {
-                    query =
-                            "SELECT ?region2 where {" +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407316> . " +
-                                    "}";
+                    query = "SELECT ?region2 where {"
+                            + " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . "
+                            + " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407316> . "
+                            + "}";
                 }
                 if (nutsRegion.get(key).type.contains("nuts2")) {
-                    query =
-                            "SELECT ?region2 where {" +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . " +
-                                    " ?region2 <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407315> . }";
+                    query = "SELECT ?region2 where {"
+                            + " ?region2 <https://linkedopendata.eu/prop/direct/P1845> <" + nutsRegion.get(key).uri + "> . "
+                            + " ?region2 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> ."
+                            + " }";
                 }
                 if (!query.equals("")) {
                     TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30, "facet");
@@ -164,8 +162,10 @@ public class FacetController {
                         if (querySolution.getBinding("region2") != null) {
                             logger.debug(querySolution.getBinding("region2").getValue().stringValue());
                             if (!querySolution.getBinding("region2").getValue().stringValue().equals(key)) {
-                                if (nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue()) == false) {
-                                    nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
+                                if (!nutsRegion.get(key).narrower.contains(querySolution.getBinding("region2").getValue().stringValue())) {
+                                    if (!Objects.equals(key, querySolution.getBinding("region2").getValue().stringValue())) {
+                                        nutsRegion.get(key).narrower.add(querySolution.getBinding("region2").getValue().stringValue());
+                                    }
                                 }
                             }
                         }
@@ -782,12 +782,11 @@ public class FacetController {
             }
         }
 
-        query +=
-                " ?program rdfs:label ?programLabel . "
-                        + " FILTER (lang(?programLabel)=\""
-                        + language
-                        + "\")"
-                        + "} order by ?cci ";
+        query += " ?program rdfs:label ?programLabel . "
+                + " FILTER (lang(?programLabel)=\""
+                + language
+                + "\")"
+                + "} order by ?cci ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 4, "facet");
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
@@ -895,7 +894,7 @@ public class FacetController {
                 element.put("instanceLabel", querySolution.getBinding("instanceLabel_en").getValue().stringValue());
             }
             // this is a hack because the data was not fine, can be removed
-            if (querySolution.getBinding("instance").getValue().stringValue().equals("https://linkedopendata.eu/entity/Q205")){
+            if (querySolution.getBinding("instance").getValue().stringValue().equals("https://linkedopendata.eu/entity/Q205")) {
                 element.put("country", "https://linkedopendata.eu/entity/Q7");
                 element.put("countryLabel", "Spain");
             } else {
@@ -1360,7 +1359,7 @@ public class FacetController {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
             element.put("instance", querySolution.getBinding("type").getValue().stringValue());
-            if (querySolution.getBinding("typeLabel") != null){
+            if (querySolution.getBinding("typeLabel") != null) {
                 element.put("instanceLabel", querySolution.getBinding("typeLabel").getValue().stringValue());
             } else {
                 element.put("instanceLabel", querySolution.getBinding("typeLabelEn").getValue().stringValue());
