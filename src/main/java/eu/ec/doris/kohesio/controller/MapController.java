@@ -700,7 +700,7 @@ public class MapController {
     public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
-//        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
+        GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
         ResponseEntity<JSONObject> result = euSearchProjectMap(
                 "en", null,
                 null, null,
@@ -710,8 +710,7 @@ public class MapController {
                 null, null,
                 null, null,
                 null, null,
-                "45.44279", "4.375305",
-//                coordinates2.getLatitude(), coordinates2.getLongitude(),
+                coordinates2.getLatitude(), coordinates2.getLongitude(),
                 null, null,
                 null, 2000,
                 0, null,

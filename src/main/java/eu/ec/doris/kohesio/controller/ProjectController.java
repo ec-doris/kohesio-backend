@@ -87,8 +87,7 @@ public class ProjectController {
     public ResponseEntity euProjectID(
             @RequestParam(value = "id") String id,
             @RequestParam(value = "language", defaultValue = "en") String language
-    )
-            throws Exception {
+    ) throws Exception {
 
         logger.info("Project search by ID: id {}, language {}", id, language);
 
