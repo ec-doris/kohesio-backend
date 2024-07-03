@@ -720,8 +720,7 @@ public class MapController {
                 400, null
         );
         JSONObject mod = result.getBody();
-//        mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
-        mod.put("coordinates", "45.44279, 4.375305");
+        mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
         return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
     }
 
