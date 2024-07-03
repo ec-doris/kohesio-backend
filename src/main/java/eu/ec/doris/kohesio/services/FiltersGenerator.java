@@ -175,8 +175,12 @@ public class FiltersGenerator {
 //                    + "FILTER ( "
 //                    + "<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)"
 //                    + "< 100000) . ";
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                    + " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < " + (radius * 1000) + ")";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . ";
+            if (keywords == null) {
+                search += " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < " + (radius * 1000) + ")";
+            } else {
+                search += " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(?coordinates,\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < " + (radius * 1000) + ")";
+            }
         }
 
         if (kohesioCategory != null) {
@@ -195,26 +199,34 @@ public class FiltersGenerator {
         }
 
         if (theme != null || policyObjective != null) {
-            if (country == null){
-                search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
-                if (theme != null) {
-                    search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
-                }
-                if (policyObjective != null) {
-                    search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
-                }
-            } else {
-                search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
-                search += " FILTER EXISTS { ";
-                if (theme != null) {
-                    search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
-                }
-                if (policyObjective != null) {
-                    search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
-                }
-                search += " } } ";
+//            if (country == null){
+            search += " { ";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
+            if (theme != null) {
+                search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
             }
-            
+            if (policyObjective != null) {
+                search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+            }
+            search += " } UNION { ";
+            if (theme != null) {
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+            }
+            if (policyObjective != null) {
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+            }
+            search += " } ";
+//            } else {
+//                search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
+//                search += " FILTER EXISTS { ";
+//                if (theme != null) {
+//                    search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+//                }
+//                if (policyObjective != null) {
+//                    search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+//                }
+//                search += " } } ";
+//            }
         }
 
         return search;
