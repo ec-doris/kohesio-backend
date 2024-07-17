@@ -896,18 +896,9 @@ public class ProjectController {
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset != Integer.MIN_VALUE) {
-            // if not special offset then cache the and optimize the limits..
-            if (keywords != null) {
-                // in case of keywords, optimize to 100 projects for performance issues
-                if (offset < 100) {
-                    offset = 0;
-                    limit = 100;
-                }
-            } else {
-                if (offset < 1000) {
-                    offset = 0;
-                    limit = 1000;
-                }
+            if (offset < 1000) {
+                offset = 0;
+                limit = 1000;
             }
         } else {
             offset = 0;
@@ -1035,25 +1026,13 @@ public class ProjectController {
             mainQuery = "SELECT DISTINCT ?s0 WHERE { " + search + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
         }
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout, "projectSearch");
-        StringBuilder values = new StringBuilder();
-        int indexLimit = 0;
-        int indexOffset = 0;
-        while (resultSet.hasNext()) {
 
+        StringBuilder values = new StringBuilder();
+        while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
-            if (offset == 0) {
-                if (indexOffset < inputOffset) {
-                    indexOffset++;
-                } else {
-                    if (indexLimit < inputLimit) {
-                        values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
-                        indexLimit++;
-                    }
-                }
-            } else {
-                values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
-            }
+            values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
         }
+
         query = "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countryCode ?description ?curatedLabel ?curatedSummary ?rawCuratedSummary WHERE { "
                 + " VALUES ?s0 { " + values + " }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
@@ -1072,7 +1051,6 @@ public class ProjectController {
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.}}}"
                 + "} ";
-
 
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false, "projectSearch");
 
@@ -1601,25 +1579,25 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getLabels()));
             cell = row.createCell(2);
             cell.setCellType(CellType.NUMERIC);
-            if (project.getTotalBudgets().size() > 0)
+            if (!project.getTotalBudgets().isEmpty())
                 cell.setCellValue(Double.parseDouble(project.getTotalBudgets().get(0)));
             cell = row.createCell(3);
             cell.setCellType(CellType.NUMERIC);
-            if (project.getEuBudgets().size() > 0)
+            if (!project.getEuBudgets().isEmpty())
                 cell.setCellValue(Double.parseDouble(project.getEuBudgets().get(0)));
             cell = row.createCell(4);
-            if (project.getStartTimes().size() > 0) {
+            if (!project.getStartTimes().isEmpty()) {
                 cell.setCellValue(project.getStartTimes().get(0));
             }
             cell = row.createCell(5);
-            if (project.getEndTimes().size() > 0) {
+            if (!project.getEndTimes().isEmpty()) {
                 cell.setCellValue(project.getEndTimes().get(0));
             }
             cell = row.createCell(6);
             cell.setCellValue(String.join("|", project.getCountrycode()));
 
             cell = row.createCell(7);
-            if (project.getDescriptions().size() > 0) {
+            if (!project.getDescriptions().isEmpty()) {
                 cell.setCellValue(project.getDescriptions().get(0));
             } else {
                 cell.setCellValue("");
