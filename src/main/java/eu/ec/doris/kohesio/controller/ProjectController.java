@@ -1041,6 +1041,7 @@ public class ProjectController {
                 }
             }
             values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
+            indexLimit++;
         }
 
         query = "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countryCode ?description ?curatedLabel ?curatedSummary ?rawCuratedSummary WHERE { "
