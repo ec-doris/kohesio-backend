@@ -1721,7 +1721,7 @@ public class ProjectController {
                             CSVFormat.DEFAULT.withHeader(
                                     "ID", "PROJECT NAME", "TOTAL BUDGET", "AMOUNT EU SUPPORT", "START DATE", "END DATE", "COUNTRY", "SUMMARY"));
             for (Project project : projectList.getList()) {
-                logger.debug("Project: {}", project.getItem());
+//                logger.debug("Project: {}", project.getItem());
                 csvPrinter.printRecord(
                         Arrays.asList(
                                 String.join("|", project.getItem()),
