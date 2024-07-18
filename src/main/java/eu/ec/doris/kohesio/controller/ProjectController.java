@@ -1745,12 +1745,12 @@ public class ProjectController {
                         )
                 );
             }
-
+            csvPrinter.flush();
+            csvPrinter.close();
+            logger.info("CSV file created successfully with {} records", projectList.getList().size());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-
 }
 
