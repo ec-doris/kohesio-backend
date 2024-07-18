@@ -1028,8 +1028,18 @@ public class ProjectController {
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout, "projectSearch");
 
         StringBuilder values = new StringBuilder();
+        int indexOffset = 0;
+        int indexLimit = 0;
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
+            if (indexOffset < inputOffset) {
+                indexOffset++;
+                continue;
+            } else {
+                if (indexLimit >= inputLimit) {
+                    break;
+                }
+            }
             values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
         }
 
@@ -1721,7 +1731,6 @@ public class ProjectController {
                             CSVFormat.DEFAULT.withHeader(
                                     "ID", "PROJECT NAME", "TOTAL BUDGET", "AMOUNT EU SUPPORT", "START DATE", "END DATE", "COUNTRY", "SUMMARY"));
             for (Project project : projectList.getList()) {
-//                logger.debug("Project: {}", project.getItem());
                 csvPrinter.printRecord(
                         Arrays.asList(
                                 String.join("|", project.getItem()),
