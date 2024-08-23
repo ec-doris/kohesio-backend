@@ -1,17 +1,19 @@
 package eu.ec.doris.kohesio.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxmind.geoip2.exception.GeoIp2Exception;
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
+import eu.ec.doris.kohesio.payload.BoundingBox;
 import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.payload.NutsRegion;
 import eu.ec.doris.kohesio.services.*;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
-import org.eclipse.rdf4j.query.algebra.In;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.mapdb.Atomic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +64,8 @@ public class MapController {
     @Autowired
     NominatimService nominatimService;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
         response.setHeader("Access-Control-Allow-Origin", "*");
@@ -100,13 +104,18 @@ public class MapController {
             @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
             @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
             @RequestParam(value = "priority_axis", required = false) String priorityAxis,
+            @RequestParam(value = "boundingBox", required = false) String boundingBoxString,
             Integer timeout,
             Principal principal)
             throws Exception {
-        logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg);
+        logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {} boundingBox {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg, boundingBoxString);
         facetController.initialize(language);
         if (timeout == null) {
             timeout = 300;
+        }
+        BoundingBox boundingBox = null;
+        if (boundingBoxString != null) {
+            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
         }
 
         //simplify the query
@@ -138,7 +147,7 @@ public class MapController {
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
-                interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, limit, offset
+                interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset
         );
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
@@ -426,10 +435,10 @@ public class MapController {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
             }
 //            granularityRegion = getSmallestCommonNuts(programNuts);
-            System.err.println(granularityRegion);
-            System.err.println(programNuts);
-            System.err.println(programCountry);
-            System.err.println(findUpperRegions(granularityRegion, language));
+//            System.err.println(granularityRegion);
+//            System.err.println(programNuts);
+//            System.err.println(programCountry);
+//            System.err.println(findUpperRegions(granularityRegion, language));
         }
         if (granularityRegion == null) {
             granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -521,6 +530,7 @@ public class MapController {
             @RequestParam(value = "kohesioCategory", required = false) String kohesioCategory,
             @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
             @RequestParam(value = "priority_axis", required = false) String priorityAxis,
+            @RequestParam(value = "timeout", required = false) BoundingBox boundingBox,
             Principal principal
     ) throws Exception {
         logger.info("Search project map point: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} latitude {} longitude {} region {} limit {} offset {} granularityRegion {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, latitude, longitude, region, limit, offset, granularityRegion);
@@ -561,6 +571,7 @@ public class MapController {
                 kohesioCategory,
                 projectTypes,
                 priorityAxis,
+                boundingBox,
                 limit,
                 offset
         );
@@ -716,7 +727,7 @@ public class MapController {
                 0, null,
                 null, null,
                 null, null, null,
-                null, null,
+                null, null, null,
                 400, null
         );
         JSONObject mod = result.getBody();

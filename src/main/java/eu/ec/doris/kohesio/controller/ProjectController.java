@@ -951,6 +951,7 @@ public class ProjectController {
                 kohesioCategory,
                 projectTypes,
                 priorityAxis,
+                null,
                 limit,
                 offset
         );
@@ -1381,7 +1382,7 @@ public class ProjectController {
                 radius, region,
                 null, null,
                 null, null,
-                null, null, null,
+                null, null, null, null,
                 limit, offset
         );
 
