@@ -350,7 +350,7 @@ public class MapController {
         } else {
             query =
                     "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
-                            + " { SELECT ?s0 WHERE { "
+                            + " { SELECT DISTINCT ?s0 WHERE { "
                             + search
                             + " } "/*LIMIT "
                             + limit
