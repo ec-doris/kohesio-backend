@@ -189,6 +189,13 @@ public class MapController {
                     timeout
             );
         } else {
+            // remove the bounding box filter and coordinate triple for search
+            search = search.replaceAll(
+                    "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
+                    ""
+            );
+            search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
+
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
                 query = "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
