@@ -150,7 +150,13 @@ public class MapController {
                 interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset
         );
         //computing the number of results
-        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "} ";
+        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search;// + "} ";
+        if (boundingBox != null) {
+            // TODO: this is a tmp fix because it look like the lucene index is not working properly
+            query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
+            // End TODO
+        }
+        query += "}";
         int numResults = 0;
         if (limit == null || limit > 2000) {
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
@@ -167,10 +173,6 @@ public class MapController {
         boolean isInSweden = nut != null && "https://linkedopendata.eu/entity/Q11".equals(nut.country);
         boolean hasLowerGranularity = nut != null && !nut.narrower.isEmpty() || granularityRegion == null;
         boolean isGreekNuts2 = nut != null && "https://linkedopendata.eu/entity/Q17".equals(nut.country) && "nuts2".equals(nut.granularity);
-//        logger.debug(
-//                "hasCoordinates {}, isInSweden {}, hasLowerGranularity {}, numResults {}, granularityRegion {}",
-//                hasCoordinates, isInSweden, hasLowerGranularity, numResults, granularityRegion
-//        );
         if (!hasLowerGranularity || numResults <= 2000 || hasCoordinates || isGreekNuts2) {
             return mapReturnCoordinates(
                     language,
@@ -181,6 +183,7 @@ public class MapController {
                     latitude,
                     longitude,
                     cci,
+                    boundingBox,
                     limit,
                     offset,
                     timeout
@@ -303,7 +306,7 @@ public class MapController {
         return subRegions;
     }
 
-    ResponseEntity<JSONObject> mapReturnCoordinates(String language, String search, String country, String region, String granularityRegion, String latitude, String longitude, List<String> cci, Integer limit, Integer offset, int timeout) throws Exception {
+    ResponseEntity<JSONObject> mapReturnCoordinates(String language, String search, String country, String region, String granularityRegion, String latitude, String longitude, List<String> cci, BoundingBox boundingBox, Integer limit, Integer offset, int timeout) throws Exception {
         logger.debug("granularityRegion {}, limit {}, cci {}", granularityRegion, limit, cci);
         String optional = " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. ";
         // not performing
@@ -347,6 +350,13 @@ public class MapController {
                             + optional
                             + " FILTER((<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>, ?coordinates, <http://www.opengis.net/def/uom/OGC/1.0/metre>)) < 100000 )"
                             + "} ";
+        } else if (boundingBox != null) {
+            query = "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
+                    + search
+//                    + " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>, ?coordinates)) "
+                    + " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))"
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . }"
+                    + "}";
         } else {
             query =
                     "SELECT DISTINCT ?coordinates ?infoRegioID WHERE { "
@@ -361,26 +371,6 @@ public class MapController {
                             + "} ";
         }
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
-//        JSONArray resultList = new JSONArray();
-//        while (resultSet.hasNext()) {
-//            BindingSet querySolution = resultSet.next();
-//            resultList.add(((Literal) querySolution.getBinding("coordinates").getValue())
-//                    .getLabel()
-//                    .replace("Point(", "")
-//                    .replace(")", "")
-//                    .replace(" ", ","));
-//        }
-//        JSONObject result = new JSONObject();
-//        result.put("list", resultList);
-//        if (granularityRegion != null) {
-//            result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
-//        } else if (country != null && region == null) {
-//            result.put("geoJson", facetController.nutsRegion.get(country).geoJson);
-//        } else if (country != null && region != null) {
-//            result.put("geoJson", facetController.nutsRegion.get(region).geoJson);
-//        } else {
-//            result.put("geoJson", "");
-//        }
         HashMap<String, Boolean> unique_highlighted = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -434,11 +424,6 @@ public class MapController {
             } else {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
             }
-//            granularityRegion = getSmallestCommonNuts(programNuts);
-//            System.err.println(granularityRegion);
-//            System.err.println(programNuts);
-//            System.err.println(programCountry);
-//            System.err.println(findUpperRegions(granularityRegion, language));
         }
         if (granularityRegion == null) {
             granularityRegion = "https://linkedopendata.eu/entity/Q1";
