@@ -173,7 +173,11 @@ public class MapController {
         boolean isInSweden = nut != null && "https://linkedopendata.eu/entity/Q11".equals(nut.country);
         boolean hasLowerGranularity = nut != null && !nut.narrower.isEmpty() || granularityRegion == null;
         boolean isGreekNuts2 = nut != null && "https://linkedopendata.eu/entity/Q17".equals(nut.country) && "nuts2".equals(nut.granularity);
-        if (!hasLowerGranularity || numResults <= 2000 || hasCoordinates || isGreekNuts2) {
+        int maxProject = 2000;
+        if (boundingBox != null) {
+            maxProject = 10000;
+        }
+        if (!hasLowerGranularity || numResults <= maxProject || hasCoordinates || isGreekNuts2) {
             return mapReturnCoordinates(
                     language,
                     search,
