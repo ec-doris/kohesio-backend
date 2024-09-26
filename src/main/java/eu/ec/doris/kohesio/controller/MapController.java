@@ -175,7 +175,7 @@ public class MapController {
         boolean isGreekNuts2 = nut != null && "https://linkedopendata.eu/entity/Q17".equals(nut.country) && "nuts2".equals(nut.granularity);
         int maxProject = 2000;
         if (boundingBox != null) {
-            maxProject = 10000;
+            maxProject = 20000;
         }
         if (!hasLowerGranularity || numResults <= maxProject || hasCoordinates || isGreekNuts2) {
             return mapReturnCoordinates(
