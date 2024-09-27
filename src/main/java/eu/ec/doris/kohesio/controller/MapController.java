@@ -836,6 +836,9 @@ public class MapController {
         JSONArray resultList = new JSONArray();
         for (Zone z : res.values()) {
             z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, 20);
+            if (z.getNumberProjects() == 0) {
+                continue;
+            }
             JSONObject element = new JSONObject();
 //            element.put("regionLabel", z.getLid());
             element.put("region", z.getLid());
