@@ -118,7 +118,7 @@ public class MapController {
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
             boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
-            return getCoordinatesByGeographicSubdivision(boundingBox, timeout);
+            return getCoordinatesByGeographicSubdivision(boundingBox, 20);
         }
 
         //simplify the query
