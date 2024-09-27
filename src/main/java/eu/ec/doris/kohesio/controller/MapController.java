@@ -13,6 +13,11 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
 import org.mapdb.Atomic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,10 +30,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/wikibase")
@@ -116,6 +118,7 @@ public class MapController {
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
             boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
+            return getCoordinatesByGeographicSubdivision(boundingBox, timeout);
         }
 
         //simplify the query
@@ -765,5 +768,192 @@ public class MapController {
             }
         }
         return null;
+    }
+
+    @PostMapping(value = "/facet/eu/search/project/map2", produces = "application/json")
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(@RequestBody BoundingBox bbox, int timeout) throws Exception {
+
+        // Get NUTS 1 in bbox
+        String queryNuts1 = "SELECT * WHERE {"
+                + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " <http://nuts.de/geometry> ?geo; "
+                + " a <http://nuts.de/NUTS1>. "
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + "} ";
+
+        // Get NUTS 2 in bbox
+        String queryNuts2 = "SELECT * WHERE {"
+                + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " <http://nuts.de/geometry> ?geo; "
+                + " a <http://nuts.de/NUTS2>. "
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + "} ";
+
+        // Get NUTS 3 in bbox
+        String queryNuts3 = "SELECT * WHERE {"
+                + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " <http://nuts.de/geometry> ?geo; "
+                + " a <http://nuts.de/NUTS3>. "
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + "} ";
+
+        // Get LAU in bbox
+        String queryLAU = "SELECT * WHERE {"
+                + " ?s <http://laus.de/linkedopendata> ?lid; "
+                + " <http://laus.de/geometry> ?geo; "
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + "} ";
+
+        HashMap<String, Zone> result = new HashMap<>(getZoneByQuery(queryNuts1, "NUTS1", timeout));
+        if (result.isEmpty()) result.putAll(getZoneByQuery(queryNuts2, "NUTS2", timeout));
+        if (result.isEmpty()) result.putAll(getZoneByQuery(queryNuts3, "NUTS3", timeout));
+        if (result.isEmpty()) result.putAll(getZoneByQuery(queryLAU, "LAU", timeout));
+
+        logger.debug("Found {} regions", result.size());
+
+        return createResponse(result, "en");
+
+
+    }
+
+    private ResponseEntity<JSONObject> createResponse(HashMap<String, Zone> res, String language) throws Exception {
+        String granularityRegion = "https://linkedopendata.eu/entity/Q1";
+//        JSONObject result = new JSONObject();
+        HashMap<String, Object> result = new HashMap<>();
+//        result.put("list", resultList);
+//        result.put("upperRegions", findUpperRegions(granularityRegion, language));
+        result.put("upperRegions", "");
+        result.put("region", granularityRegion);
+        result.put("regionLabel", "");
+
+//        if (facetController.nutsRegion.get(granularityRegion).name.containsKey(language)) {
+//            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+//        } else {
+//            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get("en"));
+//        }
+//        result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
+
+        JSONArray resultList = new JSONArray();
+        for (Zone z : res.values()) {
+            z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, 20);
+            JSONObject element = new JSONObject();
+//            element.put("regionLabel", z.getLid());
+            element.put("region", z.getLid());
+//            element.put("geoJson", z.getGeo());
+            element.put("count", z.getNumberProjects());
+            element.put("center", z.getCenterWkt());
+            element.put("coordinates", z.getCenter());
+            element.put("isHighlighted", false);
+            resultList.add(element);
+        }
+        result.put("list", resultList);
+        return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
+    }
+
+    private HashMap<String, Zone> getZoneByQuery(String query, String type, int timeout) throws Exception {
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
+        HashMap<String, Zone> result = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            String uri = querySolution.getBinding("s").getValue().stringValue();
+            String lid = querySolution.getBinding("lid").getValue().stringValue();
+            String geo = querySolution.getBinding("geo").getValue().stringValue();
+
+            Zone zone = new Zone(uri, lid, geo, type);
+            if (!result.containsKey(lid)) {
+                result.put(lid, zone);
+            }
+            result.put(lid, zone);
+        }
+        return result;
+    }
+
+    private static final WKTReader wktReader = new WKTReader();
+
+    private static class Zone {
+
+        String uri;
+        String lid;
+        String geo;
+        String type;
+        int numberProjects;
+
+        public Zone(String uri, String lid, String geo, String type) {
+            this.uri = uri;
+            this.lid = lid;
+            this.geo = geo;
+            this.type = type;
+            this.numberProjects = 0;
+        }
+
+        public String getUri() {
+            return uri;
+        }
+
+        public String getLid() {
+            return lid;
+        }
+
+        public String getGeo() {
+            return geo;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public void setUri(String uri) {
+            this.uri = uri;
+        }
+
+        public void setLid(String lid) {
+            this.lid = lid;
+        }
+
+        public void setGeo(String geo) {
+            this.geo = geo;
+        }
+
+        public void setType(String type) {
+            this.type = type;
+        }
+
+        public int getNumberProjects() {
+            return numberProjects;
+        }
+
+        public void setNumberProjects(int numberProjects) {
+            this.numberProjects = numberProjects;
+        }
+
+        public void queryNumberProjects(SPARQLQueryService sparqlQueryService, String sparqlEndpoint, int timeout) throws Exception {
+            String query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
+                    + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
+            if ("LAU".equals(this.type)) {
+                query += " ?s0 <https://linkedopendata.eu/prop/direct/P581472> <" + this.lid + "> . ";
+            } else {
+                query += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + this.lid + "> . ";
+            }
+            query += " }";
+            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
+                    sparqlEndpoint,
+                    query,
+                    timeout,
+                    "map2"
+            );
+            if (resultSet.hasNext()) {
+                BindingSet querySolution = resultSet.next();
+                numberProjects = ((Literal) querySolution.getBinding("c").getValue()).intValue();
+            }
+        }
+
+        public String getCenterWkt() throws ParseException {
+            return wktReader.read(this.geo).getCentroid().toText();
+        }
+        public String getCenter() throws ParseException {
+            Coordinate coordinate = wktReader.read(this.geo).getCentroid().getCoordinate();
+            // lat,lng
+            return coordinate.x + "," + coordinate.y;
+        }
     }
 }

@@ -39,4 +39,8 @@ public class BoundingBox {
                 southWest.getLng() + " " + northEast.getLat() + "," +
                 southWest.getLng() + " " + southWest.getLat() + "))";
     }
+
+    public String toLiteral() {
+        return "\"" + this.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>";
+    }
 }
