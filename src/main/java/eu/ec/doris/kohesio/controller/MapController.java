@@ -118,7 +118,7 @@ public class MapController {
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
             boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
-//            return getCoordinatesByGeographicSubdivision(boundingBox, 20);
+            return getCoordinatesByGeographicSubdivision(boundingBox, 20);
         }
 
         //simplify the query
@@ -178,7 +178,7 @@ public class MapController {
         boolean isGreekNuts2 = nut != null && "https://linkedopendata.eu/entity/Q17".equals(nut.country) && "nuts2".equals(nut.granularity);
         int maxProject = 2000;
         if (boundingBox != null) {
-            maxProject = 20000;
+            maxProject = 10000;
         }
         if (!hasLowerGranularity || numResults <= maxProject || hasCoordinates || isGreekNuts2) {
             return mapReturnCoordinates(
@@ -196,6 +196,7 @@ public class MapController {
                     timeout
             );
         } else {
+
             // remove the bounding box filter and coordinate triple for search
             search = search.replaceAll(
                     "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
@@ -203,6 +204,10 @@ public class MapController {
             );
             search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
 
+            if (boundingBox != null) {
+                // get the nuts visible (intersect) in the bounding box
+                granularityRegion = "";
+            }
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
                 query = "SELECT ?region (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
@@ -778,7 +783,7 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
                 + "} ";
 
         // Get NUTS 2 in bbox
@@ -786,7 +791,7 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
                 + "} ";
 
         // Get NUTS 3 in bbox
@@ -794,14 +799,14 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
                 + "} ";
 
         // Get LAU in bbox
         String queryLAU = "SELECT * WHERE {"
                 + " ?s <http://laus.de/linkedopendata> ?lid; "
                 + " <http://laus.de/geometry> ?geo; "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
                 + "} ";
 
         HashMap<String, Zone> result = new HashMap<>(getZoneByQuery(queryNuts1, "NUTS1", timeout));
