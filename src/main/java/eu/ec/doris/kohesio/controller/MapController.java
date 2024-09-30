@@ -827,17 +827,17 @@ public class MapController {
                 + "} ";
 
         if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
-            return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), "en");
+            return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, "en");
         }
         if (!getZoneByQuery(withinNuts2, "NUTS2", timeout).isEmpty()) {
-            return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), "en");
+            return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), search, "en");
         }
-        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), "en");
+        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), search, "en");
 
 
     }
 
-    private ResponseEntity<JSONObject> createResponse(HashMap<String, Zone> res, String language) throws Exception {
+    private ResponseEntity<JSONObject> createResponse(HashMap<String, Zone> res, String search, String language) throws Exception {
         String granularityRegion = "https://linkedopendata.eu/entity/Q1";
 //        JSONObject result = new JSONObject();
         HashMap<String, Object> result = new HashMap<>();
@@ -856,12 +856,12 @@ public class MapController {
 
         JSONArray resultList = new JSONArray();
         for (Zone z : res.values()) {
-            z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, 20);
+            z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, search, 20);
             if (z.getNumberProjects() == 0) {
                 continue;
             }
             JSONObject element = new JSONObject();
-//            element.put("regionLabel", z.getLid());
+            element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
             element.put("region", z.getLid());
             element.put("geoJson", facetController.nutsRegion.get(z.getLid()).geoJson);
             element.put("count", z.getNumberProjects());
@@ -950,9 +950,10 @@ public class MapController {
             this.numberProjects = numberProjects;
         }
 
-        public void queryNumberProjects(SPARQLQueryService sparqlQueryService, String sparqlEndpoint, int timeout) throws Exception {
+        public void queryNumberProjects(SPARQLQueryService sparqlQueryService, String sparqlEndpoint, String search, int timeout) throws Exception {
             String query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { "
                     + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
+            query += search;
             if ("LAU".equals(this.type)) {
                 query += " ?s0 <https://linkedopendata.eu/prop/direct/P581472> <" + this.lid + "> . ";
             } else {
