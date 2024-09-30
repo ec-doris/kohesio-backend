@@ -118,7 +118,6 @@ public class MapController {
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
             boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
-            return getCoordinatesByGeographicSubdivision(boundingBox, 20);
         }
 
         //simplify the query
@@ -196,7 +195,9 @@ public class MapController {
                     timeout
             );
         } else {
-
+            if (boundingBox != null) {
+                return getCoordinatesByGeographicSubdivision(boundingBox, 20);
+            }
             // remove the bounding box filter and coordinate triple for search
             search = search.replaceAll(
                     "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
@@ -870,7 +871,7 @@ public class MapController {
             JSONObject element = new JSONObject();
 //            element.put("regionLabel", z.getLid());
             element.put("region", z.getLid());
-//            element.put("geoJson", z.getGeo());
+            element.put("geoJson", z.getGeo());
             element.put("count", z.getNumberProjects());
             element.put("center", z.getCenterWkt());
             element.put("coordinates", z.getCenter());
