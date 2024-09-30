@@ -18,6 +18,8 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
+import org.locationtech.spatial4j.io.GeoJSONReader;
+import org.locationtech.spatial4j.io.GeoJSONWriter;
 import org.mapdb.Atomic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -871,9 +873,9 @@ public class MapController {
             JSONObject element = new JSONObject();
 //            element.put("regionLabel", z.getLid());
             element.put("region", z.getLid());
-            element.put("geoJson", z.getGeo());
+            element.put("geoJson", facetController.nutsRegion.get(z.getLid()).geoJson);
             element.put("count", z.getNumberProjects());
-            element.put("center", z.getCenterWkt());
+//            element.put("center", z.getCenterWkt());
             element.put("coordinates", z.getCenter());
             element.put("isHighlighted", false);
             resultList.add(element);
@@ -977,10 +979,6 @@ public class MapController {
                 BindingSet querySolution = resultSet.next();
                 numberProjects = ((Literal) querySolution.getBinding("c").getValue()).intValue();
             }
-        }
-
-        public String getCenterWkt() throws ParseException {
-            return wktReader.read(this.geo).getCentroid().toText();
         }
 
         public String getCenter() throws ParseException {
