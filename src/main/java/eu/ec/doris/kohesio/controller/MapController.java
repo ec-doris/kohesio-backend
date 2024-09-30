@@ -1,7 +1,6 @@
 package eu.ec.doris.kohesio.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.maxmind.geoip2.exception.GeoIp2Exception;
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.payload.BoundingBox;
@@ -14,13 +13,8 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
-import org.locationtech.spatial4j.io.GeoJSONReader;
-import org.locationtech.spatial4j.io.GeoJSONWriter;
-import org.mapdb.Atomic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +26,10 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/wikibase")
@@ -110,8 +107,8 @@ public class MapController {
             @RequestParam(value = "priority_axis", required = false) String priorityAxis,
             @RequestParam(value = "boundingBox", required = false) String boundingBoxString,
             Integer timeout,
-            Principal principal)
-            throws Exception {
+            Principal principal
+    ) throws Exception {
         logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {} boundingBox {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg, boundingBoxString);
         facetController.initialize(language);
         if (timeout == null) {
@@ -197,9 +194,6 @@ public class MapController {
                     timeout
             );
         } else {
-            if (boundingBox != null) {
-                return getCoordinatesByGeographicSubdivision(boundingBox, 20);
-            }
             // remove the bounding box filter and coordinate triple for search
             search = search.replaceAll(
                     "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
@@ -208,11 +202,7 @@ public class MapController {
             search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
 
             if (boundingBox != null) {
-                // get the nuts visible (intersect) in the bounding box
-//                granularityRegion = getSmallestCommonNuts(
-//                        getCoordinatesByGeographicSubdivision(boundingBox, 20)
-//                );
-                granularityRegion = "";
+                return getCoordinatesByGeographicSubdivision(boundingBox, search, 20);
             }
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -781,8 +771,8 @@ public class MapController {
         return null;
     }
 
-    @PostMapping(value = "/facet/eu/search/project/map2", produces = "application/json")
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(@RequestBody BoundingBox bbox, int timeout) throws Exception {
+    //    @PostMapping(value = "/facet/eu/search/project/map2", produces = "application/json")
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(@RequestBody BoundingBox bbox, String search, int timeout) throws Exception {
 
         // Get NUTS 1 in bbox
         String withinNuts1 = "SELECT * WHERE {"
