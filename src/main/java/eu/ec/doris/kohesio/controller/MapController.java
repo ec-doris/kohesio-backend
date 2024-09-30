@@ -206,6 +206,9 @@ public class MapController {
 
             if (boundingBox != null) {
                 // get the nuts visible (intersect) in the bounding box
+//                granularityRegion = getSmallestCommonNuts(
+//                        getCoordinatesByGeographicSubdivision(boundingBox, 20)
+//                );
                 granularityRegion = "";
             }
             if (granularityRegion == null) {
@@ -779,7 +782,14 @@ public class MapController {
     private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(@RequestBody BoundingBox bbox, int timeout) throws Exception {
 
         // Get NUTS 1 in bbox
-        String queryNuts1 = "SELECT * WHERE {"
+        String withinNuts1 = "SELECT * WHERE {"
+                + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " <http://nuts.de/geometry> ?geo; "
+                + " a <http://nuts.de/NUTS1>. "
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + "} ";
+
+        String intersectNuts1 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
@@ -787,7 +797,14 @@ public class MapController {
                 + "} ";
 
         // Get NUTS 2 in bbox
-        String queryNuts2 = "SELECT * WHERE {"
+        String withinNuts2 = "SELECT * WHERE {"
+                + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " <http://nuts.de/geometry> ?geo; "
+                + " a <http://nuts.de/NUTS2>. "
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + "} ";
+
+        String intersectNuts2 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
@@ -795,7 +812,14 @@ public class MapController {
                 + "} ";
 
         // Get NUTS 3 in bbox
-        String queryNuts3 = "SELECT * WHERE {"
+        String withinNuts3 = "SELECT * WHERE {"
+                + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " <http://nuts.de/geometry> ?geo; "
+                + " a <http://nuts.de/NUTS3>. "
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + "} ";
+
+        String intersectNuts3 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
@@ -806,17 +830,16 @@ public class MapController {
         String queryLAU = "SELECT * WHERE {"
                 + " ?s <http://laus.de/linkedopendata> ?lid; "
                 + " <http://laus.de/geometry> ?geo; "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
                 + "} ";
 
-        HashMap<String, Zone> result = new HashMap<>(getZoneByQuery(queryNuts1, "NUTS1", timeout));
-        if (result.isEmpty()) result.putAll(getZoneByQuery(queryNuts2, "NUTS2", timeout));
-        if (result.isEmpty()) result.putAll(getZoneByQuery(queryNuts3, "NUTS3", timeout));
-        if (result.isEmpty()) result.putAll(getZoneByQuery(queryLAU, "LAU", timeout));
-
-        logger.debug("Found {} regions", result.size());
-
-        return createResponse(result, "en");
+        if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
+            return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), "en");
+        }
+        if (!getZoneByQuery(withinNuts2, "NUTS2", timeout).isEmpty()) {
+            return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), "en");
+        }
+        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), "en");
 
 
     }
@@ -958,6 +981,7 @@ public class MapController {
         public String getCenterWkt() throws ParseException {
             return wktReader.read(this.geo).getCentroid().toText();
         }
+
         public String getCenter() throws ParseException {
             Coordinate coordinate = wktReader.read(this.geo).getCentroid().getCoordinate();
             // lat,lng
