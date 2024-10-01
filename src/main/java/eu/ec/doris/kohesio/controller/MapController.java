@@ -723,7 +723,7 @@ public class MapController {
                 null, null,
                 coordinates2.getLatitude(), coordinates2.getLongitude(),
                 null, null,
-                null, 2000,
+                null, 500,
                 0, null,
                 null, null,
                 null, null, null,
