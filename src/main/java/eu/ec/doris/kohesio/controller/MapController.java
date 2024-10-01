@@ -854,7 +854,7 @@ public class MapController {
             element.put("count", z.getNumberProjects());
 //            element.put("center", z.getCenterWkt());
             element.put("coordinates", z.getCenter());
-            element.put("isHighlighted", false);
+//            element.put("isHighlighted", false);
             resultList.add(element);
         }
 //        result.put("list", resultList);
