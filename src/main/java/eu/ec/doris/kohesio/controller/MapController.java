@@ -839,20 +839,7 @@ public class MapController {
 
     private ResponseEntity<JSONObject> createResponse(HashMap<String, Zone> res, String search, String language) throws Exception {
         String granularityRegion = "https://linkedopendata.eu/entity/Q1";
-//        JSONObject result = new JSONObject();
         HashMap<String, Object> result = new HashMap<>();
-//        result.put("list", resultList);
-//        result.put("upperRegions", findUpperRegions(granularityRegion, language));
-        result.put("upperRegions", "");
-        result.put("region", granularityRegion);
-        result.put("regionLabel", "");
-
-//        if (facetController.nutsRegion.get(granularityRegion).name.containsKey(language)) {
-//            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
-//        } else {
-//            result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get("en"));
-//        }
-//        result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
 
         JSONArray resultList = new JSONArray();
         for (Zone z : res.values()) {
@@ -870,7 +857,13 @@ public class MapController {
             element.put("isHighlighted", false);
             resultList.add(element);
         }
-        result.put("list", resultList);
+//        result.put("list", resultList);
+        result.put("subregions", resultList);
+        result.put("region", granularityRegion);
+//        result.put("upperRegions", findUpperRegions(granularityRegion, language));
+        result.put("upperRegions", new JSONArray());
+        result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+        result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
         return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
     }
 
