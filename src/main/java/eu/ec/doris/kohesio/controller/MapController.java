@@ -26,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.security.Principal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -842,11 +844,15 @@ public class MapController {
         HashMap<String, Object> result = new HashMap<>();
 
         JSONArray resultList = new JSONArray();
+        // count the number of project in each zone
+        Instant start = Instant.now();
         for (Zone z : res.values()) {
+            
             z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, search, 30);
             if (z.getNumberProjects() == 0) {
                 continue;
             }
+            
             JSONObject element = new JSONObject();
             element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
             element.put("region", z.getLid());
@@ -857,6 +863,9 @@ public class MapController {
 //            element.put("isHighlighted", false);
             resultList.add(element);
         }
+        Instant end = Instant.now();
+        Duration elapsedTime = Duration.between(start, end);
+        logger.info("Count number projects each zone: " + elapsedTime.toMillis() + " milliseconds");
 //        result.put("list", resultList);
         result.put("subregions", resultList);
         result.put("region", granularityRegion);
