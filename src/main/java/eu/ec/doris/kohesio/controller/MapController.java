@@ -158,6 +158,28 @@ public class MapController {
             // TODO: this is a tmp fix because it look like the lucene index is not working properly
             query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
             // End TODO
+            int numberTotal = 0;
+            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, search, 20);
+            for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
+                numberTotal += (int) ((JSONObject) o).get("count");
+            }
+            if (numberTotal < 10000) {
+                return mapReturnCoordinates(
+                        language,
+                        search,
+                        country,
+                        region,
+                        granularityRegion,
+                        latitude,
+                        longitude,
+                        cci,
+                        boundingBox,
+                        limit,
+                        offset,
+                        timeout
+                );
+            }
+            return tmp;
         }
         query += "}";
         int numResults = 0;
@@ -856,7 +878,7 @@ public class MapController {
             JSONObject element = new JSONObject();
             element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
             element.put("region", z.getLid());
-            element.put("geoJson", facetController.nutsRegion.get(z.getLid()).geoJson);
+//            element.put("geoJson", facetController.nutsRegion.get(z.getLid()).geoJson);
             element.put("count", z.getNumberProjects());
 //            element.put("center", z.getCenterWkt());
             element.put("coordinates", z.getCenter());
