@@ -159,7 +159,7 @@ public class MapController {
             query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
             // End TODO
             int numberTotal = 0;
-            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, search, language,40);
+            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, search, language, 40);
             for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
                 numberTotal += (int) ((JSONObject) o).get("count");
             }
@@ -797,7 +797,7 @@ public class MapController {
     }
 
     //    @PostMapping(value = "/facet/eu/search/project/map2", produces = "application/json")
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(@RequestBody BoundingBox bbox, String search, String language,  int timeout) throws Exception {
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(@RequestBody BoundingBox bbox, String search, String language, int timeout) throws Exception {
 
         // Get NUTS 1 in bbox
         String withinNuts1 = "SELECT * WHERE {"
@@ -857,10 +857,10 @@ public class MapController {
         if (!getZoneByQuery(withinNuts2, "NUTS2", timeout).isEmpty()) {
             return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), search, language);
         }
-        if (!getZoneByQuery(withinNuts3, "NUTS3", timeout).isEmpty()) {
-            return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), search, language);
-        }
-        return createResponse(getZoneByQuery(intersectLAU, "LAU", timeout), search, language);
+//        if (!getZoneByQuery(withinNuts3, "NUTS3", timeout).isEmpty()) {
+        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), search, language);
+//        }
+//        return createResponse(getZoneByQuery(intersectLAU, "LAU", timeout), search, language);
 
 
     }
@@ -882,7 +882,7 @@ public class MapController {
             if (z.getNumberProjects() == 0) {
                 continue;
             }
-            
+
             JSONObject element = new JSONObject();
             if (z.getType() != "LAU") {
                 element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
