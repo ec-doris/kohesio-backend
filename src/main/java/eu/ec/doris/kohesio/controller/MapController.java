@@ -159,7 +159,7 @@ public class MapController {
             query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
             // End TODO
             int numberTotal = 0;
-            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, search, 20);
+            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, search, language,20);
             for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
                 numberTotal += (int) ((JSONObject) o).get("count");
             }
@@ -226,7 +226,7 @@ public class MapController {
             search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
 
             if (boundingBox != null) {
-                return getCoordinatesByGeographicSubdivision(boundingBox, search, 20);
+                return getCoordinatesByGeographicSubdivision(boundingBox, search, language, 20);
             }
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -796,7 +796,7 @@ public class MapController {
     }
 
     //    @PostMapping(value = "/facet/eu/search/project/map2", produces = "application/json")
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(@RequestBody BoundingBox bbox, String search, int timeout) throws Exception {
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(@RequestBody BoundingBox bbox, String search, String language,  int timeout) throws Exception {
 
         // Get NUTS 1 in bbox
         String withinNuts1 = "SELECT * WHERE {"
@@ -844,19 +844,22 @@ public class MapController {
                 + "} ";
 
         // Get LAU in bbox
-        String queryLAU = "SELECT * WHERE {"
+        String intersectLAU = "SELECT * WHERE {"
                 + " ?s <http://laus.de/linkedopendata> ?lid; "
                 + " <http://laus.de/geometry> ?geo; "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
                 + "} ";
 
         if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
-            return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, "en");
+            return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, language);
         }
         if (!getZoneByQuery(withinNuts2, "NUTS2", timeout).isEmpty()) {
-            return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), search, "en");
+            return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), search, language);
         }
-        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), search, "en");
+        if (!getZoneByQuery(withinNuts3, "NUTS3", timeout).isEmpty()) {
+            return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), search, language);
+        }
+        return createResponse(getZoneByQuery(intersectLAU, "LAU", timeout), search, language);
 
 
     }
