@@ -163,7 +163,8 @@ public class MapController {
             for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
                 numberTotal += (int) ((JSONObject) o).get("count");
             }
-            if (numberTotal < 10000) {
+            int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
+            if (numberTotal < maxNumberOfprojectBeforeGoingToSubRegion) {
                 return mapReturnCoordinates(
                         language,
                         search,
@@ -883,7 +884,11 @@ public class MapController {
             }
             
             JSONObject element = new JSONObject();
-            element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
+            if (z.getType() != "LAU") {
+                element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
+            } else {
+                element.put("regionLabel", "");
+            }
             element.put("region", z.getLid());
 //            element.put("geoJson", facetController.nutsRegion.get(z.getLid()).geoJson);
             element.put("count", z.getNumberProjects());
