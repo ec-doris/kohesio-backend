@@ -163,7 +163,7 @@ public class MapController {
             for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
                 numberTotal += (int) ((JSONObject) o).get("count");
             }
-            int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
+            int maxNumberOfprojectBeforeGoingToSubRegion = 1000;
             if (numberTotal < maxNumberOfprojectBeforeGoingToSubRegion) {
                 return mapReturnCoordinates(
                         language,
