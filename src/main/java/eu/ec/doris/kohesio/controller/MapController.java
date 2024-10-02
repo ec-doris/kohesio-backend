@@ -159,7 +159,7 @@ public class MapController {
             query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
             // End TODO
             int numberTotal = 0;
-            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, search, language,20);
+            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, search, language,40);
             for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
                 numberTotal += (int) ((JSONObject) o).get("count");
             }
@@ -227,7 +227,7 @@ public class MapController {
             search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
 
             if (boundingBox != null) {
-                return getCoordinatesByGeographicSubdivision(boundingBox, search, language, 20);
+                return getCoordinatesByGeographicSubdivision(boundingBox, search, language, 40);
             }
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
