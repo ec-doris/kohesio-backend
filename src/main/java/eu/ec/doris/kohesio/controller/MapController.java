@@ -865,12 +865,16 @@ public class MapController {
         String granularityRegion = "https://linkedopendata.eu/entity/Q1";
         HashMap<String, Object> result = new HashMap<>();
 
+        String tmpsearch = search.replaceAll(
+                "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
+                ""
+        );
         JSONArray resultList = new JSONArray();
         // count the number of project in each zone
         Instant start = Instant.now();
         for (Zone z : res.values()) {
-            
-            z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, search, 30);
+
+            z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, tmpsearch, 30);
             if (z.getNumberProjects() == 0) {
                 continue;
             }
