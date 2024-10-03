@@ -1005,7 +1005,11 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?readability)";
             }
         } else {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P590521> ?readability . } ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 ."
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P590521> ?readabilityBase ."
+                    + "   OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId .} "
+                    + "   BIND(IF(BOUND(?keepId), ?readabilityBase * 0.5, ?readabilityBase) AS ?readability)"
+                    + " } ";
             orderBy = "ORDER BY DESC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * <http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
         }
 
@@ -1643,15 +1647,12 @@ public class ProjectController {
             @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
             @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
             @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
-
             @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
             @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
             @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
             @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
             @RequestParam(value = "orderReadability", required = false) Boolean orderReadability,
             @RequestParam(value = "orderReadabilityBudget", required = false) Boolean orderReadabilityBudget,
-
-
             @RequestParam(value = "latitude", required = false) String latitude,
             @RequestParam(value = "longitude", required = false) String longitude,
             @RequestParam(value = "region", required = false) String region,
