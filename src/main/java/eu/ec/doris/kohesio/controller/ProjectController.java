@@ -896,18 +896,9 @@ public class ProjectController {
         int inputOffset = offset;
         int inputLimit = limit;
         if (offset != Integer.MIN_VALUE) {
-            // if not special offset then cache the and optimize the limits..
-            if (keywords != null) {
-                // in case of keywords, optimize to 100 projects for performance issues
-                if (offset < 100) {
-                    offset = 0;
-                    limit = 100;
-                }
-            } else {
-                if (offset < 1000) {
-                    offset = 0;
-                    limit = 1000;
-                }
+            if (offset < 1000) {
+                offset = 0;
+                limit = 1000;
             }
         } else {
             offset = 0;
@@ -960,6 +951,7 @@ public class ProjectController {
                 kohesioCategory,
                 projectTypes,
                 priorityAxis,
+                null,
                 limit,
                 offset
         );
@@ -1013,7 +1005,11 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?readability)";
             }
         } else {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P590521> ?readability . } ";
+            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 ."
+                    + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P590521> ?readabilityBase ."
+                    + "   OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId .} "
+                    + "   BIND(IF(BOUND(?keepId), ?readabilityBase * 0.5, ?readabilityBase) AS ?readability)"
+                    + " } ";
             orderBy = "ORDER BY DESC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * <http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
         }
 
@@ -1035,25 +1031,24 @@ public class ProjectController {
             mainQuery = "SELECT DISTINCT ?s0 WHERE { " + search + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image. } } " + orderBy + " LIMIT " + limit + " OFFSET " + offset;
         }
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, mainQuery, timeout, "projectSearch");
-        StringBuilder values = new StringBuilder();
-        int indexLimit = 0;
-        int indexOffset = 0;
-        while (resultSet.hasNext()) {
 
+        StringBuilder values = new StringBuilder();
+        int indexOffset = 0;
+        int indexLimit = 0;
+        while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
-            if (offset == 0) {
-                if (indexOffset < inputOffset) {
-                    indexOffset++;
-                } else {
-                    if (indexLimit < inputLimit) {
-                        values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
-                        indexLimit++;
-                    }
-                }
+            if (indexOffset < inputOffset) {
+                indexOffset++;
+                continue;
             } else {
-                values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
+                if (indexLimit >= inputLimit) {
+                    break;
+                }
             }
+            values.append(" ").append("<").append(querySolution.getBinding("s0").getValue().stringValue()).append(">");
+            indexLimit++;
         }
+
         query = "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countryCode ?description ?curatedLabel ?curatedSummary ?rawCuratedSummary WHERE { "
                 + " VALUES ?s0 { " + values + " }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
@@ -1072,7 +1067,6 @@ public class ProjectController {
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.} }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category .  OPTIONAL {?category <https://linkedopendata.eu/prop/direct/P1848> ?objective. OPTIONAL {?objective <https://linkedopendata.eu/prop/direct/P1105> ?objectiveId.}}}"
                 + "} ";
-
 
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false, "projectSearch");
 
@@ -1392,7 +1386,7 @@ public class ProjectController {
                 radius, region,
                 null, null,
                 null, null,
-                null, null, null,
+                null, null, null, null,
                 limit, offset
         );
 
@@ -1601,25 +1595,25 @@ public class ProjectController {
             cell.setCellValue(String.join("|", project.getLabels()));
             cell = row.createCell(2);
             cell.setCellType(CellType.NUMERIC);
-            if (project.getTotalBudgets().size() > 0)
+            if (!project.getTotalBudgets().isEmpty())
                 cell.setCellValue(Double.parseDouble(project.getTotalBudgets().get(0)));
             cell = row.createCell(3);
             cell.setCellType(CellType.NUMERIC);
-            if (project.getEuBudgets().size() > 0)
+            if (!project.getEuBudgets().isEmpty())
                 cell.setCellValue(Double.parseDouble(project.getEuBudgets().get(0)));
             cell = row.createCell(4);
-            if (project.getStartTimes().size() > 0) {
+            if (!project.getStartTimes().isEmpty()) {
                 cell.setCellValue(project.getStartTimes().get(0));
             }
             cell = row.createCell(5);
-            if (project.getEndTimes().size() > 0) {
+            if (!project.getEndTimes().isEmpty()) {
                 cell.setCellValue(project.getEndTimes().get(0));
             }
             cell = row.createCell(6);
             cell.setCellValue(String.join("|", project.getCountrycode()));
 
             cell = row.createCell(7);
-            if (project.getDescriptions().size() > 0) {
+            if (!project.getDescriptions().isEmpty()) {
                 cell.setCellValue(project.getDescriptions().get(0));
             } else {
                 cell.setCellValue("");
@@ -1653,15 +1647,12 @@ public class ProjectController {
             @RequestParam(value = "startDateAfter", required = false) String startDateAfter,
             @RequestParam(value = "endDateBefore", required = false) String endDateBefore,
             @RequestParam(value = "endDateAfter", required = false) String endDateAfter,
-
             @RequestParam(value = "orderStartDate", required = false) Boolean orderStartDate,
             @RequestParam(value = "orderEndDate", required = false) Boolean orderEndDate,
             @RequestParam(value = "orderEuBudget", required = false) Boolean orderEuBudget,
             @RequestParam(value = "orderTotalBudget", required = false) Boolean orderTotalBudget,
             @RequestParam(value = "orderReadability", required = false) Boolean orderReadability,
             @RequestParam(value = "orderReadabilityBudget", required = false) Boolean orderReadabilityBudget,
-
-
             @RequestParam(value = "latitude", required = false) String latitude,
             @RequestParam(value = "longitude", required = false) String longitude,
             @RequestParam(value = "region", required = false) String region,
@@ -1743,7 +1734,6 @@ public class ProjectController {
                             CSVFormat.DEFAULT.withHeader(
                                     "ID", "PROJECT NAME", "TOTAL BUDGET", "AMOUNT EU SUPPORT", "START DATE", "END DATE", "COUNTRY", "SUMMARY"));
             for (Project project : projectList.getList()) {
-                logger.debug("Project: {}", project.getItem());
                 csvPrinter.printRecord(
                         Arrays.asList(
                                 String.join("|", project.getItem()),
@@ -1757,12 +1747,12 @@ public class ProjectController {
                         )
                 );
             }
-
+            csvPrinter.flush();
+            csvPrinter.close();
+            logger.info("CSV file created successfully with {} records", projectList.getList().size());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-
 }
 

@@ -23,7 +23,4 @@ public class SwaggerConfiguration implements ApplicationListener<ApplicationPrep
                 .addFirst(new PropertiesPropertySource("programmatically", props));
     }
 
-    private String swaggerPath() {
-        return "/api/swagger-ui.html";
-    }
 }

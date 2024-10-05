@@ -397,7 +397,7 @@ public class CacheController {
                 0, null,
                 null, null,
                 null, null, null,
-                null, null,
+                null, null, null,
                 400, null
         );
         logger.debug("Response result: " + responseEntity.getBody());
