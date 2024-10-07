@@ -58,7 +58,7 @@ public class GeneralController {
 
         String search = "";
         if (keywords != null) {
-            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT")) {
+            if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT") && !keywords.contains("\"")) {
                 String[] words = keywords.split(" ");
                 StringBuilder keywordsBuilder = new StringBuilder();
                 for (int i = 0; i < words.length - 1; i++) {
