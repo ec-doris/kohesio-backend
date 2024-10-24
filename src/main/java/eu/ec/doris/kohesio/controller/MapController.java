@@ -176,7 +176,7 @@ public class MapController {
             int mimNumberOfprojectBeforeGoingToSubRegion = 100;
             if (numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 logger.info("Number of projects in the bounding box: {}", numberTotal);
-                if (((JSONArray) tmp.getBody().get("subregions")).size() > mimNumberOfprojectBeforeGoingToSubRegion) {
+                if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
                     if (zoom != null) {
                         List<Feature> features = getProjectsPoints(
                                 language, search, boundingBox, limit, offset, timeout
