@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,13 +62,15 @@ public class FacetController {
         if (nutsRegion == null) {
             nutsRegion = new HashMap<>();
             //computing nuts information
-            List<String> gran = new ArrayList<String>();
+            List<String> gran = new ArrayList<>();
             gran.add("continent");
             gran.add("country");
             gran.add("nuts1");
             gran.add("nuts2");
             gran.add("nuts3");
+            Instant start = Instant.now();
             for (String g : gran) {
+                Instant startGran = Instant.now();
                 String filter = "";
                 if (g.equals("continent")) {
                     filter = " VALUES ?region { <https://linkedopendata.eu/entity/Q1> } . ?region <https://linkedopendata.eu/prop/direct/P104>  ?region2 .";
@@ -126,8 +130,10 @@ public class FacetController {
                         nutsRegion.put(key, nut);
                     }
                 }
+                logger.info("Granularity " + g + " took " + Duration.between(startGran, Instant.now()).toMillis() + " ms");
 
             }
+            logger.info("Total initialization took " + Duration.between(start, Instant.now()).toMillis() + " ms");
             //retrieving the narrower concept
             for (String key : nutsRegion.keySet()) {
                 String query = "";
@@ -172,6 +178,7 @@ public class FacetController {
                     }
                 }
             }
+            logger.info("Narrower concept took " + Duration.between(start, Instant.now()).toMillis() + " ms");
 // retrieving the geoJson geometries
             for (String key : nutsRegion.keySet()) {
                 String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
@@ -196,7 +203,7 @@ public class FacetController {
                     nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
                 }
             }
-
+            logger.info("GeoJson geometries took " + Duration.between(start, Instant.now()).toMillis() + " ms");
             // skipping regions that are statistical only
             gran = new ArrayList<>();
             gran.add("nuts2");
@@ -221,7 +228,7 @@ public class FacetController {
                     }
                 }
             }
-
+            logger.info("Statistical regions took " + Duration.between(start, Instant.now()).toMillis() + " ms");
         }
     }
 

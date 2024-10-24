@@ -13,6 +13,7 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.slf4j.Logger;
@@ -22,6 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.wololo.geojson.Feature;
+import org.wololo.geojson.Point;
+import org.wololo.jts2geojson.GeoJSONReader;
+import org.wololo.jts2geojson.GeoJSONWriter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -67,6 +72,9 @@ public class MapController {
     @Autowired
     NominatimService nominatimService;
 
+    @Autowired
+    ClusterService clusterService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @ModelAttribute
@@ -108,6 +116,7 @@ public class MapController {
             @RequestParam(value = "projectTypes", required = false) List<String> projectTypes,
             @RequestParam(value = "priority_axis", required = false) String priorityAxis,
             @RequestParam(value = "boundingBox", required = false) String boundingBoxString,
+            @RequestParam(value = "zoom", required = false) Integer zoom,
             Integer timeout,
             Principal principal
     ) throws Exception {
@@ -163,8 +172,20 @@ public class MapController {
             for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
                 numberTotal += (int) ((JSONObject) o).get("count");
             }
-            int maxNumberOfprojectBeforeGoingToSubRegion = 1000;
+            int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
+            int mimNumberOfprojectBeforeGoingToSubRegion = 100;
             if (numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
+                logger.info("Number of projects in the bounding box: {}", numberTotal);
+                if (((JSONArray) tmp.getBody().get("subregions")).size() > mimNumberOfprojectBeforeGoingToSubRegion) {
+                    if (zoom != null) {
+                        List<Feature> features = getProjectsPoints(
+                                language, search, boundingBox, limit, offset, timeout
+                        );
+                        List<Feature> clusters = prepareCluster(features, boundingBox, zoom);
+//                    return new ResponseEntity<>(clusters, HttpStatus.OK);
+                        return createResponse(clusters, language, search);
+                    }
+                }
                 return mapReturnCoordinates(
                         language,
                         search,
@@ -753,7 +774,7 @@ public class MapController {
                 null, null,
                 null, null, null,
                 null, null, null,
-                400, null
+                null, 400, null
         );
         JSONObject mod = result.getBody();
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
@@ -796,8 +817,7 @@ public class MapController {
         return null;
     }
 
-    //    @PostMapping(value = "/facet/eu/search/project/map2", produces = "application/json")
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(@RequestBody BoundingBox bbox, String search, String language, int timeout) throws Exception {
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, String search, String language, int timeout) throws Exception {
 
         // Get NUTS 1 in bbox
         String withinNuts1 = "SELECT * WHERE {"
@@ -874,6 +894,7 @@ public class MapController {
                 ""
         );
         JSONArray resultList = new JSONArray();
+//        ArrayList<JSONObject> resultList = new ArrayList<>();
         // count the number of project in each zone
         Instant start = Instant.now();
         for (Zone z : res.values()) {
@@ -883,8 +904,9 @@ public class MapController {
                 continue;
             }
 
-            JSONObject element = new JSONObject();
-            if (z.getType() != "LAU") {
+            HashMap<String, Object> element = new HashMap<>();
+
+            if (!"LAU".equals(z.getType())) {
                 element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
             } else {
                 element.put("regionLabel", "");
@@ -895,12 +917,13 @@ public class MapController {
 //            element.put("center", z.getCenterWkt());
             element.put("coordinates", z.getCenter());
 //            element.put("isHighlighted", false);
-            resultList.add(element);
+            resultList.add(new JSONObject(element));
         }
         Instant end = Instant.now();
         Duration elapsedTime = Duration.between(start, end);
-        logger.info("Count number projects each zone: " + elapsedTime.toMillis() + " milliseconds");
+        logger.info("Count number projects each zone: {} milliseconds", elapsedTime.toMillis());
 //        result.put("list", resultList);
+//        result.put("subregions", resultList);
         result.put("subregions", resultList);
         result.put("region", granularityRegion);
 //        result.put("upperRegions", findUpperRegions(granularityRegion, language));
@@ -926,6 +949,88 @@ public class MapController {
             result.put(lid, zone);
         }
         return result;
+    }
+
+    private List<Feature> prepareCluster(List<Feature> features, BoundingBox bbox, Integer zoom) {
+        return clusterService.getCluster(
+                features.toArray(new Feature[0]),
+                60,
+                256,
+                0,
+                20,
+                64,
+                bbox,
+                zoom
+        );
+
+    }
+
+    private List<Feature> getProjectsPoints(
+            String language,
+            String search,
+//            String country,
+//            String region,
+//            String granularityRegion,
+//            String latitude,
+//            String longitude,
+//            List<String> cci,
+            BoundingBox boundingBox,
+            Integer limit,
+            Integer offset,
+            int timeout
+    ) throws Exception {
+        logger.info("Search project map point: language {} search {} boundingBox {} limit {} offset {}", language, search, boundingBox, limit, offset);
+        String query = "SELECT DISTINCT ?s0 ?coordinates WHERE { "
+                + search
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))"
+//                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . }"
+                + "}";
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
+        HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            String coordinates = ((Literal) querySolution.getBinding("coordinates").getValue())
+                    .getLabel();
+            Geometry geometry = wktReader.read(coordinates);
+            String project = querySolution.getBinding("s0").getValue().stringValue();
+            if (!projectByCoordinates.containsKey(geometry)) {
+                projectByCoordinates.put(geometry, new ArrayList<>());
+            }
+            projectByCoordinates.get(geometry).add(project);
+        }
+        List<Feature> features = new ArrayList<>();
+        GeoJSONWriter writer = new GeoJSONWriter();
+        for (Geometry geometry : projectByCoordinates.keySet()) {
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("projects", projectByCoordinates.get(geometry));
+            Feature feature = new Feature(writer.write(geometry), properties);
+            feature.getProperties().put("projects", projectByCoordinates.get(geometry));
+            features.add(feature);
+        }
+        return features;
+    }
+
+    private ResponseEntity<JSONObject> createResponse(List<Feature> features, String search, String language) throws Exception {
+        HashMap<String, Object> result = new HashMap<>();
+//        result.put("list", features);
+        List<JSONObject> subregions = new ArrayList<>();
+        for (Feature feature : features) {
+            HashMap<String, Object> element = new HashMap<>();
+            element.put("count", (int) feature.getProperties().get("point_count"));
+            element.put("cluster", (boolean) feature.getProperties().get("cluster"));
+            if (feature.getGeometry() instanceof Point) {
+                Point point = (Point) feature.getGeometry();
+                element.put("coordinates", point.getCoordinates()[0] + "," + point.getCoordinates()[1]);
+            } else {
+                element.put("coordinates", null);
+            }
+            subregions.add(new JSONObject(element));
+        }
+        result.put("subregions", subregions);
+        result.put("region", "https://linkedopendata.eu/entity/Q1");
+        result.put("upperRegions", new JSONArray());
+        result.put("regionLabel", facetController.nutsRegion.get("https://linkedopendata.eu/entity/Q1").name.get(language));
+        return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
     }
 
     private static final WKTReader wktReader = new WKTReader();
@@ -1010,6 +1115,26 @@ public class MapController {
 
         public String getCenter() throws ParseException {
             Coordinate coordinate = wktReader.read(this.geo).getCentroid().getCoordinate();
+            // lat,lng
+            return coordinate.x + "," + coordinate.y;
+        }
+
+        public String getCenterBBox(BoundingBox bbox) throws ParseException {
+            org.locationtech.jts.geom.Point point = wktReader.read(this.geo).getCentroid();
+            Geometry bboxGeom = wktReader.read(bbox.toWkt());
+            org.locationtech.jts.geom.Point center = bboxGeom.getCentroid();
+            Geometry line = wktReader.read(
+                    "LINESTRING("
+                            + point.getX() + " "
+                            + point.getY() + ","
+                            + center.getX() + " "
+                            + center.getY() + ")"
+            );
+            // find the intersection between the center of the bbox and the point
+            Geometry intersection = line.intersection(bboxGeom);
+            logger.info("Intersection: {}", intersection.toText());
+
+            Coordinate coordinate = intersection.getCentroid().getCoordinate();
             // lat,lng
             return coordinate.x + "," + coordinate.y;
         }
