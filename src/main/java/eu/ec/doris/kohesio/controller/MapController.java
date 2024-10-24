@@ -1014,10 +1014,19 @@ public class MapController {
         HashMap<String, Object> result = new HashMap<>();
 //        result.put("list", features);
         List<JSONObject> subregions = new ArrayList<>();
+        logger.info("Features: {}", features);
         for (Feature feature : features) {
             HashMap<String, Object> element = new HashMap<>();
-            element.put("count", (int) feature.getProperties().get("point_count"));
-            element.put("cluster", (boolean) feature.getProperties().get("cluster"));
+            logger.info("feature: {}", feature);
+            logger.info("properties: {}", feature.getProperties());
+            if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
+                element.put("count", (int) feature.getProperties().get("point_count"));
+                element.put("cluster", (boolean) feature.getProperties().get("cluster"));
+            } else {
+                element.put("projects", feature.getProperties().get("projects"));
+                element.put("count", ((List<String>) feature.getProperties().get("projects")).size());
+                element.put("cluster", false);
+            }
             if (feature.getGeometry() instanceof Point) {
                 Point point = (Point) feature.getGeometry();
                 element.put("coordinates", point.getCoordinates()[0] + "," + point.getCoordinates()[1]);
