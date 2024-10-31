@@ -1005,6 +1005,7 @@ public class MapController {
             for (String uri : projects) {
                 Map<String, Object> properties = new HashMap<>();
                 properties.put("project", uri);
+                properties.put("projects", projects);
                 Feature feature = new Feature(writer.write(geometry), properties);
                 features.add(feature);
             }
