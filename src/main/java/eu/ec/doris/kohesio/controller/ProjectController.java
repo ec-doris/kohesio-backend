@@ -890,7 +890,7 @@ public class ProjectController {
                 timeout = 400;
             }
         }
-        System.err.println(ccis);
+//        System.err.println(ccis);
         logger.info("Project search: language {}, keywords {}, country {}, theme {}, fund {}, program {}, region {}, timeout {}", language, keywords, country, theme, fund, program, region, timeout);
         logger.info("interreg {}", interreg);
         int inputOffset = offset;

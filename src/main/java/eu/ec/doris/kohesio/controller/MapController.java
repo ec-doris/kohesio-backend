@@ -1001,11 +1001,13 @@ public class MapController {
         List<Feature> features = new ArrayList<>();
         GeoJSONWriter writer = new GeoJSONWriter();
         for (Geometry geometry : projectByCoordinates.keySet()) {
-            Map<String, Object> properties = new HashMap<>();
-            properties.put("projects", projectByCoordinates.get(geometry));
-            Feature feature = new Feature(writer.write(geometry), properties);
-            feature.getProperties().put("projects", projectByCoordinates.get(geometry));
-            features.add(feature);
+            List<String> projects = projectByCoordinates.get(geometry);
+            for (String uri : projects) {
+                Map<String, Object> properties = new HashMap<>();
+                properties.put("project", uri);
+                Feature feature = new Feature(writer.write(geometry), properties);
+                features.add(feature);
+            }
         }
         return features;
     }
