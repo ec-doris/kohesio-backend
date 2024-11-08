@@ -1254,6 +1254,7 @@ public class FacetController {
             @RequestParam(value = "country", required = false) String country,
             @RequestParam(value = "program", required = false) String program
     ) throws Exception {
+        logger.info("Priority axis {} {} {} {}", language, qid, country, program);
         String queryFilter = "SELECT DISTINCT ?pa ?prg ?country WHERE {"
                 + "  ?pa <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4403959>."
                 + "  ?pa <https://linkedopendata.eu/prop/direct/P1368> ?prg."
@@ -1263,9 +1264,9 @@ public class FacetController {
         }
         if (program != null) {
             queryFilter += " ?pa <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> .";
-            if (!programOfPriorityAxisToInclude.contains(program)) {
-                return new JSONArray();
-            }
+//            if (!programOfPriorityAxisToInclude.contains(program)) {
+//                return new JSONArray();
+//            }
         }
         if (country != null) {
             queryFilter += " ?prg <https://linkedopendata.eu/prop/direct/P32> <" + country + "> .";
