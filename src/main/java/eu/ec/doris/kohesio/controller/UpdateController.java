@@ -484,63 +484,62 @@ public class UpdateController {
     ) throws IOException, ApiException {
         logger.info("Propagate update project {}", updatePayload.getId());
         logger.info(updatePayload.toString());
-        return updateProject(sparqlEndpoint, updatePayload);
-//        ApiClient client = ClientBuilder.cluster().build();
-//        String namespace = new String(
-//                Files.readAllBytes(
-//                        Paths.get("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
-//                ),
-//                Charset.defaultCharset()
-//        );
-//        Configuration.setDefaultApiClient(client);
-//        CoreV1Api api = new CoreV1Api();
-//        // list all pods in all namespaces
-//        if ("development".equals(namespace)) {
-//            // On dev QAnswer is not in the cluster
-////            return updateProject(sparqlEndpoint, updatePayload);
-//            logger.info("You are on development environment, no update will be done");
-//            return new ResponseEntity<>(
-//                    (JSONObject) (new JSONObject().put("message", "You are on development environment, no update will be done")),
-//                    HttpStatus.SERVICE_UNAVAILABLE
-//            );
-//        } else {
-//            V1PodList list = api.listNamespacedPod(
-//                    namespace,
-//                    null,
-//                    null,
-//                    null,
-//                    null,
-//                    null,
-//                    null,
-//                    null,
-//                    null,
-//                    null,
-//                    null
-//
-//            );
-//            ResponseEntity<JSONObject> lastResponse = new ResponseEntity<>(
-//                    (JSONObject) (new JSONObject().put("message", "No running QAnswer found")),
-//                    HttpStatus.SERVICE_UNAVAILABLE
-//            );
-//            for (V1Pod item : list.getItems()) {
-//                String ip = item.getStatus().getPodIP();
-//                String phase = item.getStatus().getPhase();
-//                String port = null;
-//                for (V1Container container : item.getSpec().getContainers()) {
-//                    if ("kohesio-qanswer-container".equals(container.getName())) {
-//                        port = container.getPorts().get(0).getContainerPort().toString();
-//                        logger.info("IP: {} phase: {} port: {}", ip, phase, port);
-//                        break;
-//                    }
-//                }
-//
-//                if ("Running".equals(phase) && port != null) {
-//                    String url = "http://" + ip + ":" + port + "/api/endpoint/commission/eu/sparql";
-//                    lastResponse = updateProject(url, updatePayload);
-//                }
-//            }
-//            return lastResponse;
-//        }
+        ApiClient client = ClientBuilder.cluster().build();
+        String namespace = new String(
+                Files.readAllBytes(
+                        Paths.get("/var/run/secrets/kubernetes.io/serviceaccount/namespace")
+                ),
+                Charset.defaultCharset()
+        );
+        Configuration.setDefaultApiClient(client);
+        CoreV1Api api = new CoreV1Api();
+        // list all pods in all namespaces
+        if ("development".equals(namespace)) {
+            // On dev QAnswer is not in the cluster
+//            return updateProject(sparqlEndpoint, updatePayload);
+            logger.info("You are on development environment, no update will be done");
+            return new ResponseEntity<>(
+                    (JSONObject) (new JSONObject().put("message", "You are on development environment, no update will be done")),
+                    HttpStatus.SERVICE_UNAVAILABLE
+            );
+        } else {
+            V1PodList list = api.listNamespacedPod(
+                    namespace,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+
+            );
+            ResponseEntity<JSONObject> lastResponse = new ResponseEntity<>(
+                    (JSONObject) (new JSONObject().put("message", "No running QAnswer found")),
+                    HttpStatus.SERVICE_UNAVAILABLE
+            );
+            for (V1Pod item : list.getItems()) {
+                String ip = item.getStatus().getPodIP();
+                String phase = item.getStatus().getPhase();
+                String port = null;
+                for (V1Container container : item.getSpec().getContainers()) {
+                    if ("kohesio-qanswer-container".equals(container.getName())) {
+                        port = container.getPorts().get(0).getContainerPort().toString();
+                        logger.info("IP: {} phase: {} port: {}", ip, phase, port);
+                        break;
+                    }
+                }
+
+                if ("Running".equals(phase) && port != null) {
+                    String url = "http://" + ip + ":" + port + "/api/endpoint/commission/eu/sparql";
+                    lastResponse = updateProject(url, updatePayload);
+                }
+            }
+            return lastResponse;
+        }
     }
 
     private static class UpdateTriple {
