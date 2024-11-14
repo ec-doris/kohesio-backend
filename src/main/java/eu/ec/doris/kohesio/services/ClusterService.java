@@ -11,6 +11,8 @@ import org.wololo.geojson.FeatureCollection;
 import org.wololo.geojson.GeoJSON;
 import org.wololo.geojson.GeoJSONFactory;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -44,7 +46,18 @@ public class ClusterService {
         logger.info("Creating cluster with {} features", features.length);
         SuperCluster superCluster = new SuperCluster(radius, extent, minzoom, maxzoom, nodesize, features);
 //        logger.info("BBOX: {} | {} | zoom: {}", bbox.getBounds(), bbox.toWkt(), zoom);
-        return superCluster.getClusters(bbox.getBounds(), zoom);
+        return clearDuplicate(superCluster.getClusters(bbox.getBounds(), zoom));
     }
 
+    private List<Feature> clearDuplicate(List<Feature> features) {
+        HashMap<String, Feature> results = new HashMap<>();
+        features.forEach(feature -> {
+            if (!results.containsKey(feature.getGeometry().toString())) {
+                results.put(feature.getGeometry().toString(), feature);
+            }
+        });
+        List<Feature> res = new ArrayList<>();
+        results.forEach((s, feature) -> res.add(feature));
+        return res;
+    }
 }
