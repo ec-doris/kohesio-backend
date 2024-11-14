@@ -38,7 +38,7 @@ public class ClusterService {
     }
 
     public List<Feature> getClusterWithDefault(Feature[] features, BoundingBox bbox, int zoom) {
-        return getCluster(features, 60, 256, 0, 20, 64, bbox, zoom);
+        return getCluster(features, 60, 256, 0, 17, 64, bbox, zoom);
     }
     public List<Feature> getCluster(Feature[] features, int radius, int extent, int minzoom, int maxzoom, int nodesize, BoundingBox bbox, int zoom) {
         logger.info("Creating cluster with {} features", features.length);

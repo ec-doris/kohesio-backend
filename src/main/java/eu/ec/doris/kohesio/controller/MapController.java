@@ -181,6 +181,7 @@ public class MapController {
                         List<Feature> features = getProjectsPoints(
                                 language, search, boundingBox, limit, offset, timeout
                         );
+                        // count number of point
                         List<Feature> clusters = prepareCluster(features, boundingBox, zoom);
 //                    return new ResponseEntity<>(clusters, HttpStatus.OK);
                         return createResponse(clusters, language, search);
@@ -1004,7 +1005,7 @@ public class MapController {
             List<String> projects = projectByCoordinates.get(geometry);
             for (String uri : projects) {
                 Map<String, Object> properties = new HashMap<>();
-                properties.put("project", uri);
+//                properties.put("project", uri);
                 properties.put("projects", projects);
                 Feature feature = new Feature(writer.write(geometry), properties);
                 features.add(feature);

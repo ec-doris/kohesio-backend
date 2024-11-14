@@ -110,7 +110,7 @@ public class SuperCluster {
     }
 
     private int[] within(int[] ids, double[] coords, double qx, double qy, double r, int nodeSize) {
-        Stack stack = new Stack();
+        Stack<Integer> stack = new Stack<>();
         stack.push(0);
         stack.push(ids.length - 1);
         stack.push(0);
@@ -118,10 +118,10 @@ public class SuperCluster {
         List<Integer> result = new ArrayList<>();
         double r2 = r * r;
 
-        while (stack.size() > 0) {
-            int axis = (int) stack.pop();
-            int right = (int) stack.pop();
-            int left = (int) stack.pop();
+        while (!stack.isEmpty()) {
+            int axis = stack.pop();
+            int right = stack.pop();
+            int left = stack.pop();
 
             if (right - left <= nodeSize) {
                 for (int i = left; i <= right; i++) {
@@ -238,7 +238,7 @@ public class SuperCluster {
 
     private int[] range(int[] ids, double[] coords, double minX, double minY, double maxX, double maxY, int nodeSize) {
 
-        Stack stack = new Stack();
+        Stack<Integer> stack = new Stack<>();
         stack.push(0);
         stack.push(ids.length - 1);
         stack.push(0);
@@ -246,10 +246,10 @@ public class SuperCluster {
         List<Integer> result = new ArrayList<>();
         double x, y;
 
-        while (stack.size() > 0) {
-            int axis = (int) stack.pop();
-            int right = (int) stack.pop();
-            int left = (int) stack.pop();
+        while (!stack.isEmpty()) {
+            int axis = stack.pop();
+            int right = stack.pop();
+            int left = stack.pop();
 
             if (right - left <= nodeSize) {
                 for (int i = left; i <= right; i++) {
@@ -298,11 +298,11 @@ public class SuperCluster {
 
     }
 
-    private Map getClusterProperties(MainCluster cluster) {
+    private Map<String, Object> getClusterProperties(MainCluster cluster) {
         int count = cluster.numPoints;
         String abbrev = (count >= 1000000) ? ((Math.round(count / 1000000)) + "M") : (count >= 10000) ? ((Math.round(count / 1000)) + "K") : ((count >= 1000) ? ((Math.round(count / 100) / 10) + "K") : count + "");
 
-        Map<String, Object> properties = new HashMap();
+        Map<String, Object> properties = new HashMap<>();
 
         properties.put("cluster", true);
         properties.put("cluster_id", cluster.getId());
