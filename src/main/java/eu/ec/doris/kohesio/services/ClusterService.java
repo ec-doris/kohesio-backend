@@ -1,19 +1,18 @@
 package eu.ec.doris.kohesio.services;
 
+import com.yeo.javasupercluster.MainCluster;
+import com.yeo.javasupercluster.PointCluster;
 import com.yeo.javasupercluster.SuperCluster;
 import eu.ec.doris.kohesio.payload.BoundingBox;
+import eu.ec.doris.kohesio.payload.Coordinate;
+import org.eclipse.rdf4j.query.algebra.Str;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import org.wololo.geojson.Feature;
-import org.wololo.geojson.FeatureCollection;
-import org.wololo.geojson.GeoJSON;
-import org.wololo.geojson.GeoJSONFactory;
+import org.wololo.geojson.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class ClusterService {
@@ -27,6 +26,7 @@ public class ClusterService {
     public List<Feature> getCluster(String geoJSONText, int radius, int extent, int minzoom, int maxzoom, int nodesize, BoundingBox bbox, int zoom) {
         return getCluster(parseGeoJson(geoJSONText), radius, extent, minzoom, maxzoom, nodesize, bbox, zoom);
     }
+
     public List<Feature> getCluster(GeoJSON geoJSON, int radius, int extent, int minzoom, int maxzoom, int nodesize, BoundingBox bbox, int zoom) {
         Feature[] features;
         if (geoJSON instanceof Feature) {
@@ -42,11 +42,30 @@ public class ClusterService {
     public List<Feature> getClusterWithDefault(Feature[] features, BoundingBox bbox, int zoom) {
         return getCluster(features, 60, 256, 0, 17, 64, bbox, zoom);
     }
+
     public List<Feature> getCluster(Feature[] features, int radius, int extent, int minzoom, int maxzoom, int nodesize, BoundingBox bbox, int zoom) {
         logger.info("Creating cluster with {} features", features.length);
         SuperCluster superCluster = new SuperCluster(radius, extent, minzoom, maxzoom, nodesize, features);
-//        logger.info("BBOX: {} | {} | zoom: {}", bbox.getBounds(), bbox.toWkt(), zoom);
         return clearDuplicate(superCluster.getClusters(bbox.getBounds(), zoom));
+    }
+
+    public List<Feature> getPointsInCluster(List<Feature> features, Coordinate coords, BoundingBox bbox, int zoom) {
+        return getPointsInCluster(features.toArray(new Feature[]{}), coords, bbox, zoom);
+    }
+
+    public List<Feature> getPointsInCluster(Feature[] features, Coordinate coords, BoundingBox bbox, int zoom) {
+        return getPointsInCluster(features, 60, 256, 0, 17, 64, bbox, zoom, coords);
+    }
+
+    public List<Feature> getPointsInCluster(Feature[] features, int radius, int extent, int minzoom, int maxzoom, int nodesize, BoundingBox bbox, int zoom, Coordinate coords) {
+        logger.info("Getting point in cluster with {} features", features.length);
+        SuperCluster superCluster = new SuperCluster(radius, extent, minzoom, maxzoom, nodesize, features);
+        List<MainCluster> mcl = superCluster.findClusters(coords.coords(), zoom);
+        Set<Feature> points = new HashSet<>();
+        mcl.forEach(mainCluster -> {
+            points.addAll(superCluster.getPointFromCluster(mainCluster));
+        });
+        return new ArrayList<>(points);
     }
 
     private List<Feature> clearDuplicate(List<Feature> features) {

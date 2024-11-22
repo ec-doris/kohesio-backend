@@ -73,6 +73,9 @@ public class BoundingBox {
         return "\"" + this.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>";
     }
 
+    public String toString() {
+        return toWkt();
+    }
 
 //    public String getCenterBBox(BoundingBox bbox) throws ParseException {
 //        Point point = wktReader.read(this.geo).getCentroid();
