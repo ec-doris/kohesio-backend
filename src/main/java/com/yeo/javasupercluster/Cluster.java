@@ -12,24 +12,15 @@ import java.util.Properties;
  */
 public class Cluster extends MainCluster {
 
-    private Properties properties;
 
-    public Cluster(double x, double y, int id, int numPoints) {
+    public Cluster(double x, double y, int id, int numPoints, Properties properties) {
         this.x = x;
         this.y = y;
         this.id = id;
         this.numPoints = numPoints;
         this.zoom = 24; //Max Value
         this.parentId = -1;
-    }
-
-    public Properties getProperties() {
-        return properties;
-    }
-
-    public void setProperties(Properties properties) {
         this.properties = properties;
     }
-
 
 }

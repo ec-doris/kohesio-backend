@@ -5,6 +5,9 @@
  */
 package com.yeo.javasupercluster;
 
+import java.util.Map;
+import java.util.Properties;
+
 /**
  * @author yeozkaya@gmail.com
  */
@@ -17,6 +20,8 @@ public class MainCluster {
     protected int parentId;
     protected Integer index;
     protected Integer id;
+    protected Properties properties;
+    protected Integer clusterIndex;
 
     public double getX() {
         return x;
@@ -72,5 +77,35 @@ public class MainCluster {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public Properties getProperties() {
+        return properties;
+    }
+
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
+
+    public Integer getClusterIndex() {
+        return clusterIndex;
+    }
+
+    public void setClusterIndex(Integer clusterIndex) {
+        this.clusterIndex = clusterIndex;
+    }
+
+    @Override
+    public String toString() {
+        return "MainCluster{" +
+                "x=" + x +
+                ", y=" + y +
+                ", zoom=" + zoom +
+                ", numPoints=" + numPoints +
+                ", parentId=" + parentId +
+                ", index=" + index +
+                ", id=" + id +
+                ", properties=" + properties +
+                '}';
     }
 }
