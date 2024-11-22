@@ -717,7 +717,7 @@ public class MapController {
         logger.info("retrieving info for {} project(s)", projectUris.size());
         List<String> urisList = new ArrayList<>(projectUris);
         JSONArray results = new JSONArray();
-        int step = 500;
+        int step = 1000;
         for (int i = 0; i < urisList.size(); i += step) {
 
             String query = "SELECT DISTINCT ?s0 ?label ?curatedLabel ?infoRegioID WHERE { "
