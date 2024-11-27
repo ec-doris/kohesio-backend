@@ -160,7 +160,7 @@ public class MapController {
                 interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset
         );
         //computing the number of results
-        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c) WHERE {" + search;// + "} ";
+        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search;// + "} ";
         if (boundingBox != null) {
             // TODO: this is a tmp fix because it look like the lucene index is not working properly
             query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
