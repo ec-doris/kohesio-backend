@@ -79,7 +79,7 @@ public class Zone {
             query += " ?s0 <https://linkedopendata.eu/prop/direct/P581472> <" + this.lid + "> . ";
         } else if ("COUNTRY".equals(this.type)) {
             query += " ?s0 <https://linkedopendata.eu/prop/direct/P32> <" + this.lid + "> . ";
-//            timeout = 300;
+            timeout = 300;
             query = query.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
         } else {
             query += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + this.lid + "> . ";
