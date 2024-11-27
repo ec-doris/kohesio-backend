@@ -1047,6 +1047,8 @@ public class MapController {
                     Coordinate pt = wktReader.read(coordsString).getCoordinate();
                     String ret = pt.x + "," + pt.y;
                     element.put("coordinates", ret);
+                } else {
+                    element.put("coordinates", z.getCenter());
                 }
 
             } else {
