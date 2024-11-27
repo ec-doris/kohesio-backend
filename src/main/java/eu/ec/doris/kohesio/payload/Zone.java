@@ -93,6 +93,7 @@ public class Zone {
         );
         if (resultSet == null) {
             numberProjects = -1;
+            logger.info("Skipping {} because count failed but we want to test", this.lid);
             return;
         }
         if (resultSet.hasNext()) {
