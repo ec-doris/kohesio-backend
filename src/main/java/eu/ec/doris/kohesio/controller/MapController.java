@@ -14,6 +14,7 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.WKTReader;
 import org.slf4j.Logger;
@@ -986,23 +987,23 @@ public class MapController {
                 + "} ";
 
         if (zoom <= 4) {
-            return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout), search, language);
+            return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout), search, language, timeout);
         }
         if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
-            return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, language);
+            return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, language, timeout);
         }
         if (!getZoneByQuery(withinNuts2, "NUTS2", timeout).isEmpty()) {
-            return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), search, language);
+            return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), search, language, timeout);
         }
 //        if (!getZoneByQuery(withinNuts3, "NUTS3", timeout).isEmpty()) {
-        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), search, language);
+        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), search, language, timeout);
 //        }
 //        return createResponse(getZoneByQuery(intersectLAU, "LAU", timeout), search, language);
 
 
     }
 
-    private ResponseEntity<JSONObject> createResponse(HashMap<String, Zone> res, String search, String language) throws Exception {
+    private ResponseEntity<JSONObject> createResponse(HashMap<String, Zone> res, String search, String language, int timeout) throws Exception {
         String granularityRegion = "https://linkedopendata.eu/entity/Q1";
         HashMap<String, Object> result = new HashMap<>();
 
@@ -1036,7 +1037,21 @@ public class MapController {
 //            element.put("geoJson", facetController.nutsRegion.get(z.getLid()).geoJson);
             element.put("count", z.getNumberProjects());
 //            element.put("center", z.getCenterWkt());
-            element.put("coordinates", z.getCenter());
+            if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
+                String query = "SELECT ?coords WHERE { <" + z.getLid() + "> <https://linkedopendata.eu/prop/direct/P127> ?coords.}LIMIT 1";
+
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
+                if (resultSet.hasNext()) {
+                    BindingSet querySolution = resultSet.next();
+                    String coordsString = querySolution.getBinding("coords").getValue().stringValue();
+                    Coordinate pt = wktReader.read(coordsString).getCoordinate();
+                    String ret = pt.x + "," + pt.y;
+                    element.put("coordinates", ret);
+                }
+
+            } else {
+                element.put("coordinates", z.getCenter());
+            }
 //            element.put("isHighlighted", false);
             resultList.add(new JSONObject(element));
         }
