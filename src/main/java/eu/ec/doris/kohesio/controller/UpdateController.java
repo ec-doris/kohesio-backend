@@ -60,7 +60,7 @@ public class UpdateController {
         String instagramUsername = updatePayload.getInstagramUsername();
         String twitterUsername = updatePayload.getTwitterUsername();
         String facebookUserId = updatePayload.getFacebookUserId();
-        String youtubeVideoId = updatePayload.getYoutubeUserId();
+        String youtubeVideoId = updatePayload.getYoutubeVideoId();
         String imageUrl = updatePayload.getImageUrl();
         MonolingualString imageSummary = updatePayload.getImageSummary();
         String imageCopyright = updatePayload.getImageCopyright();

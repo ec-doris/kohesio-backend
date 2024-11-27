@@ -16,7 +16,7 @@ public class Update {
     String instagramUsername;
     String twitterUsername;
     String facebookUserId;
-    String youtubeUserId;
+    String youtubeVideoId;
     String imageUrl;
     MonolingualString imageSummary;
     String imageCopyright;
@@ -82,12 +82,12 @@ public class Update {
         this.facebookUserId = facebookUserId;
     }
 
-    public String getYoutubeUserId() {
-        return youtubeUserId;
+    public String getYoutubeVideoId() {
+        return youtubeVideoId;
     }
 
-    public void setYoutubeUserId(String youtubeUserId) {
-        this.youtubeUserId = youtubeUserId;
+    public void setYoutubeVideoId(String youtubeVideoId) {
+        this.youtubeVideoId = youtubeVideoId;
     }
 
     public String getImageUrl() {
