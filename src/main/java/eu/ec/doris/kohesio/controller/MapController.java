@@ -7,15 +7,14 @@ import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.payload.BoundingBox;
 import eu.ec.doris.kohesio.payload.Nut;
 import eu.ec.doris.kohesio.payload.NutsRegion;
+import eu.ec.doris.kohesio.payload.Zone;
 import eu.ec.doris.kohesio.services.*;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wololo.geojson.Feature;
 import org.wololo.geojson.Point;
-import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -74,6 +72,8 @@ public class MapController {
     ClusterService clusterService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final WKTReader wktReader = new WKTReader();
 
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
@@ -160,13 +160,13 @@ public class MapController {
                 interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset
         );
         //computing the number of results
-        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search;// + "} ";
+        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c) WHERE {" + search;// + "} ";
         if (boundingBox != null) {
             // TODO: this is a tmp fix because it look like the lucene index is not working properly
             query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
             // End TODO
             int numberTotal = 0;
-            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, search, language, 40);
+            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, zoom, search, language, 40);
             for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
                 numberTotal += (int) ((JSONObject) o).get("count");
             }
@@ -246,7 +246,7 @@ public class MapController {
             search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
 
             if (boundingBox != null) {
-                return getCoordinatesByGeographicSubdivision(boundingBox, search, language, 40);
+                return getCoordinatesByGeographicSubdivision(boundingBox, zoom, search, language, 40);
             }
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -376,7 +376,7 @@ public class MapController {
             } else {
                 optional += " OPTIONAL {SELECT DISTINCT ?o WHERE { ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . }} ";
             }
-            //check if granularity region is a country, if yes the filter is not needed
+            // check if granularity region is a country, if yes the filter is not needed
             boolean isCountry = false;
             for (Object jsonObject : facetController.facetEuCountries("en", null)) {
                 JSONObject o = (JSONObject) jsonObject;
@@ -916,7 +916,22 @@ public class MapController {
         return null;
     }
 
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, String search, String language, int timeout) throws Exception {
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, int timeout) throws Exception {
+
+        // Get Country in bbox
+        String withinCountry = "SELECT * WHERE {"
+                + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " <http://nuts.de/geometry> ?geo; "
+                + " a <http://nuts.de/NUTS0>. "
+//                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
+                + "} ";
+
+//        String intersectCountry = "SELECT * WHERE {"
+//                + " ?s <http://nuts.de/linkedopendata> ?lid; "
+//                + " <http://nuts.de/geometry> ?geo; "
+//                + " a <http://nuts.de/NUTS1>. "
+//                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+//                + "} ";
 
         // Get NUTS 1 in bbox
         String withinNuts1 = "SELECT * WHERE {"
@@ -970,6 +985,9 @@ public class MapController {
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
                 + "} ";
 
+        if (zoom <= 4) {
+            return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout), search, language);
+        }
         if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
             return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, language);
         }
@@ -1006,7 +1024,11 @@ public class MapController {
             HashMap<String, Object> element = new HashMap<>();
 
             if (!"LAU".equals(z.getType())) {
-                element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
+                if (facetController.nutsRegion.containsKey(z.getLid())) {
+                    element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
+                } else {
+                    element.put("regionLabel", "");
+                }
             } else {
                 element.put("regionLabel", "");
             }
@@ -1144,9 +1166,9 @@ public class MapController {
     }
 
     public List<Feature> getPointInfoFromBbox(
-            @RequestParam(value = "coords", required = false) eu.ec.doris.kohesio.payload.Coordinate coordinate,
-            @RequestParam(value = "boundingBox", required = false) String boundingBoxString,
-            @RequestParam(value = "zoom", required = false) Integer zoom,
+            eu.ec.doris.kohesio.payload.Coordinate coordinate,
+            String boundingBoxString,
+            Integer zoom,
             Integer timeout,
             Principal principal
     ) throws JsonProcessingException {
@@ -1163,110 +1185,5 @@ public class MapController {
         );
     }
 
-    private static final WKTReader wktReader = new WKTReader();
 
-    private static class Zone {
-
-        String uri;
-        String lid;
-        String geo;
-        String type;
-        int numberProjects;
-
-        public Zone(String uri, String lid, String geo, String type) {
-            this.uri = uri;
-            this.lid = lid;
-            this.geo = geo;
-            this.type = type;
-            this.numberProjects = 0;
-        }
-
-        public String getUri() {
-            return uri;
-        }
-
-        public String getLid() {
-            return lid;
-        }
-
-        public String getGeo() {
-            return geo;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public void setUri(String uri) {
-            this.uri = uri;
-        }
-
-        public void setLid(String lid) {
-            this.lid = lid;
-        }
-
-        public void setGeo(String geo) {
-            this.geo = geo;
-        }
-
-        public void setType(String type) {
-            this.type = type;
-        }
-
-        public int getNumberProjects() {
-            return numberProjects;
-        }
-
-        public void setNumberProjects(int numberProjects) {
-            this.numberProjects = numberProjects;
-        }
-
-        public void queryNumberProjects(SPARQLQueryService sparqlQueryService, String sparqlEndpoint, String search, int timeout) throws Exception {
-            String query = "SELECT (COUNT(DISTINCT ?s0) AS ?c) WHERE { ";
-//                    + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
-            query += search;
-            if ("LAU".equals(this.type)) {
-                query += " ?s0 <https://linkedopendata.eu/prop/direct/P581472> <" + this.lid + "> . ";
-            } else {
-                query += " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + this.lid + "> . ";
-            }
-            query += " }";
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
-                    sparqlEndpoint,
-                    query,
-                    timeout,
-                    "map2"
-            );
-            if (resultSet.hasNext()) {
-                BindingSet querySolution = resultSet.next();
-                numberProjects = ((Literal) querySolution.getBinding("c").getValue()).intValue();
-            }
-        }
-
-        public String getCenter() throws ParseException {
-            Coordinate coordinate = wktReader.read(this.geo).getCentroid().getCoordinate();
-            // lat,lng
-            return coordinate.x + "," + coordinate.y;
-        }
-
-        public String getCenterBBox(BoundingBox bbox) throws ParseException {
-            org.locationtech.jts.geom.Point point = wktReader.read(this.geo).getCentroid();
-            Geometry bboxGeom = wktReader.read(bbox.toWkt());
-            org.locationtech.jts.geom.Point center = bboxGeom.getCentroid();
-            Geometry line = wktReader.read(
-                    "LINESTRING("
-                            + point.getX() + " "
-                            + point.getY() + ","
-                            + center.getX() + " "
-                            + center.getY() + ")"
-            );
-            // find the intersection between the center of the bbox and the point
-            Geometry intersection = line.intersection(bboxGeom);
-            logger.info("Intersection: {}", intersection.toText());
-
-            Coordinate coordinate = intersection.getCentroid().getCoordinate();
-            // lat,lng
-            return coordinate.x + "," + coordinate.y;
-        }
-    }
 }
