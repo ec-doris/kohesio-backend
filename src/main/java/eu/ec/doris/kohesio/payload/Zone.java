@@ -91,6 +91,10 @@ public class Zone {
                 timeout,
                 "map2"
         );
+        if (resultSet == null) {
+            numberProjects = -1;
+            return;
+        }
         if (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             numberProjects = ((Literal) querySolution.getBinding("c").getValue()).intValue();
