@@ -1190,6 +1190,7 @@ public class MapController {
                 element.put("coordinates", null);
             }
             element.put("cluster", nbPoint.size() != 1);
+            element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
         result.put("subregions", subregions);
