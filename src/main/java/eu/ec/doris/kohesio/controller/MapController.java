@@ -174,16 +174,14 @@ public class MapController {
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
             int mimNumberOfprojectBeforeGoingToSubRegion = 100;
-            if (numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
+            if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 logger.info("Number of projects in the bounding box: {}", numberTotal);
                 if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
-                    if (zoom != null) {
-                        List<Feature> features = getProjectsPoints(
-                                language, search, boundingBox, limit, offset, timeout
-                        );
-                        List<Feature> clusters = prepareCluster(features, boundingBox, zoom);
-                        return createResponse(clusters, zoom, language, search);
-                    }
+                    List<Feature> features = getProjectsPoints(
+                            language, search, boundingBox, limit, offset, timeout
+                    );
+                    List<Feature> clusters = prepareCluster(features, boundingBox, zoom);
+                    return createResponse(clusters, zoom, language, search);
                 }
                 return mapReturnCoordinates(
                         language,
