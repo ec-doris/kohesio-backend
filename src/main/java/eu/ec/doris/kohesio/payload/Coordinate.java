@@ -2,6 +2,8 @@ package eu.ec.doris.kohesio.payload;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 
 import java.util.Objects;
 
@@ -86,4 +88,24 @@ public class Coordinate {
         return Objects.hash(latBits, lngBits);
     }
 
+    public org.locationtech.jts.geom.Coordinate toJts() {
+        return new org.locationtech.jts.geom.Coordinate(this.getLat(), this.getLng());
+    }
+
+    public org.locationtech.jts.geom.Point toPoint() {
+        return new GeometryFactory().createPoint(
+                new org.locationtech.jts.geom.Coordinate(
+                        this.getLat(),
+                        this.getLng()
+                )
+        );
+    }
+
+    public String toWkt() {
+        return this.toPoint().toText();
+    }
+
+    public String toLiteral() {
+        return "\"" + this.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>";
+    }
 }

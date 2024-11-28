@@ -65,6 +65,7 @@ public class ClusterService {
         mcl.forEach(mainCluster -> {
             points.addAll(superCluster.getPointFromCluster(mainCluster));
         });
+        logger.info("Found {} pt(s) at cluster {} with zoom {}", points.size(), coords, zoom);
         return new ArrayList<>(points);
     }
 

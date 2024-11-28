@@ -715,22 +715,25 @@ public class MapController {
         for (Feature proj : features) {
             projectUris.addAll((List<String>) proj.getProperties().get("projects"));
         }
-        logger.info("retrieving info for {} project(s)", projectUris.size());
+        logger.info("URIS : {}", projectUris);
+        logger.info("features : {}", features);
+        logger.info("retrieving info for {} project(s) from {} coordinates at cluster coordinate {}", projectUris.size(), features.size(), coordinate.toLiteral());
         List<String> urisList = new ArrayList<>(projectUris);
         JSONArray results = new JSONArray();
         int step = 1000;
         for (int i = 0; i < urisList.size(); i += step) {
 
+
             String query = "SELECT DISTINCT ?s0 ?label ?curatedLabel ?infoRegioID WHERE { "
                     + "VALUES ?s0 { <"
-                    + String.join("> <", urisList.subList(i, Math.min(urisList.size() - 1, i + step)))
+                    + String.join("> <", urisList.subList(i, Math.min(urisList.size(), i + step)))
                     + "> }"
                     + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \""
                     + language
-                    + "\") } ."
+                    + "\") } "
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel. FILTER((LANG(?curatedLabel)) = \""
                     + language
-                    + "\") } ."
+                    + "\") } "
                     + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . } "
                     + "}";
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
