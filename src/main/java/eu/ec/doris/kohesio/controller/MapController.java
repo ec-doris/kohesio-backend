@@ -1053,6 +1053,7 @@ public class MapController {
                 element.put("coordinates", z.getCenter());
             }
 //            element.put("isHighlighted", false);
+            element.put("cluster", true);
             resultList.add(new JSONObject(element));
         }
         Instant end = Instant.now();
