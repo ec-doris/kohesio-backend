@@ -2,6 +2,7 @@ package eu.ec.doris.kohesio.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yeo.javasupercluster.SuperCluster;
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
 import eu.ec.doris.kohesio.payload.BoundingBox;
@@ -180,9 +181,8 @@ public class MapController {
                         List<Feature> features = getProjectsPoints(
                                 language, search, boundingBox, limit, offset, timeout
                         );
-                        // count number of point
                         List<Feature> clusters = prepareCluster(features, boundingBox, zoom);
-                        return createResponse(clusters, language, search);
+                        return createResponse(clusters, zoom, language, search);
                     }
                 }
                 return mapReturnCoordinates(
@@ -715,15 +715,11 @@ public class MapController {
         for (Feature proj : features) {
             projectUris.addAll((List<String>) proj.getProperties().get("projects"));
         }
-        logger.info("URIS : {}", projectUris);
-        logger.info("features : {}", features);
-        logger.info("retrieving info for {} project(s) from {} coordinates at cluster coordinate {}", projectUris.size(), features.size(), coordinate.toLiteral());
         List<String> urisList = new ArrayList<>(projectUris);
+        logger.info("retrieving info for {} project(s) from {} coordinates at cluster coordinate {}", projectUris.size(), features.size(), coordinate.toLiteral());
         JSONArray results = new JSONArray();
         int step = 1000;
         for (int i = 0; i < urisList.size(); i += step) {
-
-
             String query = "SELECT DISTINCT ?s0 ?label ?curatedLabel ?infoRegioID WHERE { "
                     + "VALUES ?s0 { <"
                     + String.join("> <", urisList.subList(i, Math.min(urisList.size(), i + step)))
@@ -764,6 +760,7 @@ public class MapController {
                     item.put("isHighlighted", false);
                 }
                 JSONObject r = new JSONObject(item);
+//                logger.info("i = {}, {}, {}", i, urisList.size(), results.size());
                 if ((boolean) item.get("isHighlighted")) {
                     results.add(0, r);
                 } else {
@@ -1092,14 +1089,24 @@ public class MapController {
         return result;
     }
 
+    private List<Feature> prepareCluster(SuperCluster superCluster, BoundingBox bbox, Integer zoom) {
+        return clusterService.getCluster(
+                superCluster,
+                bbox,
+                zoom
+        );
+    }
+
     private List<Feature> prepareCluster(List<Feature> features, BoundingBox bbox, Integer zoom) {
         return clusterService.getCluster(
-                features.toArray(new Feature[0]),
-                60,
-                256,
-                0,
-                20,
-                64,
+                clusterService.createCluster(
+                        features.toArray(new Feature[0]),
+                        60,
+                        256,
+                        0,
+                        20,
+                        64
+                ),
                 bbox,
                 zoom
         );
@@ -1154,13 +1161,20 @@ public class MapController {
         return features;
     }
 
-    private ResponseEntity<JSONObject> createResponse(List<Feature> features, String search, String language) throws Exception {
+    private ResponseEntity<JSONObject> createResponse(List<Feature> features, int zoom, String search, String language) throws Exception {
+        return createResponse(clusterService.createCluster(features.toArray(new Feature[0])), features, zoom, search, language);
+    }
+
+    private ResponseEntity<JSONObject> createResponse(SuperCluster superCluster, List<Feature> features, int zoom, String search, String language) throws Exception {
         HashMap<String, Object> result = new HashMap<>();
 //        result.put("list", features);
         List<JSONObject> subregions = new ArrayList<>();
 //        logger.info("Features: {}", features);
         for (Feature feature : features) {
             HashMap<String, Object> element = new HashMap<>();
+
+            List<Feature> nbPoint = clusterService.getPointsInCluster(superCluster, zoom, new eu.ec.doris.kohesio.payload.Coordinate(((Point)feature.getGeometry()).getCoordinates()));
+
             if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
                 element.put("count", feature.getProperties().get("point_count"));
                 element.put("cluster", feature.getProperties().get("cluster"));
@@ -1176,6 +1190,8 @@ public class MapController {
             } else {
                 element.put("coordinates", null);
             }
+            element.put("cluster", nbPoint.size() != 1);
+            element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
         result.put("subregions", subregions);

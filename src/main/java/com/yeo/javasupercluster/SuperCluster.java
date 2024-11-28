@@ -324,6 +324,7 @@ public class SuperCluster {
 
 //        properties.put("cluster", true);
         boolean isCluster = cluster instanceof Cluster;
+        boolean isAPointCluster = cluster instanceof PointCluster;
         properties.put("cluster", isCluster);
         properties.put("cluster_id", cluster.getId());
         properties.put("point_count", count);

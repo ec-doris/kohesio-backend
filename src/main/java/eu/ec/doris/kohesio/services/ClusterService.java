@@ -43,10 +43,20 @@ public class ClusterService {
         return getCluster(features, 60, 256, 0, 17, 64, bbox, zoom);
     }
 
+    public SuperCluster createCluster(Feature[] features) {
+        return new SuperCluster( 60, 256, 0, 17, 64, features);
+    }
+    public SuperCluster createCluster(Feature[] features, int radius, int extent, int minzoom, int maxzoom, int nodesize) {
+        return new SuperCluster(radius, extent, minzoom, maxzoom, nodesize, features);
+    }
+
+    public List<Feature> getCluster(SuperCluster superCluster, BoundingBox bbox, int zoom) {
+        return clearDuplicate(superCluster.getClusters(bbox.getBounds(), zoom));
+    }
     public List<Feature> getCluster(Feature[] features, int radius, int extent, int minzoom, int maxzoom, int nodesize, BoundingBox bbox, int zoom) {
         logger.info("Creating cluster with {} features", features.length);
         SuperCluster superCluster = new SuperCluster(radius, extent, minzoom, maxzoom, nodesize, features);
-        return clearDuplicate(superCluster.getClusters(bbox.getBounds(), zoom));
+        return getCluster(superCluster, bbox, zoom);
     }
 
     public List<Feature> getPointsInCluster(List<Feature> features, Coordinate coords, BoundingBox bbox, int zoom) {
@@ -57,9 +67,8 @@ public class ClusterService {
         return getPointsInCluster(features, 60, 256, 0, 17, 64, bbox, zoom, coords);
     }
 
-    public List<Feature> getPointsInCluster(Feature[] features, int radius, int extent, int minzoom, int maxzoom, int nodesize, BoundingBox bbox, int zoom, Coordinate coords) {
-        logger.info("Getting point in cluster with {} features", features.length);
-        SuperCluster superCluster = new SuperCluster(radius, extent, minzoom, maxzoom, nodesize, features);
+
+    public List<Feature> getPointsInCluster(SuperCluster superCluster, int zoom, Coordinate coords) {
         List<MainCluster> mcl = superCluster.findClusters(coords.coords(), zoom);
         Set<Feature> points = new HashSet<>();
         mcl.forEach(mainCluster -> {
@@ -67,6 +76,12 @@ public class ClusterService {
         });
         logger.info("Found {} pt(s) at cluster {} with zoom {}", points.size(), coords, zoom);
         return new ArrayList<>(points);
+    }
+
+    public List<Feature> getPointsInCluster(Feature[] features, int radius, int extent, int minzoom, int maxzoom, int nodesize, BoundingBox bbox, int zoom, Coordinate coords) {
+        logger.info("Getting point in cluster with {} features", features.length);
+        SuperCluster superCluster = new SuperCluster(radius, extent, minzoom, maxzoom, nodesize, features);
+        return getPointsInCluster(superCluster, zoom, coords);
     }
 
     private List<Feature> clearDuplicate(List<Feature> features) {
