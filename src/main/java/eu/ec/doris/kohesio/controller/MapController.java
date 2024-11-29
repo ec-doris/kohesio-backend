@@ -189,7 +189,7 @@ public class MapController {
                             language, search, boundingBox, limit, offset, timeout
                     );
                     List<Feature> clusters = prepareCluster(features, boundingBox, zoom);
-                    return createResponse(clusters, zoom, language, search);
+                    return createResponse(clusters, zoom, search, language, granularityRegion);
                 }
                 return mapReturnCoordinates(
                         language,
@@ -1176,11 +1176,11 @@ public class MapController {
         return features;
     }
 
-    private ResponseEntity<JSONObject> createResponse(List<Feature> features, int zoom, String search, String language) throws Exception {
-        return createResponse(clusterService.createCluster(features.toArray(new Feature[0])), features, zoom, search, language);
+    private ResponseEntity<JSONObject> createResponse(List<Feature> features, int zoom, String search, String language, String granularityRegion) throws Exception {
+        return createResponse(clusterService.createCluster(features.toArray(new Feature[0])), features, zoom, search, language, granularityRegion);
     }
 
-    private ResponseEntity<JSONObject> createResponse(SuperCluster superCluster, List<Feature> features, int zoom, String search, String language) throws Exception {
+    private ResponseEntity<JSONObject> createResponse(SuperCluster superCluster, List<Feature> features, int zoom, String search, String language, String granularityRegion) throws Exception {
         HashMap<String, Object> result = new HashMap<>();
 //        result.put("list", features);
         List<JSONObject> subregions = new ArrayList<>();
@@ -1209,10 +1209,14 @@ public class MapController {
             element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
+        if (granularityRegion == null) {
+            granularityRegion = "https://linkedopendata.eu/entity/Q1";
+        }
         result.put("subregions", subregions);
-        result.put("region", "https://linkedopendata.eu/entity/Q1");
-        result.put("upperRegions", new JSONArray());
-        result.put("regionLabel", facetController.nutsRegion.get("https://linkedopendata.eu/entity/Q1").name.get(language));
+        result.put("region", granularityRegion);
+//        result.put("upperRegions", new JSONArray());
+        result.put("upperRegions", findUpperRegions(granularityRegion, language));
+        result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
         return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
     }
 
