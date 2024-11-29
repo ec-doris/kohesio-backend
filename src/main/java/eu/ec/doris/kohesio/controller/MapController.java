@@ -1214,9 +1214,9 @@ public class MapController {
         }
         result.put("subregions", subregions);
         result.put("region", granularityRegion);
-//        result.put("upperRegions", new JSONArray());
         result.put("upperRegions", findUpperRegions(granularityRegion, language));
         result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+        result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
         return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
     }
 
