@@ -2,10 +2,34 @@ package eu.ec.doris.kohesio.payload;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class BoundingBox {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     private Coordinate southWest;
     private Coordinate northEast;
+
+    public static BoundingBox createFromJson(String boundingBoxString) throws JsonProcessingException {
+        return objectMapper.readValue(boundingBoxString, BoundingBox.class);
+    }
+
+    public static BoundingBox createFromDouble(double[] bbox) throws JsonProcessingException {
+        return new BoundingBox(bbox[0], bbox[1], bbox[2], bbox[3]);
+    }
+
+    public static BoundingBox createFromString(String boundingBoxString) throws JsonProcessingException {
+        if (boundingBoxString.startsWith("{")) {
+            return BoundingBox.createFromJson(boundingBoxString);
+        }
+        String[] parts = boundingBoxString.split(",");
+        double[] bbox = new double[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            bbox[i] = Double.parseDouble(parts[i]);
+        }
+        return BoundingBox.createFromDouble(bbox);
+    }
 
     public BoundingBox() {
     }
@@ -20,6 +44,7 @@ public class BoundingBox {
         this.southWest = new Coordinate(south, west);
         this.northEast = new Coordinate(north, east);
     }
+
     public Coordinate getSouthWest() {
         return southWest;
     }

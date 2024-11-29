@@ -127,7 +127,8 @@ public class MapController {
         }
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
-            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
+            boundingBox = BoundingBox.createFromString(boundingBoxString);
+//            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
         }
 
         //simplify the query
@@ -168,7 +169,14 @@ public class MapController {
             query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
             // End TODO
             int numberTotal = 0;
-            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(boundingBox, zoom, search, language, 40);
+            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(
+                    boundingBox,
+                    zoom,
+                    search,
+                    language,
+                    !(country != null && granularityRegion != null),
+                    40
+            );
             for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
                 numberTotal += (int) ((JSONObject) o).get("count");
             }
@@ -245,7 +253,14 @@ public class MapController {
             search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
 
             if (boundingBox != null) {
-                return getCoordinatesByGeographicSubdivision(boundingBox, zoom, search, language, 40);
+                return getCoordinatesByGeographicSubdivision(
+                        boundingBox,
+                        zoom,
+                        search,
+                        language,
+                        !(country != null && granularityRegion != null),
+                        40
+                );
             }
             if (granularityRegion == null) {
                 granularityRegion = "https://linkedopendata.eu/entity/Q1";
@@ -586,7 +601,8 @@ public class MapController {
         }
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
-            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
+//            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
+            boundingBox = BoundingBox.createFromString(boundingBoxString);
         }
 
         ExpandedQuery expandedQuery = null;
@@ -915,7 +931,7 @@ public class MapController {
         return null;
     }
 
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, int timeout) throws Exception {
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, boolean forceBaseCountry,  int timeout) throws Exception {
 
         // Get Country in bbox
         String withinCountry = "SELECT * WHERE {"
@@ -984,7 +1000,7 @@ public class MapController {
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
                 + "} ";
 
-        if (zoom <= 4) {
+        if (zoom <= 4 && forceBaseCountry) {
             return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout), search, language, timeout);
         }
         if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
@@ -1209,7 +1225,8 @@ public class MapController {
     ) throws JsonProcessingException {
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
-            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
+//            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
+            boundingBox = BoundingBox.createFromString(boundingBoxString);
         }
         List<Feature> list = new ArrayList<>();
         return clusterService.getPointsInCluster(
