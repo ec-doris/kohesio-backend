@@ -16,7 +16,7 @@ public class BoundingBox {
     }
 
     public static BoundingBox createFromDouble(double[] bbox) throws JsonProcessingException {
-        return new BoundingBox(bbox[0], bbox[1], bbox[2], bbox[3]);
+        return new BoundingBox(bbox[1], bbox[0], bbox[3], bbox[2]);
     }
 
     public static BoundingBox createFromString(String boundingBoxString) throws JsonProcessingException {
