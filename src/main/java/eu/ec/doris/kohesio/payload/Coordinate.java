@@ -92,6 +92,10 @@ public class Coordinate {
         return new org.locationtech.jts.geom.Coordinate(this.getLat(), this.getLng());
     }
 
+    public org.locationtech.jts.geom.Coordinate toJtsCoordinate() {
+        return new org.locationtech.jts.geom.Coordinate(this.getLat(), this.getLng());
+
+    }
     public org.locationtech.jts.geom.Point toPoint() {
         return new GeometryFactory().createPoint(
                 new org.locationtech.jts.geom.Coordinate(

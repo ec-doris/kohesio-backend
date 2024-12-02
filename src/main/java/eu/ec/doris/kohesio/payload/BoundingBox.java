@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.locationtech.jts.geom.*;
 
 public class BoundingBox {
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -32,6 +33,11 @@ public class BoundingBox {
     }
 
     public BoundingBox() {
+    }
+
+    public BoundingBox(Envelope envelope) {
+        this.southWest = new Coordinate(envelope.getMinY(),envelope.getMaxX());
+        this.northEast = new Coordinate(envelope.getMaxY(),envelope.getMinX());
     }
 
     @JsonCreator
@@ -100,6 +106,17 @@ public class BoundingBox {
 
     public String toString() {
         return toWkt();
+    }
+
+    public Geometry toGeometry() {
+        org.locationtech.jts.geom.Coordinate[] coordinates = new org.locationtech.jts.geom.Coordinate[]{
+                new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getWest()),
+                new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getEast()),
+                new org.locationtech.jts.geom.Coordinate(this.getSouth(), this.getEast()),
+                new org.locationtech.jts.geom.Coordinate(this.getSouth(), this.getWest())
+        };
+
+        return new GeometryFactory().createPolygon(coordinates);
     }
 
 //    public String getCenterBBox(BoundingBox bbox) throws ParseException {

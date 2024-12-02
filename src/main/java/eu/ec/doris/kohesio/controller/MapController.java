@@ -26,7 +26,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wololo.geojson.Feature;
+import org.wololo.geojson.GeoJSON;
 import org.wololo.geojson.Point;
+import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -74,7 +76,7 @@ public class MapController {
     ClusterService clusterService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
+    private final GeoJSONReader geoJSONReader = new GeoJSONReader();
     private static final WKTReader wktReader = new WKTReader();
 
     @ModelAttribute
@@ -185,6 +187,14 @@ public class MapController {
             if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 logger.info("Number of projects in the bounding box: {}", numberTotal);
                 if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
+                    // check if gran
+                    if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
+                        Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson);
+                        if (!boundingBox.toGeometry().contains(geometry)) {
+                            logger.info("changing bbox to fit the region ask");
+                            boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
+                        }
+                    }
                     List<Feature> features = getProjectsPoints(
                             language, search, boundingBox, limit, offset, timeout
                     );
@@ -931,7 +941,7 @@ public class MapController {
         return null;
     }
 
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, boolean forceBaseCountry,  int timeout) throws Exception {
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, boolean forceBaseCountry, int timeout) throws Exception {
 
         // Get Country in bbox
         String withinCountry = "SELECT * WHERE {"
@@ -1188,14 +1198,25 @@ public class MapController {
         for (Feature feature : features) {
             HashMap<String, Object> element = new HashMap<>();
 
-            List<Feature> nbPoint = clusterService.getPointsInCluster(superCluster, zoom, new eu.ec.doris.kohesio.payload.Coordinate(((Point)feature.getGeometry()).getCoordinates()));
+            List<Feature> nbPoint = clusterService.getPointsInCluster(
+                    superCluster,
+                    zoom,
+                    new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates())
+            );
 
+            boolean isClusterFromCluster = (boolean) feature.getProperties().get("cluster");
+            logger.info(
+                    "Is cluster : {} | Point count : {} | Project count : {}",
+                    isClusterFromCluster,
+                    feature.getProperties().get("point_count"),
+                    ((List<String>) feature.getProperties().get("projects")).size()
+            );
             if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
                 element.put("count", feature.getProperties().get("point_count"));
                 element.put("cluster", feature.getProperties().get("cluster"));
-                element.put("projects", feature.getProperties().get("projects"));
+//                element.put("projects", feature.getProperties().get("projects"));
             } else {
-                element.put("projects", feature.getProperties().get("projects"));
+//                element.put("projects", feature.getProperties().get("projects"));
                 element.put("count", ((List<String>) feature.getProperties().get("projects")).size());
                 element.put("cluster", false);
             }
