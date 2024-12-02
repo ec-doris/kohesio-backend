@@ -96,7 +96,7 @@ public class ProjectController {
                 "}";
 
 
-        boolean resultAsk = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, queryCheck, 2);
+        boolean resultAsk = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, queryCheck, false, 2);
         if (!resultAsk) {
             JSONObject result = new JSONObject();
             result.put("message", "Bad Request - project ID not found");
