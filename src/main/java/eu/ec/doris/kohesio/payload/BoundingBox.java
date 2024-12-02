@@ -113,7 +113,8 @@ public class BoundingBox {
                 new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getWest()),
                 new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getEast()),
                 new org.locationtech.jts.geom.Coordinate(this.getSouth(), this.getEast()),
-                new org.locationtech.jts.geom.Coordinate(this.getSouth(), this.getWest())
+                new org.locationtech.jts.geom.Coordinate(this.getSouth(), this.getWest()),
+                new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getWest())
         };
 
         return new GeometryFactory().createPolygon(coordinates);

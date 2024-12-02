@@ -189,7 +189,8 @@ public class MapController {
                 if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
                     // check if gran
                     if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-                        Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson);
+                        logger.info(facetController.nutsRegion.get(granularityRegion).geoJson);
+                        Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
                         if (!boundingBox.toGeometry().contains(geometry)) {
                             logger.info("changing bbox to fit the region ask");
                             boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
