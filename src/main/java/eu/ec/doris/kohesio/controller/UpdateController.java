@@ -111,15 +111,17 @@ public class UpdateController {
                                 .append(language)
                                 .append("\") ")
                         ;
-                        tripleToInsert
-                                .append(" <")
-                                .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581563> \"")
-                                .append(label)
-                                .append("\"@")
-                                .append(language)
-                                .append(" . ")
-                        ;
+                        if (!label.isEmpty()) {
+                            tripleToInsert
+                                    .append(" <")
+                                    .append(id)
+                                    .append("> <https://linkedopendata.eu/prop/direct/P581563> \"")
+                                    .append(label)
+                                    .append("\"@")
+                                    .append(language)
+                                    .append(" . ")
+                            ;
+                        }
                         updateTriples.add(
                                 new UpdateTriple(
                                         tripleToDelete.toString(),
@@ -159,16 +161,17 @@ public class UpdateController {
                                 .append(language)
                                 .append("\") ")
                         ;
-                        tripleToInsert
-                                .append(" <")
-                                .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581562> \"")
-                                .append(description)
-                                .append("\"@")
-                                .append(language)
-                                .append(" . ")
-                        ;
-
+                        if (!description.isEmpty()) {
+                            tripleToInsert
+                                    .append(" <")
+                                    .append(id)
+                                    .append("> <https://linkedopendata.eu/prop/direct/P581562> \"")
+                                    .append(description)
+                                    .append("\"@")
+                                    .append(language)
+                                    .append(" . ")
+                            ;
+                        }
                         updateTriples.add(
                                 new UpdateTriple(
                                         tripleToDelete.toString(),
@@ -209,16 +212,17 @@ public class UpdateController {
                                 .append(language)
                                 .append("\") ")
                         ;
-                        tripleToInsert
-                                .append(" <")
-                                .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P589596> \"")
-                                .append(descriptionRaw)
-                                .append("\"@")
-                                .append(language)
-                                .append(" . ")
-                        ;
-
+                        if (!descriptionRaw.isEmpty()) {
+                            tripleToInsert
+                                    .append(" <")
+                                    .append(id)
+                                    .append("> <https://linkedopendata.eu/prop/direct/P589596> \"")
+                                    .append(descriptionRaw)
+                                    .append("\"@")
+                                    .append(language)
+                                    .append(" . ")
+                            ;
+                        }
                         updateTriples.add(
                                 new UpdateTriple(
                                         tripleToDelete.toString(),
