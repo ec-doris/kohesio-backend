@@ -190,15 +190,14 @@ public class MapController {
                 if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
                     // check if gran
                     if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-                        logger.info(facetController.nutsRegion.get(granularityRegion).geoJson);
                         Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
                         logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
-                        if (!boundingBox.toGeometry().contains(geometry)) {
-                            boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
-                            logger.info("changing bbox to fit the region ask {}", boundingBox);
-                        } else {
-                            logger.info("keeping bbox");
-                        }
+//                        if (!boundingBox.toGeometry().contains(geometry)) {
+//                            boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
+//                            logger.info("changing bbox to fit the region ask {}", boundingBox);
+//                        } else {
+//                            logger.info("keeping bbox");
+//                        }
                     }
                     List<Feature> features = getProjectsPoints(
                             language, search, boundingBox, limit, offset, timeout
@@ -1139,12 +1138,6 @@ public class MapController {
     private List<Feature> getProjectsPoints(
             String language,
             String search,
-//            String country,
-//            String region,
-//            String granularityRegion,
-//            String latitude,
-//            String longitude,
-//            List<String> cci,
             BoundingBox boundingBox,
             Integer limit,
             Integer offset,
@@ -1203,13 +1196,13 @@ public class MapController {
             );
 
 
-//            Boolean isClusterFromCluster = (Boolean) feature.getProperties().get("cluster");
-//            logger.info(
-//                    "Is cluster : {} | Point count : {} | Project count : {}",
-//                    isClusterFromCluster,
-//                    feature.getProperties().get("point_count"),
-//                    ((List<String>) feature.getProperties().get("projects")).size()
-//            );
+            Boolean isClusterFromCluster = (Boolean) feature.getProperties().get("cluster");
+            logger.info(
+                    "Is cluster : {} | Point count : {} | Project count : {}",
+                    isClusterFromCluster,
+                    feature.getProperties().get("point_count"),
+                    ((List<String>) feature.getProperties().get("projects")).size()
+            );
             if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
                 element.put("count", feature.getProperties().get("point_count"));
                 element.put("cluster", feature.getProperties().get("cluster"));

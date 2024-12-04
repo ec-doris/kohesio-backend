@@ -435,7 +435,7 @@ public class SuperCluster {
             if (mc.getZoom() <= zoom) {
                 results.add(mc);
             }
-            logger.info("found a cluster matching coords {} but not zoom {} vs {}. Cluster: {}", coords, zoom, mc.getZoom(), mc);
+//            logger.info("found a cluster matching coords {} but not zoom {} vs {}. Cluster: {}", coords, zoom, mc.getZoom(), mc);
         }
         return results;
     }
