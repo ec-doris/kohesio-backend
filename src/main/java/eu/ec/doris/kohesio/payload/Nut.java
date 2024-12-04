@@ -13,4 +13,15 @@ public class Nut{
     public String nutsCode = "";
     public String granularity;
     public List<String> narrower = new ArrayList<String>();
+
+    @Override
+    public String toString() {
+        return "Nut{" +
+                "uri='" + uri + '\'' +
+                ", type=" + type +
+                ", name=" + name +
+                ", country='" + country + '\'' +
+                ", nutsCode='" + nutsCode + '\'' +
+                '}';
+    }
 }

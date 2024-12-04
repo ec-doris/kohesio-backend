@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -60,13 +62,15 @@ public class FacetController {
         if (nutsRegion == null) {
             nutsRegion = new HashMap<>();
             //computing nuts information
-            List<String> gran = new ArrayList<String>();
+            List<String> gran = new ArrayList<>();
             gran.add("continent");
             gran.add("country");
             gran.add("nuts1");
             gran.add("nuts2");
             gran.add("nuts3");
+            Instant start = Instant.now();
             for (String g : gran) {
+                Instant startGran = Instant.now();
                 String filter = "";
                 if (g.equals("continent")) {
                     filter = " VALUES ?region { <https://linkedopendata.eu/entity/Q1> } . ?region <https://linkedopendata.eu/prop/direct/P104>  ?region2 .";
@@ -126,8 +130,10 @@ public class FacetController {
                         nutsRegion.put(key, nut);
                     }
                 }
+                logger.debug("Granularity {} took {} ms", g, Duration.between(startGran, Instant.now()).toMillis());
 
             }
+            logger.debug("Total initialization took {} ms", Duration.between(start, Instant.now()).toMillis());
             //retrieving the narrower concept
             for (String key : nutsRegion.keySet()) {
                 String query = "";
@@ -172,6 +178,7 @@ public class FacetController {
                     }
                 }
             }
+            logger.debug("Narrower concept took {} ms", Duration.between(start, Instant.now()).toMillis());
 // retrieving the geoJson geometries
             for (String key : nutsRegion.keySet()) {
                 String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
@@ -196,7 +203,7 @@ public class FacetController {
                     nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
                 }
             }
-
+            logger.debug("GeoJson geometries took {} ms", Duration.between(start, Instant.now()).toMillis());
             // skipping regions that are statistical only
             gran = new ArrayList<>();
             gran.add("nuts2");
@@ -221,7 +228,7 @@ public class FacetController {
                     }
                 }
             }
-
+            logger.debug("Statistical regions took {} ms", Duration.between(start, Instant.now()).toMillis());
         }
     }
 
@@ -1247,6 +1254,7 @@ public class FacetController {
             @RequestParam(value = "country", required = false) String country,
             @RequestParam(value = "program", required = false) String program
     ) throws Exception {
+        logger.info("Priority axis {} {} {} {}", language, qid, country, program);
         String queryFilter = "SELECT DISTINCT ?pa ?prg ?country WHERE {"
                 + "  ?pa <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4403959>."
                 + "  ?pa <https://linkedopendata.eu/prop/direct/P1368> ?prg."
@@ -1256,9 +1264,9 @@ public class FacetController {
         }
         if (program != null) {
             queryFilter += " ?pa <https://linkedopendata.eu/prop/direct/P1368> <" + program + "> .";
-            if (!programOfPriorityAxisToInclude.contains(program)) {
-                return new JSONArray();
-            }
+//            if (!programOfPriorityAxisToInclude.contains(program)) {
+//                return new JSONArray();
+//            }
         }
         if (country != null) {
             queryFilter += " ?prg <https://linkedopendata.eu/prop/direct/P32> <" + country + "> .";

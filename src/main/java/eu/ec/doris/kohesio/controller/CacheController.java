@@ -398,7 +398,7 @@ public class CacheController {
                 null, null,
                 null, null, null,
                 null, null, null,
-                400, null
+                null, 400, null
         );
         logger.debug("Response result: " + responseEntity.getBody());
         if (((JSONObject) responseEntity.getBody()).get("subregions") instanceof JSONArray) {
