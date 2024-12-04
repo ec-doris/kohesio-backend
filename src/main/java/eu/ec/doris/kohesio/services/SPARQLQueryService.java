@@ -125,7 +125,7 @@ public class SPARQLQueryService {
     public boolean executeBooleanQuery(String sparqlEndpoint, String query, boolean cache, int timeout) {
 
         query = spaceCleaner.matcher(query).replaceAll(" ");
-        logger.info("Executing given query: {}", query);
+        logger.info("Executing given of hash {}, query: {}", query.hashCode(), query);
         File dir = new File(location + "/facet/cache/");
         dir.mkdirs();
 

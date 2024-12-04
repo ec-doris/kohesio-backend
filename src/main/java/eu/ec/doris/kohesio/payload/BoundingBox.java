@@ -4,9 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BoundingBox {
+    private static final Logger logger = LoggerFactory.getLogger(BoundingBox.class);
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private Coordinate southWest;
@@ -36,8 +41,8 @@ public class BoundingBox {
     }
 
     public BoundingBox(Envelope envelope) {
-        this.southWest = new Coordinate(envelope.getMinY(),envelope.getMaxX());
-        this.northEast = new Coordinate(envelope.getMaxY(),envelope.getMinX());
+        this.southWest = new Coordinate(envelope.getMinY(), envelope.getMaxX());
+        this.northEast = new Coordinate(envelope.getMaxY(), envelope.getMinX());
     }
 
     @JsonCreator

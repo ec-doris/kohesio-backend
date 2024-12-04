@@ -130,10 +130,10 @@ public class FacetController {
                         nutsRegion.put(key, nut);
                     }
                 }
-                logger.info("Granularity " + g + " took " + Duration.between(startGran, Instant.now()).toMillis() + " ms");
+                logger.debug("Granularity {} took {} ms", g, Duration.between(startGran, Instant.now()).toMillis());
 
             }
-            logger.info("Total initialization took " + Duration.between(start, Instant.now()).toMillis() + " ms");
+            logger.debug("Total initialization took {} ms", Duration.between(start, Instant.now()).toMillis());
             //retrieving the narrower concept
             for (String key : nutsRegion.keySet()) {
                 String query = "";
@@ -178,7 +178,7 @@ public class FacetController {
                     }
                 }
             }
-            logger.info("Narrower concept took " + Duration.between(start, Instant.now()).toMillis() + " ms");
+            logger.debug("Narrower concept took {} ms", Duration.between(start, Instant.now()).toMillis());
 // retrieving the geoJson geometries
             for (String key : nutsRegion.keySet()) {
                 String geometry = " ?nut <http://nuts.de/geoJson> ?regionGeo . ";
@@ -203,7 +203,7 @@ public class FacetController {
                     nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
                 }
             }
-            logger.info("GeoJson geometries took " + Duration.between(start, Instant.now()).toMillis() + " ms");
+            logger.debug("GeoJson geometries took {} ms", Duration.between(start, Instant.now()).toMillis());
             // skipping regions that are statistical only
             gran = new ArrayList<>();
             gran.add("nuts2");
@@ -228,7 +228,7 @@ public class FacetController {
                     }
                 }
             }
-            logger.info("Statistical regions took " + Duration.between(start, Instant.now()).toMillis() + " ms");
+            logger.debug("Statistical regions took {} ms", Duration.between(start, Instant.now()).toMillis());
         }
     }
 
