@@ -62,7 +62,7 @@ public class UpdateController {
         String facebookUserId = updatePayload.getFacebookUserId();
         String youtubeVideoId = updatePayload.getYoutubeVideoId();
         String imageUrl = updatePayload.getImageUrl();
-        MonolingualString imageSummary = updatePayload.getImageSummary();
+        List<MonolingualString> imageSummaries = updatePayload.getImageSummaries();
         String imageCopyright = updatePayload.getImageCopyright();
 
         logger.info("Project update by ID: id {} on {}", id, url);
@@ -248,8 +248,10 @@ public class UpdateController {
             // handle image:
             // we want to keep the qualifier if they exist and aren't updated
             // and we want to update only the qualifier if only that is provided
-            if (imageCopyright != null || imageUrl != null || imageSummary != null) {
-                generateUpdateTriplesForImage(id, imageUrl, imageCopyright, imageSummary, updateTriples);
+            if (imageCopyright != null || imageUrl != null || imageSummaries != null) {
+                for (MonolingualString imageSummary : imageSummaries) {
+                    generateUpdateTriplesForImage(id, imageUrl, imageCopyright, imageSummary, updateTriples);
+                }
             }
             logger.info("Updating {} triples", updateTriples.size());
             if (updateTriples.isEmpty()) {
@@ -285,6 +287,14 @@ public class UpdateController {
             MonolingualString imageSummary,
             List<UpdateTriple> updateTriples
     ) {
+//        if (imageUrl != null && imageUrl.isEmpty()) {
+//            String tripleToDelete = "<"+id+"> <https://linkedopendata.eu/prop/P851> ?image.";
+//            UpdateTriple updateTriple = new UpdateTriple();
+//            updateTriples.add(
+//
+//            )
+//            return;
+//        }
         String query = "SELECT ?image ?image_url ?image_summary ?image_copyright WHERE {"
                 + " <" + id + "> <https://linkedopendata.eu/prop/P851> ?image ."
                 + " ?image <https://linkedopendata.eu/prop/statement/P851> ?image_url."

@@ -18,7 +18,7 @@ public class Update {
     String facebookUserId;
     String youtubeVideoId;
     String imageUrl;
-    MonolingualString imageSummary;
+    List<MonolingualString> imageSummary;
     String imageCopyright;
 
     @JsonCreator
@@ -98,11 +98,11 @@ public class Update {
         this.imageUrl = imageUrl;
     }
 
-    public MonolingualString getImageSummary() {
+    public List<MonolingualString> getImageSummaries() {
         return imageSummary;
     }
 
-    public void setImageSummary(MonolingualString imageSummary) {
+    public void setImageSummary(List<MonolingualString> imageSummary) {
         this.imageSummary = imageSummary;
     }
 
