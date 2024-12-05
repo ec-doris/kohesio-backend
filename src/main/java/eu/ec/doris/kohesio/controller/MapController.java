@@ -190,11 +190,11 @@ public class MapController {
                 numberTotal += (int) ((JSONObject) o).get("count");
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
-            int mimNumberOfprojectBeforeGoingToSubRegion = 100;
+//            int mimNumberOfprojectBeforeGoingToSubRegion = 100;
             logger.info("found {} projects, nb tot {}", ((JSONArray) tmp.getBody().get("subregions")).size(), numberTotal);
             if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 logger.info("Number of projects in the bounding box: {}", numberTotal);
-                if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
+//                if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
                     // check if gran
                     if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
                         Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
@@ -220,21 +220,21 @@ public class MapController {
                     List<Feature> clusters = prepareCluster(superCluster, boundingBox, zoom);
                     logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
                     return createResponse(superCluster, clusters, boundingBox, zoom, search, language, granularityRegion);
-                }
-                return mapReturnCoordinates(
-                        language,
-                        search,
-                        country,
-                        region,
-                        granularityRegion,
-                        latitude,
-                        longitude,
-                        cci,
-                        boundingBox,
-                        limit,
-                        offset,
-                        timeout
-                );
+//                }
+//                return mapReturnCoordinates(
+//                        language,
+//                        search,
+//                        country,
+//                        region,
+//                        granularityRegion,
+//                        latitude,
+//                        longitude,
+//                        cci,
+//                        boundingBox,
+//                        limit,
+//                        offset,
+//                        timeout
+//                );
             }
             return tmp;
         }
