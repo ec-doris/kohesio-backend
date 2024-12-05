@@ -107,13 +107,15 @@ public class ProjectController {
                     + "PREFIX ps: <https://linkedopendata.eu/prop/statement/> "
                     + "PREFIX p: <https://linkedopendata.eu/prop/> "
                     + "SELECT ?s0 ?snippet ?label ?description ?infoRegioUrl ?startTime ?endTime "
-                    + "?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?youtube "
+                    + "?expectedEndTime ?budget ?euBudget ?cofinancingRate ?image ?imageCopyright ?imageSummary ?youtube "
                     + "?video ?tweet ?coordinates  ?countryLabel ?countryCode ?program ?programLabel ?program_cci "
                     + "?programInfoRegioUrl ?categoryLabel ?categoryID ?fund ?fundId ?fundLabel ?fundWebsite ?themeId "
                     + "?themeLabel ?themeIdInferred ?themeLabelInferred ?policyId ?policyLabel "
                     + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
                     + "?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite "
-                    + "?beneficiaryString ?source ?source2 ?keepUrl ?curatedLabel ?curatedSummary ?rawCuratedSummary WHERE { "
+                    + "?beneficiaryString ?source ?source2 ?keepUrl ?curatedLabel ?curatedSummary ?rawCuratedSummary"
+                    + " ?instagramUsername ?facebookUserId ?twitterUsername ?youtubeVideoId"
+                    + " WHERE { "
                     + "VALUES ?s0 { <" + id + "> } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581562> ?curatedSummary . FILTER((LANG(?curatedSummary)) = \"" + language + "\") }"
@@ -127,12 +129,12 @@ public class ProjectController {
                     + " OPTIONAL { ?s0 wdt:P835 ?euBudget. } "
                     + " OPTIONAL { ?s0 wdt:P474 ?budget. } "
                     + " OPTIONAL { ?s0 wdt:P837 ?cofinancingRate. } "
-                    + " OPTIONAL { ?s0 wdt:P851 ?image } . "
+//                    + " OPTIONAL { ?s0 wdt:P851 ?image } . "
                     + " OPTIONAL { ?s0 wdt:P2210 ?youtube } . "
                     + " OPTIONAL { ?s0 wdt:P562941 ?keepId. wd:P562941 wdt:P877 ?formatter. BIND(REPLACE(?keepId, '^(.+)$', ?formatter) AS ?keepUrl). } . "
                     + " OPTIONAL { ?s0 p:P851 ?blank . "
                     + " ?blank ps:P851 ?image . "
-                    + " ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?summary . "
+                    + " OPTIONAL {?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary . FILTER(LANG(?imageSummary)=\"" + language +"\")}"
                     + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                     + " OPTIONAL { ?s0 wdt:P1746 ?video . }"
                     + " OPTIONAL { ?s0 wdt:P1416 ?tweet . }"
@@ -188,6 +190,10 @@ public class ProjectController {
                     + "          }"
                     + " } "
                     + " OPTIONAL { ?s0 wdt:P841 ?beneficiaryString .}"
+                    + " OPTIONAL { ?s0 wdt:P478 ?instagramUsername .}"
+                    + " OPTIONAL { ?s0 wdt:P407 ?facebookUserId .}"
+                    + " OPTIONAL { ?s0 wdt:P241 ?twitterUsername .}"
+                    + " OPTIONAL { ?s0 wdt:P241 ?youtubeVideoId .}"
                     + " } ";
             String queryCoordinates = "PREFIX wd: <https://linkedopendata.eu/entity/> "
                     + "PREFIX wdt: <https://linkedopendata.eu/prop/direct/> "
@@ -227,6 +233,10 @@ public class ProjectController {
             result.put("categoryIDs", new JSONArray());
             result.put("fundLabel", "");
             result.put("fundWebsite", "");
+            result.put("instagramUsername", "");
+            result.put("facebookUserId", "");
+            result.put("twitterUsername", "");
+            result.put("youtubeVideoId", "");
 
 
             HashSet<HashMap> programs = new HashSet<>();
@@ -268,6 +278,30 @@ public class ProjectController {
             HashMap<String, HashMap<String, Object>> tmpPrograms = new HashMap<>();
             while (resultSet.hasNext()) {
                 BindingSet querySolution = resultSet.next();
+
+                if (querySolution.getBinding("instagramUsername") != null)
+                    result.put("instagramUsername", querySolution.getBinding("instagramUsername").getValue().stringValue());
+                else {
+                    result.put("instagramUsername", "");
+                }
+
+                if (querySolution.getBinding("facebookUserId") != null)
+                    result.put("facebookUserId", querySolution.getBinding("facebookUserId").getValue().stringValue());
+                else {
+                    result.put("facebookUserId", "");
+                }
+
+                if (querySolution.getBinding("twitterUsername") != null)
+                    result.put("twitterUsername", querySolution.getBinding("twitterUsername").getValue().stringValue());
+                else {
+                    result.put("twitterUsername", "");
+                }
+
+                if (querySolution.getBinding("youtubeVideoId") != null)
+                    result.put("youtubeVideoId", querySolution.getBinding("youtubeVideoId").getValue().stringValue());
+                else {
+                    result.put("youtubeVideoId", "");
+                }
 
                 if (querySolution.getBinding("budget") != null) {
                     result.put(
@@ -544,6 +578,9 @@ public class ProjectController {
                         image.put("image", im);
                         if (querySolution.getBinding("imageCopyright") != null) {
                             image.put("imageCopyright", "© " + querySolution.getBinding("imageCopyright").getValue().stringValue());
+                        }
+                        if (querySolution.getBinding("imageSummary") != null) {
+                            image.put("imageSummary", querySolution.getBinding("imageSummary").getValue().stringValue());
                         }
                         images.add(image);
                     }
@@ -1049,7 +1086,7 @@ public class ProjectController {
             indexLimit++;
         }
 
-        query = "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?coordinates ?objectiveId ?countryCode ?description ?curatedLabel ?curatedSummary ?rawCuratedSummary WHERE { "
+        query = "SELECT ?s0 ?label ?startTime ?endTime ?expectedEndTime ?totalBudget ?euBudget ?image ?imageCopyright ?imageSummary ?coordinates ?objectiveId ?countryCode ?description ?curatedLabel ?curatedSummary ?rawCuratedSummary WHERE { "
                 + " VALUES ?s0 { " + values + " }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581562> ?curatedSummary . FILTER((LANG(?curatedSummary)) = \"" + language + "\") }"
@@ -1060,7 +1097,11 @@ public class ProjectController {
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime . }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime . }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. }"
-                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank . ?blank <https://linkedopendata.eu/prop/statement/P851> ?image . OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }}"
+                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank ."
+                + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image ."
+                + " OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }"
+                + " OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary. FILTER(LANG(?imageSummary)=\""+language+"\")} "
+                + " }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P32> ?country . OPTIONAL {?country <https://linkedopendata.eu/prop/direct/P173> ?countryCode . }}"
