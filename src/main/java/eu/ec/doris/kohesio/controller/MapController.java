@@ -171,11 +171,18 @@ public class MapController {
             query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
             // End TODO
             int numberTotal = 0;
+            logger.info("Params:\n {}\n{}\n{}\n{}\n{}",
+                    boundingBox,
+                    zoom,
+                    search,
+                    language,
+                    !(country != null && granularityRegion != null));
             ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(
                     boundingBox,
                     zoom,
                     search,
                     language,
+                    granularityRegion,
                     !(country != null && granularityRegion != null),
                     40
             );
@@ -184,7 +191,7 @@ public class MapController {
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
             int mimNumberOfprojectBeforeGoingToSubRegion = 100;
-            logger.info("found {} projects", ((JSONArray) tmp.getBody().get("subregions")).size());
+            logger.info("found {} projects, nb tot {}", ((JSONArray) tmp.getBody().get("subregions")).size(), numberTotal);
             if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 logger.info("Number of projects in the bounding box: {}", numberTotal);
                 if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
@@ -945,15 +952,18 @@ public class MapController {
         return null;
     }
 
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, boolean forceBaseCountry, int timeout) throws Exception {
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, String granularityRegion, boolean forceBaseCountry, int timeout) throws Exception {
 
         // Get Country in bbox
         String withinCountry = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS0>. "
+                + " a <http://nuts.de/NUTS0>. ";
+        if (granularityRegion != null) {
+            withinCountry += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+        }
 //                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
+        withinCountry += "} ";
 
 //        String intersectCountry = "SELECT * WHERE {"
 //                + " ?s <http://nuts.de/linkedopendata> ?lid; "
@@ -967,52 +977,73 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
+        if (granularityRegion != null) {
+            withinNuts1 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+        }
+        withinNuts1 += "} ";
 
         String intersectNuts1 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
+        if (granularityRegion != null) {
+            intersectNuts1 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+        }
+        intersectNuts1 += "} ";
 
         // Get NUTS 2 in bbox
         String withinNuts2 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
+        if (granularityRegion != null) {
+            withinNuts2 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+        }
+        withinNuts2 += "} ";
 
         String intersectNuts2 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
+        if (granularityRegion != null) {
+            intersectNuts2 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+        }
+        intersectNuts2 += "} ";
 
         // Get NUTS 3 in bbox
         String withinNuts3 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
+        if (granularityRegion != null) {
+            withinNuts3 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+        }
+        withinNuts3 += "} ";
 
         String intersectNuts3 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
+        if (granularityRegion != null) {
+            intersectNuts3 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+        }
+        intersectNuts3 += "} ";
 
         // Get LAU in bbox
         String intersectLAU = "SELECT * WHERE {"
                 + " ?s <http://laus.de/linkedopendata> ?lid; "
                 + " <http://laus.de/geometry> ?geo; "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
+                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
+        if (granularityRegion != null) {
+            intersectLAU += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+        }
+        intersectLAU += "} ";
 
         if (zoom <= 4 && forceBaseCountry) {
             return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout), search, language, timeout);
