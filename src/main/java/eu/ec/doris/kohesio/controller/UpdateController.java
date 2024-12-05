@@ -296,12 +296,12 @@ public class UpdateController {
                 String queryDelete = updateTriple.getDeleteQuery();
                 String queryInsert = updateTriple.getInsertQuery();
                 if (queryDelete != null && !queryDelete.isEmpty()) {
-                    logger.info("Executing delete query: {}", queryDelete);
-//                    sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
+//                    logger.info("Executing delete query: {}", queryDelete);
+                    sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
                 }
                 if (queryInsert != null && !queryInsert.isEmpty()) {
-                    logger.info("Executing Insert query: {}", queryInsert);
-//                    sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
+//                    logger.info("Executing Insert query: {}", queryInsert);
+                    sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
                 }
             }
 
