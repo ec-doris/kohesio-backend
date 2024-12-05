@@ -115,7 +115,9 @@ public class BeneficiaryController {
                 "      ?wikipedia <http://schema.org/about> ?s0 ; " +
                 "                 <http://schema.org/inLanguage> \"" + language + "\" ;" +
                 "                 <http://schema.org/isPartOf> <https://" + language + ".wikipedia.org/> ." + "}\n " +
-                " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P998> ?picNumber}"
+                " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P998> ?picNumberTmp." +
+                " <https://linkedopendata.eu/entity/P998> <https://linkedopendata.eu/prop/direct/P877> ?picFormatter." +
+                " BIND(REPLACE(?picNumberTmp, '^(.+)$', ?picFormatter) AS ?picNumber)}"
                 + "}";
 
         String query2 = "SELECT ?s0 (SUM(?euBudget) AS ?totalEuBudget) (SUM(?budget) AS ?totalBudget) (COUNT(DISTINCT?project) AS ?numberProjects) (MIN(?startTime) AS ?minStartTime) (MAX(?endTime) AS ?maxEndTime) WHERE {\n" +
@@ -219,7 +221,7 @@ public class BeneficiaryController {
             }
             result.put("images", images);
             if (querySolution.getBinding("picNumber") != null) {
-                result.put("picNumber", querySolution.getBinding("country").getValue().stringValue());
+                result.put("picNumber", querySolution.getBinding("picNumber").getValue().stringValue());
             } else {
                 result.put("picNumber", "");
             }
