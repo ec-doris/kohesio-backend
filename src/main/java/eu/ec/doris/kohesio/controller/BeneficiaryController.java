@@ -91,7 +91,7 @@ public class BeneficiaryController {
         }
 
         String labelsFilter = getBeneficiaryLabelsFilter();
-        String query1 = "SELECT ?s0 ?country ?countryCode ?beneficiaryLabel_en ?beneficiaryLabel ?transliteration ?description ?website ?image ?logo ?coordinates ?wikipedia WHERE {\n"
+        String query1 = "SELECT ?s0 ?country ?countryCode ?beneficiaryLabel_en ?beneficiaryLabel ?transliteration ?description ?website ?image ?logo ?coordinates ?wikipedia ?picNumber WHERE {\n"
                 + " VALUES ?s0 { <"
                 + id
                 + "> } " +
@@ -115,7 +115,8 @@ public class BeneficiaryController {
                 "      ?wikipedia <http://schema.org/about> ?s0 ; " +
                 "                 <http://schema.org/inLanguage> \"" + language + "\" ;" +
                 "                 <http://schema.org/isPartOf> <https://" + language + ".wikipedia.org/> ." + "}\n " +
-                "}";
+                " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P998> ?picNumber}"
+                + "}";
 
         String query2 = "SELECT ?s0 (SUM(?euBudget) AS ?totalEuBudget) (SUM(?budget) AS ?totalBudget) (COUNT(DISTINCT?project) AS ?numberProjects) (MIN(?startTime) AS ?minStartTime) (MAX(?endTime) AS ?maxEndTime) WHERE {\n" +
                 " VALUES ?s0 { <" +
@@ -217,6 +218,11 @@ public class BeneficiaryController {
                 images.add(querySolution.getBinding("logo").getValue().stringValue().replace("http://commons.wikimedia.org/", "https://commons.wikimedia.org/"));
             }
             result.put("images", images);
+            if (querySolution.getBinding("picNumber") != null) {
+                result.put("picNumber", querySolution.getBinding("country").getValue().stringValue());
+            } else {
+                result.put("picNumber", "");
+            }
         }
         TupleQueryResult resultSet2 = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query2, 30, "beneficiaryDetail");
         while (resultSet2.hasNext()) {
