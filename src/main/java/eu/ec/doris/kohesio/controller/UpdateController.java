@@ -237,24 +237,52 @@ public class UpdateController {
             // for instagram, facebook, twitter, youtube and image
             // if null we skip if "" empty string we delete and if value we delete and setup the new value
             if (instagramUsername != null) {
-                generateUpdateTriplesForValue(id, instagramUsername, updateTriples, "P478");
+                generateUpdateTriplesForValue(
+                        id,
+                        instagramUsername,
+                        updateTriples,
+                        "P478",
+                        "instagramUsername"
+                );
             }
             if (facebookUserId != null) {
-                generateUpdateTriplesForValue(id, facebookUserId, updateTriples, "P407");
+                generateUpdateTriplesForValue(
+                        id,
+                        facebookUserId,
+                        updateTriples,
+                        "P407",
+                        "facebookUserId"
+                );
             }
             if (twitterUsername != null) {
-                generateUpdateTriplesForValue(id, twitterUsername, updateTriples, "P241");
+                generateUpdateTriplesForValue(
+                        id,
+                        twitterUsername,
+                        updateTriples,
+                        "P241",
+                        "twitterUsername"
+                );
             }
             if (youtubeVideoId != null) {
-                generateUpdateTriplesForValue(id, youtubeVideoId, updateTriples, "P2210");
+                generateUpdateTriplesForValue(
+                        id,
+                        youtubeVideoId,
+                        updateTriples,
+                        "P2210",
+                        "youtubeVideoId"
+                );
             }
 
             // handle image:
             // we want to keep the qualifier if they exist and aren't updated
             // and we want to update only the qualifier if only that is provided
             if (imageCopyright != null || imageUrl != null || imageSummaries != null) {
-                for (MonolingualString imageSummary : imageSummaries) {
-                    generateUpdateTriplesForImage(id, imageUrl, imageCopyright, imageSummary, updateTriples);
+                if (imageSummaries != null) {
+                    for (MonolingualString imageSummary : imageSummaries) {
+                        generateUpdateTriplesForImage(id, imageUrl, imageCopyright, imageSummary, updateTriples);
+                    }
+                } else {
+                    generateUpdateTriplesForImage(id, imageUrl, imageCopyright, null, updateTriples);
                 }
             }
             logger.info("Updating {} triples", updateTriples.size());
@@ -268,12 +296,12 @@ public class UpdateController {
                 String queryDelete = updateTriple.getDeleteQuery();
                 String queryInsert = updateTriple.getInsertQuery();
                 if (queryDelete != null && !queryDelete.isEmpty()) {
-//                    logger.info("Executing delete query: {}", queryDelete);
-                    sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
+                    logger.info("Executing delete query: {}", queryDelete);
+//                    sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
                 }
                 if (queryInsert != null && !queryInsert.isEmpty()) {
-//                    logger.info("Executing Insert query: {}", queryInsert);
-                    sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
+                    logger.info("Executing Insert query: {}", queryInsert);
+//                    sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
                 }
             }
 
@@ -422,38 +450,40 @@ public class UpdateController {
             }
         } else {
             if (imageUrl == null || imageUrl.isEmpty()) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Bad Request - No image to edit"
+                // if no image in graph and no image in payload just ignore it
+//                throw new ResponseStatusException(
+//                        HttpStatus.BAD_REQUEST,
+//                        "Bad Request - No image to edit"
+//                );
+            } else {
+                // this mean there wasn't any image before so we have to create all the triples ourselves
+                String fakeStatement = id + "-image-P851-" + UUID.randomUUID();
+                String tripleImageUrl = "<" + id + "> <https://linkedopendata.eu/prop/direct/P851> \"" + imageUrl + "\" . "
+                        + "<" + id + "> <https://linkedopendata.eu/prop/P851> <" + fakeStatement + "> . "
+                        + "<" + fakeStatement + "> <https://linkedopendata.eu/prop/statement/P851> \"" + imageUrl + "\" . ";
+                if (imageSummary != null && !imageSummary.getText().isEmpty()) {
+                    tripleImageUrl += "<" + fakeStatement + "> <https://linkedopendata.eu/prop/qualifier/P836> " + imageSummary.toValue() + " . ";
+                }
+                if (imageCopyright != null && !imageCopyright.isEmpty()) {
+                    tripleImageUrl += "<" + fakeStatement + "> <https://linkedopendata.eu/prop/qualifier/P1743> \"" + imageCopyright + "\" . ";
+                }
+                updateTriples.add(
+                        new UpdateTriple(
+                                null,
+                                tripleImageUrl,
+                                null
+                        )
                 );
             }
-            // this mean there wasn't any image before so we have to create all the triples ourselves
-            String fakeStatement = id + "-image-P851-" + UUID.randomUUID();
-            String tripleImageUrl = "<" + id + "> <https://linkedopendata.eu/prop/direct/P851> \"" + imageUrl + "\" . "
-                    + "<" + id + "> <https://linkedopendata.eu/prop/P851> <" + fakeStatement + "> . "
-                    + "<" + fakeStatement + "> <https://linkedopendata.eu/prop/statement/P851> \"" + imageUrl + "\" . ";
-            if (imageSummary != null && !imageSummary.getText().isEmpty()) {
-                tripleImageUrl += "<" + fakeStatement + "> <https://linkedopendata.eu/prop/qualifier/P836> " + imageSummary.toValue() + " . ";
-            }
-            if (imageCopyright != null && !imageCopyright.isEmpty()) {
-                tripleImageUrl += "<" + fakeStatement + "> <https://linkedopendata.eu/prop/qualifier/P1743> \"" + imageCopyright + "\" . ";
-            }
-            updateTriples.add(
-                    new UpdateTriple(
-                            null,
-                            tripleImageUrl,
-                            null
-                    )
-            );
-
         }
     }
 
     private static void generateUpdateTriplesForValue(
             String id,
-            String instagramUsername,
+            String value,
             List<UpdateTriple> updateTriples,
-            String pid
+            String pid,
+            String varName
     ) {
         StringBuilder tripleToDelete = new StringBuilder();
         StringBuilder tripleToInsert = new StringBuilder();
@@ -464,22 +494,28 @@ public class UpdateController {
                 .append(id)
                 .append("> <https://linkedopendata.eu/prop/direct/")
                 .append(pid)
-                .append("> ?instagramUsername . ");
+                .append("> ?")
+                .append(varName)
+                .append(" . ")
+        ;
 
         tripleToWhere
                 .append("<")
                 .append(id)
                 .append("> <https://linkedopendata.eu/prop/direct/")
                 .append(pid)
-                .append("> ?instagramUsername . ");
-        if (!instagramUsername.isEmpty()) {
+                .append("> ?")
+                .append(varName)
+                .append(" . ")
+        ;
+        if (!value.isEmpty()) {
             tripleToInsert
                     .append("<")
                     .append(id)
-                    .append("> <https://linkedopendata.eu/prop/direct/P478")
+                    .append("> <https://linkedopendata.eu/prop/direct/")
                     .append(pid)
                     .append("> \"")
-                    .append(instagramUsername)
+                    .append(value)
                     .append("\" . ")
             ;
         }
@@ -498,6 +534,7 @@ public class UpdateController {
     ) throws IOException, ApiException {
         logger.info("Propagate update project {}", updatePayload.getId());
         logger.info(updatePayload.toString());
+//        return updateProject(sparqlEndpoint, updatePayload);
         ApiClient client = ClientBuilder.cluster().build();
         String namespace = new String(
                 Files.readAllBytes(
@@ -614,6 +651,15 @@ public class UpdateController {
 
         public void setTripleToWhere(String tripleToWhere) {
             this.tripleToWhere = tripleToWhere;
+        }
+
+        @Override
+        public String toString() {
+            return "UpdateTriple{" +
+                    "tripleToDelete='" + tripleToDelete + '\'' +
+                    ", tripleToInsert='" + tripleToInsert + '\'' +
+                    ", tripleToWhere='" + tripleToWhere + '\'' +
+                    '}';
         }
     }
 }
