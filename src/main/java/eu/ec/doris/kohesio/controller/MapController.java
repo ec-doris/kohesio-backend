@@ -203,13 +203,13 @@ public class MapController {
                             language, search, boundingBox, limit, offset, timeout
                     );
                     SuperCluster superCluster = clusterService.createCluster(
-                                    features.toArray(new Feature[0]),
-                                    60,
-                                    256,
-                                    0,
-                                    20,
-                                    64
-                            );
+                            features.toArray(new Feature[0]),
+                            60,
+                            256,
+                            0,
+                            20,
+                            64
+                    );
                     List<Feature> clusters = prepareCluster(superCluster, boundingBox, zoom);
                     logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
                     return createResponse(superCluster, clusters, boundingBox, zoom, search, language, granularityRegion);
@@ -1152,10 +1152,18 @@ public class MapController {
             int timeout
     ) throws Exception {
         logger.info("Search project map point: language {} search {} boundingBox {} limit {} offset {}", language, search, boundingBox, limit, offset);
+        String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
+        String tmpSearch = search.replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P127> \\?coordinates \\.", "")
+                .replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> \\.", "")
+                .replace(filterBbox, "");
         String query = "SELECT DISTINCT ?s0 ?coordinates WHERE { "
-                + search
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))"
-                + "}";
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ."
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates ."
+                + " FILTER EXISTS { "
+                + tmpSearch
+                + " }";
+        query += " " + filterBbox + " " + filterBbox + "}";
+
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
         while (resultSet.hasNext()) {
@@ -1201,15 +1209,15 @@ public class MapController {
                     new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates())
             );
 
-            Boolean isClusterFromCluster = (Boolean) feature.getProperties().get("cluster");
-            logger.info(
-                    "Is cluster : {} | Point count : {} | Project count : {} | nbPoint : {} | class : {}",
-                    isClusterFromCluster,
-                    feature.getProperties().get("point_count"),
-                    ((List<String>) feature.getProperties().get("projects")).size(),
-                    nbPoint.size(),
-                    feature.getGeometry().getClass()
-            );
+//            Boolean isClusterFromCluster = (Boolean) feature.getProperties().get("cluster");
+//            logger.info(
+//                    "Is cluster : {} | Point count : {} | Project count : {} | nbPoint : {} | class : {}",
+//                    isClusterFromCluster,
+//                    feature.getProperties().get("point_count"),
+//                    ((List<String>) feature.getProperties().get("projects")).size(),
+//                    nbPoint.size(),
+//                    feature.getGeometry().getClass()
+//            );
             if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
                 element.put("count", feature.getProperties().get("point_count"));
                 element.put("cluster", feature.getProperties().get("cluster"));
@@ -1227,7 +1235,7 @@ public class MapController {
             }
 
             boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
-            element.put("cluster", nbPoint.size() > (int)element.get("count"));
+            element.put("cluster", nbPoint.size() > (int) element.get("count"));
             element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
