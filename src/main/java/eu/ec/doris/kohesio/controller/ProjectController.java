@@ -193,7 +193,7 @@ public class ProjectController {
                     + " OPTIONAL { ?s0 wdt:P478 ?instagramUsername .}"
                     + " OPTIONAL { ?s0 wdt:P407 ?facebookUserId .}"
                     + " OPTIONAL { ?s0 wdt:P241 ?twitterUsername .}"
-                    + " OPTIONAL { ?s0 wdt:P241 ?youtubeVideoId .}"
+                    + " OPTIONAL { ?s0 wdt:P2210 ?youtubeVideoId .}"
                     + " } ";
             String queryCoordinates = "PREFIX wd: <https://linkedopendata.eu/entity/> "
                     + "PREFIX wdt: <https://linkedopendata.eu/prop/direct/> "
@@ -212,6 +212,7 @@ public class ProjectController {
                     + "FILTER(STRLEN(STR(?regionId))>=5) "
                     + "}";
 
+            logger.info("HERE");
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 3, false, "projectDetail");
             TupleQueryResult resultSetCoords = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCoordinates, 3, false, "projectDetail");
             TupleQueryResult resultSetRegion = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryRegion, 3, false, "projectDetail");
