@@ -451,7 +451,6 @@ public class SuperCluster {
                 cluster.getId(),
                 new HashSet<>()
         );
-        logger.info("child : {}", this.clustersParentChilds);
         for (int childIndex : childrenClusterIndexes) {
             MainCluster mc = this.clusters.get(childIndex);
             points.addAll(this.getPointFromCluster(mc));

@@ -1227,7 +1227,7 @@ public class MapController {
             }
 
             boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
-            element.put("cluster", nbPoint.size() != 1);
+            element.put("cluster", nbPoint.size() > (int)element.get("count"));
             element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
