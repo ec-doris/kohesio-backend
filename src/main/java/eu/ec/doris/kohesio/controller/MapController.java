@@ -202,9 +202,17 @@ public class MapController {
                     List<Feature> features = getProjectsPoints(
                             language, search, boundingBox, limit, offset, timeout
                     );
-                    List<Feature> clusters = prepareCluster(features, boundingBox, zoom);
+                    SuperCluster superCluster = clusterService.createCluster(
+                                    features.toArray(new Feature[0]),
+                                    60,
+                                    256,
+                                    0,
+                                    20,
+                                    64
+                            );
+                    List<Feature> clusters = prepareCluster(superCluster, boundingBox, zoom);
                     logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
-                    return createResponse(clusters, zoom, search, language, granularityRegion);
+                    return createResponse(superCluster, clusters, boundingBox, zoom, search, language, granularityRegion);
                 }
                 return mapReturnCoordinates(
                         language,
@@ -1147,7 +1155,6 @@ public class MapController {
         String query = "SELECT DISTINCT ?s0 ?coordinates WHERE { "
                 + search
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))"
-//                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . }"
                 + "}";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
@@ -1177,15 +1184,14 @@ public class MapController {
         return features;
     }
 
-    private ResponseEntity<JSONObject> createResponse(List<Feature> features, int zoom, String search, String language, String granularityRegion) throws Exception {
-        return createResponse(clusterService.createCluster(features.toArray(new Feature[0])), features, zoom, search, language, granularityRegion);
+    private ResponseEntity<JSONObject> createResponse(List<Feature> features, BoundingBox boundingBox, int zoom, String search, String language, String granularityRegion) throws Exception {
+        return createResponse(clusterService.createCluster(features.toArray(new Feature[0])), features, boundingBox, zoom, search, language, granularityRegion);
     }
 
-    private ResponseEntity<JSONObject> createResponse(SuperCluster superCluster, List<Feature> features, int zoom, String search, String language, String granularityRegion) throws Exception {
+    private ResponseEntity<JSONObject> createResponse(SuperCluster superCluster, List<Feature> features, BoundingBox boundingBox, int zoom, String search, String language, String granularityRegion) throws Exception {
         HashMap<String, Object> result = new HashMap<>();
 //        result.put("list", features);
         List<JSONObject> subregions = new ArrayList<>();
-//        logger.info("Features: {}", features);
         for (Feature feature : features) {
             HashMap<String, Object> element = new HashMap<>();
 
@@ -1195,13 +1201,14 @@ public class MapController {
                     new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates())
             );
 
-
             Boolean isClusterFromCluster = (Boolean) feature.getProperties().get("cluster");
             logger.info(
-                    "Is cluster : {} | Point count : {} | Project count : {}",
+                    "Is cluster : {} | Point count : {} | Project count : {} | nbPoint : {} | class : {}",
                     isClusterFromCluster,
                     feature.getProperties().get("point_count"),
-                    ((List<String>) feature.getProperties().get("projects")).size()
+                    ((List<String>) feature.getProperties().get("projects")).size(),
+                    nbPoint.size(),
+                    feature.getGeometry().getClass()
             );
             if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
                 element.put("count", feature.getProperties().get("point_count"));
@@ -1218,6 +1225,8 @@ public class MapController {
             } else {
                 element.put("coordinates", null);
             }
+
+            boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
             element.put("cluster", nbPoint.size() != 1);
             element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));

@@ -6,6 +6,7 @@
 package com.yeo.javasupercluster;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -107,5 +108,25 @@ public class MainCluster {
                 ", id=" + id +
                 ", properties=" + properties +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        MainCluster cluster = (MainCluster) o;
+        return Double.compare(x, cluster.x) == 0
+                && Double.compare(y, cluster.y) == 0
+                && zoom == cluster.zoom
+                && parentId == cluster.parentId
+                && Objects.equals(numPoints, cluster.numPoints)
+                && Objects.equals(index, cluster.index)
+                && Objects.equals(id, cluster.id)
+                && Objects.equals(properties, cluster.properties)
+                && Objects.equals(clusterIndex, cluster.clusterIndex);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y, zoom, numPoints, parentId, index, id, properties, clusterIndex);
     }
 }

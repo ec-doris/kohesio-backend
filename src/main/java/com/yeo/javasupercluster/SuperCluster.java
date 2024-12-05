@@ -339,7 +339,7 @@ public class SuperCluster {
         KDBush tree = this.trees[_limitZoom(zoom)];
         for (int i = 0; i < tree.getPoints().size(); i++) {
             MainCluster mc = tree.getPoints().get(i);
-            logger.info("class: {}, id: {}, parend_id: {}, parent: {}", mc.getClass(), mc.getId(), mc.getParentId(), this.getParentOfCluster(mc));
+            logger.debug("class: {}, id: {}, parend_id: {}, parent: {}", mc.getClass(), mc.getId(), mc.getParentId(), this.getParentOfCluster(mc));
         }
         return null;
     }
@@ -349,6 +349,9 @@ public class SuperCluster {
     }
 
     private void addToIndexes(MainCluster mc) {
+        if (this.clusters.contains(mc)) {
+            return;
+        }
         mc.setClusterIndex(this.clusters.size());
         this.clusters.add(mc);
         this.clustersIndex.put(mc.id, mc.getClusterIndex());
@@ -428,7 +431,6 @@ public class SuperCluster {
         double x = lngX(coords[0]);
         double y = latY(coords[1]);
         double[] coordsCluster = new double[]{x, y};
-//        logger.info("parentChildren: {}", clustersParentChilds);
         List<MainCluster> results = new ArrayList<>();
         for (Integer i : this.clustersCoordsIndex.get(new Coordinate(coordsCluster))) {
             MainCluster mc = this.clusters.get(i);
@@ -444,15 +446,15 @@ public class SuperCluster {
         Set<Feature> points = new HashSet<>();
         if (cluster instanceof PointCluster) {
             points.add(this.points[cluster.index]);
-        } else {
-            Set<Integer> childrenClusterIndexes = this.clustersParentChilds.getOrDefault(
-                    cluster.getId(),
-                    new HashSet<>()
-            );
-            for (int childIndex : childrenClusterIndexes) {
-                MainCluster mc = this.clusters.get(childIndex);
-                points.addAll(this.getPointFromCluster(mc));
-            }
+        }
+        Set<Integer> childrenClusterIndexes = this.clustersParentChilds.getOrDefault(
+                cluster.getId(),
+                new HashSet<>()
+        );
+        logger.info("child : {}", this.clustersParentChilds);
+        for (int childIndex : childrenClusterIndexes) {
+            MainCluster mc = this.clusters.get(childIndex);
+            points.addAll(this.getPointFromCluster(mc));
         }
         return points;
     }
