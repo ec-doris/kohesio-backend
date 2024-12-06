@@ -1270,9 +1270,10 @@ public class MapController {
                 element.put("coordinates", null);
             }
 
-            boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
+//            boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
 //            element.put("cluster", nbPoint.size() > (int) element.get("count"));
-            element.put("cluster", this.hasDifferentCoordinate(nbPoint));
+            boolean cluster = this.hasDifferentCoordinate(nbPoint) || zoom >= 18;
+            element.put("cluster", cluster);
             element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
