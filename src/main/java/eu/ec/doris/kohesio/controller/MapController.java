@@ -1281,8 +1281,9 @@ public class MapController {
 
 //            boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
 //            element.put("cluster", nbPoint.size() > (int) element.get("count"));
-            boolean cluster = zoom < 18 || this.hasDifferentCoordinate(nbPoint);
-            element.put("cluster", cluster);
+            if (zoom <= 18) {
+                element.put("cluster", false);
+            }
             element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
