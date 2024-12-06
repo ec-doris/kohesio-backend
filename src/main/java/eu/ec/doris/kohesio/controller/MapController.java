@@ -1196,8 +1196,8 @@ public class MapController {
                 + tmpSearch
                 + " }";
         query += " " + filterBbox + " " + filterBbox + " ";
-        Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-        query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\""+ geometryGranularityRegion.toText() +"\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+//        Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+//        query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\""+ geometryGranularityRegion.toText() +"\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
         query += "}";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
