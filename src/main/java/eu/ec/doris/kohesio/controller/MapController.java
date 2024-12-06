@@ -1309,13 +1309,15 @@ public class MapController {
     }
 
     private boolean hasDifferentCoordinate(List<Feature> features) {
-        Set<eu.ec.doris.kohesio.payload.Coordinate> coordinates = new HashSet<>();
-        for(Feature feature: features) {
-            eu.ec.doris.kohesio.payload.Coordinate coordinate = new eu.ec.doris.kohesio.payload.Coordinate(((Point)feature.getGeometry()).getCoordinates());
-            if (coordinates.contains(coordinate)) {
+        eu.ec.doris.kohesio.payload.Coordinate coordinate0 = null;
+        for (Feature feature : features) {
+            if (coordinate0 == null) {
+                coordinate0 = new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates());
+            }
+            eu.ec.doris.kohesio.payload.Coordinate coordinate = new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates());
+            if (!coordinate0.equals(coordinate)) {
                 return true;
             }
-            coordinates.add(coordinate);
         }
         return false;
     }
