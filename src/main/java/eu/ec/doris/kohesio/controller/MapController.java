@@ -171,12 +171,12 @@ public class MapController {
             query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
             // End TODO
             int numberTotal = 0;
-            logger.info("Params:\n {}\n{}\n{}\n{}\n{}",
-                    boundingBox,
-                    zoom,
-                    search,
-                    language,
-                    !(country != null && granularityRegion != null));
+//            logger.info("Params:\n {}\n{}\n{}\n{}\n{}",
+//                    boundingBox,
+//                    zoom,
+//                    search,
+//                    language,
+//                    !(country != null && granularityRegion != null));
             ResponseEntity<JSONObject> tmp = null;
             if (zoom < 9) {
                 tmp = getCoordinatesByGeographicSubdivision(
@@ -200,8 +200,8 @@ public class MapController {
                 logger.info("Number of projects in the bounding box: {}", numberTotal);
 //                if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
                 // check if gran
-                if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-                    Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+//                if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
+//                    Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
 //                        logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
 //                        if (!boundingBox.toGeometry().contains(geometry)) {
 //                            boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
@@ -209,10 +209,11 @@ public class MapController {
 //                        } else {
 //                            logger.info("keeping bbox");
 //                        }
-                }
+//                }
                 List<Feature> features = getProjectsPoints(
                         language, search, boundingBox, granularityRegion, limit, offset, timeout
                 );
+                Instant instant = Instant.now();
                 SuperCluster superCluster = clusterService.createCluster(
                         features.toArray(new Feature[0]),
                         60,
@@ -221,6 +222,7 @@ public class MapController {
                         20,
                         64
                 );
+                logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
                 List<Feature> clusters = prepareCluster(superCluster, boundingBox, zoom);
 //                logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
                 return createResponse(superCluster, clusters, boundingBox, zoom, search, language, granularityRegion);
@@ -1250,6 +1252,7 @@ public class MapController {
                     zoom,
                     new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates())
             );
+
 
 //            Boolean isClusterFromCluster = (Boolean) feature.getProperties().get("cluster");
 //            logger.info(

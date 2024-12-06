@@ -35,6 +35,7 @@ public class SuperCluster {
 
     public SuperCluster(int radius, int extent, int minzoom, int maxzoom, int nodesize, Feature[] clusterpoints) {
 
+        logger.info("Starting creating Cluster");
         this.radius = radius;
         this.extent = extent;
         this.minZoom = minzoom;
@@ -53,7 +54,7 @@ public class SuperCluster {
         for (int i = 0; i < points.length; i++) {
             PointCluster tmp = createPointCluster(points[i], i);
             clusters.add(tmp);
-            addToIndexes(tmp);
+//            this.addToIndexes(tmp);
         }
 
         trees[maxZoom + 1] = new KDBush(clusters, nodeSize);
@@ -61,7 +62,6 @@ public class SuperCluster {
         for (int z = maxZoom; z >= minZoom; z--) {
             clusters = this._cluster(clusters, z);
             this.trees[z] = new KDBush(clusters, nodeSize);
-
             clusters.forEach(this::addToIndexes);
         }
 
@@ -354,7 +354,7 @@ public class SuperCluster {
         }
         mc.setClusterIndex(this.clusters.size());
         this.clusters.add(mc);
-        this.clustersIndex.put(mc.id, mc.getClusterIndex());
+//        this.clustersIndex.put(mc.id, mc.getClusterIndex());
 
         double[] coords = new double[]{mc.getX(), mc.getY()};
         Coordinate coordinate = new Coordinate(coords);
