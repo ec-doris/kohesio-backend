@@ -195,31 +195,31 @@ public class MapController {
             if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 logger.info("Number of projects in the bounding box: {}", numberTotal);
 //                if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
-                    // check if gran
-                    if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-                        Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-                        logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
+                // check if gran
+                if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
+                    Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+//                        logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
 //                        if (!boundingBox.toGeometry().contains(geometry)) {
 //                            boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
 //                            logger.info("changing bbox to fit the region ask {}", boundingBox);
 //                        } else {
 //                            logger.info("keeping bbox");
 //                        }
-                    }
-                    List<Feature> features = getProjectsPoints(
-                            language, search, boundingBox, limit, offset, timeout
-                    );
-                    SuperCluster superCluster = clusterService.createCluster(
-                            features.toArray(new Feature[0]),
-                            60,
-                            256,
-                            0,
-                            20,
-                            64
-                    );
-                    List<Feature> clusters = prepareCluster(superCluster, boundingBox, zoom);
-                    logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
-                    return createResponse(superCluster, clusters, boundingBox, zoom, search, language, granularityRegion);
+                }
+                List<Feature> features = getProjectsPoints(
+                        language, search, boundingBox, granularityRegion, limit, offset, timeout
+                );
+                SuperCluster superCluster = clusterService.createCluster(
+                        features.toArray(new Feature[0]),
+                        60,
+                        256,
+                        0,
+                        20,
+                        64
+                );
+                List<Feature> clusters = prepareCluster(superCluster, boundingBox, zoom);
+                logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
+                return createResponse(superCluster, clusters, boundingBox, zoom, search, language, granularityRegion);
 //                }
 //                return mapReturnCoordinates(
 //                        language,
@@ -737,6 +737,7 @@ public class MapController {
                         language,
                         search,
                         boundingBox,
+                        null,
                         limit,
                         offset,
                         timeout
@@ -1178,12 +1179,13 @@ public class MapController {
             String language,
             String search,
             BoundingBox boundingBox,
+            String granularityRegion,
             Integer limit,
             Integer offset,
             int timeout
     ) throws Exception {
         logger.info("Search project map point: language {} search {} boundingBox {} limit {} offset {}", language, search, boundingBox, limit, offset);
-        String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))";
+        String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
         String tmpSearch = search.replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P127> \\?coordinates \\.", "")
                 .replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> \\.", "")
                 .replace(filterBbox, "");
@@ -1193,7 +1195,10 @@ public class MapController {
                 + " FILTER EXISTS { "
                 + tmpSearch
                 + " }";
-        query += " " + filterBbox + " " + filterBbox + "}";
+        query += " " + filterBbox + " " + filterBbox + " ";
+        Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+        query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\""+ geometryGranularityRegion.toText() +"\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+        query += "}";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
