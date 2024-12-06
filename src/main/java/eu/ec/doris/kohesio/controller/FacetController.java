@@ -1338,7 +1338,9 @@ public class FacetController {
     public List<String> projectTypes = Arrays.asList(
             "https://linkedopendata.eu/entity/Q3402194",
             "https://linkedopendata.eu/entity/Q6714233",
-            "https://linkedopendata.eu/entity/Q6869909"
+            "https://linkedopendata.eu/entity/Q6869909",
+            "https://linkedopendata.eu/entity/Q7339617",
+            "https://linkedopendata.eu/entity/Q7339618"
     );
 
     @GetMapping(value = "/facet/eu/project_types", produces = "application/json")
@@ -1360,7 +1362,13 @@ public class FacetController {
                 + "     FILTER((LANG(?typeLabelEn)) = \"en\" )"
                 + "}";
 
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 10, "facet");
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
+                sparqlEndpoint,
+                query,
+                10,
+                false,
+                "facet"
+        );
 
         JSONArray jsonArray = new JSONArray();
         while (resultSet.hasNext()) {
