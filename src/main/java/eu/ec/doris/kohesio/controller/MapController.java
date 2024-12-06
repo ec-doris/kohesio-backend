@@ -1191,10 +1191,12 @@ public class MapController {
                 .replace(filterBbox, "");
         String query = "SELECT DISTINCT ?s0 ?coordinates WHERE { "
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ."
-                + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates ."
-                + " FILTER EXISTS { "
-                + tmpSearch
-                + " }";
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .";
+        if (!tmpSearch.replaceAll("\\s", "").isEmpty()) {
+            query += " FILTER EXISTS { "
+                    + tmpSearch
+                    + " }";
+        }
         query += " " + filterBbox + " " + filterBbox + " ";
 //        Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
 //        query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\""+ geometryGranularityRegion.toText() +"\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
@@ -1272,7 +1274,7 @@ public class MapController {
 
 //            boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
 //            element.put("cluster", nbPoint.size() > (int) element.get("count"));
-            boolean cluster = this.hasDifferentCoordinate(nbPoint) || zoom >= 18;
+            boolean cluster = zoom < 18 || this.hasDifferentCoordinate(nbPoint);
             element.put("cluster", cluster);
             element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
