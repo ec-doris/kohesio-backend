@@ -218,7 +218,7 @@ public class MapController {
                         64
                 );
                 List<Feature> clusters = prepareCluster(superCluster, boundingBox, zoom);
-                logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
+//                logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
                 return createResponse(superCluster, clusters, boundingBox, zoom, search, language, granularityRegion);
 //                }
 //                return mapReturnCoordinates(
@@ -1271,7 +1271,8 @@ public class MapController {
             }
 
             boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
-            element.put("cluster", nbPoint.size() > (int) element.get("count"));
+//            element.put("cluster", nbPoint.size() > (int) element.get("count"));
+            element.put("cluster", this.hasDifferentCoordinate(nbPoint));
             element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
@@ -1307,5 +1308,16 @@ public class MapController {
         );
     }
 
+    private boolean hasDifferentCoordinate(List<Feature> features) {
+        Set<eu.ec.doris.kohesio.payload.Coordinate> coordinates = new HashSet<>();
+        for(Feature feature: features) {
+            eu.ec.doris.kohesio.payload.Coordinate coordinate = new eu.ec.doris.kohesio.payload.Coordinate(((Point)feature.getGeometry()).getCoordinates());
+            if (coordinates.contains(coordinate)) {
+                return true;
+            }
+            coordinates.add(coordinate);
+        }
+        return false;
+    }
 
 }
