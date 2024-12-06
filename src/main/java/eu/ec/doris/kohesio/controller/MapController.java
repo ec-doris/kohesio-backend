@@ -177,21 +177,25 @@ public class MapController {
                     search,
                     language,
                     !(country != null && granularityRegion != null));
-            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(
-                    boundingBox,
-                    zoom,
-                    search,
-                    language,
-                    granularityRegion,
-                    !(country != null && granularityRegion != null),
-                    40
-            );
-            for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
-                numberTotal += (int) ((JSONObject) o).get("count");
+            ResponseEntity<JSONObject> tmp = null;
+            if (zoom < 9) {
+                tmp = getCoordinatesByGeographicSubdivision(
+                        boundingBox,
+                        zoom,
+                        search,
+                        language,
+                        granularityRegion,
+                        !(country != null && granularityRegion != null),
+                        40
+                );
+
+                for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
+                    numberTotal += (int) ((JSONObject) o).get("count");
+                }
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
 //            int mimNumberOfprojectBeforeGoingToSubRegion = 100;
-            logger.info("found {} projects, nb tot {}", ((JSONArray) tmp.getBody().get("subregions")).size(), numberTotal);
+//            logger.info("found {} projects, nb tot {}", ((JSONArray) tmp.getBody().get("subregions")).size(), numberTotal);
             if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 logger.info("Number of projects in the bounding box: {}", numberTotal);
 //                if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
