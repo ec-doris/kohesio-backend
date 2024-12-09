@@ -1244,34 +1244,14 @@ public class MapController {
 
     private ResponseEntity<JSONObject> createResponse(SuperCluster superCluster, List<Feature> features, BoundingBox boundingBox, int zoom, String search, String language, String granularityRegion) throws Exception {
         HashMap<String, Object> result = new HashMap<>();
-//        result.put("list", features);
         List<JSONObject> subregions = new ArrayList<>();
         for (Feature feature : features) {
             HashMap<String, Object> element = new HashMap<>();
 
-//            Instant start = Instant.now();
-//            List<Feature> nbPoint = clusterService.getPointsInCluster(
-//                    superCluster,
-//                    zoom,
-//                    new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates())
-//            );
-//            logger.info("PointInCluster took: {} milliseconds", Duration.between(start, Instant.now()).toMillis());
-
-//            Boolean isClusterFromCluster = (Boolean) feature.getProperties().get("cluster");
-//            logger.info(
-//                    "Is cluster : {} | Point count : {} | Project count : {} | nbPoint : {} | class : {}",
-//                    isClusterFromCluster,
-//                    feature.getProperties().get("point_count"),
-//                    ((List<String>) feature.getProperties().get("projects")).size(),
-//                    nbPoint.size(),
-//                    feature.getGeometry().getClass()
-//            );
             if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
                 element.put("count", feature.getProperties().get("point_count"));
                 element.put("cluster", feature.getProperties().get("cluster"));
-//                element.put("projects", feature.getProperties().get("projects"));
             } else {
-//                element.put("projects", feature.getProperties().get("projects"));
                 element.put("count", ((List<String>) feature.getProperties().get("projects")).size());
                 element.put("cluster", false);
             }
@@ -1282,13 +1262,11 @@ public class MapController {
                 element.put("coordinates", null);
             }
 
-//            boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
-//            element.put("cluster", nbPoint.size() > (int) element.get("count"));
-//            element.put("cluster", false);
             if (zoom >= 18) {
                 element.put("cluster", false);
             }
-//            element.put("nbPoint", nbPoint.size());
+//            logger.info("Feature Properties : {}", feature.getProperties());
+//            logger.info("Element Properties : {}", element);
             subregions.add(new JSONObject(element));
         }
         if (granularityRegion == null) {
