@@ -1057,7 +1057,7 @@ public class MapController {
         if (zoom <= 4 && forceBaseCountry) {
             return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout), search, language, timeout);
         }
-        if (zoom >= 8) {
+        if (zoom < 8) {
             if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
                 return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, language, timeout);
             }
