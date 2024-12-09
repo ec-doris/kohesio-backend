@@ -1057,10 +1057,10 @@ public class MapController {
         if (zoom <= 4 && forceBaseCountry) {
             return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout), search, language, timeout);
         }
-        if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
+        if (!(zoom > 8) && !getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
             return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, language, timeout);
         }
-        if (!getZoneByQuery(withinNuts2, "NUTS2", timeout).isEmpty()) {
+        if (!(zoom > 8) && !getZoneByQuery(withinNuts2, "NUTS2", timeout).isEmpty()) {
             return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), search, language, timeout);
         }
 //        if (!getZoneByQuery(withinNuts3, "NUTS3", timeout).isEmpty()) {
