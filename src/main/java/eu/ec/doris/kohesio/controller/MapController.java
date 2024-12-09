@@ -219,7 +219,7 @@ public class MapController {
                         60,
                         256,
                         0,
-                        20,
+                        17,
                         64
                 );
                 logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
@@ -1174,7 +1174,7 @@ public class MapController {
                         60,
                         256,
                         0,
-                        20,
+                        17,
                         64
                 ),
                 bbox,
