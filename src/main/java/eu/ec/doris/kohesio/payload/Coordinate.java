@@ -8,7 +8,7 @@ import org.locationtech.jts.geom.Point;
 import java.util.Objects;
 
 public class Coordinate {
-    private static final double TOLERANCE = 1e-9;
+    private static final double TOLERANCE = 1e-8;
     double lat;
     double lng;
 
