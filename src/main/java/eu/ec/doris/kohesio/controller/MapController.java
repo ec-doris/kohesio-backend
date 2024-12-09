@@ -1247,12 +1247,13 @@ public class MapController {
         for (Feature feature : features) {
             HashMap<String, Object> element = new HashMap<>();
 
-            List<Feature> nbPoint = clusterService.getPointsInCluster(
-                    superCluster,
-                    zoom,
-                    new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates())
-            );
-
+//            Instant start = Instant.now();
+//            List<Feature> nbPoint = clusterService.getPointsInCluster(
+//                    superCluster,
+//                    zoom,
+//                    new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates())
+//            );
+//            logger.info("PointInCluster took: {} milliseconds", Duration.between(start, Instant.now()).toMillis());
 
 //            Boolean isClusterFromCluster = (Boolean) feature.getProperties().get("cluster");
 //            logger.info(
@@ -1281,10 +1282,11 @@ public class MapController {
 
 //            boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
 //            element.put("cluster", nbPoint.size() > (int) element.get("count"));
+//            element.put("cluster", false);
             if (zoom <= 18) {
                 element.put("cluster", false);
             }
-            element.put("nbPoint", nbPoint.size());
+//            element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
         if (granularityRegion == null) {

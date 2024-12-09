@@ -32,6 +32,7 @@ public class SuperCluster {
     private final HashMap<Coordinate, List<Integer>> clustersCoordsIndex;
     private final List<MainCluster> clusters;
     private final HashMap<Integer, Set<Integer>> clustersParentChilds;
+    private final List<MainCluster> clustersBase;
 
     public SuperCluster(int radius, int extent, int minzoom, int maxzoom, int nodesize, Feature[] clusterpoints) {
 
@@ -62,9 +63,9 @@ public class SuperCluster {
         for (int z = maxZoom; z >= minZoom; z--) {
             clusters = this._cluster(clusters, z);
             this.trees[z] = new KDBush(clusters, nodeSize);
-            clusters.forEach(this::addToIndexes);
+//            clusters.forEach(this::addToIndexes);
         }
-
+        this.clustersBase = clusters;
     }
 
     private List<MainCluster> _cluster(List<MainCluster> points, int zoom) {
@@ -354,7 +355,7 @@ public class SuperCluster {
         }
         mc.setClusterIndex(this.clusters.size());
         this.clusters.add(mc);
-//        this.clustersIndex.put(mc.id, mc.getClusterIndex());
+        this.clustersIndex.put(mc.id, mc.getClusterIndex());
 
         double[] coords = new double[]{mc.getX(), mc.getY()};
         Coordinate coordinate = new Coordinate(coords);
@@ -366,7 +367,16 @@ public class SuperCluster {
 
     }
 
+    private void buildClusterIndex() {
+        List<MainCluster> allClusters = new ArrayList<>();
+        for (KDBush bush : this.trees) {
+            allClusters.addAll(bush.getPoints());
+        }
+        allClusters.forEach(this::addToIndexes);
+    }
+
     private void buildClusterParentChild() {
+        this.buildClusterIndex();
         for (MainCluster mc : this.clusters) {
             if (!this.clustersParentChilds.containsKey(mc.getParentId())) {
                 this.clustersParentChilds.put(mc.getParentId(), new HashSet<>());
@@ -427,7 +437,9 @@ public class SuperCluster {
     }
 
     public List<MainCluster> findClusters(double[] coords, int zoom) {
-        this.buildClusterParentChild();
+        if (this.clustersParentChilds.isEmpty()) {
+            this.buildClusterParentChild();
+        }
         double x = lngX(coords[0]);
         double y = latY(coords[1]);
         double[] coordsCluster = new double[]{x, y};
