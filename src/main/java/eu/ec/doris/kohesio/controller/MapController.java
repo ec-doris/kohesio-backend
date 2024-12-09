@@ -684,9 +684,12 @@ public class MapController {
                     )
             );
             eu.ec.doris.kohesio.payload.Coordinate coords = new eu.ec.doris.kohesio.payload.Coordinate(coordinate);
-            if (!superCluster.containPointAtCoordinates(coords)) {
+            if (!superCluster.containsPointAtCoordinates(coords)) {
                 return new ResponseEntity<>(new JSONArray(), HttpStatus.OK);
 //                return new ResponseEntity<>(mapPointBbox(superCluster, language, coords, zoom, timeout), HttpStatus.OK) ;
+            } else {
+                eu.ec.doris.kohesio.payload.Coordinate coordsFromCluster = superCluster.getCoordinateFromPointAtCoordinates(coords);
+                coordinate = coordsFromCluster.toBasicCoords();
             }
         }
 
@@ -1260,7 +1263,7 @@ public class MapController {
             if (feature.getGeometry() instanceof Point) {
                 Point point = (Point) feature.getGeometry();
                 eu.ec.doris.kohesio.payload.Coordinate coordinate = new eu.ec.doris.kohesio.payload.Coordinate(point.getCoordinates());
-                element.put("cluster", !superCluster.containPointAtCoordinates(coordinate));
+                element.put("cluster", !superCluster.containsPointAtCoordinates(coordinate));
                 element.put("coordinates", point.getCoordinates()[0] + "," + point.getCoordinates()[1]);
             } else {
                 element.put("cluster", false);

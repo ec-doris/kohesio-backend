@@ -32,7 +32,7 @@ public class SuperCluster {
     private final HashMap<Coordinate, List<Integer>> clustersCoordsIndex;
     private final List<MainCluster> clusters;
     private final HashMap<Integer, Set<Integer>> clustersParentChilds;
-    private final Set<Coordinate> pointCoordinates;
+    private final HashMap<Coordinate, Coordinate> pointCoordinates;
 
     public SuperCluster(int radius, int extent, int minzoom, int maxzoom, int nodesize, Feature[] clusterpoints) {
 
@@ -49,15 +49,17 @@ public class SuperCluster {
         this.clustersCoordsIndex = new HashMap<>();
         this.clusters = new ArrayList<>();
         this.clustersParentChilds = new HashMap<>();
-        this.pointCoordinates = new HashSet<>();
+        this.pointCoordinates = new HashMap<>();
 
         List<MainCluster> clusters = new ArrayList<>();
 
         for (int i = 0; i < points.length; i++) {
             PointCluster tmp = createPointCluster(points[i], i);
             clusters.add(tmp);
-            this.pointCoordinates.add(
-                    new Coordinate(((Point)points[i].getGeometry()).getCoordinates())
+            Coordinate coordinate = new Coordinate(((Point) points[i].getGeometry()).getCoordinates());
+            this.pointCoordinates.put(
+                    coordinate,
+                    coordinate
             );
         }
 
@@ -69,8 +71,14 @@ public class SuperCluster {
         }
     }
 
-    public boolean containPointAtCoordinates(Coordinate coordinate) {
-        return this.pointCoordinates.contains(coordinate);
+    public Coordinate getCoordinateFromPointAtCoordinates(Coordinate coordinate) {
+        logger.info("Coords hash {} , {}", coordinate.hashCode(), this.pointCoordinates.containsKey(coordinate));
+        return this.pointCoordinates.getOrDefault(coordinate, null);
+    }
+
+    public boolean containsPointAtCoordinates(Coordinate coordinate) {
+        logger.info("Coords hash {} , {}", coordinate.hashCode(), this.pointCoordinates.containsKey(coordinate));
+        return this.pointCoordinates.containsKey(coordinate);
     }
 
     private List<MainCluster> _cluster(List<MainCluster> points, int zoom) {
