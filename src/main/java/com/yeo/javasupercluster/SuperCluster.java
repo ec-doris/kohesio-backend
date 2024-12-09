@@ -32,7 +32,7 @@ public class SuperCluster {
     private final HashMap<Coordinate, List<Integer>> clustersCoordsIndex;
     private final List<MainCluster> clusters;
     private final HashMap<Integer, Set<Integer>> clustersParentChilds;
-    private final List<MainCluster> clustersBase;
+    private final Set<Coordinate> pointCoordinates;
 
     public SuperCluster(int radius, int extent, int minzoom, int maxzoom, int nodesize, Feature[] clusterpoints) {
 
@@ -49,13 +49,16 @@ public class SuperCluster {
         this.clustersCoordsIndex = new HashMap<>();
         this.clusters = new ArrayList<>();
         this.clustersParentChilds = new HashMap<>();
+        this.pointCoordinates = new HashSet<>();
 
         List<MainCluster> clusters = new ArrayList<>();
 
         for (int i = 0; i < points.length; i++) {
             PointCluster tmp = createPointCluster(points[i], i);
             clusters.add(tmp);
-//            this.addToIndexes(tmp);
+            this.pointCoordinates.add(
+                    new Coordinate(((Point)points[i].getGeometry()).getCoordinates())
+            );
         }
 
         trees[maxZoom + 1] = new KDBush(clusters, nodeSize);
@@ -63,9 +66,11 @@ public class SuperCluster {
         for (int z = maxZoom; z >= minZoom; z--) {
             clusters = this._cluster(clusters, z);
             this.trees[z] = new KDBush(clusters, nodeSize);
-//            clusters.forEach(this::addToIndexes);
         }
-        this.clustersBase = clusters;
+    }
+
+    public boolean containPointAtCoordinates(Coordinate coordinate) {
+        return this.pointCoordinates.contains(coordinate);
     }
 
     private List<MainCluster> _cluster(List<MainCluster> points, int zoom) {

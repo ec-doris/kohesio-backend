@@ -26,7 +26,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.wololo.geojson.Feature;
-import org.wololo.geojson.GeoJSON;
 import org.wololo.geojson.Point;
 import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
@@ -200,16 +199,16 @@ public class MapController {
                 logger.info("Number of projects in the bounding box: {}", numberTotal);
 //                if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
                 // check if gran
-//                if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-//                    Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-//                        logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
-//                        if (!boundingBox.toGeometry().contains(geometry)) {
-//                            boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
-//                            logger.info("changing bbox to fit the region ask {}", boundingBox);
-//                        } else {
-//                            logger.info("keeping bbox");
-//                        }
-//                }
+                if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
+                    Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+                    logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
+                    if (!boundingBox.toGeometry().contains(geometry)) {
+                        boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
+                        logger.info("changing bbox to fit the region ask {}", boundingBox);
+                    } else {
+                        logger.info("keeping bbox");
+                    }
+                }
                 List<Feature> features = getProjectsPoints(
                         language, search, boundingBox, granularityRegion, limit, offset, timeout
                 );
@@ -673,8 +672,22 @@ public class MapController {
         );
 
         if (boundingBox != null && zoom < 18) {
+            SuperCluster superCluster = clusterService.createCluster(
+                    getProjectsPoints(
+                            language,
+                            search,
+                            boundingBox,
+                            granularityRegion,
+                            limit,
+                            offset,
+                            timeout
+                    )
+            );
             eu.ec.doris.kohesio.payload.Coordinate coords = new eu.ec.doris.kohesio.payload.Coordinate(coordinate);
-            return new ResponseEntity<>(mapPointBbox(language, search, boundingBox, limit, offset, coords, zoom, timeout), HttpStatus.OK);
+            if (!superCluster.containPointAtCoordinates(coords)) {
+                return new ResponseEntity<>(new JSONArray(), HttpStatus.OK);
+//                return new ResponseEntity<>(mapPointBbox(superCluster, language, coords, zoom, timeout), HttpStatus.OK) ;
+            }
         }
 
         String limitS = "";
@@ -729,29 +742,17 @@ public class MapController {
     }
 
     private JSONArray mapPointBbox(
+            SuperCluster superCluster,
             String language,
-            String search,
-            BoundingBox boundingBox,
-            Integer limit,
-            Integer offset,
             eu.ec.doris.kohesio.payload.Coordinate coordinate,
             int zoom,
             int timeout
     ) throws Exception {
         Instant start = Instant.now();
         List<Feature> features = clusterService.getPointsInCluster(
-                getProjectsPoints(
-                        language,
-                        search,
-                        boundingBox,
-                        null,
-                        limit,
-                        offset,
-                        timeout
-                ),
-                coordinate,
-                boundingBox,
-                zoom
+                superCluster,
+                zoom,
+                coordinate
         );
 
         logger.info("Got point in {} ms", Duration.between(start, Instant.now()).toMillis());
@@ -1249,21 +1250,22 @@ public class MapController {
         List<JSONObject> subregions = new ArrayList<>();
         for (Feature feature : features) {
             HashMap<String, Object> element = new HashMap<>();
-
             if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
                 element.put("count", feature.getProperties().get("point_count"));
-                element.put("cluster", feature.getProperties().get("cluster"));
+//                element.put("cluster", feature.getProperties().get("cluster"));
             } else {
                 element.put("count", ((List<String>) feature.getProperties().get("projects")).size());
-                element.put("cluster", false);
+//                element.put("cluster", false);
             }
             if (feature.getGeometry() instanceof Point) {
                 Point point = (Point) feature.getGeometry();
+                eu.ec.doris.kohesio.payload.Coordinate coordinate = new eu.ec.doris.kohesio.payload.Coordinate(point.getCoordinates());
+                element.put("cluster", superCluster.containPointAtCoordinates(coordinate));
                 element.put("coordinates", point.getCoordinates()[0] + "," + point.getCoordinates()[1]);
             } else {
+                element.put("cluster", false);
                 element.put("coordinates", null);
             }
-
             subregions.add(new JSONObject(element));
         }
         if (granularityRegion == null) {

@@ -43,6 +43,10 @@ public class ClusterService {
         return getCluster(features, 60, 256, 0, 17, 64, bbox, zoom);
     }
 
+
+    public SuperCluster createCluster(List<Feature> features) {
+        return createCluster(features.toArray(new Feature[0]));
+    }
     public SuperCluster createCluster(Feature[] features) {
         return new SuperCluster( 60, 256, 0, 17, 64, features);
     }

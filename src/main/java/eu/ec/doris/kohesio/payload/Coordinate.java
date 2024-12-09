@@ -112,4 +112,5 @@ public class Coordinate {
     public String toLiteral() {
         return "\"" + this.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>";
     }
+
 }

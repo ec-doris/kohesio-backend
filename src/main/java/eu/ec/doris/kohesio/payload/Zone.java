@@ -73,7 +73,8 @@ public class Zone {
 
     public void queryNumberProjects(SPARQLQueryService sparqlQueryService, String sparqlEndpoint, String search, int timeout) throws Exception {
         String query = "SELECT (COUNT(DISTINCT ?s0) AS ?c ) WHERE { ";
-//                    + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
+//        query += " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
+//        query += "FILTER EXISTS { " + search + " }";
         query += search;
         if ("LAU".equals(this.type)) {
             query += " ?s0 <https://linkedopendata.eu/prop/direct/P581472> <" + this.lid + "> . ";
