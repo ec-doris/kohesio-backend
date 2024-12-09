@@ -672,7 +672,7 @@ public class MapController {
                 offset
         );
 
-        if (boundingBox != null) {
+        if (boundingBox != null && zoom < 18) {
             eu.ec.doris.kohesio.payload.Coordinate coords = new eu.ec.doris.kohesio.payload.Coordinate(coordinate);
             return new ResponseEntity<>(mapPointBbox(language, search, boundingBox, limit, offset, coords, zoom, timeout), HttpStatus.OK);
         }
@@ -1262,11 +1262,6 @@ public class MapController {
                 element.put("coordinates", null);
             }
 
-            if (zoom >= 18) {
-                element.put("cluster", false);
-            }
-//            logger.info("Feature Properties : {}", feature.getProperties());
-//            logger.info("Element Properties : {}", element);
             subregions.add(new JSONObject(element));
         }
         if (granularityRegion == null) {
