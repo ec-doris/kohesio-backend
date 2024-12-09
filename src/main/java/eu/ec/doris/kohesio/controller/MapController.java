@@ -738,6 +738,7 @@ public class MapController {
             int zoom,
             int timeout
     ) throws Exception {
+        Instant start = Instant.now();
         List<Feature> features = clusterService.getPointsInCluster(
                 getProjectsPoints(
                         language,
@@ -753,6 +754,7 @@ public class MapController {
                 zoom
         );
 
+        logger.info("Got point in {} ms", Duration.between(start, Instant.now()).toMillis());
         Set<String> projectUris = new HashSet<>();
         for (Feature proj : features) {
             projectUris.addAll((List<String>) proj.getProperties().get("projects"));
@@ -1283,7 +1285,7 @@ public class MapController {
 //            boolean isNotAClusterAsIDecided = nbPoint.size() == 1 || zoom < 7;
 //            element.put("cluster", nbPoint.size() > (int) element.get("count"));
 //            element.put("cluster", false);
-            if (zoom <= 18) {
+            if (zoom >= 18) {
                 element.put("cluster", false);
             }
 //            element.put("nbPoint", nbPoint.size());
