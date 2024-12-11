@@ -72,12 +72,10 @@ public class SuperCluster {
     }
 
     public Coordinate getCoordinateFromPointAtCoordinates(Coordinate coordinate) {
-        logger.info("Coords hash {} , {}", coordinate.hashCode(), this.pointCoordinates.containsKey(coordinate));
         return this.pointCoordinates.getOrDefault(coordinate, null);
     }
 
     public boolean containsPointAtCoordinates(Coordinate coordinate) {
-        logger.info("Coords hash {} , {}", coordinate.hashCode(), this.pointCoordinates.containsKey(coordinate));
         return this.pointCoordinates.containsKey(coordinate);
     }
 
@@ -462,7 +460,6 @@ public class SuperCluster {
             if (mc.getZoom() <= zoom) {
                 results.add(mc);
             }
-//            logger.info("found a cluster matching coords {} but not zoom {} vs {}. Cluster: {}", coords, zoom, mc.getZoom(), mc);
         }
         return results;
     }
@@ -481,5 +478,13 @@ public class SuperCluster {
             points.addAll(this.getPointFromCluster(mc));
         }
         return points;
+    }
+
+    public Feature[] getPoints() {
+        return points;
+    }
+
+    public KDBush[] getTrees() {
+        return trees;
     }
 }

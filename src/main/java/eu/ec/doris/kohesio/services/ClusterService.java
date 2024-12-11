@@ -1,16 +1,16 @@
 package eu.ec.doris.kohesio.services;
 
 import com.yeo.javasupercluster.MainCluster;
-import com.yeo.javasupercluster.PointCluster;
 import com.yeo.javasupercluster.SuperCluster;
 import eu.ec.doris.kohesio.payload.BoundingBox;
 import eu.ec.doris.kohesio.payload.Coordinate;
-import org.eclipse.rdf4j.query.algebra.Str;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import org.wololo.geojson.*;
+import org.wololo.geojson.Feature;
+import org.wololo.geojson.FeatureCollection;
+import org.wololo.geojson.GeoJSON;
+import org.wololo.geojson.GeoJSONFactory;
 
 import java.util.*;
 

@@ -41,8 +41,8 @@ public class BoundingBox {
     }
 
     public BoundingBox(Envelope envelope) {
-        this.southWest = new Coordinate(envelope.getMinY(), envelope.getMaxX());
-        this.northEast = new Coordinate(envelope.getMaxY(), envelope.getMinX());
+        this.southWest = new Coordinate(envelope.getMinY(), envelope.getMinX());
+        this.northEast = new Coordinate(envelope.getMaxY(), envelope.getMaxX());
     }
 
     @JsonCreator
@@ -98,11 +98,11 @@ public class BoundingBox {
     }
 
     public String toWkt() {
-        return "POLYGON((" + southWest.getLng() + " " + southWest.getLat() + "," +
-                northEast.getLng() + " " + southWest.getLat() + "," +
-                northEast.getLng() + " " + northEast.getLat() + "," +
-                southWest.getLng() + " " + northEast.getLat() + "," +
-                southWest.getLng() + " " + southWest.getLat() + "))";
+        return "POLYGON((" + southWest.getLng() + " " + southWest.getLat() + ","
+                + northEast.getLng() + " " + southWest.getLat() + ","
+                + northEast.getLng() + " " + northEast.getLat() + ","
+                + southWest.getLng() + " " + northEast.getLat() + ","
+                + southWest.getLng() + " " + southWest.getLat() + "))";
     }
 
     public String toLiteral() {

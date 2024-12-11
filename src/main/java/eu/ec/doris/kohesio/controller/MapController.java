@@ -129,7 +129,6 @@ public class MapController {
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
             boundingBox = BoundingBox.createFromString(boundingBoxString);
-//            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
         }
 
         //simplify the query
@@ -166,20 +165,20 @@ public class MapController {
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search;// + "} ";
         if (boundingBox != null) {
-            // TODO: this is a tmp fix because it look like the lucene index is not working properly
-            query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
-            // End TODO
+            BoundingBox bboxToUse = boundingBox;
+            if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
+                Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+//                logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
+                if (!boundingBox.toGeometry().contains(geometry)) {
+                    bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
+                }
+            }
+
             int numberTotal = 0;
-//            logger.info("Params:\n {}\n{}\n{}\n{}\n{}",
-//                    boundingBox,
-//                    zoom,
-//                    search,
-//                    language,
-//                    !(country != null && granularityRegion != null));
             ResponseEntity<JSONObject> tmp = null;
             if (zoom < 9) {
                 tmp = getCoordinatesByGeographicSubdivision(
-                        boundingBox,
+                        bboxToUse,
                         zoom,
                         search,
                         language,
@@ -193,24 +192,9 @@ public class MapController {
                 }
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
-//            int mimNumberOfprojectBeforeGoingToSubRegion = 100;
-//            logger.info("found {} projects, nb tot {}", ((JSONArray) tmp.getBody().get("subregions")).size(), numberTotal);
             if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
-                logger.info("Number of projects in the bounding box: {}", numberTotal);
-//                if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
-                // check if gran
-                if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-                    Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-                    logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
-                    if (!boundingBox.toGeometry().contains(geometry)) {
-                        boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
-                        logger.info("changing bbox to fit the region ask {}", boundingBox);
-                    } else {
-                        logger.info("keeping bbox");
-                    }
-                }
                 List<Feature> features = getProjectsPoints(
-                        language, search, boundingBox, granularityRegion, limit, offset, timeout
+                        language, search, bboxToUse, granularityRegion, limit, offset, timeout
                 );
                 Instant instant = Instant.now();
                 SuperCluster superCluster = clusterService.createCluster(
@@ -222,24 +206,8 @@ public class MapController {
                         64
                 );
                 logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
-                List<Feature> clusters = prepareCluster(superCluster, boundingBox, zoom);
-//                logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
-                return createResponse(superCluster, clusters, boundingBox, zoom, search, language, granularityRegion);
-//                }
-//                return mapReturnCoordinates(
-//                        language,
-//                        search,
-//                        country,
-//                        region,
-//                        granularityRegion,
-//                        latitude,
-//                        longitude,
-//                        cci,
-//                        boundingBox,
-//                        limit,
-//                        offset,
-//                        timeout
-//                );
+                List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
+                return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
             }
             return tmp;
         }
@@ -1199,10 +1167,9 @@ public class MapController {
             int timeout
     ) throws Exception {
         logger.info("Search project map point: language {} search {} boundingBox {} limit {} offset {}", language, search, boundingBox, limit, offset);
-        String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
         String tmpSearch = search.replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P127> \\?coordinates \\.", "")
                 .replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> \\.", "")
-                .replace(filterBbox, "");
+                .replaceAll("FILTER\\(<http://www.opengis.net/def/function/geosparql/ehContains>\\(.*\\)", "");
         String query = "SELECT DISTINCT ?s0 ?coordinates WHERE { "
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ."
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .";
@@ -1211,9 +1178,10 @@ public class MapController {
                     + tmpSearch
                     + " }";
         }
+        String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
         query += " " + filterBbox + " " + filterBbox + " ";
-//        Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-//        query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\""+ geometryGranularityRegion.toText() +"\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+        Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+        query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\""+ geometryGranularityRegion.toText() +"\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
         query += "}";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
@@ -1235,7 +1203,6 @@ public class MapController {
             List<String> projects = projectByCoordinates.get(geometry);
             for (String uri : projects) {
                 Map<String, Object> properties = new HashMap<>();
-//                properties.put("project", uri);
                 properties.put("projects", projects);
                 Feature feature = new Feature(writer.write(geometry), properties);
                 features.add(feature);
@@ -1255,10 +1222,8 @@ public class MapController {
             HashMap<String, Object> element = new HashMap<>();
             if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
                 element.put("count", feature.getProperties().get("point_count"));
-//                element.put("cluster", feature.getProperties().get("cluster"));
             } else {
                 element.put("count", ((List<String>) feature.getProperties().get("projects")).size());
-//                element.put("cluster", false);
             }
             if (feature.getGeometry() instanceof Point) {
                 Point point = (Point) feature.getGeometry();
