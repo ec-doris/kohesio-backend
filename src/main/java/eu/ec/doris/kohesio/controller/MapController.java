@@ -944,13 +944,15 @@ public class MapController {
         String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + tmpSearch
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . "
-                + "?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type."
+                + " FILTER EXISTS {"
+                + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type."
                 + " VALUES ?type{"
                 + " <https://linkedopendata.eu/entity/Q4407315>"
                 + " <https://linkedopendata.eu/entity/Q4407316>"
                 + " <https://linkedopendata.eu/entity/Q4407317>"
                 + " <https://linkedopendata.eu/entity/Q510>"
-                + " }"
+                + " }}"
+
                 + " } GROUP BY ?nutsOfCount";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
