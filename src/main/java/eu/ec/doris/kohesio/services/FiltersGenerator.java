@@ -210,34 +210,22 @@ public class FiltersGenerator {
         }
 
         if (theme != null || policyObjective != null) {
-//            if (country == null){
-//            search += " { ";
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
+            search += "{";
             if (theme != null) {
-                search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
             }
+            if (policyObjective != null) {
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+            }
+            search += " } UNION { ";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
             if (policyObjective != null) {
                 search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
             }
-//            search += " } UNION { ";
-//            if (theme != null) {
-//                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
-//            }
-//            if (policyObjective != null) {
-//                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
-//            }
-//            search += " } ";
-//            } else {
-//                search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
-//                search += " FILTER EXISTS { ";
-//                if (theme != null) {
-//                    search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
-//                }
-//                if (policyObjective != null) {
-//                    search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
-//                }
-//                search += " } } ";
-//            }
+            if (theme != null) {
+                search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+            }
+            search += " } ";
         }
         return search;
     }

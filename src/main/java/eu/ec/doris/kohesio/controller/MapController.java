@@ -192,22 +192,25 @@ public class MapController {
                 }
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
-            if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
-                List<Feature> features = getProjectsPoints(
-                        language, search, bboxToUse, granularityRegion, limit, offset, timeout
-                );
-                Instant instant = Instant.now();
-                SuperCluster superCluster = clusterService.createCluster(
-                        features.toArray(new Feature[0]),
-                        60,
-                        256,
-                        0,
-                        17,
-                        64
-                );
-                logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
-                List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
-                return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
+            logger.info("Found: {} projects by subdivision", numberTotal);
+            if (zoom >= 8) {
+                if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
+                    List<Feature> features = getProjectsPoints(
+                            language, search, bboxToUse, granularityRegion, limit, offset, timeout
+                    );
+                    Instant instant = Instant.now();
+                    SuperCluster superCluster = clusterService.createCluster(
+                            features.toArray(new Feature[0]),
+                            60,
+                            256,
+                            0,
+                            17,
+                            64
+                    );
+                    logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
+                    List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
+                    return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
+                }
             }
             return tmp;
         }
