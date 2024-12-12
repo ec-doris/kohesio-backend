@@ -193,7 +193,7 @@ public class MapController {
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
             logger.info("Found: {} projects by subdivision", numberTotal);
-            if (zoom >= 8) {
+//            if (zoom >= 8) {
                 if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                     List<Feature> features = getProjectsPoints(
                             language, search, bboxToUse, granularityRegion, limit, offset, timeout
@@ -211,7 +211,7 @@ public class MapController {
                     List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
                     return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
                 }
-            }
+//            }
             return tmp;
         }
         query += "}";
