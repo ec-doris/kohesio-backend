@@ -884,6 +884,7 @@ public class ProjectController {
             Principal principal
     )
             throws Exception {
+        offset = Math.min(offset, 950);
         if (timeout == null) {
             timeout = 20;
             if (keywords == null) {

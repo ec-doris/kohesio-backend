@@ -320,6 +320,7 @@ public class BeneficiaryController {
             @RequestParam(value = "offset", defaultValue = "0") int offset,
             Principal principal
     ) throws Exception {
+        Math.min(offset, 950);
         int timeout = 20;
         if (keywords == null) {
             timeout = 500;

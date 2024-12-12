@@ -56,6 +56,7 @@ public class GeneralController {
         logger.info("General search: language {}, keywords {}", language, keywords);
 //        logger.info("Order: EuBudget {}, TotalBudget {}, Number {}", orderEuBudget, orderTotalBudget, orderNumProjects);
 
+        offset = Math.min(offset, 950);
         String search = "";
         if (keywords != null) {
             if (!keywords.contains("AND") && !keywords.contains("OR") && !keywords.contains("NOT") && !keywords.contains("\"")) {
