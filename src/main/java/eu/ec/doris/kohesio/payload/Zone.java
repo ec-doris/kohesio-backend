@@ -21,14 +21,17 @@ public class Zone {
     String lid;
     String geo;
     String type;
-    int numberProjects;
+    Integer numberProjects;
 
-    public Zone(String uri, String lid, String geo, String type) {
+    public Zone(String uri, String lid, String geo, String type, Integer numberProjects) {
         this.uri = uri;
         this.lid = lid;
         this.geo = geo;
         this.type = type;
-        this.numberProjects = 0;
+        this.numberProjects = numberProjects;
+    }
+    public Zone(String uri, String lid, String geo, String type) {
+        this(uri, lid, geo, type, null);
     }
 
     public String getUri() {
@@ -63,11 +66,11 @@ public class Zone {
         this.type = type;
     }
 
-    public int getNumberProjects() {
+    public Integer getNumberProjects() {
         return numberProjects;
     }
 
-    public void setNumberProjects(int numberProjects) {
+    public void setNumberProjects(Integer numberProjects) {
         this.numberProjects = numberProjects;
     }
 

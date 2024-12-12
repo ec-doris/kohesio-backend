@@ -193,25 +193,23 @@ public class MapController {
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
             logger.info("Found: {} projects by subdivision", numberTotal);
-//            if (zoom >= 8) {
-                if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
-                    List<Feature> features = getProjectsPoints(
-                            language, search, bboxToUse, granularityRegion, limit, offset, timeout
-                    );
-                    Instant instant = Instant.now();
-                    SuperCluster superCluster = clusterService.createCluster(
-                            features.toArray(new Feature[0]),
-                            60,
-                            256,
-                            0,
-                            17,
-                            64
-                    );
-                    logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
-                    List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
-                    return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
-                }
-//            }
+            if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
+                List<Feature> features = getProjectsPoints(
+                        language, search, bboxToUse, granularityRegion, limit, offset, timeout
+                );
+                Instant instant = Instant.now();
+                SuperCluster superCluster = clusterService.createCluster(
+                        features.toArray(new Feature[0]),
+                        60,
+                        256,
+                        0,
+                        17,
+                        64
+                );
+                logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
+                List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
+                return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
+            }
             return tmp;
         }
         query += "}";
@@ -938,6 +936,37 @@ public class MapController {
 
     private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, String granularityRegion, boolean forceBaseCountry, int timeout) throws Exception {
 
+        String tmpSearch = search.replaceAll(
+                "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
+                ""
+        );
+
+        String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
+                + tmpSearch
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . "
+                + "?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type."
+                + " VALUES ?type{"
+                + " <https://linkedopendata.eu/entity/Q4407315>"
+                + " <https://linkedopendata.eu/entity/Q4407316>"
+                + " <https://linkedopendata.eu/entity/Q4407317>"
+                + " <https://linkedopendata.eu/entity/Q510>"
+                + " }"
+                + " } GROUP BY ?nutsOfCount";
+
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
+                sparqlEndpoint,
+                queryCount,
+                timeout,
+                "map2"
+        );
+        HashMap<String, Integer> uriCount = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet bindings = resultSet.next();
+            String nutsOfCount = bindings.getBinding("nutsOfCount").getValue().stringValue();
+            Integer count = Integer.parseInt(bindings.getBinding("count").getValue().stringValue());
+            uriCount.put(nutsOfCount, count);
+        }
+
         // Get Country in bbox
         String withinCountry = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
@@ -1030,25 +1059,30 @@ public class MapController {
         intersectLAU += "} ";
 
         if (zoom <= 4 && forceBaseCountry) {
-            return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout), search, language, timeout);
+            return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount), search, language, timeout);
         }
         if (zoom < 8) {
-            if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
-                return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, language, timeout);
+            if (!getZoneByQuery(withinNuts1, "NUTS1", timeout, uriCount).isEmpty()) {
+                return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout, uriCount), search, language, timeout);
             }
-            if (!getZoneByQuery(withinNuts2, "NUTS2", timeout).isEmpty()) {
-                return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), search, language, timeout);
+            if (!getZoneByQuery(withinNuts2, "NUTS2", timeout, uriCount).isEmpty()) {
+                return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout, uriCount), search, language, timeout);
             }
         }
 //        if (!getZoneByQuery(withinNuts3, "NUTS3", timeout).isEmpty()) {
-        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), search, language, timeout);
+        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout, uriCount), search, language, timeout);
 //        }
 //        return createResponse(getZoneByQuery(intersectLAU, "LAU", timeout), search, language);
 
 
     }
 
-    private ResponseEntity<JSONObject> createResponse(HashMap<String, Zone> res, String search, String language, int timeout) throws Exception {
+    private ResponseEntity<JSONObject> createResponse(
+            HashMap<String, Zone> res,
+            String search,
+            String language,
+            int timeout
+    ) throws Exception {
 //        logger.info("WE ARE HERE {} | {} ", search, language);
         String granularityRegion = "https://linkedopendata.eu/entity/Q1";
         HashMap<String, Object> result = new HashMap<>();
@@ -1063,7 +1097,9 @@ public class MapController {
         Instant start = Instant.now();
         for (Zone z : res.values()) {
 
-            z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, tmpsearch, 30);
+            if (z.getNumberProjects() == null) {
+                z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, tmpsearch, 30);
+            }
             if (z.getNumberProjects() == 0) {
                 continue;
             }
@@ -1118,7 +1154,7 @@ public class MapController {
         return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
     }
 
-    private HashMap<String, Zone> getZoneByQuery(String query, String type, int timeout) throws Exception {
+    private HashMap<String, Zone> getZoneByQuery(String query, String type, int timeout, HashMap<String, Integer> uriCount) throws Exception {
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
         HashMap<String, Zone> result = new HashMap<>();
         while (resultSet.hasNext()) {
@@ -1127,7 +1163,8 @@ public class MapController {
             String lid = querySolution.getBinding("lid").getValue().stringValue();
             String geo = querySolution.getBinding("geo").getValue().stringValue();
 
-            Zone zone = new Zone(uri, lid, geo, type);
+            Integer count = uriCount.getOrDefault(lid, 0);
+            Zone zone = new Zone(uri, lid, geo, type, count);
             if (!result.containsKey(lid)) {
                 result.put(lid, zone);
             }
