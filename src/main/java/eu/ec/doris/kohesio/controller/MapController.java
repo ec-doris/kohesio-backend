@@ -939,7 +939,7 @@ public class MapController {
         String tmpSearch = search.replaceAll(
                 "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
                 ""
-        ).replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates", "");
+        ).replaceAll("\\?s0\\s+<https://linkedopendata.eu/prop/direct/P127>\\s+\\?coordinates\\s*.", "");
 
         String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + tmpSearch
