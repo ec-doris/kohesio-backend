@@ -184,7 +184,7 @@ public class MapController {
                         language,
                         granularityRegion,
                         !(country != null && granularityRegion != null),
-                        40
+                        100
                 );
 
                 for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
