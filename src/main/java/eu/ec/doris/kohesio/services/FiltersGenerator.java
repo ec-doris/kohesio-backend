@@ -230,7 +230,13 @@ public class FiltersGenerator {
                 }
             }
             if (theme != null) {
+                if (flagFilter) {
+                    search += " FILTER EXISTS {";
+                }
                 search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+                if (flagFilter) {
+                    search += "} ";
+                }
             }
             search += " } ";
         }
