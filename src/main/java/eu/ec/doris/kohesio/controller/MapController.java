@@ -177,6 +177,14 @@ public class MapController {
             int numberTotal = 0;
             ResponseEntity<JSONObject> tmp = null;
             if (zoom < 9) {
+                boolean shouldFilterExistsOnNuts = country != null || theme != null || fund != null || program != null ||
+                        categoryOfIntervention != null || policyObjective != null || budgetBiggerThen != null ||
+                        budgetSmallerThen != null || budgetEUBiggerThen != null ||
+                        budgetEUSmallerThen != null || startDateBefore != null || startDateAfter != null ||
+                        endDateBefore != null || endDateAfter != null || region != null || granularityRegion != null ||
+                        interreg != null || highlighted != null || cci != null || kohesioCategory != null ||
+                        projectTypes != null || priorityAxis != null;
+
                 tmp = getCoordinatesByGeographicSubdivision(
                         bboxToUse,
                         zoom,
@@ -184,7 +192,8 @@ public class MapController {
                         language,
                         granularityRegion,
                         !(country != null && granularityRegion != null),
-                        180
+                        180,
+                        shouldFilterExistsOnNuts
                 );
 
                 for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
@@ -934,7 +943,16 @@ public class MapController {
         return null;
     }
 
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, String granularityRegion, boolean forceBaseCountry, int timeout) throws Exception {
+    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(
+            BoundingBox bbox,
+            int zoom,
+            String search,
+            String language,
+            String granularityRegion,
+            boolean forceBaseCountry,
+            int timeout,
+            boolean shouldFilterExistsOnNuts
+    ) throws Exception {
 
         String tmpSearch = search.replaceAll(
                 "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
@@ -943,17 +961,21 @@ public class MapController {
 
         String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + tmpSearch
-                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . "
-//                + " FILTER EXISTS {"
-                + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type."
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . ";
+        if (shouldFilterExistsOnNuts) {
+            queryCount += " FILTER EXISTS {";
+        }
+        queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type."
                 + " VALUES ?type{"
                 + " <https://linkedopendata.eu/entity/Q4407315>"
                 + " <https://linkedopendata.eu/entity/Q4407316>"
                 + " <https://linkedopendata.eu/entity/Q4407317>"
                 + " <https://linkedopendata.eu/entity/Q510>"
-                + " }"
-//                + "}"
-                + " } GROUP BY ?nutsOfCount";
+                + " }";
+        if (shouldFilterExistsOnNuts) {
+            queryCount += "}";
+        }
+        queryCount += " } GROUP BY ?nutsOfCount";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
                 sparqlEndpoint,
