@@ -195,37 +195,37 @@ public class FiltersGenerator {
         }
 
         if (kohesioCategory != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category."
-                    + " ?category <https://linkedopendata.eu/prop/direct/P579321> <" + kohesioCategory + "> . "
+            search += " FILTER EXISTS {?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. "
+                    + " FILTER EXISTS { ?category <https://linkedopendata.eu/prop/direct/P579321> <" + kohesioCategory + "> . }} "
             ;
         }
 
         if (projectTypes != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P35> ";
+            search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P35> ";
             search += String.join(
                     ",",
                     projectTypes.stream().map((projectType) -> "<" + projectType + ">").collect(Collectors.toList())
             );
-            search += ". ";
+            search += ". } ";
         }
 
         if (theme != null || policyObjective != null) {
             search += "{";
             if (theme != null) {
-                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+                search += "FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> . } ";
             }
             if (policyObjective != null) {
-                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+                search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . } ";
             }
             search += " } UNION { ";
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
+            search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
             if (policyObjective != null) {
-                search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+                search += " FILTER EXISTS { ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . } ";
             }
             if (theme != null) {
-                search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+                search += " FILTER EXISTS { ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> . } ";
             }
-            search += " } ";
+            search += " }} ";
         }
         return search;
     }
