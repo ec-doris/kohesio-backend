@@ -160,7 +160,7 @@ public class MapController {
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
-                interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset
+                interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset, true
         );
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search;// + "} ";
@@ -646,7 +646,8 @@ public class MapController {
                 priorityAxis,
                 boundingBox,
                 limit,
-                offset
+                offset,
+                false
         );
 
         if (boundingBox != null && zoom < 18) {

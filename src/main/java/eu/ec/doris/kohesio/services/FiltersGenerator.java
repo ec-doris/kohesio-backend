@@ -47,7 +47,8 @@ public class FiltersGenerator {
             String priorityAxis,
             BoundingBox boundingBox,
             Integer limit,
-            Integer offset
+            Integer offset,
+            boolean flagFilter
     ) throws IOException {
         String search = "";
 
@@ -220,7 +221,13 @@ public class FiltersGenerator {
             search += " } UNION { ";
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
             if (policyObjective != null) {
+                if (flagFilter) {
+                    search += " FILTER EXISTS {";
+                }
                 search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+                if (flagFilter) {
+                    search += "} ";
+                }
             }
             if (theme != null) {
                 search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";

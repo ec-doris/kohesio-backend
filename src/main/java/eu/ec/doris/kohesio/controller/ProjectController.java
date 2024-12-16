@@ -991,7 +991,8 @@ public class ProjectController {
                 priorityAxis,
                 null,
                 limit,
-                offset
+                offset,
+                false
         );
 
         int numResults = 0;
@@ -1429,7 +1430,8 @@ public class ProjectController {
                 null, null,
                 null, null,
                 null, null, null, null,
-                limit, offset
+                limit, offset,
+                false
         );
 
         //computing the number of results
