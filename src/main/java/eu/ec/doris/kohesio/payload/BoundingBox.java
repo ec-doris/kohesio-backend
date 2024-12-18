@@ -115,11 +115,11 @@ public class BoundingBox {
 
     public Geometry toGeometry() {
         org.locationtech.jts.geom.Coordinate[] coordinates = new org.locationtech.jts.geom.Coordinate[]{
-                new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getWest()),
-                new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getEast()),
-                new org.locationtech.jts.geom.Coordinate(this.getSouth(), this.getEast()),
-                new org.locationtech.jts.geom.Coordinate(this.getSouth(), this.getWest()),
-                new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getWest())
+                new org.locationtech.jts.geom.Coordinate(this.getWest(), this.getNorth()),
+                new org.locationtech.jts.geom.Coordinate(this.getEast(), this.getNorth()),
+                new org.locationtech.jts.geom.Coordinate(this.getEast(), this.getSouth()),
+                new org.locationtech.jts.geom.Coordinate(this.getWest(), this.getSouth()),
+                new org.locationtech.jts.geom.Coordinate(this.getWest(), this.getNorth())
         };
 
         return new GeometryFactory().createPolygon(coordinates);
@@ -137,5 +137,58 @@ public class BoundingBox {
 //        Coordinate coordinate = intersection.getCentroid().getCoordinate();
 //        // lat,lng
 //        return coordinate.x + "," + coordinate.y;
+//    }
+
+    private static final int WORLD_DIM_HEIGHT = 256;
+    private static final int WORLD_DIM_WIDTH = 256;
+    private static final int MAX_ZOOM = 18;
+
+    private double latRad(double lat) {
+        double sin = Math.sin(lat * Math.PI / 180);
+        double radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
+        return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
+    }
+
+    private double zoom(double mapPx, double worldPx, double fraction) {
+        return Math.floor(Math.log(mapPx / worldPx / fraction) / Math.log(2));
+    }
+//    public int guessZoom() {
+//        Coordinate ne = this.getNorthEast();
+//        Coordinate sw = this.getSouthWest();
+//
+//        double latFraction = (latRad(ne.getLat()) - latRad(sw.getLat())) / Math.PI;
+//
+//        double lngDiff = ne.getLng() - sw.getLng();
+//        double lngFraction = ((lngDiff < 0) ? (lngDiff + 360) : lngDiff) / 360;
+//
+//        double latZoom = zoom(mapDim.height, WORLD_DIM_HEIGHT, latFraction);
+//        double lngZoom = zoom(mapDim.width, WORLD_DIM_WIDTH, lngFraction);
+//
+//        return (int) Math.min(Math.min(latZoom, lngZoom), MAX_ZOOM);
+//    }
+//
+//    public int calculateZoom() {
+//        // Earth’s circumference in meters at the equator
+//        final double EARTH_CIRCUMFERENCE = 40075017;
+//
+//        // Map tile size in pixels (default is 256 for many mapping APIs)
+//        final int TILE_SIZE = 256;
+//
+//        // Calculate the width and height of the bounding box in meters
+//        double latDifference = Math.abs(this.getNorth() - this.getSouth());
+//        double lngDifference = Math.abs(this.getEast() - this.getWest());
+//
+//        // Calculate the resolution needed in meters per pixel
+//        double latResolution = (EARTH_CIRCUMFERENCE / Math.pow(2, 0)) * latDifference / 360.0;
+//        double lngResolution = (EARTH_CIRCUMFERENCE / Math.pow(2, 0)) * lngDifference / 360.0;
+//
+//        // Adjust the resolutions to fit the map dimensions
+//        double latZoom = Math.log(800. / TILE_SIZE / latResolution) / Math.log(2);
+//        double lngZoom = Math.log(640. / TILE_SIZE / lngResolution) / Math.log(2);
+//
+//        // Use the smaller zoom level to ensure the bounding box fits in the map
+//        int zoomLevel = (int) Math.floor(Math.min(latZoom, lngZoom));
+//        System.err.println(zoomLevel);
+//        return Math.max(0, zoomLevel); // Ensure zoom level is non-negative
 //    }
 }

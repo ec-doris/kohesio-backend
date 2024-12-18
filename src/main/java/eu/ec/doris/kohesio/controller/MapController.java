@@ -168,8 +168,7 @@ public class MapController {
             BoundingBox bboxToUse = boundingBox;
             if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
                 Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-//                logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
-                if (!boundingBox.toGeometry().contains(geometry)) {
+                if (!geometry.contains(boundingBox.toGeometry())) {
                     bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
                 }
             }
