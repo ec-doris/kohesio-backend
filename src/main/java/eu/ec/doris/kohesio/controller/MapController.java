@@ -998,9 +998,9 @@ public class MapController {
         // Get Country in bbox
         String withinCountry = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS0>. ";
+                + " a <http://nuts.de/NUTS0>. "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }";
         if (granularityRegion != null) {
             withinCountry += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
         }
@@ -1017,9 +1017,9 @@ public class MapController {
         // Get NUTS 1 in bbox
         String withinNuts1 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             withinNuts1 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1028,9 +1028,9 @@ public class MapController {
 
         String intersectNuts1 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             intersectNuts1 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1040,9 +1040,9 @@ public class MapController {
         // Get NUTS 2 in bbox
         String withinNuts2 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             withinNuts2 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1051,9 +1051,9 @@ public class MapController {
 
         String intersectNuts2 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             intersectNuts2 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1063,9 +1063,9 @@ public class MapController {
         // Get NUTS 3 in bbox
         String withinNuts3 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             withinNuts3 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1074,9 +1074,9 @@ public class MapController {
 
         String intersectNuts3 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             intersectNuts3 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
