@@ -170,6 +170,7 @@ public class MapController {
                 Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
                 if (!geometry.contains(boundingBox.toGeometry())) {
                     bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
+                    zoom = 6;
                 }
             }
 
