@@ -171,7 +171,7 @@ public class MapController {
                 logger.info("\n{}\n{}\n", geometry, boundingBox);
                 if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
                     bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
-                    zoom = 6;
+                    zoom = bboxToUse.getZoomLevel();
                 }
             }
 

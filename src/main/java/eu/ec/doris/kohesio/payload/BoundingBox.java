@@ -125,7 +125,7 @@ public class BoundingBox {
         return new GeometryFactory().createPolygon(coordinates);
     }
 
-//    public String getCenterBBox(BoundingBox bbox) throws ParseException {
+    //    public String getCenterBBox(BoundingBox bbox) throws ParseException {
 //        Point point = wktReader.read(this.geo).getCentroid();
 //        Geometry bboxGeom = wktReader.read(bbox.toWkt());
 //        Point center = bboxGeom.getCentroid();
@@ -138,20 +138,30 @@ public class BoundingBox {
 //        // lat,lng
 //        return coordinate.x + "," + coordinate.y;
 //    }
+    public int getZoomLevel() {
+        double latDiff = this.getNorth() - this.getSouth();
+        double lngDiff = this.getEast() - this.getWest();
 
-    private static final int WORLD_DIM_HEIGHT = 256;
-    private static final int WORLD_DIM_WIDTH = 256;
-    private static final int MAX_ZOOM = 18;
-
-    private double latRad(double lat) {
-        double sin = Math.sin(lat * Math.PI / 180);
-        double radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
-        return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
+        double maxDiff = Math.max(lngDiff, latDiff);
+        if (maxDiff < 360 / Math.pow(2, 20)) {
+            return 18;
+        } else {
+            return Math.max((int) (-1 * ((Math.log(maxDiff) / Math.log(2)) - (Math.log(360) / Math.log(2)))), 1) + 3;
+        }
     }
-
-    private double zoom(double mapPx, double worldPx, double fraction) {
-        return Math.floor(Math.log(mapPx / worldPx / fraction) / Math.log(2));
-    }
+//    private static final int WORLD_DIM_HEIGHT = 256;
+//    private static final int WORLD_DIM_WIDTH = 256;
+//    private static final int MAX_ZOOM = 18;
+//
+//    private double latRad(double lat) {
+//        double sin = Math.sin(lat * Math.PI / 180);
+//        double radX2 = Math.log((1 + sin) / (1 - sin)) / 2;
+//        return Math.max(Math.min(radX2, Math.PI), -Math.PI) / 2;
+//    }
+//
+//    private double zoom(double mapPx, double worldPx, double fraction) {
+//        return Math.floor(Math.log(mapPx / worldPx / fraction) / Math.log(2));
+//    }
 //    public int guessZoom() {
 //        Coordinate ne = this.getNorthEast();
 //        Coordinate sw = this.getSouthWest();
