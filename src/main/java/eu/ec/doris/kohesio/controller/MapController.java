@@ -168,7 +168,8 @@ public class MapController {
             BoundingBox bboxToUse = boundingBox;
             if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
                 Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-                if (!geometry.contains(boundingBox.toGeometry())) {
+                logger.info("\n{}\n{}\n", geometry, boundingBox);
+                if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
                     bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
                     zoom = 6;
                 }
