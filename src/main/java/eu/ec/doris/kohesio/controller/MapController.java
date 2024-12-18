@@ -1083,18 +1083,18 @@ public class MapController {
         intersectLAU += "} ";
 
         if (zoom <= 4 && forceBaseCountry) {
-            return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount), search, language, timeout);
+            return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount), search, language, granularityRegion, timeout);
         }
         if (zoom < 8) {
             if (!getZoneByQuery(withinNuts1, "NUTS1", timeout, uriCount).isEmpty()) {
-                return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout, uriCount), search, language, timeout);
+                return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout, uriCount), search, language, granularityRegion, timeout);
             }
             if (!getZoneByQuery(withinNuts2, "NUTS2", timeout, uriCount).isEmpty()) {
-                return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout, uriCount), search, language, timeout);
+                return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout, uriCount), search, language, granularityRegion, timeout);
             }
         }
 //        if (!getZoneByQuery(withinNuts3, "NUTS3", timeout).isEmpty()) {
-        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout, uriCount), search, language, timeout);
+        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout, uriCount), search, language, granularityRegion, timeout);
 //        }
 //        return createResponse(getZoneByQuery(intersectLAU, "LAU", timeout), search, language);
 
@@ -1105,10 +1105,13 @@ public class MapController {
             HashMap<String, Zone> res,
             String search,
             String language,
+            String granularityRegion,
             int timeout
     ) throws Exception {
 //        logger.info("WE ARE HERE {} | {} ", search, language);
-        String granularityRegion = "https://linkedopendata.eu/entity/Q1";
+        if (granularityRegion == null) {
+            granularityRegion = "https://linkedopendata.eu/entity/Q1";
+        }
         HashMap<String, Object> result = new HashMap<>();
 
         String tmpsearch = search.replaceAll(
@@ -1175,6 +1178,9 @@ public class MapController {
         result.put("upperRegions", new JSONArray());
         result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
         result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
+        logger.info("Granularity: {}", granularityRegion);
+        logger.info("Granularity nut: {}", facetController.nutsRegion.get(granularityRegion));
+
         return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
     }
 
