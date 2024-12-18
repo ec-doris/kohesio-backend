@@ -969,6 +969,7 @@ public class MapController {
             queryCount += " FILTER EXISTS {";
         }
         queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type."
+                + " FILTER NOT EXISTS { ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " VALUES ?type{"
                 + " <https://linkedopendata.eu/entity/Q4407315>"
                 + " <https://linkedopendata.eu/entity/Q4407316>"
@@ -997,6 +998,7 @@ public class MapController {
         // Get Country in bbox
         String withinCountry = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS0>. ";
         if (granularityRegion != null) {
@@ -1015,6 +1017,7 @@ public class MapController {
         // Get NUTS 1 in bbox
         String withinNuts1 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
@@ -1025,6 +1028,7 @@ public class MapController {
 
         String intersectNuts1 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
@@ -1036,6 +1040,7 @@ public class MapController {
         // Get NUTS 2 in bbox
         String withinNuts2 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
@@ -1046,6 +1051,7 @@ public class MapController {
 
         String intersectNuts2 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
@@ -1057,6 +1063,7 @@ public class MapController {
         // Get NUTS 3 in bbox
         String withinNuts3 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
@@ -1067,6 +1074,7 @@ public class MapController {
 
         String intersectNuts3 = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
