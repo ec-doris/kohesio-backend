@@ -216,7 +216,7 @@ public class ProjectController {
             TupleQueryResult resultSetCoords = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCoordinates, 3, false, "projectDetail");
             TupleQueryResult resultSetRegion = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryRegion, 3, false, "projectDetail");
 
-            logger.info("q1:{} q2:{} q3:{}", resultSet, resultSetCoords, resultSetRegion);
+            logger.info("q1:{} query:{}", resultSet, query);
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
             result.put("link", id);
