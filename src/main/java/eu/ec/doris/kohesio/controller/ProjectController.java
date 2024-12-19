@@ -134,7 +134,7 @@ public class ProjectController {
                     + " OPTIONAL { ?s0 wdt:P562941 ?keepId. wd:P562941 wdt:P877 ?formatter. BIND(REPLACE(?keepId, '^(.+)$', ?formatter) AS ?keepUrl). } . "
                     + " OPTIONAL { ?s0 p:P851 ?blank . "
                     + " ?blank ps:P851 ?image . "
-                    + " OPTIONAL {?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary . FILTER(LANG(?imageSummary)=\"" + language +"\")}"
+                    + " OPTIONAL {?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary . FILTER(LANG(?imageSummary)=\"" + language + "\")}"
                     + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                     + " OPTIONAL { ?s0 wdt:P1746 ?video . }"
                     + " OPTIONAL { ?s0 wdt:P1416 ?tweet . }"
@@ -212,11 +212,11 @@ public class ProjectController {
                     + "FILTER(STRLEN(STR(?regionId))>=5) "
                     + "}";
 
-            logger.info("HERE");
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 3, false, "projectDetail");
             TupleQueryResult resultSetCoords = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCoordinates, 3, false, "projectDetail");
             TupleQueryResult resultSetRegion = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryRegion, 3, false, "projectDetail");
 
+            logger.info("q1:{} q2:{} q3:{}", resultSet, resultSetCoords, resultSetRegion);
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
             result.put("link", id);
@@ -1102,7 +1102,7 @@ public class ProjectController {
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank ."
                 + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image ."
                 + " OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }"
-                + " OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary. FILTER(LANG(?imageSummary)=\""+language+"\")} "
+                + " OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary. FILTER(LANG(?imageSummary)=\"" + language + "\")} "
                 + " }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. }"

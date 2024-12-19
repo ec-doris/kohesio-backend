@@ -1119,7 +1119,6 @@ public class MapController {
             String granularityRegion,
             int timeout
     ) throws Exception {
-//        logger.info("WE ARE HERE {} | {} ", search, language);
         if (granularityRegion == null) {
             granularityRegion = "https://linkedopendata.eu/entity/Q1";
         }
@@ -1130,8 +1129,6 @@ public class MapController {
                 ""
         );
         JSONArray resultList = new JSONArray();
-//        ArrayList<JSONObject> resultList = new ArrayList<>();
-        // count the number of project in each zone
         Instant start = Instant.now();
         for (Zone z : res.values()) {
 
@@ -1154,9 +1151,7 @@ public class MapController {
                 element.put("regionLabel", "");
             }
             element.put("region", z.getLid());
-//            element.put("geoJson", facetController.nutsRegion.get(z.getLid()).geoJson);
             element.put("count", z.getNumberProjects());
-//            element.put("center", z.getCenterWkt());
             if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
                 String query = "SELECT ?coords WHERE { <" + z.getLid() + "> <https://linkedopendata.eu/prop/direct/P127> ?coords.}LIMIT 1";
 
@@ -1174,23 +1169,17 @@ public class MapController {
             } else {
                 element.put("coordinates", z.getCenter());
             }
-//            element.put("isHighlighted", false);
             element.put("cluster", true);
             resultList.add(new JSONObject(element));
         }
         Instant end = Instant.now();
         Duration elapsedTime = Duration.between(start, end);
         logger.debug("Count number projects each zone: {} milliseconds", elapsedTime.toMillis());
-//        result.put("list", resultList);
-//        result.put("subregions", resultList);
         result.put("subregions", resultList);
         result.put("region", granularityRegion);
-//        result.put("upperRegions", findUpperRegions(granularityRegion, language));
         result.put("upperRegions", new JSONArray());
         result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
         result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
-        logger.info("Granularity: {}", granularityRegion);
-        logger.info("Granularity nut: {}", facetController.nutsRegion.get(granularityRegion));
 
         return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
     }
@@ -1267,6 +1256,7 @@ public class MapController {
         }
         query += "}";
 
+        logger.info("timeout={}", timeout);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
         while (resultSet.hasNext()) {
