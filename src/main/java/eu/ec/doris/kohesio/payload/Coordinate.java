@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 public class Coordinate {
@@ -114,7 +115,10 @@ public class Coordinate {
     }
 
     public String toBasicCoords() {
-        return this.lng + "," + this.lat;
+
+        return BigDecimal.valueOf(this.lng).stripTrailingZeros().toPlainString()
+                + ","
+                + BigDecimal.valueOf(this.lat).stripTrailingZeros().toPlainString();
     }
 
 }
