@@ -969,7 +969,7 @@ public class MapController {
             queryCount += " FILTER EXISTS {";
         }
         queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type."
-                + " FILTER NOT EXISTS { ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
+//                + " FILTER NOT EXISTS { ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " VALUES ?type{"
                 + " <https://linkedopendata.eu/entity/Q4407315>"
                 + " <https://linkedopendata.eu/entity/Q4407316>"
@@ -999,8 +999,8 @@ public class MapController {
         String withinCountry = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS0>. "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }";
+                + " a <http://nuts.de/NUTS0>. ";
+//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }";
         if (granularityRegion != null) {
             withinCountry += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
         }
@@ -1019,7 +1019,7 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
+//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             withinNuts1 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1030,7 +1030,7 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS1>. "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
+//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             intersectNuts1 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1042,7 +1042,7 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
+//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             withinNuts2 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1053,7 +1053,7 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS2>. "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
+//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             intersectNuts2 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1065,7 +1065,7 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
+//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             withinNuts3 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1076,7 +1076,7 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS3>. "
-                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
+//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
         if (granularityRegion != null) {
             intersectNuts3 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
@@ -1256,7 +1256,7 @@ public class MapController {
         }
         query += "}";
 
-        logger.info("timeout={}", timeout);
+        logger.info("sparql={}", sparqlEndpoint);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
         while (resultSet.hasNext()) {
