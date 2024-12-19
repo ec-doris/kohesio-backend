@@ -84,7 +84,6 @@ public class SPARQLQueryService {
 
         try {
             TupleQueryResult resultSet = repo.getConnection().prepareTupleQuery(query).evaluate();
-            logger.info("tupleQueryResult: {}", resultSet);
             FileOutputStream out = new FileOutputStream(location + "/facet/cache/" + query.hashCode());
             TupleQueryResultHandler writer = new SPARQLResultsJSONWriter(out);
             QueryResults.report(resultSet, writer);
@@ -110,6 +109,7 @@ public class SPARQLQueryService {
 
             return tupleQueryResultHandler.getQueryResult();
         } catch (QueryEvaluationException e) {
+            e.printStackTrace();
             logger.error("Query Evaluation Exception: [{}]", e.getMessage());
         } catch (QueryResultParseException e) {
             logger.error("To heavy timeout {} --- {}", query, timeout);
