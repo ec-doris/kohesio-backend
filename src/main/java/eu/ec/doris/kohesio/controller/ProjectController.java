@@ -28,16 +28,17 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.sail.lucene.SearchFields;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.mapstruct.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
@@ -952,12 +953,13 @@ public class ProjectController {
             logger.info("Expansion time " + (System.nanoTime() - start) / 1000000);
         }
         if (town != null) {
-            NominatimService.Coordinates tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
+            Coordinate tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
             if (tmpCoordinates != null) {
-                latitude = tmpCoordinates.getLatitude();
-                longitude = tmpCoordinates.getLongitude();
+                latitude = String.valueOf(tmpCoordinates.getLat());
+                longitude = String.valueOf(tmpCoordinates.getLng());
 
             } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "location not found");
                 // What should we do
             }
         }
@@ -1409,10 +1411,10 @@ public class ProjectController {
 
 
         if (town != null) {
-            NominatimService.Coordinates tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
+            Coordinate tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
             if (tmpCoordinates != null) {
-                latitude = tmpCoordinates.getLatitude();
-                longitude = tmpCoordinates.getLongitude();
+                latitude = String.valueOf(tmpCoordinates.getLat());
+                longitude = String.valueOf(tmpCoordinates.getLng());
 
             }
         }

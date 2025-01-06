@@ -10,7 +10,6 @@ import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -474,7 +473,7 @@ public class FacetController {
             throws Exception {
         initialize(language);
         logger.info("Get EU regions");
-        List<JSONObject> jsonValues = new ArrayList<JSONObject>();
+        List<JSONObject> jsonValues = new ArrayList<>();
         if (qid != null && nutsRegion.containsKey(qid)) {
             JSONObject element = new JSONObject();
             element.put("region", qid);
@@ -519,51 +518,11 @@ public class FacetController {
                 jsonValues.add(element);
             }
         }
-//        String row;
-//        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-//        InputStream input = loader.getResourceAsStream("regions2.csv");
-//        BufferedReader csvReader = new BufferedReader(new BufferedReader(new InputStreamReader(input, "UTF-8")));
-//
-//        List<JSONObject> jsonValues = new ArrayList<JSONObject>();
-//
-//
-//        while ((row = csvReader.readLine()) != null) {
-//            String[] data = row.split(";");
-//            System.out.println();
-//            if (country.equals("https://linkedopendata.eu/entity/Q2") && data[0].equals("IE")
-//                    || country.equals("https://linkedopendata.eu/entity/Q15") && data[0].equals("IT")
-//                    || country.equals("https://linkedopendata.eu/entity/Q13") && data[0].equals("PL")
-//                    || country.equals("https://linkedopendata.eu/entity/Q25") && data[0].equals("CZ")
-//                    || country.equals("https://linkedopendata.eu/entity/Q20") && data[0].equals("FR")
-//                    || country.equals("https://linkedopendata.eu/entity/Q12") && data[0].equals("DK")) {
-//                JSONObject element = new JSONObject();
-//                element.put("region", data[6]);
-//                element.put("name", data[3]);
-//                jsonValues.add(element);
-//            }
-//        }
-//        csvReader.close();
 
-        Collections.sort(jsonValues, new Comparator<JSONObject>() {
-            //You can change "Name" with "ID" if you want to sort by ID
-            private static final String KEY_NAME = "name";
-
-            @Override
-            public int compare(JSONObject a, JSONObject b) {
-                String valA = new String();
-                String valB = new String();
-                valA = (String) a.get(KEY_NAME);
-                valB = (String) b.get(KEY_NAME);
-                return valA.compareTo(valB);
-                //if you want to change the sort order, simply use the following:
-                //return -valA.compareTo(valB);
-            }
-        });
+        jsonValues.sort(Comparator.comparing(a -> ((String) a.get("name"))));
 
         JSONArray result = new JSONArray();
-        for (int i = 0; i < jsonValues.size(); i++) {
-            result.add(jsonValues.get(i));
-        }
+        result.addAll(jsonValues);
 
         return result;
     }
@@ -828,10 +787,10 @@ public class FacetController {
     }
 
     @GetMapping(value = "/facet/eu/thematic_objectives", produces = "application/json")
-    public JSONArray facetEuThematicObjective( //
-                                               @RequestParam(value = "language", defaultValue = "en") String language,
-                                               @RequestParam(value = "policy", required = false) String policy,
-                                               @RequestParam(value = "qid", required = false) String qid
+    public JSONArray facetEuThematicObjective(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "policy", required = false) String policy,
+            @RequestParam(value = "qid", required = false) String qid
     ) throws Exception {
 
         logger.info("Get list of thematic objectives");

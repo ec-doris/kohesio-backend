@@ -148,10 +148,10 @@ public class MapController {
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
         if (town != null) {
-            NominatimService.Coordinates tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
+            eu.ec.doris.kohesio.payload.Coordinate tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
             if (tmpCoordinates != null) {
-                latitude = tmpCoordinates.getLatitude();
-                longitude = tmpCoordinates.getLongitude();
+                latitude = String.valueOf(tmpCoordinates.getLat());
+                longitude = String.valueOf(tmpCoordinates.getLng());
 
             }
         }
