@@ -1,6 +1,10 @@
 package eu.ec.doris.kohesio.services;
 
 import eu.ec.doris.kohesio.payload.Coordinate;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.apache.http.client.HttpClient;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -14,13 +18,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
+import java.util.Collections;
+
 @Service
 public class NominatimService {
     private static final Logger logger = LoggerFactory.getLogger(NominatimService.class);
 
-    public Coordinate getCoordinatesFromTown(String town) {
+    public Coordinate getCoordinatesFromTown(String town) throws IOException {
         HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         HttpEntity<?> entity = new HttpEntity<>(headers);
 
         String urlTemplate = UriComponentsBuilder.fromHttpUrl("https://nominatim.openstreetmap.org/search")
@@ -30,13 +37,16 @@ public class NominatimService {
                 .encode().toUriString();
         logger.info("URL: {}", urlTemplate);
 
-        HttpEntity<String> response = new RestTemplate().exchange(
-                urlTemplate,
-                HttpMethod.GET, entity, String.class
-        );
-        logger.info("Response: {}", response.getBody());
+        OkHttpClient httpClient = new OkHttpClient();
+
+        Request request =  new Request.Builder()
+                .url(urlTemplate)
+                .addHeader("Accept", "application/json")
+                .build();
+        Response response = httpClient.newCall(request).execute();
         try {
-            JSONArray jsonArray = (JSONArray) new JSONParser().parse(response.getBody());
+            assert response.body() != null;
+            JSONArray jsonArray = (JSONArray) new JSONParser().parse(response.body().charStream());
             if (jsonArray.isEmpty()) {
                 return null;
             }
