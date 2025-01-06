@@ -168,7 +168,7 @@ public class MapController {
             BoundingBox bboxToUse = boundingBox;
             if (town != null) {
                 bboxToUse = nominatimService.getBboxFromTown(town);
-                zoom = bboxToUse.getZoomLevel();
+//                zoom = bboxToUse.getZoomLevel();
             } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
                 Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
                 logger.info("\n{}\n{}\n", geometry, boundingBox);
