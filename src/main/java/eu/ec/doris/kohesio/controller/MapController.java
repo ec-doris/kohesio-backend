@@ -166,7 +166,10 @@ public class MapController {
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search;// + "} ";
         if (boundingBox != null) {
             BoundingBox bboxToUse = boundingBox;
-            if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
+            if (town != null) {
+                bboxToUse = nominatimService.getBboxFromTown(town);
+                zoom = bboxToUse.getZoomLevel();
+            } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
                 Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
                 logger.info("\n{}\n{}\n", geometry, boundingBox);
                 if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
@@ -174,6 +177,7 @@ public class MapController {
                     zoom = bboxToUse.getZoomLevel();
                 }
             }
+
 
             int numberTotal = 0;
             ResponseEntity<JSONObject> tmp = null;
