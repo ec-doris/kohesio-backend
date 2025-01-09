@@ -975,7 +975,7 @@ public class MapController {
         if (shouldFilterExistsOnNuts) {
             queryCount += " FILTER EXISTS {";
         }
-        queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type."
+        queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/P35> ?type_statement. ?type_statement <https://linkedopendata.eu/prop/statement/P35> ?type ."
 //                + " FILTER NOT EXISTS { ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
                 + " VALUES ?type{"
                 + " <https://linkedopendata.eu/entity/Q4407315>"
