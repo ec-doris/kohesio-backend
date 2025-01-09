@@ -84,7 +84,7 @@ public class MapController {
     }
 
     @GetMapping(value = "/facet/eu/search/project/map", produces = "application/json")
-    public ResponseEntity euSearchProjectMap(
+    public ResponseEntity<JSONObject> euSearchProjectMap(
             @RequestParam(value = "language", defaultValue = "en") String language,
             @RequestParam(value = "keywords", required = false) String keywords, //
             @RequestParam(value = "country", required = false) String country,
@@ -174,10 +174,13 @@ public class MapController {
                 logger.info("\n{}\n{}\n", geometry, boundingBox);
                 if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
                     bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
-                    zoom = bboxToUse.getZoomLevel();
+//                    zoom = bboxToUse.getZoomLevel();
                 }
             }
 
+            if (zoom == -1) {
+                zoom = bboxToUse.getZoomLevel();
+            }
 
             int numberTotal = 0;
             ResponseEntity<JSONObject> tmp = null;
