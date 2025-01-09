@@ -875,8 +875,8 @@ public class FacetController {
     }
 
 
-    public JSONArray facetEuThematicObjective( //
-                                               @RequestParam(value = "language", defaultValue = "en") String language
+    public JSONArray facetEuThematicObjective(
+            @RequestParam(value = "language", defaultValue = "en") String language
     ) throws Exception {
         return facetEuThematicObjective(language, null, null);
     }

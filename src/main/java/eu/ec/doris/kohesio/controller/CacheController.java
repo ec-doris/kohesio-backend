@@ -8,14 +8,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -313,63 +312,146 @@ public class CacheController {
             }
 
         }
-
-
-//        for (String country : countries) {
-//            JSONArray regions = new JSONArray();
-//            if(country != null) {
-//                regions = facetController.facetEuRegions(country, "en");
-//            }
-//            regions.add(null);
-//            for (Object region : regions) {
-//                JSONArray funds = facetController.facetEuFunds("en");
-//                funds.add(null);
-//                for (Object fund : funds) {
-//                    JSONArray programs = new JSONArray();
-//                    if(country != null) {
-//                        programs = facetController.facetEuPrograms("en", country);
-//                    }
-//                    programs.add(null);
-//                    for (Object program : programs) {
-//                        String r = null;
-//                        if (region != null) {
-//                            r = ((JSONObject) region).get("region").toString();
-//                        }
-//                        String f = null;
-//                        if (fund != null) {
-//                            f = ((JSONObject) fund).get("instance").toString();
-//                        }
-//                        String p = null;
-//                        if (program != null) {
-//                            p = ((JSONObject) program).get("instance").toString();
-//                        }
-//                        Boolean[] orderEuBudget = {null, true, false};
-//                        for (Boolean b : orderEuBudget) {
-//                            beneficiaryController.euSearchBeneficiaries(
-//                                    "en", null, country, r, null, null, f, p, null,b, null, null, 1000, 0, null);
-//                        }
-//                        JSONArray policies = facetController.facetPolicyObjective("en");
-//                        for (Object policy: policies) {
-//                            String polic = null;
-//                            if(policy != null)
-//                                polic = ((JSONObject) policy).get("instance").toString();
-//                            projectController.euSearchProject("en", null, country, null, null, null,
-//                                    null, polic, null, null,
-//                                    null, null, null, null, null,
-//                                    null, null, null, null, false, null, null,
-//                                    null, 1000, 1,50, null);
-//                            mapController.euSearchProjectMap("en", null, country, null, f, p, null,
-//                                    polic, null, null, null,
-//                                    null, null, null, null,
-//                                    null, null, null, r, r, null, 0, 400, null);
-//                        }
-//                        logger.info("End generating cache!");
-//                    }
-//                }
-//            }
-//        }
+        cacheMapWithBoundingBox();
     }
 
+    private List<String> getListFromApi(JSONArray array, String key) {
+        List<String> list = new ArrayList<>();
+        for (Object jso : array) {
+            list.add((String) ((JSONObject) jso).get(key));
+        }
+        return list;
+    }
+
+    private void wrapperMap(
+            String country,
+            String theme,
+            String fund,
+            String program,
+            List<String> categoryOfIntervention,
+            String policyObjective,
+            String region,
+            String granularityRegion,
+            Boolean interreg,
+            String kohesioCategory,
+            List<String> projectTypes,
+            String priorityAxis
+    ) throws Exception {
+        String boundingBoxString = "{\"_southWest\":{\"lat\":22.43134015636062,\"lng\":-44.6484375},\"_northEast\":{\"lat\":65.18303007291382,\"lng\":52.73437500000001}}";
+        mapController.euSearchProjectMap(
+                "en", null, country, theme,
+                fund, program, categoryOfIntervention, policyObjective,
+                null, null, null, null,
+                null, null, null, null,
+                null, null, region, granularityRegion,
+                null, null, 0, null,
+                null, interreg, null, null,
+                kohesioCategory, projectTypes, priorityAxis, boundingBoxString,
+                4, 400, null
+        );
+    }
+
+    private void cacheMapWithBoundingBox() throws Exception {
+        String language = "en";
+        int zoom = 4;
+        List<String> countries = getListFromApi(facetController.facetEuCountries(language, null), "instance");
+
+        wrapperMap(
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null
+        );
+        for (String country : countries) {
+            wrapperMap(
+                    country, null, null, null,
+                    null, null, null, country,
+                    null, null, null, null
+            );
+            List<String> regions = getListFromApi(facetController.facetEuRegions(country, "en", null), "region");
+            for (String region : regions) {
+                wrapperMap(
+                        country, null, null, null,
+                        null, null, region, region,
+                        null, null, null, null
+                );
+            }
+
+            List<String> programs = getListFromApi(facetController.facetEuPrograms("en", country, null, null, null, null), "region");
+            for (String program : programs) {
+                wrapperMap(
+                        country, null, null, program,
+                        null, null, null, null,
+                        null, null, null, null
+                );
+
+                List<String> priorityAxis = getListFromApi(facetController.facetEuPriorityAxis("en", null, country, program), "instance");
+                for (String priorityAxi : priorityAxis) {
+                    wrapperMap(
+                            country, null, null, program,
+                            null, null, null, null,
+                            null, null, null, priorityAxi
+                    );
+                }
+            }
+
+        }
+
+        List<String> policies = getListFromApi(facetController.facetPolicyObjective("en"), "instance");
+        for (String policy : policies) {
+            wrapperMap(
+                    null, null, null, null,
+                    null, policy, null, null,
+                    null, null, null, null
+            );
+            List<String> themesOfPolicy = getListFromApi(facetController.facetEuThematicObjective("en", policy, null), "instance");
+            for (String themeOfPolicy : themesOfPolicy) {
+                wrapperMap(
+                        null, themeOfPolicy, null, null,
+                        null, policy, null, null,
+                        null, null, null, null
+                );
+            }
+        }
+
+        List<String> themes = getListFromApi(facetController.facetEuThematicObjective("en"), "instance");
+        for (String theme : themes) {
+            wrapperMap(
+                    null, theme, null, null,
+                    null, null, null, null,
+                    null, null, null, null
+            );
+        }
+
+        for (String projectCollection : facetController.projectTypes) {
+            wrapperMap(
+                    null, null, null, null,
+                    null, null, null, null,
+                    null, null, Collections.singletonList(projectCollection), null
+            );
+        }
+
+        List<String> funds = getListFromApi(facetController.facetEuFunds("eu", null), "instance");
+        for (String fund : funds) {
+            wrapperMap(
+                    null, null, fund, null,
+                    null, null, null, null,
+                    null, null, null, null
+            );
+        }
+        { // interreg
+            wrapperMap(
+                    null, null, null, null,
+                    null, null, null, null,
+                    false, null, null, null
+            );
+            wrapperMap(
+                    null, null, null, null,
+                    null, null, null, null,
+                    true, null, null, null
+            );
+        }
+
+    }
 
     @PostMapping(value = "/facet/eu/cache/clean", produces = "application/json")
     public void cleanCache() throws Exception {
