@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -328,25 +327,23 @@ public class CacheController {
             String theme,
             String fund,
             String program,
-            List<String> categoryOfIntervention,
             String policyObjective,
             String region,
             String granularityRegion,
             Boolean interreg,
-            String kohesioCategory,
             List<String> projectTypes,
             String priorityAxis
     ) throws Exception {
         String boundingBoxString = "{\"_southWest\":{\"lat\":22.43134015636062,\"lng\":-44.6484375},\"_northEast\":{\"lat\":65.18303007291382,\"lng\":52.73437500000001}}";
         mapController.euSearchProjectMap(
                 "en", null, country, theme,
-                fund, program, categoryOfIntervention, policyObjective,
+                fund, program, null, policyObjective,
                 null, null, null, null,
                 null, null, null, null,
                 null, null, region, granularityRegion,
                 null, null, 0, null,
                 null, interreg, null, null,
-                kohesioCategory, projectTypes, priorityAxis, boundingBoxString,
+                null, projectTypes, priorityAxis, boundingBoxString,
                 4, 400, null
         );
     }
@@ -358,21 +355,21 @@ public class CacheController {
 
         wrapperMap(
                 null, null, null, null,
-                null, null, null, null,
-                null, null, null, null
+                null, null, null,
+                null, null, null
         );
         for (String country : countries) {
             wrapperMap(
                     country, null, null, null,
-                    null, null, null, country,
-                    null, null, null, null
+                    null, null, country,
+                    null, null, null
             );
             List<String> regions = getListFromApi(facetController.facetEuRegions(country, "en", null), "region");
             for (String region : regions) {
                 wrapperMap(
                         country, null, null, null,
-                        null, null, region, region,
-                        null, null, null, null
+                        null, region, region,
+                        null, null, null
                 );
             }
 
@@ -380,16 +377,16 @@ public class CacheController {
             for (String program : programs) {
                 wrapperMap(
                         country, null, null, program,
-                        null, null, null, null,
-                        null, null, null, null
+                        null, null, null,
+                        null, null, null
                 );
 
                 List<String> priorityAxis = getListFromApi(facetController.facetEuPriorityAxis("en", null, country, program), "instance");
                 for (String priorityAxi : priorityAxis) {
                     wrapperMap(
                             country, null, null, program,
-                            null, null, null, null,
-                            null, null, null, priorityAxi
+                            null, null, null,
+                            null, null, priorityAxi
                     );
                 }
             }
@@ -400,15 +397,15 @@ public class CacheController {
         for (String policy : policies) {
             wrapperMap(
                     null, null, null, null,
-                    null, policy, null, null,
-                    null, null, null, null
+                    policy, null, null,
+                    null, null, null
             );
             List<String> themesOfPolicy = getListFromApi(facetController.facetEuThematicObjective("en", policy, null), "instance");
             for (String themeOfPolicy : themesOfPolicy) {
                 wrapperMap(
                         null, themeOfPolicy, null, null,
-                        null, policy, null, null,
-                        null, null, null, null
+                        policy, null, null,
+                        null, null, null
                 );
             }
         }
@@ -417,16 +414,16 @@ public class CacheController {
         for (String theme : themes) {
             wrapperMap(
                     null, theme, null, null,
-                    null, null, null, null,
-                    null, null, null, null
+                    null, null, null,
+                    null, null, null
             );
         }
 
         for (String projectCollection : facetController.projectTypes) {
             wrapperMap(
                     null, null, null, null,
-                    null, null, null, null,
-                    null, null, Collections.singletonList(projectCollection), null
+                    null, null, null,
+                    null, Collections.singletonList(projectCollection), null
             );
         }
 
@@ -434,20 +431,20 @@ public class CacheController {
         for (String fund : funds) {
             wrapperMap(
                     null, null, fund, null,
-                    null, null, null, null,
-                    null, null, null, null
+                    null, null, null,
+                    null, null, null
             );
         }
         { // interreg
             wrapperMap(
                     null, null, null, null,
-                    null, null, null, null,
-                    false, null, null, null
+                    null, null, null,
+                    false, null, null
             );
             wrapperMap(
                     null, null, null, null,
-                    null, null, null, null,
-                    true, null, null, null
+                    null, null, null,
+                    true, null, null
             );
         }
 
