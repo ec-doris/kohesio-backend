@@ -963,28 +963,28 @@ public class ProjectController {
 
         String orderBy = "";
         if (orderStartDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .}";
             if (orderStartDate) {
                 orderBy = "ORDER BY ASC(?startTime)";
             } else {
                 orderBy = "ORDER BY DESC(?startTime)";
             }
         } else if (orderEndDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .}";
             if (orderEndDate) {
                 orderBy = "ORDER BY ASC(?endTime)";
             } else {
                 orderBy = "ORDER BY DESC(?endTime)";
             }
         } else if (orderEuBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. }";
             if (orderEuBudget) {
                 orderBy = "ORDER BY ASC(?euBudget)";
             } else {
                 orderBy = "ORDER BY DESC(?euBudget)";
             }
         } else if (orderTotalBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
+            orderQuery += "OPTIONAL{?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. }";
             if (orderTotalBudget) {
                 orderBy = "ORDER BY ASC(?budget)";
             } else {
@@ -992,7 +992,7 @@ public class ProjectController {
             }
         } else if (orderReadabilityBudget != null) {
             //log uri <http://the-qa-company.com/qendpoint/#log>
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . OPTIONAL { ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . } ";
+            orderQuery += "OPTIONAL{?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 .} OPTIONAL { ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . } ";
             if (orderReadabilityBudget) {
                 orderBy = "ORDER BY ASC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
             } else {
@@ -1006,7 +1006,7 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?readability)";
             }
         } else {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 ."
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 .}"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P590521> ?readabilityBase ."
                     + "   OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId .} "
                     + "   BIND(IF(BOUND(?keepId), ?readabilityBase * 0.5, ?readabilityBase) AS ?readability)"
