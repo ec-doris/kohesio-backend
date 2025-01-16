@@ -36,6 +36,8 @@ import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/wikibase")
@@ -1247,10 +1249,18 @@ public class MapController {
         String tmpSearch = search.replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P127> \\?coordinates \\.", "")
                 .replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> \\.", "")
                 .replaceAll("FILTER\\(<http://www.opengis.net/def/function/geosparql/ehContains>\\(.*\\)", "");
+
         String query = "SELECT DISTINCT ?s0 ?coordinates WHERE { "
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ."
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .";
         if (!tmpSearch.replaceAll("\\s", "").isEmpty()) {
+            Pattern instanceOfPattern = Pattern.compile("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <([^>]*)>\\s*\\.?");
+            Matcher instanceOfMatcher = instanceOfPattern.matcher(tmpSearch);
+            while (instanceOfMatcher.find()){
+               String uri = instanceOfMatcher.group(1);
+                System.err.println(uri);
+               query += "?s0 <https://linkedopendata.eu/prop/direct/P35> <"+uri+">.";
+            }
             query += " FILTER EXISTS { "
                     + tmpSearch
                     + " }";

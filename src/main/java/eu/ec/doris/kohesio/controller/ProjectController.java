@@ -1003,14 +1003,14 @@ public class ProjectController {
 
         String orderBy = "";
         if (orderStartDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .}";
             if (orderStartDate) {
                 orderBy = "ORDER BY ASC(?startTime)";
             } else {
                 orderBy = "ORDER BY DESC(?startTime)";
             }
         } else if (orderEndDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .}";
             if (orderEndDate) {
                 orderBy = "ORDER BY ASC(?endTime)";
             } else {

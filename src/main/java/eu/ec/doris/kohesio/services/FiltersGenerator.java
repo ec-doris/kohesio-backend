@@ -49,7 +49,7 @@ public class FiltersGenerator {
             Integer limit,
             Integer offset,
             boolean flagFilter
-    ) throws IOException {
+    ) {
         String search = "";
 
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
