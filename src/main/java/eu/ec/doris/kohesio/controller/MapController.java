@@ -979,11 +979,19 @@ public class MapController {
         }
         queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type ."
 //                + " FILTER NOT EXISTS { ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
-                + " VALUES ?type{"
-                + " <https://linkedopendata.eu/entity/Q4407315>"
-                + " <https://linkedopendata.eu/entity/Q4407316>"
-                + " <https://linkedopendata.eu/entity/Q4407317>"
-                + " <https://linkedopendata.eu/entity/Q510>"
+                // + " VALUES ?type{"
+                // + " <https://linkedopendata.eu/entity/Q4407315>"
+                // + " <https://linkedopendata.eu/entity/Q4407316>"
+                // + " <https://linkedopendata.eu/entity/Q4407317>"
+                // + " <https://linkedopendata.eu/entity/Q510>"
+
+                + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315>} "
+                + " UNION " 
+                + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316>} "
+                + " UNION " 
+                + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317>} "
+                + " UNION " 
+                + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510>} "
                 + " }";
         if (shouldFilterExistsOnNuts) {
             queryCount += "}";
