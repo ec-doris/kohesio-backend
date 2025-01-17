@@ -1276,7 +1276,7 @@ public class MapController {
         }
         String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
         // hack to run the geosparql not over lucene in case there is a freetext query over lucene
-        if (!useLuceneForGeoSparql) {
+        if (useLuceneForGeoSparql) {
             filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates," + boundingBox.toLiteral() + "))";
         }
         query += " " + filterBbox + " " + filterBbox + " ";
