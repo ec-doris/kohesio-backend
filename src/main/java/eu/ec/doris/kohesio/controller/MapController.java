@@ -1275,7 +1275,8 @@ public class MapController {
             }
             query += " " + tmpSearch + " ";
             if (!useLuceneForGeoSparql) {
-                query += " }"
+                query += " }";
+            }
         }
         String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
         // hack to run the geosparql not over lucene in case there is a freetext query over lucene
