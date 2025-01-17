@@ -215,7 +215,7 @@ public class MapController {
             logger.info("Found: {} projects by subdivision", numberTotal);
             if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 List<Feature> features = getProjectsPoints(
-                        language, search, bboxToUse, granularityRegion, limit, offset, timeout
+                        language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
                 );
                 Instant instant = Instant.now();
                 SuperCluster superCluster = clusterService.createCluster(
@@ -670,6 +670,7 @@ public class MapController {
                             granularityRegion,
                             limit,
                             offset,
+                            keywords != null,
                             timeout
                     )
             );
@@ -1250,6 +1251,7 @@ public class MapController {
             String granularityRegion,
             Integer limit,
             Integer offset,
+            boolean useLuceneForGeoSparql,
             int timeout
     ) throws Exception {
         logger.info("Search project map point: language {} search {} boundingBox {} limit {} offset {}", language, search, boundingBox, limit, offset);
@@ -1273,6 +1275,10 @@ public class MapController {
                     + " }";
         }
         String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
+        // hack to run the geosparql not over lucene in case there is a freetext query over lucene
+        if (!useLuceneForGeoSparql) {
+            filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates," + boundingBox.toLiteral() + "))";
+        }
         query += " " + filterBbox + " " + filterBbox + " ";
         if (granularityRegion != null) {
             Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
