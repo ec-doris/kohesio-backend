@@ -991,7 +991,7 @@ public class MapController {
                 + " UNION "
                 + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317>} "
                 + " UNION "
-                + " {?nutsOfCount <https://linkedopendata.eu/prop/P35> ?type_statement. ?type_statement <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q510>} ";
+                + " {?nutsOfCount <https://linkedopendata.eu/prop/P35> <https://linkedopendata.eu/entity/Q510>} ";
         if (shouldFilterExistsOnNuts) {
             queryCount += "}";
         }
