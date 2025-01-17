@@ -978,20 +978,20 @@ public class MapController {
             queryCount += " FILTER EXISTS {";
         }
 //        queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type ."
-        queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/P35> ?type_statement. ?type_statement <https://linkedopendata.eu/prop/statement/P35> ?type ."
-                // + " VALUES ?type{"
-                // + " <https://linkedopendata.eu/entity/Q4407315>"
-                // + " <https://linkedopendata.eu/entity/Q4407316>"
-                // + " <https://linkedopendata.eu/entity/Q4407317>"
-                // + " <https://linkedopendata.eu/entity/Q510>"
+//        queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/P35> ?type_statement. ?type_statement <https://linkedopendata.eu/prop/statement/P35> ?type ."
+        // + " VALUES ?type{"
+        // + " <https://linkedopendata.eu/entity/Q4407315>"
+        // + " <https://linkedopendata.eu/entity/Q4407316>"
+        // + " <https://linkedopendata.eu/entity/Q4407317>"
+        // + " <https://linkedopendata.eu/entity/Q510>"
 
-                + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315>} "
-                + " UNION " 
+        queryCount += " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315>} "
+                + " UNION "
                 + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316>} "
-                + " UNION " 
+                + " UNION "
                 + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317>} "
-                + " UNION " 
-                + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510>} ";
+                + " UNION "
+                + " {?nutsOfCount <https://linkedopendata.eu/prop/P35> ?type_statement. ?type_statement <https://linkedopendata.eu/prop/statement/P35> <https://linkedopendata.eu/entity/Q510>} ";
         if (shouldFilterExistsOnNuts) {
             queryCount += "}";
         }
@@ -1263,10 +1263,10 @@ public class MapController {
         if (!tmpSearch.replaceAll("\\s", "").isEmpty()) {
             Pattern instanceOfPattern = Pattern.compile("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <([^>]*)>\\s*\\.?");
             Matcher instanceOfMatcher = instanceOfPattern.matcher(tmpSearch);
-            while (instanceOfMatcher.find()){
-               String uri = instanceOfMatcher.group(1);
+            while (instanceOfMatcher.find()) {
+                String uri = instanceOfMatcher.group(1);
                 System.err.println(uri);
-               query += "?s0 <https://linkedopendata.eu/prop/direct/P35> <"+uri+">.";
+                query += "?s0 <https://linkedopendata.eu/prop/direct/P35> <" + uri + ">.";
             }
             query += " FILTER EXISTS { "
                     + tmpSearch
