@@ -194,7 +194,7 @@ public class MapController {
                         budgetEUSmallerThen != null || startDateBefore != null || startDateAfter != null ||
                         endDateBefore != null || endDateAfter != null || region != null || granularityRegion != null ||
                         interreg != null || highlighted != null || cci != null || kohesioCategory != null ||
-                        projectTypes != null || priorityAxis != null;
+                        projectTypes != null || priorityAxis != null || keywords != null;
 
                 tmp = getCoordinatesByGeographicSubdivision(
                         bboxToUse,
