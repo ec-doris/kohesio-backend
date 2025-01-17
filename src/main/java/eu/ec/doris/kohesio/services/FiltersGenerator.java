@@ -177,7 +177,12 @@ public class FiltersGenerator {
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . ";
             if (isBoundingBoxSearch) {
 //                BoundingBox bbox = BoundingBox;
-                search += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+                if (keywords !=null) {
+                    search += " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, \"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>)) ";
+                }
+//                } else {
+//                    search += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+//                }
             }
             if (isCoordinateSearch) {
                 if (radius == null) {
