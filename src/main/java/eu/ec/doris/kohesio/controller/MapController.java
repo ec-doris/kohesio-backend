@@ -1270,16 +1270,21 @@ public class MapController {
                 System.err.println(uri);
                 query += "?s0 <https://linkedopendata.eu/prop/direct/P35> <" + uri + ">.";
             }
-            query += " FILTER EXISTS { "
-                    + tmpSearch
-                    + " }";
+            if (!useLuceneForGeoSparql) {
+                query += " FILTER EXISTS { ";
+            }
+            query += " " + tmpSearch + " ";
+            if (!useLuceneForGeoSparql) {
+                query += " }"
         }
         String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
         // hack to run the geosparql not over lucene in case there is a freetext query over lucene
         if (useLuceneForGeoSparql) {
             filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates," + boundingBox.toLiteral() + "))";
+            query += " " + filterBbox + " ";
+        } else {
+            query += " " + filterBbox + " " + filterBbox + " ";
         }
-        query += " " + filterBbox + " " + filterBbox + " ";
         if (granularityRegion != null) {
             Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
             query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
