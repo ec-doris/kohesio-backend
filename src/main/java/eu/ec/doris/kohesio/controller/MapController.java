@@ -209,7 +209,7 @@ public class MapController {
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
             logger.info("Found: {} projects by subdivision", numberTotal);
-            if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
+            if (zoom >= 10 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 List<Feature> features = getProjectsPoints(
                         language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
                 );
