@@ -850,6 +850,7 @@ public class MapController {
                 ""
         ).replaceAll("\\?s0\\s+<https://linkedopendata.eu/prop/direct/P127>\\s+\\?coordinates\\s*.", "");
 
+        // compute for all NUTS1, NUTS2, NUTS3 that are non-statistical the number of projects they contain 
         String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + tmpSearch
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . ";
@@ -858,15 +859,19 @@ public class MapController {
         }
         queryCount += " { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
+                // exclude statistical only
                 + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> "
+                // exclude statistical only
                 + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> "
+                // exclude statistical only
                 + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
+                // exclude statistical only
                 + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " }";
         if (shouldFilterExistsOnNuts) {
@@ -880,6 +885,7 @@ public class MapController {
                 timeout,
                 "map2"
         );
+        // store the numbers in a hash map where the key is the NUTS url
         HashMap<String, Integer> uriCount = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet bindings = resultSet.next();
@@ -887,54 +893,6 @@ public class MapController {
             Integer count = Integer.parseInt(bindings.getBinding("count").getValue().stringValue());
             uriCount.put(nutsOfCount, count);
         }
-
-        // Get NUTS 1 in bbox
-        String withinNuts1 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS1>. "
-//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
-        if (granularityRegion != null) {
-            withinNuts1 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
-        }
-        withinNuts1 += "} ";
-
-       
-
-        // Get NUTS 2 in bbox
-        String withinNuts2 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS2>. "
-//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))";
-        if (granularityRegion != null) {
-            withinNuts2 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
-        }
-        withinNuts2 += "} ";
-
-        String intersectNuts2 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS2>. "
-//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
-        if (granularityRegion != null) {
-            intersectNuts2 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
-        }
-        intersectNuts2 += "} ";
-
-        String intersectNuts3 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS3>. "
-//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
-        if (granularityRegion != null) {
-            intersectNuts3 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
-        }
-        intersectNuts3 += "} ";
 
         // if the zoom is smaller than 4 we show the numbers of the whole country
         if (zoom <= 6 && forceBaseCountry) {
@@ -949,25 +907,30 @@ public class MapController {
             withinCountry += "} ";
             return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount), search, language, granularityRegion, timeout);
         }
-        // if the zoom is smaller between 4 and 9 we show the numbers of the nuts 1 or 2
-        if (zoom < 9) {
-            // if (!getZoneByQuery(withinNuts1, "NUTS1", timeout, uriCount).isEmpty()) {
-            String intersectNuts1 = "SELECT * WHERE {"
+        // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
+        if (zoom < 8) {
+            String intersectNuts = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid; "
             + " <http://nuts.de/geometry> ?geo . "
             + " { ?s a <http://nuts.de/NUTS1> } UNION {?s a <http://nuts.de/NUTS2>}  "
             + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
             if (granularityRegion != null) {
-                intersectNuts1 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+                intersectNuts += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
             }
-            intersectNuts1 += "} ";
-            return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout, uriCount), search, language, granularityRegion, timeout);
-            // }
-            // if (!getZoneByQuery(withinNuts2, "NUTS2", timeout, uriCount).isEmpty()) {
-                // return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout, uriCount), search, language, granularityRegion, timeout);
-            // }
+            intersectNuts += "} ";
+            return createResponse(getZoneByQuery(intersectNuts, "NUTS12", timeout, uriCount), search, language, granularityRegion, timeout);
         }
-        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout, uriCount), search, language, granularityRegion, timeout);
+        // if the zoom is lower than 9 we show the numbers of the nuts 2 or 3
+        String intersectNuts = "SELECT * WHERE {"
+            + " ?s <http://nuts.de/linkedopendata> ?lid; "
+            + " <http://nuts.de/geometry> ?geo . "
+            + " { ?s a <http://nuts.de/NUTS2> } UNION {?s a <http://nuts.de/NUTS3>}  "
+            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
+            if (granularityRegion != null) {
+                intersectNuts += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
+            }
+            intersectNuts += "} ";
+        return createResponse(getZoneByQuery(intersectNuts, "NUTS23", timeout, uriCount), search, language, granularityRegion, timeout);
     }
 
     private ResponseEntity<JSONObject> createResponse(
