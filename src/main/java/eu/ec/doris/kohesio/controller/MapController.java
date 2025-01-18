@@ -187,7 +187,7 @@ public class MapController {
             int numberTotal = 0;
             ResponseEntity<JSONObject> tmp = null;
             logger.info("zoom = {}", zoom);
-            if (zoom < 9) {
+            if (zoom < 10) {
                 boolean shouldFilterExistsOnNuts = country != null || theme != null || fund != null || program != null ||
                         categoryOfIntervention != null || policyObjective != null || budgetBiggerThen != null ||
                         budgetSmallerThen != null || budgetEUBiggerThen != null ||
