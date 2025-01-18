@@ -858,16 +858,16 @@ public class MapController {
         }
         queryCount += " { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
-                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> "
+                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> "
-                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> "
+                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> "
-                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> "
+                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
-                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> "
+                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " }";
         if (shouldFilterExistsOnNuts) {
             queryCount += "}";
@@ -893,19 +893,10 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS0>. ";
-//                + " FILTER NOT EXISTS { ?lid <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }";
         if (granularityRegion != null) {
             withinCountry += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
         }
-//                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
         withinCountry += "} ";
-
-//        String intersectCountry = "SELECT * WHERE {"
-//                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-//                + " <http://nuts.de/geometry> ?geo; "
-//                + " a <http://nuts.de/NUTS1>. "
-//                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-//                + "} ";
 
         // Get NUTS 1 in bbox
         String withinNuts1 = "SELECT * WHERE {"
