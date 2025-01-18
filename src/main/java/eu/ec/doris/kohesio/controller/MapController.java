@@ -194,7 +194,7 @@ public class MapController {
                         budgetEUSmallerThen != null || startDateBefore != null || startDateAfter != null ||
                         endDateBefore != null || endDateAfter != null || region != null || granularityRegion != null ||
                         interreg != null || highlighted != null || cci != null || kohesioCategory != null ||
-                        projectTypes != null || priorityAxis != null;
+                        projectTypes != null || priorityAxis != null || keywords != null;
 
                 tmp = getCoordinatesByGeographicSubdivision(
                         bboxToUse,
@@ -215,7 +215,7 @@ public class MapController {
             logger.info("Found: {} projects by subdivision", numberTotal);
             if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
                 List<Feature> features = getProjectsPoints(
-                        language, search, bboxToUse, granularityRegion, limit, offset, timeout
+                        language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
                 );
                 Instant instant = Instant.now();
                 SuperCluster superCluster = clusterService.createCluster(
@@ -670,6 +670,7 @@ public class MapController {
                             granularityRegion,
                             limit,
                             offset,
+                            keywords != null,
                             timeout
                     )
             );
@@ -977,20 +978,20 @@ public class MapController {
         if (shouldFilterExistsOnNuts) {
             queryCount += " FILTER EXISTS {";
         }
-        queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type ."
-//                + " FILTER NOT EXISTS { ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> }"
-                // + " VALUES ?type{"
-                // + " <https://linkedopendata.eu/entity/Q4407315>"
-                // + " <https://linkedopendata.eu/entity/Q4407316>"
-                // + " <https://linkedopendata.eu/entity/Q4407317>"
-                // + " <https://linkedopendata.eu/entity/Q510>"
+//        queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> ?type ."
+//        queryCount += " ?nutsOfCount <https://linkedopendata.eu/prop/P35> ?type_statement. ?type_statement <https://linkedopendata.eu/prop/statement/P35> ?type ."
+        // + " VALUES ?type{"
+        // + " <https://linkedopendata.eu/entity/Q4407315>"
+        // + " <https://linkedopendata.eu/entity/Q4407316>"
+        // + " <https://linkedopendata.eu/entity/Q4407317>"
+        // + " <https://linkedopendata.eu/entity/Q510>"
 
-                + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315>} "
-                + " UNION " 
+        queryCount += " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315>} "
+                + " UNION "
                 + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316>} "
-                + " UNION " 
+                + " UNION "
                 + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317>} "
-                + " UNION " 
+                + " UNION "
                 + " {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510>} ";
         if (shouldFilterExistsOnNuts) {
             queryCount += "}";
@@ -1250,6 +1251,7 @@ public class MapController {
             String granularityRegion,
             Integer limit,
             Integer offset,
+            boolean useLuceneForGeoSparql,
             int timeout
     ) throws Exception {
         logger.info("Search project map point: language {} search {} boundingBox {} limit {} offset {}", language, search, boundingBox, limit, offset);
@@ -1263,17 +1265,27 @@ public class MapController {
         if (!tmpSearch.replaceAll("\\s", "").isEmpty()) {
             Pattern instanceOfPattern = Pattern.compile("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <([^>]*)>\\s*\\.?");
             Matcher instanceOfMatcher = instanceOfPattern.matcher(tmpSearch);
-            while (instanceOfMatcher.find()){
-               String uri = instanceOfMatcher.group(1);
+            while (instanceOfMatcher.find()) {
+                String uri = instanceOfMatcher.group(1);
                 System.err.println(uri);
-               query += "?s0 <https://linkedopendata.eu/prop/direct/P35> <"+uri+">.";
+                query += "?s0 <https://linkedopendata.eu/prop/direct/P35> <" + uri + ">.";
             }
-            query += " FILTER EXISTS { "
-                    + tmpSearch
-                    + " }";
+            if (!useLuceneForGeoSparql) {
+                query += " FILTER EXISTS { ";
+            }
+            query += " " + tmpSearch + " ";
+            if (!useLuceneForGeoSparql) {
+                query += " }";
+            }
         }
         String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
-        query += " " + filterBbox + " " + filterBbox + " ";
+        // hack to run the geosparql not over lucene in case there is a freetext query over lucene
+        if (useLuceneForGeoSparql) {
+            filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates," + boundingBox.toLiteral() + "))";
+            query += " " + filterBbox + " ";
+        } else {
+            query += " " + filterBbox + " " + filterBbox + " ";
+        }
         if (granularityRegion != null) {
             Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
             query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
