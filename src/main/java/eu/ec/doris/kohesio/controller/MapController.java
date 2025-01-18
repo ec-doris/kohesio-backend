@@ -955,7 +955,7 @@ public class MapController {
             String intersectNuts1 = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid; "
             + " <http://nuts.de/geometry> ?geo . "
-            + " { ?s rdf:type <http://nuts.de/NUTS1> } UNION {?s rdf:type <http://nuts.de/NUTS2>}  "
+            + " { ?s a <http://nuts.de/NUTS1> } UNION {?s a <http://nuts.de/NUTS2>}  "
             + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
             if (granularityRegion != null) {
                 intersectNuts1 += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
