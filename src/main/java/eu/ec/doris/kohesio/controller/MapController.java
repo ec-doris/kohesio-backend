@@ -141,6 +141,7 @@ public class MapController {
         if (granularityRegion != null) {
             c = null;
         }
+        // expand the keywords
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
         if (keywords != null) {
@@ -162,8 +163,6 @@ public class MapController {
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
                 interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset, true
         );
-        //computing the number of results
-        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search;// + "} ";
         if (boundingBox != null) {
             BoundingBox bboxToUse = boundingBox;
             if (town != null) {
@@ -228,7 +227,8 @@ public class MapController {
             }
             return tmp;
         }
-        query += "}";
+        //computing the number of results
+        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "}";
         int numResults = 0;
         if (limit == null || limit > 2000) {
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
@@ -908,7 +908,7 @@ public class MapController {
             return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount), search, language, granularityRegion, timeout);
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
-        if (zoom < 8) {
+        if (zoom < 8 || forceBaseCountry) {
             String intersectNuts = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid; "
             + " <http://nuts.de/geometry> ?geo . "
