@@ -163,10 +163,12 @@ public class MapController {
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
                 interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset, true
         );
+        // there is a bounding box
         if (boundingBox != null) {
             BoundingBox bboxToUse = boundingBox;
             if (town != null) {
                 bboxToUse = nominatimService.getBboxFromTown(town);
+            // todo: what is this condition? 
             } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
                 Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
                 logger.info("\n{}\n{}\n", geometry, boundingBox);
@@ -180,7 +182,6 @@ public class MapController {
             }
 
             int numberTotal = 0;
-            ResponseEntity<JSONObject> tmp = null;
             logger.info("zoom = {}", zoom);
             if (zoom < 10) {
                 boolean shouldFilterExistsOnNuts = country != null || theme != null || fund != null || program != null ||
@@ -191,7 +192,7 @@ public class MapController {
                         interreg != null || highlighted != null || cci != null || kohesioCategory != null ||
                         projectTypes != null || priorityAxis != null || keywords != null;
 
-                tmp = getCoordinatesByGeographicSubdivision(
+                HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
                         bboxToUse,
                         zoom,
                         search,
@@ -202,13 +203,15 @@ public class MapController {
                         shouldFilterExistsOnNuts
                 );
 
-                for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
-                    numberTotal += (int) ((JSONObject) o).get("count");
+                for (String key : tmp.keySet()) {
+                    numberTotal += tmp.get(key).getNumberProjects();
                 }
+                return createResponse(tmp, search, language, granularityRegion, timeout);
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
             logger.info("Found: {} projects by subdivision", numberTotal);
-            if (zoom >= 10 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
+            // in this case create the clusters by taking all points and 
+            if (zoom >= 10 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion) {
                 List<Feature> features = getProjectsPoints(
                         language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
                 );
@@ -225,7 +228,6 @@ public class MapController {
                 List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
                 return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
             }
-            return tmp;
         }
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "}";
@@ -834,7 +836,7 @@ public class MapController {
         return null;
     }
 
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(
+    private HashMap<String, Zone> getCoordinatesByGeographicSubdivision(
             BoundingBox bbox,
             int zoom,
             String search,
@@ -905,7 +907,7 @@ public class MapController {
                 withinCountry += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
             }
             withinCountry += "} ";
-            return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount), search, language, granularityRegion, timeout);
+            return getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount);
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
         if (zoom < 8 || countryOrRegionSelected) {
@@ -918,7 +920,7 @@ public class MapController {
                 intersectNuts += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
             }
             intersectNuts += "} ";
-            return createResponse(getZoneByQuery(intersectNuts, "NUTS12", timeout, uriCount), search, language, granularityRegion, timeout);
+            return getZoneByQuery(intersectNuts, "NUTS12", timeout, uriCount);
         }
         // if the zoom is lower than 9 we show the numbers of the nuts 2 or 3
         String intersectNuts = "SELECT * WHERE {"
@@ -930,7 +932,7 @@ public class MapController {
                 intersectNuts += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
             }
             intersectNuts += "} ";
-        return createResponse(getZoneByQuery(intersectNuts, "NUTS23", timeout, uriCount), search, language, granularityRegion, timeout);
+        return getZoneByQuery(intersectNuts, "NUTS23", timeout, uriCount);
     }
 
     private ResponseEntity<JSONObject> createResponse(
@@ -961,16 +963,12 @@ public class MapController {
             }
 
             HashMap<String, Object> element = new HashMap<>();
-
-            if (!"LAU".equals(z.getType())) {
-                if (facetController.nutsRegion.containsKey(z.getLid())) {
-                    element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
-                } else {
-                    element.put("regionLabel", "");
-                }
+            if (facetController.nutsRegion.containsKey(z.getLid())) {
+                element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
             } else {
                 element.put("regionLabel", "");
             }
+            
             element.put("region", z.getLid());
             element.put("count", z.getNumberProjects());
             if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
