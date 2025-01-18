@@ -197,7 +197,7 @@ public class MapController {
                         search,
                         language,
                         granularityRegion,
-                        !(country != null && granularityRegion != null),
+                        (country != null || granularityRegion != null),
                         180,
                         shouldFilterExistsOnNuts
                 );
@@ -840,7 +840,7 @@ public class MapController {
             String search,
             String language,
             String granularityRegion,
-            boolean forceBaseCountry,
+            boolean countryOrRegionSelected,
             int timeout,
             boolean shouldFilterExistsOnNuts
     ) throws Exception {
@@ -895,7 +895,7 @@ public class MapController {
         }
 
         // if the zoom is smaller than 4 we show the numbers of the whole country
-        if (zoom <= 6 && forceBaseCountry) {
+        if (zoom <= 6 && !countryOrRegionSelected) {
             // Get Country in bbox
             String withinCountry = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
@@ -908,7 +908,7 @@ public class MapController {
             return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount), search, language, granularityRegion, timeout);
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
-        if (zoom < 8 || forceBaseCountry) {
+        if (zoom < 8 || countryOrRegionSelected) {
             String intersectNuts = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid; "
             + " <http://nuts.de/geometry> ?geo . "
