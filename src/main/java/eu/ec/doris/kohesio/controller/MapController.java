@@ -848,19 +848,19 @@ public class MapController {
                 + " FILTER EXISTS { { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
                 // exclude statistical only
-                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
+                //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> "
                 // exclude statistical only
-                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
+                //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> "
                 // exclude statistical only
-                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
+                //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
                 // exclude statistical only
-                + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
+                //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } "
                 + " }} GROUP BY ?nutsOfCount";
 
@@ -890,12 +890,23 @@ public class MapController {
             return getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount);
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
+        if (zoom < 7) {
+            String intersectNuts = "SELECT * WHERE {"
+            + " ?s <http://nuts.de/linkedopendata> ?lid . "
+            + " OPTIONAL { ?contained <http://nuts.de/contained> ?s } . "
+            + " ?s <http://nuts.de/geometry> ?geo . "
+            + " ?s a <http://nuts.de/NUTS1>  "
+            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
+            intersectNuts += "} ";
+            return getZoneByQuery(intersectNuts, "NUTS12", timeout, uriCount);
+        }
+        // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
         if (zoom < 8) {
             String intersectNuts = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid . "
-            + " ?s <http://nuts.de/contained> ?contained . "
+            + " OPTIONAL { ?contained <http://nuts.de/contained> ?s } . "
             + " ?s <http://nuts.de/geometry> ?geo . "
-            + " { ?s a <http://nuts.de/NUTS1> } UNION {?s a <http://nuts.de/NUTS2>}  "
+            + " ?s a <http://nuts.de/NUTS2>  "
             + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
             intersectNuts += "} ";
             return getZoneByQuery(intersectNuts, "NUTS12", timeout, uriCount);
@@ -903,9 +914,9 @@ public class MapController {
         // if the zoom is lower than 9 we show the numbers of the nuts 2 or 3
         String intersectNuts = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid . "
-            + " ?s <http://nuts.de/contained> ?contained . "
+            + " OPTIONAL { ?contained <http://nuts.de/contained> ?s } . "
             + " ?s <http://nuts.de/geometry> ?geo . "
-            + " { ?s a <http://nuts.de/NUTS2> } UNION {?s a <http://nuts.de/NUTS3>}  "
+            + " ?s a <http://nuts.de/NUTS3> "
             + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
             intersectNuts += "} ";
         return getZoneByQuery(intersectNuts, "NUTS23", timeout, uriCount);
@@ -991,6 +1002,7 @@ public class MapController {
             if (querySolution.getBinding("contained") != null){
                 uriContained = querySolution.getBinding("contained").getValue().stringValue();
             }
+            System.out.println(uriContained + " contains " + lid);
 
             Integer count = uriCount.getOrDefault(lid, 0);
             Zone zone = new Zone(uri, uriContained, lid, geo, type, count);
@@ -999,18 +1011,22 @@ public class MapController {
             }
             result.put(lid, zone);
         }
-        // drop the regions that are containing some of the sub-regions
-        HashSet<String> keysToDelete = new HashSet<>(); 
-        Iterator<Entry<String,Zone>> iterator = result.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Entry<String, Zone> entry = iterator.next();
-            if (entry.getValue().getUriContained() != null && result.containsKey(entry.getValue().getUriContained())) {
-                keysToDelete.add(entry.getValue().getUriContained());
-            }
-        }
-        for (String keyToDelete: keysToDelete){
-            result.remove(keyToDelete);
-        }
+        // // drop the regions that are containing some of the sub-regions
+        // HashSet<String> keysToDelete = new HashSet<>(); 
+        // Iterator<Entry<String,Zone>> iterator = result.entrySet().iterator();
+        // while (iterator.hasNext()) {
+        //     Entry<String, Zone> entry = iterator.next();
+        //     if (entry.getValue().getUriContained() != null && result.containsKey(entry.getValue().getUriContained())) {
+        //         keysToDelete.add(entry.getValue().getUriContained());
+        //     }
+        // }
+        // iterator = result.entrySet().iterator();
+        // while (iterator.hasNext()) {
+        //     Entry<String, Zone> entry = iterator.next();
+        //     if (keysToDelete.contains(entry.getValue().getUri())){
+        //         iterator.remove();
+        //     }
+        // }
 
         return result;
     }
