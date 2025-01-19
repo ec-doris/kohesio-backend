@@ -831,6 +831,7 @@ public class MapController {
             String country,
             int timeout
     ) throws Exception {
+        // 1. compute for all NUTS1, NUTS2, NUTS3 that are non-statistical, the number of projects they contain 
         String restrictNuts = "";
         // if the country is set, restrict to nuts in the country
         if (country != null){
@@ -839,8 +840,6 @@ public class MapController {
         if (granularityRegion != null){
             restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + granularityRegion + "> . " ;
         }
-
-        // compute for all NUTS1, NUTS2, NUTS3 that are non-statistical, the number of projects they contain 
         String queryCount = "SELECT ?nuts (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + search
                 // the projects must have a coordinate otherwise when zooming in there will be no point
@@ -873,7 +872,7 @@ public class MapController {
             Integer count = Integer.parseInt(bindings.getBinding("count").getValue().stringValue());
             uriCount.put(nutsOfCount, count);
         }
-
+        // 2. take only the nuts that are matching to the zoom level
         // if the zoom is smaller than 4 we show the numbers of the whole country
         String query = "";
         String type = "";
