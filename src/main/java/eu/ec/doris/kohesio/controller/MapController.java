@@ -185,7 +185,7 @@ public class MapController {
 
             int numberTotal = 0;
             logger.info("zoom = {}", zoom);
-            if (zoom < 10) {
+            if (zoom <= 10) {
 
                 HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
                         bboxToUse,

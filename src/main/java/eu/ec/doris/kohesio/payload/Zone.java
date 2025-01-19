@@ -20,21 +20,20 @@ public class Zone {
     private static final Logger logger = LoggerFactory.getLogger(Zone.class);
 
     String uri;
-    String uriContained;
     String lid;
     String geo;
     String type;
     Integer numberProjects;
 
-    public Zone(String uri, String uriContained, String lid, String geo, String type, Integer numberProjects) {
+    public Zone(String uri, String lid, String geo, String type, Integer numberProjects) {
         this.uri = uri;
         this.lid = lid;
         this.geo = geo;
         this.type = type;
         this.numberProjects = numberProjects;
     }
-    public Zone(String uri, String uriContained, String lid, String geo, String type) {
-        this(uri, uriContained, lid, geo, type, null);
+    public Zone(String uri, String lid, String geo, String type) {
+        this(uri, lid, geo, type, null);
     }
 
     public Integer getNumberProjects() {
