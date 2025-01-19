@@ -210,7 +210,7 @@ public class MapController {
             }
             int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
             logger.info("Found: {} projects by subdivision", numberTotal);
-            // in this case create the clusters by taking all points and 
+            // in this case create the clusters by taking all points 
             if (zoom >= 10 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion) {
                 List<Feature> features = getProjectsPoints(
                         language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
@@ -856,10 +856,7 @@ public class MapController {
         String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + tmpSearch
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . ";
-        if (shouldFilterExistsOnNuts) {
-            queryCount += " FILTER EXISTS {";
-        }
-        queryCount += " { "
+        queryCount += " FILTER EXISTS { { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
                 // exclude statistical only
                 + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
@@ -876,10 +873,7 @@ public class MapController {
                 // exclude statistical only
                 + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " }";
-        if (shouldFilterExistsOnNuts) {
-            queryCount += "}";
-        }
-        queryCount += " } GROUP BY ?nutsOfCount";
+        queryCount += " }} GROUP BY ?nutsOfCount";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
                 sparqlEndpoint,
