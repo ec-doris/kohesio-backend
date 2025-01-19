@@ -193,7 +193,7 @@ public class MapController {
                         search,
                         language,
                         granularityRegion,
-                        (country != null || granularityRegion != null),
+                        country,
                         180
                 );
 
@@ -836,33 +836,40 @@ public class MapController {
             String search,
             String language,
             String granularityRegion,
-            boolean countryOrRegionSelected,
+            String country,
             int timeout
     ) throws Exception {
+        String restrictNuts = "";
+        // if the country is set, restrict to nuts in the country
+        if (country != null){
+            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P32> <" + country + "> " ;
+        }
+
         // compute for all NUTS1, NUTS2, NUTS3 that are non-statistical, the number of projects they contain 
-        String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
+        String queryCount = "SELECT ?nuts (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + search
                 // the porjects must have a coordinate otherwise when zooming in there will be no point
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . "
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nuts . "
+                + restrictNuts
                 + " FILTER EXISTS { { "
-                + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
+                + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
                 // exclude statistical only
                 //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
-                + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> "
+                + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> "
                 // exclude statistical only
                 //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
-                + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> "
+                + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> "
                 // exclude statistical only
                 //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
-                + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
+                + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
                 // exclude statistical only
                 //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } "
-                + " }} GROUP BY ?nutsOfCount";
+                + " }} GROUP BY ?nuts";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
                 sparqlEndpoint,
@@ -874,7 +881,7 @@ public class MapController {
         HashMap<String, Integer> uriCount = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet bindings = resultSet.next();
-            String nutsOfCount = bindings.getBinding("nutsOfCount").getValue().stringValue();
+            String nutsOfCount = bindings.getBinding("nuts").getValue().stringValue();
             Integer count = Integer.parseInt(bindings.getBinding("count").getValue().stringValue());
             uriCount.put(nutsOfCount, count);
         }
