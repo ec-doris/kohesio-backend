@@ -519,7 +519,11 @@ public class FacetController {
             }
         }
 
+        try {
         jsonValues.sort(Comparator.comparing(a -> ((String) a.get("name"))));
+        } catch (Exception e){
+
+        }
 
         JSONArray result = new JSONArray();
         result.addAll(jsonValues);
