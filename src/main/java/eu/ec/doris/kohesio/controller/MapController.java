@@ -880,7 +880,7 @@ public class MapController {
         }
 
         // if the zoom is smaller than 4 we show the numbers of the whole country
-        if (zoom <= 6) {
+        if (zoom < 6) {
             // Get Country in bbox
             String withinCountry = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
