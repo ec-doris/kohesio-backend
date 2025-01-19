@@ -184,7 +184,7 @@ public class MapController {
             }
 
             logger.info("zoom = {}", zoom);
-            if (zoom <= 10) {
+            if (zoom < 10) {
                 HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
                         bboxToUse,
                         zoom,
@@ -197,7 +197,7 @@ public class MapController {
                 return createResponse(tmp, search, language, granularityRegion, timeout);
             }
             // in this case create the clusters by taking all points 
-            if (zoom > 10) {
+            if (zoom >= 10) {
                 List<Feature> features = getProjectsPoints(
                         language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
                 );
