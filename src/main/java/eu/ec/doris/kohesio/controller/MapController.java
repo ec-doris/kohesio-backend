@@ -183,10 +183,8 @@ public class MapController {
                 zoom = bboxToUse.getZoomLevel();
             }
 
-            int numberTotal = 0;
             logger.info("zoom = {}", zoom);
             if (zoom <= 10) {
-
                 HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
                         bboxToUse,
                         zoom,
@@ -196,16 +194,10 @@ public class MapController {
                         country,
                         180
                 );
-
-                for (String key : tmp.keySet()) {
-                    numberTotal += tmp.get(key).getNumberProjects();
-                }
                 return createResponse(tmp, search, language, granularityRegion, timeout);
             }
-            int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
-            logger.info("Found: {} projects by subdivision", numberTotal);
             // in this case create the clusters by taking all points 
-            if (zoom >= 10 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion) {
+            if (zoom > 10) {
                 List<Feature> features = getProjectsPoints(
                         language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
                 );
@@ -842,35 +834,28 @@ public class MapController {
         String restrictNuts = "";
         // if the country is set, restrict to nuts in the country
         if (country != null){
-            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P32> <" + country + "> " ;
+            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . " ;
         }
         if (granularityRegion != null){
-            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + granularityRegion + "> " ;
+            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + granularityRegion + "> . " ;
         }
 
         // compute for all NUTS1, NUTS2, NUTS3 that are non-statistical, the number of projects they contain 
         String queryCount = "SELECT ?nuts (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + search
-                // the porjects must have a coordinate otherwise when zooming in there will be no point
+                // the projects must have a coordinate otherwise when zooming in there will be no point
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nuts . "
+                + " FILTER EXISTS { "
                 + restrictNuts
-                + " FILTER EXISTS { { "
+                + " { "
                 + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
-                // exclude statistical only
-                //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> "
-                // exclude statistical only
-                //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> "
-                // exclude statistical only
-                //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } UNION { "
                 + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
-                // exclude statistical only
-                //+ " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
                 + " } "
                 + " }} GROUP BY ?nuts";
 
@@ -878,7 +863,7 @@ public class MapController {
                 sparqlEndpoint,
                 queryCount,
                 timeout,
-                "map2"
+                "map"
         );
         // store the numbers in a hash map where the key is the NUTS url
         HashMap<String, Integer> uriCount = new HashMap<>();
@@ -1016,23 +1001,6 @@ public class MapController {
             }
             result.put(lid, zone);
         }
-        // // drop the regions that are containing some of the sub-regions
-        // HashSet<String> keysToDelete = new HashSet<>(); 
-        // Iterator<Entry<String,Zone>> iterator = result.entrySet().iterator();
-        // while (iterator.hasNext()) {
-        //     Entry<String, Zone> entry = iterator.next();
-        //     if (entry.getValue().getUriContained() != null && result.containsKey(entry.getValue().getUriContained())) {
-        //         keysToDelete.add(entry.getValue().getUriContained());
-        //     }
-        // }
-        // iterator = result.entrySet().iterator();
-        // while (iterator.hasNext()) {
-        //     Entry<String, Zone> entry = iterator.next();
-        //     if (keysToDelete.contains(entry.getValue().getUri())){
-        //         iterator.remove();
-        //     }
-        // }
-
         return result;
     }
 
