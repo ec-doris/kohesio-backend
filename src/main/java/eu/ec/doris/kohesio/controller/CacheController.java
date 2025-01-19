@@ -350,7 +350,6 @@ public class CacheController {
 
     private void cacheMapWithBoundingBox() throws Exception {
         String language = "en";
-        int zoom = 4;
         List<String> countries = getListFromApi(facetController.facetEuCountries(language, null), "instance");
 
         wrapperMap(

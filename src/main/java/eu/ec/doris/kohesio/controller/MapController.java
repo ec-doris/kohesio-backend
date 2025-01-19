@@ -931,23 +931,16 @@ public class MapController {
         JSONArray resultList = new JSONArray();
         Instant start = Instant.now();
         for (Zone z : res.values()) {
-
-            // if (z.getNumberProjects() == null) {
-            //     z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, search, 30);
-            // }
-            // if (z.getNumberProjects() == 0) {
-            //     continue;
-            // }
-
             HashMap<String, Object> element = new HashMap<>();
             if (facetController.nutsRegion.containsKey(z.getLid())) {
                 element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
             } else {
                 element.put("regionLabel", "");
             }
-            
             element.put("region", z.getLid());
             element.put("count", z.getNumberProjects());
+            element.put("geo", z.getGeo());
+            element.put("coordinates", z.getCenter());
             if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
                 String query = "SELECT ?coords WHERE { <" + z.getLid() + "> <https://linkedopendata.eu/prop/direct/P127> ?coords.}LIMIT 1";
 
@@ -962,8 +955,6 @@ public class MapController {
                     element.put("coordinates", z.getCenter());
                 }
 
-            } else {
-                element.put("coordinates", z.getCenter());
             }
             element.put("cluster", true);
             resultList.add(new JSONObject(element));
@@ -975,7 +966,6 @@ public class MapController {
         result.put("region", granularityRegion);
         result.put("upperRegions", new JSONArray());
         result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
-        result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
 
         return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
     }
