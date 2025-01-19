@@ -838,7 +838,7 @@ public class MapController {
             boolean countryOrRegionSelected,
             int timeout
     ) throws Exception {
-        // compute for all NUTS1, NUTS2, NUTS3 that are non-statistical the number of projects they contain 
+        // compute for all NUTS1, NUTS2, NUTS3 that are non-statistical, the number of projects they contain 
         String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + search
                 // the porjects must have a coordinate otherwise when zooming in there will be no point
@@ -878,29 +878,29 @@ public class MapController {
             uriCount.put(nutsOfCount, count);
         }
 
-        // we check how many countires and nuts are there
-        int numberCountries = 0;
-        int numberNuts1 = 0;
-        int numberNuts2 = 0;
-        int numberNuts3 = 0;
-        for (String uri : uriCount.keySet()){
-            if (facetController.nutsRegion.get(uri).type.equals("country")){
-                numberCountries += 1;
-            }
-            if (facetController.nutsRegion.get(uri).type.equals("nuts1")){
-                numberNuts1 += 1;
-            }
-            if (facetController.nutsRegion.get(uri).type.equals("nuts2")){
-                numberNuts2 += 1;
-            }
-            if (facetController.nutsRegion.get(uri).type.equals("nuts3")){
-                numberNuts3 += 1;
-            }
-        }
+        // // we check how many countires and nuts are there
+        // int numberCountries = 0;
+        // int numberNuts1 = 0;
+        // int numberNuts2 = 0;
+        // int numberNuts3 = 0;
+        // for (String uri : uriCount.keySet()){
+        //     if (facetController.nutsRegion.get(uri).type.equals("country")){
+        //         numberCountries += 1;
+        //     }
+        //     if (facetController.nutsRegion.get(uri).type.equals("nuts1")){
+        //         numberNuts1 += 1;
+        //     }
+        //     if (facetController.nutsRegion.get(uri).type.equals("nuts2")){
+        //         numberNuts2 += 1;
+        //     }
+        //     if (facetController.nutsRegion.get(uri).type.equals("nuts3")){
+        //         numberNuts3 += 1;
+        //     }
+        // }
         
 
         // if the zoom is smaller than 4 we show the numbers of the whole country
-        if (zoom <= 6 && numberCountries > 1) {
+        if (zoom <= 6) {
             // Get Country in bbox
             String withinCountry = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
@@ -913,7 +913,7 @@ public class MapController {
             return getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount);
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
-        if (zoom < 8 || countryOrRegionSelected) {
+        if (zoom < 8) {
             String intersectNuts = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid; "
             + " <http://nuts.de/geometry> ?geo . "
