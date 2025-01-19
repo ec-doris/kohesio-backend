@@ -875,46 +875,66 @@ public class MapController {
         }
 
         // if the zoom is smaller than 4 we show the numbers of the whole country
+        String query = "";
+        String type = "";
         if (zoom < 6) {
             // Get Country in bbox
-            String withinCountry = "SELECT * WHERE {"
+            query = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS0>. ";
-            withinCountry += "} ";
-            return getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount);
+                + " a <http://nuts.de/NUTS0>. "
+                + "} ";
+            type = "COUNTRY";
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
         if (zoom < 7) {
-            String intersectNuts = "SELECT * WHERE {"
+            query = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid . "
             + " OPTIONAL { ?contained <http://nuts.de/contained> ?s } . "
             + " ?s <http://nuts.de/geometry> ?geo . "
             + " ?s a <http://nuts.de/NUTS1>  "
-            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
-            intersectNuts += "} ";
-            return getZoneByQuery(intersectNuts, "NUTS12", timeout, uriCount);
+            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+            + "} ";
+            type = "NUTS1";
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
         if (zoom < 8) {
-            String intersectNuts = "SELECT * WHERE {"
+            query = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid . "
             + " OPTIONAL { ?contained <http://nuts.de/contained> ?s } . "
             + " ?s <http://nuts.de/geometry> ?geo . "
             + " ?s a <http://nuts.de/NUTS2>  "
-            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
-            intersectNuts += "} ";
-            return getZoneByQuery(intersectNuts, "NUTS12", timeout, uriCount);
+            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+            + "} ";
+            type = "NUTS2";
         }
         // if the zoom is lower than 9 we show the numbers of the nuts 2 or 3
-        String intersectNuts = "SELECT * WHERE {"
+        if (zoom >=8){
+            query = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid . "
             + " OPTIONAL { ?contained <http://nuts.de/contained> ?s } . "
             + " ?s <http://nuts.de/geometry> ?geo . "
             + " ?s a <http://nuts.de/NUTS3> "
-            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
-            intersectNuts += "} ";
-        return getZoneByQuery(intersectNuts, "NUTS23", timeout, uriCount);
+            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+            + "} ";
+            type = "NUTS3";
+        }
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
+        HashMap<String, Zone> result = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            String uri = querySolution.getBinding("s").getValue().stringValue();
+            String lid = querySolution.getBinding("lid").getValue().stringValue();
+            String geo = querySolution.getBinding("geo").getValue().stringValue();
+            if (uriCount.containsKey(lid)){
+                Zone zone = new Zone(uri, lid, geo, type, uriCount.get(lid));
+                if (!result.containsKey(lid)) {
+                    result.put(lid, zone);
+                }
+                result.put(lid, zone);
+            }
+        }
+        return result;
     }
 
     private ResponseEntity<JSONObject> createResponse(
@@ -968,25 +988,6 @@ public class MapController {
         result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
 
         return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
-    }
-
-    private HashMap<String, Zone> getZoneByQuery(String query, String type, int timeout, HashMap<String, Integer> uriCount) throws Exception {
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
-        HashMap<String, Zone> result = new HashMap<>();
-        while (resultSet.hasNext()) {
-            BindingSet querySolution = resultSet.next();
-            String uri = querySolution.getBinding("s").getValue().stringValue();
-            String lid = querySolution.getBinding("lid").getValue().stringValue();
-            String geo = querySolution.getBinding("geo").getValue().stringValue();
-
-            Integer count = uriCount.getOrDefault(lid, 0);
-            Zone zone = new Zone(uri, lid, geo, type, count);
-            if (!result.containsKey(lid)) {
-                result.put(lid, zone);
-            }
-            result.put(lid, zone);
-        }
-        return result;
     }
 
     private List<Feature> prepareCluster(SuperCluster superCluster, BoundingBox bbox, Integer zoom) {
