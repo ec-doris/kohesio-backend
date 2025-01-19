@@ -309,8 +309,11 @@ public class CacheController {
                     e.printStackTrace();
                 }
             }
+        }  
+    }
 
-        }
+    @PostMapping(value = "/facet/eu/cache/generate/map")
+    public void generateCacheMap() throws Exception {
         cacheMapWithBoundingBox();
     }
 
@@ -351,12 +354,7 @@ public class CacheController {
     private void cacheMapWithBoundingBox() throws Exception {
         String language = "en";
         List<String> countries = getListFromApi(facetController.facetEuCountries(language, null), "instance");
-
-        wrapperMap(
-                null, null, null, null,
-                null, null, null,
-                null, null, null
-        );
+        countries.add(null);
         for (String country : countries) {
             wrapperMap(
                     country, null, null, null,
@@ -372,80 +370,84 @@ public class CacheController {
                 );
             }
 
-            List<String> programs = getListFromApi(facetController.facetEuPrograms("en", country, null, null, null, null), "region");
-            for (String program : programs) {
+            List<String> policies = getListFromApi(facetController.facetPolicyObjective("en"), "instance");
+            for (String policy : policies) {
                 wrapperMap(
-                        country, null, null, program,
-                        null, null, null,
+                        null, null, null, null,
+                        policy, null, null,
                         null, null, null
                 );
-
-                List<String> priorityAxis = getListFromApi(facetController.facetEuPriorityAxis("en", null, country, program), "instance");
-                for (String priorityAxi : priorityAxis) {
+                List<String> themesOfPolicy = getListFromApi(facetController.facetEuThematicObjective("en", policy, null), "instance");
+                for (String themeOfPolicy : themesOfPolicy) {
                     wrapperMap(
-                            country, null, null, program,
-                            null, null, null,
-                            null, null, priorityAxi
+                            null, themeOfPolicy, null, null,
+                            policy, null, null,
+                            null, null, null
                     );
                 }
             }
 
-        }
-
-        List<String> policies = getListFromApi(facetController.facetPolicyObjective("en"), "instance");
-        for (String policy : policies) {
-            wrapperMap(
-                    null, null, null, null,
-                    policy, null, null,
-                    null, null, null
-            );
-            List<String> themesOfPolicy = getListFromApi(facetController.facetEuThematicObjective("en", policy, null), "instance");
-            for (String themeOfPolicy : themesOfPolicy) {
+            List<String> themes = getListFromApi(facetController.facetEuThematicObjective("en"), "instance");
+            for (String theme : themes) {
                 wrapperMap(
-                        null, themeOfPolicy, null, null,
-                        policy, null, null,
+                        null, theme, null, null,
+                        null, null, null,
                         null, null, null
                 );
             }
+
+            List<String> funds = getListFromApi(facetController.facetEuFunds("eu", null), "instance");
+            for (String fund : funds) {
+                wrapperMap(
+                        null, null, fund, null,
+                        null, null, null,
+                        null, null, null
+                );
+            }
+
+            // List<String> programs = getListFromApi(facetController.facetEuPrograms("en", country, null, null, null, null), "region");
+            // for (String program : programs) {
+            //     wrapperMap(
+            //             country, null, null, program,
+            //             null, null, null,
+            //             null, null, null
+            //     );
+
+            //     List<String> priorityAxis = getListFromApi(facetController.facetEuPriorityAxis("en", null, country, program), "instance");
+            //     for (String priorityAxi : priorityAxis) {
+            //         wrapperMap(
+            //                 country, null, null, program,
+            //                 null, null, null,
+            //                 null, null, priorityAxi
+            //         );
+            //     }
+            // }
+
         }
 
-        List<String> themes = getListFromApi(facetController.facetEuThematicObjective("en"), "instance");
-        for (String theme : themes) {
-            wrapperMap(
-                    null, theme, null, null,
-                    null, null, null,
-                    null, null, null
-            );
-        }
+        
 
-        for (String projectCollection : facetController.projectTypes) {
-            wrapperMap(
-                    null, null, null, null,
-                    null, null, null,
-                    null, Collections.singletonList(projectCollection), null
-            );
-        }
+        // for (String projectCollection : facetController.projectTypes) {
+        //     wrapperMap(
+        //             null, null, null, null,
+        //             null, null, null,
+        //             null, Collections.singletonList(projectCollection), null
+        //     );
+        // }
 
-        List<String> funds = getListFromApi(facetController.facetEuFunds("eu", null), "instance");
-        for (String fund : funds) {
-            wrapperMap(
-                    null, null, fund, null,
-                    null, null, null,
-                    null, null, null
-            );
-        }
-        { // interreg
-            wrapperMap(
-                    null, null, null, null,
-                    null, null, null,
-                    false, null, null
-            );
-            wrapperMap(
-                    null, null, null, null,
-                    null, null, null,
-                    true, null, null
-            );
-        }
+        
+        // { // interreg
+        //     wrapperMap(
+        //             null, null, null, null,
+        //             null, null, null,
+        //             false, null, null
+        //     );
+        //     wrapperMap(
+        //             null, null, null, null,
+        //             null, null, null,
+        //             true, null, null
+        //     );
+        // }
 
     }
 
