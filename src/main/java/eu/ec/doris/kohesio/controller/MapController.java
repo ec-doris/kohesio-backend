@@ -35,6 +35,7 @@ import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -257,10 +258,10 @@ public class MapController {
             );
         } else {
             // remove the bounding box filter and coordinate triple for search
-            search = search.replaceAll(
-                    "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
-                    ""
-            );
+            // search = search.replaceAll(
+            //         "FILTER\(<http://www\.opengis\.net/def/function/geosparql/ehContains>\(.*\)",
+            //         ""
+            // );
             search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
 
             if (granularityRegion == null) {
@@ -843,8 +844,8 @@ public class MapController {
                 + search
                 // the porjects must have a coordinate otherwise when zooming in there will be no point
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . ";
-        queryCount += " FILTER EXISTS { { "
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . "
+                + " FILTER EXISTS { { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
                 // exclude statistical only
                 + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
@@ -860,8 +861,8 @@ public class MapController {
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
                 // exclude statistical only
                 + " FILTER NOT EXISTS {?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> } "
-                + " }";
-        queryCount += " }} GROUP BY ?nutsOfCount";
+                + " } "
+                + " }} GROUP BY ?nutsOfCount";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
                 sparqlEndpoint,
@@ -878,27 +879,6 @@ public class MapController {
             uriCount.put(nutsOfCount, count);
         }
 
-        // // we check how many countires and nuts are there
-        // int numberCountries = 0;
-        // int numberNuts1 = 0;
-        // int numberNuts2 = 0;
-        // int numberNuts3 = 0;
-        // for (String uri : uriCount.keySet()){
-        //     if (facetController.nutsRegion.get(uri).type.equals("country")){
-        //         numberCountries += 1;
-        //     }
-        //     if (facetController.nutsRegion.get(uri).type.equals("nuts1")){
-        //         numberNuts1 += 1;
-        //     }
-        //     if (facetController.nutsRegion.get(uri).type.equals("nuts2")){
-        //         numberNuts2 += 1;
-        //     }
-        //     if (facetController.nutsRegion.get(uri).type.equals("nuts3")){
-        //         numberNuts3 += 1;
-        //     }
-        // }
-        
-
         // if the zoom is smaller than 4 we show the numbers of the whole country
         if (zoom <= 6) {
             // Get Country in bbox
@@ -906,34 +886,27 @@ public class MapController {
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
                 + " <http://nuts.de/geometry> ?geo; "
                 + " a <http://nuts.de/NUTS0>. ";
-            if (granularityRegion != null) {
-                withinCountry += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
-            }
             withinCountry += "} ";
             return getZoneByQuery(withinCountry, "COUNTRY", timeout, uriCount);
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
         if (zoom < 8) {
             String intersectNuts = "SELECT * WHERE {"
-            + " ?s <http://nuts.de/linkedopendata> ?lid; "
-            + " <http://nuts.de/geometry> ?geo . "
+            + " ?s <http://nuts.de/linkedopendata> ?lid . "
+            + " ?s <http://nuts.de/contained> ?contained . "
+            + " ?s <http://nuts.de/geometry> ?geo . "
             + " { ?s a <http://nuts.de/NUTS1> } UNION {?s a <http://nuts.de/NUTS2>}  "
             + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
-            if (granularityRegion != null) {
-                intersectNuts += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
-            }
             intersectNuts += "} ";
             return getZoneByQuery(intersectNuts, "NUTS12", timeout, uriCount);
         }
         // if the zoom is lower than 9 we show the numbers of the nuts 2 or 3
         String intersectNuts = "SELECT * WHERE {"
-            + " ?s <http://nuts.de/linkedopendata> ?lid; "
-            + " <http://nuts.de/geometry> ?geo . "
+            + " ?s <http://nuts.de/linkedopendata> ?lid . "
+            + " ?s <http://nuts.de/contained> ?contained . "
+            + " ?s <http://nuts.de/geometry> ?geo . "
             + " { ?s a <http://nuts.de/NUTS2> } UNION {?s a <http://nuts.de/NUTS3>}  "
             + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))";
-            if (granularityRegion != null) {
-                intersectNuts += " ?lid <https://linkedopendata.eu/prop/direct/P1845> <" + granularityRegion + "> .";
-            }
             intersectNuts += "} ";
         return getZoneByQuery(intersectNuts, "NUTS23", timeout, uriCount);
     }
@@ -950,16 +923,16 @@ public class MapController {
         }
         HashMap<String, Object> result = new HashMap<>();
 
-        String tmpsearch = search.replaceAll(
-                "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
-                ""
-        );
+        // String tmpsearch = search.replaceAll(
+        //         "FILTER\(<http://www\.opengis\.net/def/function/geosparql/ehContains>\(.*\)",
+        //         ""
+        // );
         JSONArray resultList = new JSONArray();
         Instant start = Instant.now();
         for (Zone z : res.values()) {
 
             if (z.getNumberProjects() == null) {
-                z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, tmpsearch, 30);
+                z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, search, 30);
             }
             if (z.getNumberProjects() == 0) {
                 continue;
@@ -1014,14 +987,31 @@ public class MapController {
             String uri = querySolution.getBinding("s").getValue().stringValue();
             String lid = querySolution.getBinding("lid").getValue().stringValue();
             String geo = querySolution.getBinding("geo").getValue().stringValue();
+            String uriContained = null;
+            if (querySolution.getBinding("contained") != null){
+                uriContained = querySolution.getBinding("contained").getValue().stringValue();
+            }
 
             Integer count = uriCount.getOrDefault(lid, 0);
-            Zone zone = new Zone(uri, lid, geo, type, count);
+            Zone zone = new Zone(uri, uriContained, lid, geo, type, count);
             if (!result.containsKey(lid)) {
                 result.put(lid, zone);
             }
             result.put(lid, zone);
         }
+        // drop the regions that are containing some of the sub-regions
+        HashSet<String> keysToDelete = new HashSet<>(); 
+        Iterator<Entry<String,Zone>> iterator = result.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Entry<String, Zone> entry = iterator.next();
+            if (entry.getValue().getUriContained() != null && result.containsKey(entry.getValue().getUriContained())) {
+                keysToDelete.add(entry.getValue().getUriContained());
+            }
+        }
+        for (String keyToDelete: keysToDelete){
+            result.remove(keyToDelete);
+        }
+
         return result;
     }
 
