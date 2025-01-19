@@ -955,7 +955,7 @@ public class MapController {
             }
             element.put("region", z.getLid());
             element.put("count", z.getNumberProjects());
-            element.put("geo", z.getGeo());
+            //element.put("geo", z.getGeo());
             element.put("coordinates", z.getCenter());
             if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
                 String query = "SELECT ?coords WHERE { <" + z.getLid() + "> <https://linkedopendata.eu/prop/direct/P127> ?coords.}LIMIT 1";
