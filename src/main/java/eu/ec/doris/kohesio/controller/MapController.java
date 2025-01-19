@@ -844,6 +844,9 @@ public class MapController {
         if (country != null){
             restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P32> <" + country + "> " ;
         }
+        if (granularityRegion != null){
+            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + granularityRegion + "> " ;
+        }
 
         // compute for all NUTS1, NUTS2, NUTS3 that are non-statistical, the number of projects they contain 
         String queryCount = "SELECT ?nuts (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
@@ -1005,14 +1008,9 @@ public class MapController {
             String uri = querySolution.getBinding("s").getValue().stringValue();
             String lid = querySolution.getBinding("lid").getValue().stringValue();
             String geo = querySolution.getBinding("geo").getValue().stringValue();
-            String uriContained = null;
-            if (querySolution.getBinding("contained") != null){
-                uriContained = querySolution.getBinding("contained").getValue().stringValue();
-            }
-            System.out.println(uriContained + " contains " + lid);
 
             Integer count = uriCount.getOrDefault(lid, 0);
-            Zone zone = new Zone(uri, uriContained, lid, geo, type, count);
+            Zone zone = new Zone(uri, lid, geo, type, count);
             if (!result.containsKey(lid)) {
                 result.put(lid, zone);
             }
