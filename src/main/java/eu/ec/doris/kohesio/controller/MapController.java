@@ -855,6 +855,8 @@ public class MapController {
         // compute for all NUTS1, NUTS2, NUTS3 that are non-statistical the number of projects they contain 
         String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + tmpSearch
+                // the porjects must have a coordinate otherwise when zooming in there will be no point
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . ";
         queryCount += " FILTER EXISTS { { "
                 + " ?nutsOfCount <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
