@@ -148,6 +148,7 @@ public class MapController {
             expandedQuery = similarityService.expandQuery(keywords, language);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
+        // if the town is set, find it's loocation via nominatim geo-coding
         if (town != null) {
             eu.ec.doris.kohesio.payload.Coordinate tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
             if (tmpCoordinates != null) {
@@ -184,13 +185,6 @@ public class MapController {
             int numberTotal = 0;
             logger.info("zoom = {}", zoom);
             if (zoom < 10) {
-                boolean shouldFilterExistsOnNuts = country != null || theme != null || fund != null || program != null ||
-                        categoryOfIntervention != null || policyObjective != null || budgetBiggerThen != null ||
-                        budgetSmallerThen != null || budgetEUBiggerThen != null ||
-                        budgetEUSmallerThen != null || startDateBefore != null || startDateAfter != null ||
-                        endDateBefore != null || endDateAfter != null || region != null || granularityRegion != null ||
-                        interreg != null || highlighted != null || cci != null || kohesioCategory != null ||
-                        projectTypes != null || priorityAxis != null || keywords != null;
 
                 HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
                         bboxToUse,
@@ -199,8 +193,7 @@ public class MapController {
                         language,
                         granularityRegion,
                         (country != null || granularityRegion != null),
-                        180,
-                        shouldFilterExistsOnNuts
+                        180
                 );
 
                 for (String key : tmp.keySet()) {
@@ -843,18 +836,11 @@ public class MapController {
             String language,
             String granularityRegion,
             boolean countryOrRegionSelected,
-            int timeout,
-            boolean shouldFilterExistsOnNuts
+            int timeout
     ) throws Exception {
-
-        String tmpSearch = search.replaceAll(
-                "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
-                ""
-        ).replaceAll("\\?s0\\s+<https://linkedopendata.eu/prop/direct/P127>\\s+\\?coordinates\\s*.", "");
-
         // compute for all NUTS1, NUTS2, NUTS3 that are non-statistical the number of projects they contain 
         String queryCount = "SELECT ?nutsOfCount (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
-                + tmpSearch
+                + search
                 // the porjects must have a coordinate otherwise when zooming in there will be no point
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nutsOfCount . ";
@@ -892,8 +878,29 @@ public class MapController {
             uriCount.put(nutsOfCount, count);
         }
 
+        // we check how many countires and nuts are there
+        int numberCountries = 0;
+        int numberNuts1 = 0;
+        int numberNuts2 = 0;
+        int numberNuts3 = 0;
+        for (String uri : uriCount.keySet()){
+            if (facetController.nutsRegion.get(uri).type.equals("country")){
+                numberCountries += 1;
+            }
+            if (facetController.nutsRegion.get(uri).type.equals("nuts1")){
+                numberNuts1 += 1;
+            }
+            if (facetController.nutsRegion.get(uri).type.equals("nuts2")){
+                numberNuts2 += 1;
+            }
+            if (facetController.nutsRegion.get(uri).type.equals("nuts3")){
+                numberNuts3 += 1;
+            }
+        }
+        
+
         // if the zoom is smaller than 4 we show the numbers of the whole country
-        if (zoom <= 6 && !countryOrRegionSelected) {
+        if (zoom <= 6 && numberCountries > 1) {
             // Get Country in bbox
             String withinCountry = "SELECT * WHERE {"
                 + " ?s <http://nuts.de/linkedopendata> ?lid; "
