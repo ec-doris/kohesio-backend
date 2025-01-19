@@ -928,21 +928,16 @@ public class MapController {
             granularityRegion = "https://linkedopendata.eu/entity/Q1";
         }
         HashMap<String, Object> result = new HashMap<>();
-
-        // String tmpsearch = search.replaceAll(
-        //         "FILTER\(<http://www\.opengis\.net/def/function/geosparql/ehContains>\(.*\)",
-        //         ""
-        // );
         JSONArray resultList = new JSONArray();
         Instant start = Instant.now();
         for (Zone z : res.values()) {
 
-            if (z.getNumberProjects() == null) {
-                z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, search, 30);
-            }
-            if (z.getNumberProjects() == 0) {
-                continue;
-            }
+            // if (z.getNumberProjects() == null) {
+            //     z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, search, 30);
+            // }
+            // if (z.getNumberProjects() == 0) {
+            //     continue;
+            // }
 
             HashMap<String, Object> element = new HashMap<>();
             if (facetController.nutsRegion.containsKey(z.getLid())) {
