@@ -886,7 +886,7 @@ public class MapController {
             type = "COUNTRY";
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
-        if (zoom == 7) {
+        if (zoom == 6) {
             query = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid . "
             + " ?s <http://nuts.de/geometry> ?geo . "
@@ -896,7 +896,7 @@ public class MapController {
             type = "NUTS1";
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
-        if (zoom == 8) {
+        if (zoom == 7) {
             query = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid . "
             + " ?s <http://nuts.de/geometry> ?geo . "
@@ -906,7 +906,7 @@ public class MapController {
             type = "NUTS2";
         }
         // if the zoom is lower than 9 we show the numbers of the nuts 2 or 3
-        if (zoom >= 9){
+        if (zoom >= 8){
             query = "SELECT * WHERE {"
             + " ?s <http://nuts.de/linkedopendata> ?lid . "
             + " ?s <http://nuts.de/geometry> ?geo . "
