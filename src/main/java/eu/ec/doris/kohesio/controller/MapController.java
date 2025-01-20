@@ -170,7 +170,6 @@ public class MapController {
             BoundingBox bboxToUse = boundingBox;
             if (town != null) {
                 bboxToUse = nominatimService.getBboxFromTown(town);
-            // todo: what is this condition? 
             } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
                 Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
                 logger.info("\n{}\n{}\n", geometry, boundingBox);
@@ -1008,7 +1007,8 @@ public class MapController {
         logger.info("Search project map point: language {} search {} boundingBox {} limit {} offset {}", language, search, boundingBox, limit, offset);
         String tmpSearch = search.replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P127> \\?coordinates \\.", "")
                 .replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> \\.", "")
-                .replaceAll("FILTER\\(<http://www.opengis.net/def/function/geosparql/ehContains>\\(.*\\)", "");
+                .replaceAll("FILTER\\(<http://www.opengis.net/def/function/geosparql/ehContains>\\(.*\\)", "")
+                .replaceAll("FILTER\\(<http://www.opengis.net/def/function/geosparql/distance>.*\\)", "");
 
         String query = "SELECT DISTINCT ?s0 ?coordinates WHERE { "
                 + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ."
