@@ -172,7 +172,7 @@ public class MapController {
             if (town != null) {
                 bboxToUse = nominatimService.getBboxFromTown(town);
                 if (bboxToUse == null) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Town " + town + " not found");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Town not found");
                 }
             } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
                 Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
