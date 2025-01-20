@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.wololo.geojson.Feature;
 import org.wololo.geojson.Point;
 import org.wololo.jts2geojson.GeoJSONReader;
@@ -170,6 +171,9 @@ public class MapController {
             BoundingBox bboxToUse = boundingBox;
             if (town != null) {
                 bboxToUse = nominatimService.getBboxFromTown(town);
+                if (bboxToUse == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Town " + town + " not found");
+                }
             } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
                 Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
                 logger.info("\n{}\n{}\n", geometry, boundingBox);
@@ -833,11 +837,11 @@ public class MapController {
         // 1. compute for all NUTS1, NUTS2, NUTS3 that are non-statistical, the number of projects they contain 
         String restrictNuts = "";
         // if the country is set, restrict to nuts in the country
-        if (country != null){
-            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . " ;
+        if (country != null) {
+            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
         }
-        if (granularityRegion != null){
-            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + granularityRegion + "> . " ;
+        if (granularityRegion != null) {
+            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + granularityRegion + "> . ";
         }
         String queryCount = "SELECT ?nuts (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
                 + search
@@ -878,40 +882,40 @@ public class MapController {
         if (zoom < 6) {
             // Get Country in bbox
             query = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS0>. "
-                + "} ";
+                    + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                    + " <http://nuts.de/geometry> ?geo; "
+                    + " a <http://nuts.de/NUTS0>. "
+                    + "} ";
             type = "COUNTRY";
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
         if (zoom == 6) {
             query = "SELECT * WHERE {"
-            + " ?s <http://nuts.de/linkedopendata> ?lid . "
-            + " ?s <http://nuts.de/geometry> ?geo . "
-            + " ?s a <http://nuts.de/NUTS1>  "
-            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-            + "} ";
+                    + " ?s <http://nuts.de/linkedopendata> ?lid . "
+                    + " ?s <http://nuts.de/geometry> ?geo . "
+                    + " ?s a <http://nuts.de/NUTS1>  "
+                    + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+                    + "} ";
             type = "NUTS1";
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
         if (zoom == 7) {
             query = "SELECT * WHERE {"
-            + " ?s <http://nuts.de/linkedopendata> ?lid . "
-            + " ?s <http://nuts.de/geometry> ?geo . "
-            + " ?s a <http://nuts.de/NUTS2>  "
-            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-            + "} ";
+                    + " ?s <http://nuts.de/linkedopendata> ?lid . "
+                    + " ?s <http://nuts.de/geometry> ?geo . "
+                    + " ?s a <http://nuts.de/NUTS2>  "
+                    + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+                    + "} ";
             type = "NUTS2";
         }
         // if the zoom is lower than 9 we show the numbers of the nuts 2 or 3
-        if (zoom >= 8){
+        if (zoom >= 8) {
             query = "SELECT * WHERE {"
-            + " ?s <http://nuts.de/linkedopendata> ?lid . "
-            + " ?s <http://nuts.de/geometry> ?geo . "
-            + " ?s a <http://nuts.de/NUTS3> "
-            + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-            + "} ";
+                    + " ?s <http://nuts.de/linkedopendata> ?lid . "
+                    + " ?s <http://nuts.de/geometry> ?geo . "
+                    + " ?s a <http://nuts.de/NUTS3> "
+                    + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+                    + "} ";
             type = "NUTS3";
         }
         resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
@@ -921,7 +925,7 @@ public class MapController {
             String uri = querySolution.getBinding("s").getValue().stringValue();
             String lid = querySolution.getBinding("lid").getValue().stringValue();
             String geo = querySolution.getBinding("geo").getValue().stringValue();
-            if (uriCount.containsKey(lid)){
+            if (uriCount.containsKey(lid)) {
                 Zone zone = new Zone(uri, lid, geo, type, uriCount.get(lid));
                 if (!result.containsKey(lid)) {
                     result.put(lid, zone);
