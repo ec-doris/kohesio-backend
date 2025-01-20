@@ -65,6 +65,11 @@ public class UpdateController {
         List<MonolingualString> imageSummaries = updatePayload.getImageSummaries();
         String imageCopyright = updatePayload.getImageCopyright();
 
+        labels.forEach(this::escapeDoubleQuote);
+        descriptions.forEach(this::escapeDoubleQuote);
+        descriptionsRaw.forEach(this::escapeDoubleQuote);
+        imageSummaries.forEach(this::escapeDoubleQuote);
+
         logger.info("Project update by ID: id {} on {}", id, url);
 
         String queryCheck = "ASK { <"
@@ -591,6 +596,10 @@ public class UpdateController {
             }
             return lastResponse;
         }
+    }
+
+    private void escapeDoubleQuote(MonolingualString ms) {
+        ms.setText(ms.getText().replace("\"", "\\\""));
     }
 
     private static class UpdateTriple {
