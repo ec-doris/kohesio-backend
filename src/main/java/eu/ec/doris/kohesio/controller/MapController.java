@@ -802,7 +802,7 @@ public class MapController {
             @RequestParam(value = "useCluster", defaultValue = "false") boolean useCluster,
             HttpServletRequest request
     ) throws Exception {
-        logger.info("Find coordinates of given IP");
+        logger.info("Find coordinates of given IP : {}, {}", language, useCluster);
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
         ResponseEntity<JSONObject> result = euSearchProjectMap(
