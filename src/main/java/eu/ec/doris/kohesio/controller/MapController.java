@@ -318,7 +318,8 @@ public class MapController {
         }
         // in this case create the clusters by taking all points
         List<Feature> features = getProjectsPoints(
-                language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
+                language, search, bboxToUse, granularityRegion,
+                limit, offset, keywords != null, timeout
         );
         Instant instant = Instant.now();
         SuperCluster superCluster = clusterService.createCluster(

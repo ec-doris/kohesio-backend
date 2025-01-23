@@ -150,6 +150,7 @@ public class BoundingBox {
         if (maxDiff < 360 / Math.pow(2, 20)) {
             return 18;
         } else {
+            logger.info("zoom partial {}", (-1 * ((Math.log(maxDiff) / Math.log(2)) - (Math.log(360) / Math.log(2)))));
             return Math.max((int) (-1 * ((Math.log(maxDiff) / Math.log(2)) - (Math.log(360) / Math.log(2)))), 1) + 3;
         }
     }
