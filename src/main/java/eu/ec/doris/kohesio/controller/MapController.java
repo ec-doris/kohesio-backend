@@ -796,7 +796,7 @@ public class MapController {
     @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
     public ResponseEntity<JSONObject> geoIp(
             @RequestParam(value = "language", defaultValue = "en") String language,
-            @RequestParam(value = "useBoundingBox", defaultValue = "false") boolean useBoundingBox,
+            @RequestParam(value = "useBoundingBox", defaultValue = "true") boolean useBoundingBox,
             HttpServletRequest request
     ) throws Exception {
         logger.info("Find coordinates of given IP");
