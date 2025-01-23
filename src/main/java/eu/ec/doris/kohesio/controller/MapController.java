@@ -798,7 +798,7 @@ public class MapController {
     @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
     public ResponseEntity<JSONObject> geoIp(
             @RequestParam(value = "language", defaultValue = "en") String language,
-            @RequestParam(value = "useBoundingBox", defaultValue = "false") boolean useBoundingBox,
+            @RequestParam(value = "useCluster", defaultValue = "false") boolean useCluster,
             HttpServletRequest request
     ) throws Exception {
         logger.info("Find coordinates of given IP");
@@ -823,7 +823,7 @@ public class MapController {
                 null, 400, null
         );
         JSONObject mod = result.getBody();
-        if (useBoundingBox) {
+        if (useCluster) {
             JSONArray array = (JSONArray) mod.get("list");
             List<double[]> coords = new ArrayList<>();
             for (Object object : array) {
