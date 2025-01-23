@@ -336,22 +336,24 @@ public class MapController {
 
     private BoundingBox findBoundingbox(List<double[]> features) {
         double maxX = Double.MIN_VALUE;
-        double maxY = Double.MIN_VALUE;
         double minX = Double.MAX_VALUE;
+        double maxY = Double.MIN_VALUE;
         double minY = Double.MAX_VALUE;
         for (double[] coords : features) {
             if (coords[0] > maxX) {
                 maxX = coords[0];
-            } else if (coords[0] < minX) {
+            }
+            if (coords[0] < minX) {
                 minX = coords[0];
             }
             if (coords[1] > maxY) {
                 maxY = coords[1];
-            } else if (coords[1] < minY) {
+            }
+            if (coords[1] < minY) {
                 minY = coords[1];
             }
         }
-        return new BoundingBox(minY, minX, minY, maxX);
+        return new BoundingBox(minY, minX, maxY, maxX);
     }
 
     private HashMap<String, JSONObject> findLowerRegionCount(String region, String search, String language, int timeout) throws Exception {
