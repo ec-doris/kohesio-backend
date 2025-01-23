@@ -123,7 +123,7 @@ public class MapController {
             Integer timeout,
             Principal principal
     ) throws Exception {
-        logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {} boundingBox {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg, boundingBoxString);
+        logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {} town {} boundingBox {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg, town, boundingBoxString);
         facetController.initialize(language);
         if (timeout == null) {
             timeout = 300;
@@ -150,15 +150,15 @@ public class MapController {
             expandedQuery = similarityService.expandQuery(keywords, language);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
-        // if the town is set, find it's loocation via nominatim geo-coding
-        if (town != null) {
+        // if the town is set, find it's location via nominatim geo-coding
+        if (town != null && boundingBox == null) {
             eu.ec.doris.kohesio.payload.Coordinate tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
             if (tmpCoordinates != null) {
                 latitude = String.valueOf(tmpCoordinates.getLat());
                 longitude = String.valueOf(tmpCoordinates.getLng());
-
             }
         }
+
         String search = filtersGenerator.filterProject(
                 expandedQueryText, language, c, theme, fund, program, categoryOfIntervention,
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
@@ -166,57 +166,14 @@ public class MapController {
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
                 interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset, true
         );
+
         // there is a bounding box
         if (boundingBox != null) {
-            BoundingBox bboxToUse = boundingBox;
-            if (town != null) {
-                bboxToUse = nominatimService.getBboxFromTown(town);
-                if (bboxToUse == null) {
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Town not found");
-                }
-            } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-                Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-                logger.info("\n{}\n{}\n", geometry, boundingBox);
-                if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
-                    bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
-                }
-            }
-
-            if (zoom == -1) {
-                zoom = bboxToUse.getZoomLevel();
-            }
-
-            logger.info("zoom = {}", zoom);
-            if (zoom < 10) {
-                HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
-                        bboxToUse,
-                        zoom,
-                        search,
-                        language,
-                        granularityRegion,
-                        country,
-                        180
-                );
-                return createResponse(tmp, search, language, granularityRegion, timeout);
-            }
-            // in this case create the clusters by taking all points 
-            if (zoom >= 10) {
-                List<Feature> features = getProjectsPoints(
-                        language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
-                );
-                Instant instant = Instant.now();
-                SuperCluster superCluster = clusterService.createCluster(
-                        features.toArray(new Feature[0]),
-                        60,
-                        256,
-                        0,
-                        17,
-                        64
-                );
-                logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
-                List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
-                return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
-            }
+            return handleBoundingBox(
+                    language, keywords, country, granularityRegion,
+                    limit, offset, town, zoom,
+                    timeout, boundingBox, search
+            );
         }
         //computing the number of results
         String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "}";
@@ -321,6 +278,60 @@ public class MapController {
                 return new ResponseEntity<>(result, HttpStatus.OK);
             }
         }
+    }
+
+    private ResponseEntity<JSONObject> handleBoundingBox(
+            String language, String keywords, String country, String granularityRegion,
+            Integer limit, Integer offset, String town, Integer zoom,
+            Integer timeout, BoundingBox boundingBox, String search
+    ) throws Exception {
+        BoundingBox bboxToUse = boundingBox;
+        if (town != null) {
+            bboxToUse = nominatimService.getBboxFromTown(town);
+            if (bboxToUse == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Town not found");
+            }
+        } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
+            Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+            logger.info("\n{}\n{}\n", geometry, boundingBox);
+            if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
+                bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
+            }
+        }
+
+        if (zoom == -1) {
+            zoom = bboxToUse.getZoomLevel();
+        }
+
+        logger.info("zoom = {}", zoom);
+        if (zoom < 10 && town != null && !town.isEmpty()) {
+            HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
+                    bboxToUse,
+                    zoom,
+                    search,
+                    language,
+                    granularityRegion,
+                    country,
+                    180
+            );
+            return createResponse(tmp, search, language, granularityRegion, timeout);
+        }
+        // in this case create the clusters by taking all points
+        List<Feature> features = getProjectsPoints(
+                language, search, bboxToUse, granularityRegion, limit, offset, keywords != null, timeout
+        );
+        Instant instant = Instant.now();
+        SuperCluster superCluster = clusterService.createCluster(
+                features.toArray(new Feature[0]),
+                60,
+                256,
+                0,
+                17,
+                64
+        );
+        logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
+        List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
+        return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
     }
 
     private HashMap<String, JSONObject> findLowerRegionCount(String region, String search, String language, int timeout) throws Exception {

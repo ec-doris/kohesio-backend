@@ -18,7 +18,7 @@ public class NominatimService {
     private static final Logger logger = LoggerFactory.getLogger(NominatimService.class);
 
     private JSONArray makeQuery(String town) throws IOException, ParseException {
-
+        logger.info("Querying Nominatim for {}", town);
         String urlTemplate = UriComponentsBuilder.fromHttpUrl("https://nominatim.openstreetmap.org/search")
                 .queryParam("q", town)
                 .queryParam("format", "json")
