@@ -794,12 +794,16 @@ public class MapController {
 
 
     @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
-    public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
+    public ResponseEntity<JSONObject> geoIp(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "useBoundingBox", defaultValue = "false") boolean useBoundingBox,
+            HttpServletRequest request
+    ) throws Exception {
         logger.info("Find coordinates of given IP");
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
         ResponseEntity<JSONObject> result = euSearchProjectMap(
-                "en", null,
+                language, null,
                 null, null,
                 null, null,
                 null, null,
@@ -816,35 +820,39 @@ public class MapController {
                 null, null, null,
                 null, 400, null
         );
-        JSONArray array = (JSONArray) result.getBody().get("list");
-        List<double[]> coords = new ArrayList<>();
-        for (Object object : array) {
-            JSONObject jsonObject = (JSONObject) object;
-            String coordString = (String) jsonObject.get("coordinates");
-            coords.add(new eu.ec.doris.kohesio.payload.Coordinate(coordString).coords());
+        JSONObject mod = result.getBody();
+        if (useBoundingBox) {
+            JSONArray array = (JSONArray) mod.get("list");
+            List<double[]> coords = new ArrayList<>();
+            for (Object object : array) {
+                JSONObject jsonObject = (JSONObject) object;
+                String coordString = (String) jsonObject.get("coordinates");
+                coords.add(new eu.ec.doris.kohesio.payload.Coordinate(coordString).coords());
+            }
+            BoundingBox boundingBox = findBoundingbox(coords);
+            logger.info("found bbox : {}", boundingBox);
+            ResponseEntity<JSONObject> result2 = euSearchProjectMap(
+                    "en", null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    coordinates2.getLatitude(), coordinates2.getLongitude(),
+                    null, null,
+                    null, 500,
+                    0, null,
+                    null, null,
+                    null, null, null,
+                    null, null, boundingBox.toBounds(),
+                    -1, 400, null
+            );
+            mod = result2.getBody();
         }
-        BoundingBox boundingBox = findBoundingbox(coords);
-        ResponseEntity<JSONObject> result2 = euSearchProjectMap(
-                "en", null,
-                null, null,
-                null, null,
-                null, null,
-                null, null,
-                null, null,
-                null, null,
-                null, null,
-                coordinates2.getLatitude(), coordinates2.getLongitude(),
-                null, null,
-                null, 500,
-                0, null,
-                null, null,
-                null, null, null,
-                null, null, boundingBox.toBounds(),
-                -1, 400, null
-        );
-        JSONObject mod = result2.getBody();
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
-        return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
+        return new ResponseEntity<>(mod, HttpStatus.OK);
     }
 
 
