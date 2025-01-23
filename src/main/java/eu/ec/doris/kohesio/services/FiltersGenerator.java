@@ -176,22 +176,11 @@ public class FiltersGenerator {
         if (isCoordinateSearch || isBoundingBoxSearch) {
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . ";
             if (isBoundingBoxSearch) {
-//                BoundingBox bbox = BoundingBox;
-                // if (keywords !=null) {
-                //     search += " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates, \"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>)) ";
-                // }
-//                } else {
-//                    search += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
-//                }
             }
             if (isCoordinateSearch) {
                 if (radius == null) {
                     radius = 100L;
                 }
-//            search += "?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-//                    + "FILTER ( "
-//                    + "<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)"
-//                    + "< 100000) . ";
                 if (keywords == null) {
                     search += " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < " + (radius * 1000) + ")";
                 } else {
