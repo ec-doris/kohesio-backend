@@ -251,7 +251,7 @@ public class BoundingBox {
         double zoom = Math.min(zoomX, zoomY);
 
         // Apply Leaflet's zoom snapping and clamp to valid range
-        int finalZoom = (int) Math.floor(zoom + 0.5); // Round to nearest integer
+        int finalZoom = (int) Math.ceil(zoom + 0.5); // Round to nearest integer
         finalZoom = Math.max(0, Math.min(finalZoom, 18)); // Standard Leaflet zoom range
 
         return finalZoom;
