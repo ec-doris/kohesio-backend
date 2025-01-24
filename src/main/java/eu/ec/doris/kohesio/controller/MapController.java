@@ -300,15 +300,7 @@ public class MapController {
         }
 
         if (zoom == -1) {
-            zoom = bboxToUse.getZoomLevel4();
-            logger.info(
-                    "zoom1 : {}, zoom2 : {}, zoom3 : {}, zoom4 : {}, bounds: {}",
-                    bboxToUse.getZoomLevel(),
-                    bboxToUse.getZoomLevel2(),
-                    bboxToUse.getZoomLevel3(),
-                    bboxToUse.getZoomLevel4(),
-                    bboxToUse.getBounds()
-            );
+            zoom = bboxToUse.getZoomLevel();
         }
 
         logger.info("zoom = {}", zoom);
