@@ -293,14 +293,22 @@ public class MapController {
             }
         } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
             Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-            logger.info("\n{}\n{}\n", geometry, boundingBox);
+//            logger.info("\n{}\n{}\n", geometry, boundingBox);
             if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
                 bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
             }
         }
 
         if (zoom == -1) {
-            zoom = bboxToUse.getZoomLevel();
+            zoom = bboxToUse.getZoomLevel4();
+            logger.info(
+                    "zoom1 : {}, zoom2 : {}, zoom3 : {}, zoom4 : {}, bounds: {}",
+                    bboxToUse.getZoomLevel(),
+                    bboxToUse.getZoomLevel2(),
+                    bboxToUse.getZoomLevel3(),
+                    bboxToUse.getZoomLevel4(),
+                    bboxToUse.getBounds()
+            );
         }
 
         logger.info("zoom = {}", zoom);
@@ -996,9 +1004,6 @@ public class MapController {
             String geo = querySolution.getBinding("geo").getValue().stringValue();
             if (uriCount.containsKey(lid)) {
                 Zone zone = new Zone(uri, lid, geo, type, uriCount.get(lid));
-                if (!result.containsKey(lid)) {
-                    result.put(lid, zone);
-                }
                 result.put(lid, zone);
             }
         }
