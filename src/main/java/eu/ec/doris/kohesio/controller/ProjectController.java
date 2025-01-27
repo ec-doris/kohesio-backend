@@ -146,13 +146,15 @@ public class ProjectController {
                     + "             ?country <http://www.w3.org/2000/01/rdf-schema#label> ?countryLabel. "
                     + "             FILTER((LANG(?countryLabel)) = \"" + language + "\") }"
                     + " OPTIONAL { ?s0 wdt:P1368 ?program ."
-                    + "             OPTIONAL { ?program wdt:P1367  ?program_cci . } "
-                    + "             ?program wdt:P1586 ?managingAuthority. "
                     + "             ?program <http://www.w3.org/2000/01/rdf-schema#label> ?programLabel. "
+                    + "             FILTER((LANG(?programLabel)) = \"" + language + "\") ."
+                    + "             OPTIONAL { ?program wdt:P1367  ?program_cci . } "
+                    + "             OPTIONAL {"
+                    + "               ?program wdt:P1586 ?managingAuthority. "
+                    + "               ?managingAuthority <http://www.w3.org/2000/01/rdf-schema#label> ?managingAuthorityLabel. } "
+                    + "             } "
                     + "             OPTIONAL { ?program wdt:P1742 ?programInfoRegioUrl . }"
                     + "             OPTIONAL { ?program wdt:P1750 ?source2 . }"
-                    + "             FILTER((LANG(?programLabel)) = \"" + language + "\") ."
-                    + "             ?managingAuthority <http://www.w3.org/2000/01/rdf-schema#label> ?managingAuthorityLabel. } "
                     + " OPTIONAL { ?s0 wdt:P888 ?category ."
                     + "             OPTIONAL { ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
                     + "                         FILTER((LANG(?categoryLabel)) = \"" + language + "\") }"
@@ -685,7 +687,7 @@ public class ProjectController {
                 if (querySolution.getBinding("managingAuthorityLabel") != null) {
                     result.put(
                             "managingAuthorityLabel",
-                            ((Literal) querySolution.getBinding("managingAuthorityLabel").getValue())
+                            querySolution.getBinding("managingAuthorityLabel").getValue()
                                     .stringValue());
                 }
             }
