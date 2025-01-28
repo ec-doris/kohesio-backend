@@ -115,7 +115,7 @@ public class ProjectController {
                     + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
                     + "?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite "
                     + "?beneficiaryString ?source ?source2 ?keepUrl ?curatedLabel ?curatedSummary ?rawCuratedSummary"
-                    + " ?instagramUsername ?facebookUserId ?twitterUsername ?youtubeVideoId"
+                    + " ?instagramUsername ?facebookUserId ?twitterUsername ?youtubeVideoId ?programPeriod"
                     + " WHERE { "
                     + "VALUES ?s0 { <" + id + "> } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
@@ -153,6 +153,7 @@ public class ProjectController {
                     + "               ?program wdt:P1586 ?managingAuthority. "
                     + "               ?managingAuthority <http://www.w3.org/2000/01/rdf-schema#label> ?managingAuthorityLabel. } "
                     + "             } "
+                    + "             OPTIONAL { ?program wdt:P605685 ?programPeriod . } "
                     + "             OPTIONAL { ?program wdt:P1742 ?programInfoRegioUrl . }"
                     + "             OPTIONAL { ?program wdt:P1750 ?source2 . }"
                     + " OPTIONAL { ?s0 wdt:P888 ?category ."
@@ -513,7 +514,16 @@ public class ProjectController {
                                 querySolution.getBinding("source2").getValue().stringValue()
                         );
                     }
-                    program.put("programmingPeriodLabel", "2014-2020");
+                    if (querySolution.getBinding("programPeriod") != null) {
+                        String programmingPeriodUri = querySolution.getBinding("programPeriod").getValue().stringValue();
+                        if ("https://linkedopendata.eu/entity/Q7333084".equals(programmingPeriodUri)) {
+                            program.put("programmingPeriodLabel", "2014-2021");
+                        } else if ("https://linkedopendata.eu/entity/Q7333082".equals(programmingPeriodUri)) {
+                            program.put("programmingPeriodLabel", "2021-2027");
+                        } else {
+                            program.put("programmingPeriodLabel", "");
+                        }
+                    }
                 }
 
                 if (querySolution.getBinding("themeId") != null) {
