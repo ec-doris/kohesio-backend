@@ -854,23 +854,23 @@ public class FacetController {
             JSONObject element = new JSONObject();
             String iUri = querySolution.getBinding("instance").getValue().stringValue();
             element.put("instance", iUri);
-            element.put("instanceLabel", this.nutsRegion.get(iUri).name.get(language));
             // this is a hack because the data was not fine, can be removed
-            if (querySolution.getBinding("instance").getValue().stringValue().equals("https://linkedopendata.eu/entity/Q205")) {
+            if (iUri.equals("https://linkedopendata.eu/entity/Q205")) {
+                element.put("instanceLabel", this.nutsRegion.get(iUri).name.get(language));
                 String cUri = "https://linkedopendata.eu/entity/Q7";
                 element.put("country", cUri);
                 element.put("countryLabel", this.nutsRegion.get(cUri).name.get(language));
-            } else if (querySolution.getBinding("instance").getValue().stringValue().equals("https://linkedopendata.eu/entity/Q206")) {
+            } else if (iUri.equals("https://linkedopendata.eu/entity/Q206")) {
+                element.put("instanceLabel", "La Réunion");
                 String cUri = "https://linkedopendata.eu/entity/Q20";
                 element.put("country", cUri);
                 element.put("countryLabel", this.nutsRegion.get(cUri).name.get(language));
             } else if (querySolution.getBinding("country") != null) {
+                element.put("instanceLabel", this.nutsRegion.get(iUri).name.get(language));
                 String cUri = querySolution.getBinding("country").getValue().stringValue();
                 element.put("country", cUri);
                 element.put("countryLabel", this.nutsRegion.get(cUri).name.get(language));
-
             }
-
             result.add(element);
         }
         return result;
