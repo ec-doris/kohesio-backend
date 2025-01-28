@@ -520,8 +520,8 @@ public class FacetController {
         }
 
         try {
-        jsonValues.sort(Comparator.comparing(a -> ((String) a.get("name"))));
-        } catch (Exception e){
+            jsonValues.sort(Comparator.comparing(a -> ((String) a.get("name"))));
+        } catch (Exception e) {
 
         }
 
@@ -831,47 +831,45 @@ public class FacetController {
     }
 
     @GetMapping(value = "/facet/eu/outermost_regions", produces = "application/json")
-    public JSONArray facetOutermostRegions( //
-                                            @RequestParam(value = "language", defaultValue = "en") String language,
-                                            @RequestParam(value = "qid", required = false) String qid
+    public JSONArray facetOutermostRegions(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "qid", required = false) String qid
     ) throws Exception {
-
         logger.info("Get list of outermost regions");
+        this.initialize(language);
+
         String query = "PREFIX wd: <https://linkedopendata.eu/entity/>"
                 + " PREFIX wdt: <https://linkedopendata.eu/prop/direct/>"
-                + " SELECT ?instance ?instanceLabel ?instanceLabel_en ?country ?countryLabel WHERE { ";
+                + " SELECT ?instance ?country WHERE { ";
         if (qid != null) {
             query += " VALUES ?instance { <" + qid + "> }";
         }
         query += " VALUES ?instance {wd:Q203 wd:Q204 wd:Q205 wd:Q206 wd:Q201 wd:Q2576740 wd:Q198 wd:Q209} "
-                + " OPTIONAL { ?instance rdfs:label ?instanceLabel . "
-                + " FILTER (lang(?instanceLabel)=\"" + language + "\") .} "
-                + " OPTIONAL { ?instance rdfs:label ?instanceLabel_en . "
-                + " FILTER (lang(?instanceLabel_en)=\"en\") . "
-                + " ?instance wdt:P32 ?country . "
-                + " ?country rdfs:label ?countryLabel . "
-                + " FILTER (lang(?countryLabel)=\"" + language + "\") } . "
+                + " OPTIONAL { ?instance wdt:P32 ?country . } "
                 + " } ";
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 2, "facet");
         JSONArray result = new JSONArray();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
             JSONObject element = new JSONObject();
-            element.put("instance", querySolution.getBinding("instance").getValue().stringValue());
-            if (querySolution.getBinding("instanceLabel") != null) {
-                element.put("instanceLabel", querySolution.getBinding("instanceLabel").getValue().stringValue());
-            } else {
-                element.put("instanceLabel", querySolution.getBinding("instanceLabel_en").getValue().stringValue());
-            }
+            String iUri = querySolution.getBinding("instance").getValue().stringValue();
+            element.put("instance", iUri);
+            element.put("instanceLabel", this.nutsRegion.get(iUri).name.get(language));
             // this is a hack because the data was not fine, can be removed
             if (querySolution.getBinding("instance").getValue().stringValue().equals("https://linkedopendata.eu/entity/Q205")) {
-                element.put("country", "https://linkedopendata.eu/entity/Q7");
-                element.put("countryLabel", "Spain");
-            } else {
-                element.put("country", querySolution.getBinding("country").getValue().stringValue());
-                element.put("countryLabel", querySolution.getBinding("countryLabel").getValue().stringValue());
-            }
+                String cUri = "https://linkedopendata.eu/entity/Q7";
+                element.put("country", cUri);
+                element.put("countryLabel", this.nutsRegion.get(cUri).name.get(language));
+            } else if (querySolution.getBinding("instance").getValue().stringValue().equals("https://linkedopendata.eu/entity/Q206")) {
+                String cUri = "https://linkedopendata.eu/entity/Q20";
+                element.put("country", cUri);
+                element.put("countryLabel", this.nutsRegion.get(cUri).name.get(language));
+            } else if (querySolution.getBinding("country") != null) {
+                String cUri = querySolution.getBinding("country").getValue().stringValue();
+                element.put("country", cUri);
+                element.put("countryLabel", this.nutsRegion.get(cUri).name.get(language));
 
+            }
 
             result.add(element);
         }
