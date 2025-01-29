@@ -292,9 +292,6 @@ public class MapController {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Town not found");
             }
         } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-            if (granularityRegion.equals("https://linkedopendata.eu/entity/Q206")) {
-                logger.info("Reunion nuts : {}", facetController.nutsRegion.get(granularityRegion));
-            }
             Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
 //            logger.info("\n{}\n{}\n", geometry, boundingBox);
             if (!geometry.convexHull().contains(boundingBox.toGeometry())) {

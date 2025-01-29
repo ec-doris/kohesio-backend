@@ -865,11 +865,6 @@ public class FacetController {
                 String cUri = "https://linkedopendata.eu/entity/Q7";
                 element.put("country", cUri);
                 element.put("countryLabel", this.nutsRegion.get(cUri).name.get(language));
-            } else if (iUri.equals("https://linkedopendata.eu/entity/Q206")) {
-                element.put("instanceLabel", "Réunion");
-                String cUri = "https://linkedopendata.eu/entity/Q20";
-                element.put("country", cUri);
-                element.put("countryLabel", this.nutsRegion.get(cUri).name.get(language));
             } else if (querySolution.getBinding("country") != null) {
                 element.put("instanceLabel", this.nutsRegion.get(iUri).name.get(language));
                 String cUri = querySolution.getBinding("country").getValue().stringValue();
