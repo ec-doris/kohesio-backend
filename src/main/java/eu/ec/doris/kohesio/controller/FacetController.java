@@ -192,7 +192,13 @@ public class FacetController {
                                 "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
                                 geometry +
                                 " }";
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 20, "facet");
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
+                        sparqlEndpoint,
+                        query,
+                        20,
+                        key.equals("https://linkedopendata.eu/entity/Q206"),
+                        "facet"
+                );
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     nutsRegion.get(key).geoJson = querySolution.getBinding("regionGeo").getValue().stringValue();
@@ -210,7 +216,12 @@ public class FacetController {
                         List<String> nonStatisticalNuts = new ArrayList<>();
                         for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
                             String query = "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }";
-                            boolean resultSet = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, query, false,20);
+                            boolean resultSet = sparqlQueryService.executeBooleanQuery(
+                                    sparqlEndpoint,
+                                    query,
+                                    key.equals("https://linkedopendata.eu/entity/Q206"),
+                                    20
+                            );
                             if (resultSet) {
                                 for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
                                     nonStatisticalNuts.add(childNut);
