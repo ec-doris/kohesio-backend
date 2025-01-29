@@ -89,7 +89,7 @@ public class FacetController {
                         + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } "
                         + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?nuts_code } "
                         + "}";
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30, false ,"facet");
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30,"facet");
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     String key = querySolution.getBinding("region").getValue().stringValue();
