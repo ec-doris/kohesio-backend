@@ -73,17 +73,13 @@ public class FacetController {
                 String filter = "";
                 if (g.equals("continent")) {
                     filter = " VALUES ?region { <https://linkedopendata.eu/entity/Q1> } . ?region <https://linkedopendata.eu/prop/direct/P104>  ?region2 .";
-                }
-                if (g.equals("country")) {
+                } else if (g.equals("country")) {
                     filter = " <https://linkedopendata.eu/entity/Q1> <https://linkedopendata.eu/prop/direct/P104>  ?region . ";
-                }
-                if (g.equals("nuts1")) {
+                } else if (g.equals("nuts1")) {
                     filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407317> . ";
-                }
-                if (g.equals("nuts2")) {
+                } else if (g.equals("nuts2")) {
                     filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407316> .";
-                }
-                if (g.equals("nuts3")) {
+                } else if (g.equals("nuts3")) {
                     filter = " ?region <https://linkedopendata.eu/prop/direct/P35>  <https://linkedopendata.eu/entity/Q4407315> .";
                 }
 
@@ -214,7 +210,7 @@ public class FacetController {
                         List<String> nonStatisticalNuts = new ArrayList<>();
                         for (String nutsCheckStatistical : nutsRegion.get(key).narrower) {
                             String query = "ASK { <" + nutsCheckStatistical + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }";
-                            boolean resultSet = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, query, 20);
+                            boolean resultSet = sparqlQueryService.executeBooleanQuery(sparqlEndpoint, query, false,20);
                             if (resultSet) {
                                 for (String childNut : nutsRegion.get(nutsCheckStatistical).narrower) {
                                     nonStatisticalNuts.add(childNut);
