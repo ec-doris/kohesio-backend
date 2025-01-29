@@ -196,7 +196,7 @@ public class FacetController {
                         sparqlEndpoint,
                         query,
                         20,
-                        key.equals("https://linkedopendata.eu/entity/Q206"),
+                        !key.equals("https://linkedopendata.eu/entity/Q206"),
                         "facet"
                 );
                 while (resultSet.hasNext()) {
@@ -219,7 +219,7 @@ public class FacetController {
                             boolean resultSet = sparqlQueryService.executeBooleanQuery(
                                     sparqlEndpoint,
                                     query,
-                                    key.equals("https://linkedopendata.eu/entity/Q206"),
+                                    !key.equals("https://linkedopendata.eu/entity/Q206"),
                                     20
                             );
                             if (resultSet) {
