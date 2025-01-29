@@ -320,6 +320,7 @@ public class MapController {
                 Zone zone = entry.getValue();
                 total += zone.getNumberProjects();
             }
+            logger.info("Found {} projects in the region at zoom {}", total, zoom);
             if (total < 2000) {
                 return createResponse(tmp, search, language, granularityRegion, timeout);
             }
