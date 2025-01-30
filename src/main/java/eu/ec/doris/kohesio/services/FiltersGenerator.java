@@ -81,7 +81,7 @@ public class FiltersGenerator {
         if (ccis != null) {
             if (ccis.size() == 1) {
                 search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
-                        + " ?program <https://linkedopendata.eu/prop/direct/P1367> " + ccis.get(0) + " . ";
+                        + " ?program <https://linkedopendata.eu/prop/direct/P1367> <" + ccis.get(0) + "> . ";
             } else {
                 search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
                         + " ?program <https://linkedopendata.eu/prop/direct/P1367> ?cci . "
