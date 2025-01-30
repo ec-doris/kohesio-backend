@@ -96,7 +96,7 @@ public class FiltersGenerator {
 
         if (categoryOfIntervention != null) {
             if (categoryOfIntervention.size() == 1) {
-                search += "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention.get(0) + "}> . ";
+                search += "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention.get(0) + "> . ";
             } else {
                 search += "?s0 <https://linkedopendata.eu/prop/direct/P888> ?categoryOfIntervention . ";
                 search += "VALUES ?categoryOfIntervention {";
