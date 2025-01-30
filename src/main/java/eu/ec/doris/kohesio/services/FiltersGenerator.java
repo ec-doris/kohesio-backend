@@ -79,23 +79,32 @@ public class FiltersGenerator {
         }
 
         if (ccis != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
-                    + " ?program <https://linkedopendata.eu/prop/direct/P1367> ?cci . "
-                    + "FILTER(?cci IN (";
-            for (String cci : ccis) {
-                search += " \"" + cci + "\",";
+            if (ccis.size() == 1) {
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
+                        + " ?program <https://linkedopendata.eu/prop/direct/P1367> " + ccis.get(0) + " . ";
+            } else {
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
+                        + " ?program <https://linkedopendata.eu/prop/direct/P1367> ?cci . "
+                        + "FILTER(?cci IN (";
+                for (String cci : ccis) {
+                    search += " \"" + cci + "\",";
+                }
+                search = search.substring(0, search.length() - 1);
+                search += "))";
             }
-            search = search.substring(0, search.length() - 1);
-            search += "))";
         }
 
         if (categoryOfIntervention != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P888> ?categoryOfIntervention . ";
-            search += "VALUES ?categoryOfIntervention {";
-            for (String category : categoryOfIntervention) {
-                search += "<" + category + "> ";
+            if (categoryOfIntervention.size() == 1) {
+                search += "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention.get(0) + "}> . ";
+            } else {
+                search += "?s0 <https://linkedopendata.eu/prop/direct/P888> ?categoryOfIntervention . ";
+                search += "VALUES ?categoryOfIntervention {";
+                for (String category : categoryOfIntervention) {
+                    search += "<" + category + "> ";
+                }
+                search += "}";
             }
-            search += "}";
         }
 
         if (interreg != null && interreg) {
