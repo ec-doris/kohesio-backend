@@ -1041,7 +1041,7 @@ public class MapController {
             if (z.getNumberProjects() == 1) {
                 String query = "SELECT ?coords WHERE { "
                         + search
-                        + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
+                        + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coords . "
                         + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + z.getLid() + "> . "
                         + "}";
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
