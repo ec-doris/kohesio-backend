@@ -1037,6 +1037,13 @@ public class MapController {
             element.put("coordinates", z.getCenter());
             if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
                 String query = "SELECT ?coords WHERE { <" + z.getLid() + "> <https://linkedopendata.eu/prop/direct/P127> ?coords.}LIMIT 1";
+                if (z.getNumberProjects() == 1) {
+                    query = "SELECT ?coords WHERE { "
+                            + search
+                            + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
+                            + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + z.getLid() + "> . "
+                            + "}";
+                }
 
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
                 if (resultSet.hasNext()) {
