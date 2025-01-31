@@ -1050,6 +1050,9 @@ public class MapController {
                     BindingSet querySolution = resultSet.next();
                     String coordsString = querySolution.getBinding("coords").getValue().stringValue();
                     Coordinate pt = wktReader.read(coordsString).getCoordinate();
+                    if (z.getNumberProjects() == 1) {
+                        logger.info("Coordinates : {}", pt);
+                    }
                     String ret = pt.x + "," + pt.y;
                     element.put("coordinates", ret);
                 } else {
