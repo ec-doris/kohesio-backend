@@ -1032,33 +1032,43 @@ public class MapController {
                 element.put("regionLabel", "");
             }
             element.put("region", z.getLid());
+            if (z.getNumberProjects() == 1) {
+
+            }
             element.put("count", z.getNumberProjects());
             //element.put("geo", z.getGeo());
-            element.put("coordinates", z.getCenter());
-            if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
-                String query = "SELECT ?coords WHERE { <" + z.getLid() + "> <https://linkedopendata.eu/prop/direct/P127> ?coords.}LIMIT 1";
-                if (z.getNumberProjects() == 1) {
-                    query = "SELECT ?coords WHERE { "
-                            + search
-                            + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-                            + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + z.getLid() + "> . "
-                            + "}";
+
+            if (z.getNumberProjects() == 1) {
+                String query = "SELECT ?coords WHERE { "
+                        + search
+                        + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
+                        + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + z.getLid() + "> . "
+                        + "}";
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
+                if (resultSet.hasNext()) {
+                    BindingSet querySolution = resultSet.next();
+                    String coordsString = querySolution.getBinding("coords").getValue().stringValue();
+                    Coordinate pt = wktReader.read(coordsString).getCoordinate();
+                    String ret = pt.x + "," + pt.y;
+                    element.put("coordinates", ret);
+                } else {
+                    element.put("coordinates", z.getCenter());
                 }
+            } else if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
+                String query = "SELECT ?coords WHERE { <" + z.getLid() + "> <https://linkedopendata.eu/prop/direct/P127> ?coords.}LIMIT 1";
 
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
                 if (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     String coordsString = querySolution.getBinding("coords").getValue().stringValue();
                     Coordinate pt = wktReader.read(coordsString).getCoordinate();
-                    if (z.getNumberProjects() == 1) {
-                        logger.info("Coordinates : {}", pt);
-                    }
                     String ret = pt.x + "," + pt.y;
                     element.put("coordinates", ret);
                 } else {
                     element.put("coordinates", z.getCenter());
                 }
-
+            } else {
+                element.put("coordinates", z.getCenter());
             }
             element.put("cluster", true);
             resultList.add(new JSONObject(element));
