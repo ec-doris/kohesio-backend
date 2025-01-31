@@ -315,15 +315,15 @@ public class MapController {
                     180
             );
             // to avoid single point cluster on high level that would make the point API failed
-            int total = 0;
-            for (Entry<String, Zone> entry : tmp.entrySet()) {
-                Zone zone = entry.getValue();
-                total += zone.getNumberProjects();
-            }
-//            logger.info("Found {} projects in the region at zoom {}", total, zoom);
-            if (total > 2000) {
-                return createResponse(tmp, search, language, granularityRegion, timeout);
-            }
+//            int total = 0;
+//            for (Entry<String, Zone> entry : tmp.entrySet()) {
+//                Zone zone = entry.getValue();
+//                total += zone.getNumberProjects();
+//            }
+////            logger.info("Found {} projects in the region at zoom {}", total, zoom);
+//            if (total > 2000) {
+            return createResponse(tmp, search, language, granularityRegion, timeout);
+//            }
         }
         // in this case create the clusters by taking all points
         List<Feature> features = getProjectsPoints(
