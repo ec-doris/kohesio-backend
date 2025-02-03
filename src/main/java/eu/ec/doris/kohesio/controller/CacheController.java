@@ -42,6 +42,7 @@ public class CacheController {
 
     @PostMapping(value = "/facet/eu/cache/generate", produces = "application/json")
     public void generateCache() throws Exception {
+        facetController.initialize("en");
         logger.debug("Start generating map recursively");
         recursiveMap(null);
         logger.debug("End recursive map");
@@ -309,7 +310,7 @@ public class CacheController {
                     e.printStackTrace();
                 }
             }
-        }  
+        }
     }
 
     @PostMapping(value = "/facet/eu/cache/generate/map")
@@ -370,84 +371,80 @@ public class CacheController {
                 );
             }
 
-            List<String> policies = getListFromApi(facetController.facetPolicyObjective("en"), "instance");
-            for (String policy : policies) {
+            List<String> programs = getListFromApi(facetController.facetEuPrograms("en", country, null, null, null, null), "region");
+            for (String program : programs) {
                 wrapperMap(
-                        null, null, null, null,
-                        policy, null, null,
+                        country, null, null, program,
+                        null, null, null,
                         null, null, null
                 );
-                List<String> themesOfPolicy = getListFromApi(facetController.facetEuThematicObjective("en", policy, null), "instance");
-                for (String themeOfPolicy : themesOfPolicy) {
+
+                List<String> priorityAxis = getListFromApi(facetController.facetEuPriorityAxis("en", null, country, program), "instance");
+                for (String priorityAxi : priorityAxis) {
                     wrapperMap(
-                            null, themeOfPolicy, null, null,
-                            policy, null, null,
-                            null, null, null
+                            country, null, null, program,
+                            null, null, null,
+                            null, null, priorityAxi
                     );
                 }
             }
-
-            List<String> themes = getListFromApi(facetController.facetEuThematicObjective("en"), "instance");
-            for (String theme : themes) {
-                wrapperMap(
-                        null, theme, null, null,
-                        null, null, null,
-                        null, null, null
-                );
-            }
-
-            List<String> funds = getListFromApi(facetController.facetEuFunds("eu", null), "instance");
-            for (String fund : funds) {
-                wrapperMap(
-                        null, null, fund, null,
-                        null, null, null,
-                        null, null, null
-                );
-            }
-
-            // List<String> programs = getListFromApi(facetController.facetEuPrograms("en", country, null, null, null, null), "region");
-            // for (String program : programs) {
-            //     wrapperMap(
-            //             country, null, null, program,
-            //             null, null, null,
-            //             null, null, null
-            //     );
-
-            //     List<String> priorityAxis = getListFromApi(facetController.facetEuPriorityAxis("en", null, country, program), "instance");
-            //     for (String priorityAxi : priorityAxis) {
-            //         wrapperMap(
-            //                 country, null, null, program,
-            //                 null, null, null,
-            //                 null, null, priorityAxi
-            //         );
-            //     }
-            // }
-
         }
 
-        
+        List<String> policies = getListFromApi(facetController.facetPolicyObjective("en"), "instance");
+        for (String policy : policies) {
+            wrapperMap(
+                    null, null, null, null,
+                    policy, null, null,
+                    null, null, null
+            );
+            List<String> themesOfPolicy = getListFromApi(facetController.facetEuThematicObjective("en", policy, null), "instance");
+            for (String themeOfPolicy : themesOfPolicy) {
+                wrapperMap(
+                        null, themeOfPolicy, null, null,
+                        policy, null, null,
+                        null, null, null
+                );
+            }
+        }
 
-        // for (String projectCollection : facetController.projectTypes) {
-        //     wrapperMap(
-        //             null, null, null, null,
-        //             null, null, null,
-        //             null, Collections.singletonList(projectCollection), null
-        //     );
-        // }
+        List<String> themes = getListFromApi(facetController.facetEuThematicObjective("en"), "instance");
+        for (String theme : themes) {
+            wrapperMap(
+                    null, theme, null, null,
+                    null, null, null,
+                    null, null, null
+            );
+        }
 
-        
-        // { // interreg
-        //     wrapperMap(
-        //             null, null, null, null,
-        //             null, null, null,
-        //             false, null, null
-        //     );
-        //     wrapperMap(
-        //             null, null, null, null,
-        //             null, null, null,
-        //             true, null, null
-        //     );
-        // }
+        List<String> funds = getListFromApi(facetController.facetEuFunds("eu", null), "instance");
+        for (String fund : funds) {
+            wrapperMap(
+                    null, null, fund, null,
+                    null, null, null,
+                    null, null, null
+            );
+        }
+
+        for (String projectCollection : facetController.projectTypes) {
+            wrapperMap(
+                    null, null, null, null,
+                    null, null, null,
+                    null, Collections.singletonList(projectCollection), null
+            );
+        }
+
+        { // interreg
+            wrapperMap(
+                    null, null, null, null,
+                    null, null, null,
+                    false, null, null
+            );
+            wrapperMap(
+                    null, null, null, null,
+                    null, null, null,
+                    true, null, null
+            );
+        }
 
     }
 
@@ -461,8 +458,8 @@ public class CacheController {
     }
 
     void recursiveMap(String granularityRegion) throws Exception {
-        logger.debug("Resolving for region: " + granularityRegion);
-        ResponseEntity responseEntity = mapController.euSearchProjectMap(
+        logger.debug("Resolving for region: {}", granularityRegion);
+        ResponseEntity<JSONObject> responseEntity = mapController.euSearchProjectMap(
                 "en", null,
                 null, null,
                 null, null,
@@ -480,10 +477,10 @@ public class CacheController {
                 null, null, null,
                 null, 400, null
         );
-        logger.debug("Response result: " + responseEntity.getBody());
-        if (((JSONObject) responseEntity.getBody()).get("subregions") instanceof JSONArray) {
-            for (Object element : (JSONArray) ((JSONObject) responseEntity.getBody()).get("subregions")) {
-                logger.debug("Subregion: " + ((JSONObject) element).get("region").toString());
+        logger.debug("Response result: {}", responseEntity.getBody());
+        if ((responseEntity.getBody()).get("subregions") instanceof JSONArray) {
+            for (Object element : (JSONArray) (responseEntity.getBody()).get("subregions")) {
+                logger.debug("Subregion: {}", ((JSONObject) element).get("region").toString());
                 if (!((JSONObject) element).get("region").toString().equals(granularityRegion)) {
                     recursiveMap(((JSONObject) element).get("region").toString());
                 }

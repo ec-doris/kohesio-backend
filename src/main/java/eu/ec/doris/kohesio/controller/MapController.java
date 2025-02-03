@@ -209,11 +209,6 @@ public class MapController {
                     timeout
             );
         } else {
-            // remove the bounding box filter and coordinate triple for search
-            // search = search.replaceAll(
-            //         "FILTER\(<http://www\.opengis\.net/def/function/geosparql/ehContains>\(.*\)",
-            //         ""
-            // );
             search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
 
             if (granularityRegion == null) {
@@ -314,16 +309,7 @@ public class MapController {
                     country,
                     180
             );
-            // to avoid single point cluster on high level that would make the point API failed
-//            int total = 0;
-//            for (Entry<String, Zone> entry : tmp.entrySet()) {
-//                Zone zone = entry.getValue();
-//                total += zone.getNumberProjects();
-//            }
-////            logger.info("Found {} projects in the region at zoom {}", total, zoom);
-//            if (total > 2000) {
             return createResponse(tmp, search, language, granularityRegion, timeout);
-//            }
         }
         // in this case create the clusters by taking all points
         List<Feature> features = getProjectsPoints(
@@ -977,7 +963,7 @@ public class MapController {
             type = "NUTS1";
         }
         // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
-        else if (zoom == 7) {
+        else if (zoom <= 7) {
             query = "SELECT * WHERE {"
                     + " ?s <http://nuts.de/linkedopendata> ?lid . "
                     + " ?s <http://nuts.de/geometry> ?geo . "
@@ -1032,12 +1018,8 @@ public class MapController {
                 element.put("regionLabel", "");
             }
             element.put("region", z.getLid());
-            if (z.getNumberProjects() == 1) {
-
-            }
-            element.put("count", z.getNumberProjects());
             //element.put("geo", z.getGeo());
-
+            element.put("count", z.getNumberProjects());
             if (z.getNumberProjects() == 1) {
                 String query = "SELECT ?coords WHERE { "
                         + search
