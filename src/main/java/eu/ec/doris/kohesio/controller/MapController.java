@@ -288,7 +288,7 @@ public class MapController {
             }
         } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
             Nut nut = facetController.nutsRegion.get(granularityRegion);
-            if (nut != null && nut.geoJson != null) {
+            if (nut != null && nut.geoJson != null && !nut.geoJson.isEmpty()) {
                 logger.info("Loading Geojson: {}", nut.geoJson.replace("'", "\""));
                 Geometry geometry = geoJSONReader.read(nut.geoJson.replace("'", "\""));
 //            logger.info("\n{}\n{}\n", geometry, boundingBox);
