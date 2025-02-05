@@ -41,8 +41,8 @@ public class BoundingBox {
     }
 
     public BoundingBox(Envelope envelope) {
-        this.southWest = new Coordinate(envelope.getMinY(), envelope.getMaxX());
-        this.northEast = new Coordinate(envelope.getMaxY(), envelope.getMinX());
+        this.southWest = new Coordinate(envelope.getMinY(), envelope.getMinX());
+        this.northEast = new Coordinate(envelope.getMaxY(), envelope.getMaxX());
     }
 
     @JsonCreator
@@ -97,12 +97,16 @@ public class BoundingBox {
         };
     }
 
+    public String toBounds() {
+        return getWest() + "," + getSouth() + "," + getEast() + "," + getNorth();
+    }
+
     public String toWkt() {
-        return "POLYGON((" + southWest.getLng() + " " + southWest.getLat() + "," +
-                northEast.getLng() + " " + southWest.getLat() + "," +
-                northEast.getLng() + " " + northEast.getLat() + "," +
-                southWest.getLng() + " " + northEast.getLat() + "," +
-                southWest.getLng() + " " + southWest.getLat() + "))";
+        return "POLYGON((" + southWest.getLng() + " " + southWest.getLat() + ","
+                + northEast.getLng() + " " + southWest.getLat() + ","
+                + northEast.getLng() + " " + northEast.getLat() + ","
+                + southWest.getLng() + " " + northEast.getLat() + ","
+                + southWest.getLng() + " " + southWest.getLat() + "))";
     }
 
     public String toLiteral() {
@@ -115,27 +119,46 @@ public class BoundingBox {
 
     public Geometry toGeometry() {
         org.locationtech.jts.geom.Coordinate[] coordinates = new org.locationtech.jts.geom.Coordinate[]{
-                new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getWest()),
-                new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getEast()),
-                new org.locationtech.jts.geom.Coordinate(this.getSouth(), this.getEast()),
-                new org.locationtech.jts.geom.Coordinate(this.getSouth(), this.getWest()),
-                new org.locationtech.jts.geom.Coordinate(this.getNorth(), this.getWest())
+                new org.locationtech.jts.geom.Coordinate(this.getWest(), this.getNorth()),
+                new org.locationtech.jts.geom.Coordinate(this.getEast(), this.getNorth()),
+                new org.locationtech.jts.geom.Coordinate(this.getEast(), this.getSouth()),
+                new org.locationtech.jts.geom.Coordinate(this.getWest(), this.getSouth()),
+                new org.locationtech.jts.geom.Coordinate(this.getWest(), this.getNorth())
         };
 
         return new GeometryFactory().createPolygon(coordinates);
     }
+    public int getZoomLevel() {
+        double east = this.getEast();
+        double west = this.getWest();
+        double north = this.getNorth();
+        double south = this.getSouth();
 
-//    public String getCenterBBox(BoundingBox bbox) throws ParseException {
-//        Point point = wktReader.read(this.geo).getCentroid();
-//        Geometry bboxGeom = wktReader.read(bbox.toWkt());
-//        Point center = bboxGeom.getCentroid();
-//        Geometry line = wktReader.read("LINESTRING(" + point.getX() + " " + point.getY() + "," + center.getX() + " " + center.getY() + ")");
-//        // find the intersection between the center of the bbox and the point
-//        Geometry intersection = line.intersection(bboxGeom);
-//        logger.info("Intersection: {}", intersection.toText());
-//
-//        Coordinate coordinate = intersection.getCentroid().getCoordinate();
-//        // lat,lng
-//        return coordinate.x + "," + coordinate.y;
-//    }
+        // Handle longitude wrapping and global bounds
+        double lngDiff = east - west;
+        if (lngDiff < 0) lngDiff += 360;
+        if (lngDiff >= 360 || (north - south) >= 180) return 1;
+
+        // Convert to radians for Mercator calculations
+        double northRad = Math.toRadians(north);
+        double southRad = Math.toRadians(south);
+
+        // Leaflet's Mercator Y coordinate calculation
+        double y1 = 0.5 - (Math.log(Math.tan(northRad) + 1/Math.cos(northRad)) / (2 * Math.PI));
+        double y2 = 0.5 - (Math.log(Math.tan(southRad) + 1/Math.cos(southRad)) / (2 * Math.PI));
+        double latFraction = Math.abs(y1 - y2);
+
+        // Calculate zoom for longitude and latitude separately
+        double zoomX = Math.log(360.0 / lngDiff) / Math.log(2);
+        double zoomY = Math.log(1.0 / latFraction) / Math.log(2);
+
+        // Use the more constrained zoom (matching Leaflet's fitBounds behavior)
+        double zoom = Math.min(zoomX, zoomY);
+
+        // Apply Leaflet's zoom snapping and clamp to valid range
+        int finalZoom = (int) Math.ceil(zoom + 0.5); // Round to nearest integer
+        finalZoom = Math.max(0, Math.min(finalZoom, 18)); // Standard Leaflet zoom range
+
+        return finalZoom;
+    }
 }

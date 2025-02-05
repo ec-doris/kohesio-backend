@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 public class Coordinate {
@@ -70,7 +71,6 @@ public class Coordinate {
 //    }
 
 
-
     // new equals and hash because of some floating point error
     @Override
     public boolean equals(Object o) {
@@ -96,6 +96,7 @@ public class Coordinate {
         return new org.locationtech.jts.geom.Coordinate(this.getLat(), this.getLng());
 
     }
+
     public org.locationtech.jts.geom.Point toPoint() {
         return new GeometryFactory().createPoint(
                 new org.locationtech.jts.geom.Coordinate(
@@ -112,4 +113,12 @@ public class Coordinate {
     public String toLiteral() {
         return "\"" + this.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>";
     }
+
+    public String toBasicCoords() {
+
+        return BigDecimal.valueOf(this.lng).stripTrailingZeros().toPlainString()
+                + ","
+                + BigDecimal.valueOf(this.lat).stripTrailingZeros().toPlainString();
+    }
+
 }

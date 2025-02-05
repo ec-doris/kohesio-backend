@@ -32,9 +32,11 @@ public class SuperCluster {
     private final HashMap<Coordinate, List<Integer>> clustersCoordsIndex;
     private final List<MainCluster> clusters;
     private final HashMap<Integer, Set<Integer>> clustersParentChilds;
+    private final HashMap<Coordinate, Coordinate> pointCoordinates;
 
     public SuperCluster(int radius, int extent, int minzoom, int maxzoom, int nodesize, Feature[] clusterpoints) {
 
+        logger.info("Starting creating Cluster");
         this.radius = radius;
         this.extent = extent;
         this.minZoom = minzoom;
@@ -47,13 +49,18 @@ public class SuperCluster {
         this.clustersCoordsIndex = new HashMap<>();
         this.clusters = new ArrayList<>();
         this.clustersParentChilds = new HashMap<>();
+        this.pointCoordinates = new HashMap<>();
 
         List<MainCluster> clusters = new ArrayList<>();
 
         for (int i = 0; i < points.length; i++) {
             PointCluster tmp = createPointCluster(points[i], i);
             clusters.add(tmp);
-            addToIndexes(tmp);
+            Coordinate coordinate = new Coordinate(((Point) points[i].getGeometry()).getCoordinates());
+            this.pointCoordinates.put(
+                    coordinate,
+                    coordinate
+            );
         }
 
         trees[maxZoom + 1] = new KDBush(clusters, nodeSize);
@@ -61,10 +68,15 @@ public class SuperCluster {
         for (int z = maxZoom; z >= minZoom; z--) {
             clusters = this._cluster(clusters, z);
             this.trees[z] = new KDBush(clusters, nodeSize);
-
-            clusters.forEach(this::addToIndexes);
         }
+    }
 
+    public Coordinate getCoordinateFromPointAtCoordinates(Coordinate coordinate) {
+        return this.pointCoordinates.getOrDefault(coordinate, null);
+    }
+
+    public boolean containsPointAtCoordinates(Coordinate coordinate) {
+        return this.pointCoordinates.containsKey(coordinate);
     }
 
     private List<MainCluster> _cluster(List<MainCluster> points, int zoom) {
@@ -339,7 +351,7 @@ public class SuperCluster {
         KDBush tree = this.trees[_limitZoom(zoom)];
         for (int i = 0; i < tree.getPoints().size(); i++) {
             MainCluster mc = tree.getPoints().get(i);
-            logger.info("class: {}, id: {}, parend_id: {}, parent: {}", mc.getClass(), mc.getId(), mc.getParentId(), this.getParentOfCluster(mc));
+            logger.debug("class: {}, id: {}, parend_id: {}, parent: {}", mc.getClass(), mc.getId(), mc.getParentId(), this.getParentOfCluster(mc));
         }
         return null;
     }
@@ -349,6 +361,9 @@ public class SuperCluster {
     }
 
     private void addToIndexes(MainCluster mc) {
+        if (this.clusters.contains(mc)) {
+            return;
+        }
         mc.setClusterIndex(this.clusters.size());
         this.clusters.add(mc);
         this.clustersIndex.put(mc.id, mc.getClusterIndex());
@@ -363,7 +378,16 @@ public class SuperCluster {
 
     }
 
+    private void buildClusterIndex() {
+        List<MainCluster> allClusters = new ArrayList<>();
+        for (KDBush bush : this.trees) {
+            allClusters.addAll(bush.getPoints());
+        }
+        allClusters.forEach(this::addToIndexes);
+    }
+
     private void buildClusterParentChild() {
+        this.buildClusterIndex();
         for (MainCluster mc : this.clusters) {
             if (!this.clustersParentChilds.containsKey(mc.getParentId())) {
                 this.clustersParentChilds.put(mc.getParentId(), new HashSet<>());
@@ -424,18 +448,18 @@ public class SuperCluster {
     }
 
     public List<MainCluster> findClusters(double[] coords, int zoom) {
-        this.buildClusterParentChild();
+        if (this.clustersParentChilds.isEmpty()) {
+            this.buildClusterParentChild();
+        }
         double x = lngX(coords[0]);
         double y = latY(coords[1]);
         double[] coordsCluster = new double[]{x, y};
-//        logger.info("parentChildren: {}", clustersParentChilds);
         List<MainCluster> results = new ArrayList<>();
         for (Integer i : this.clustersCoordsIndex.get(new Coordinate(coordsCluster))) {
             MainCluster mc = this.clusters.get(i);
             if (mc.getZoom() <= zoom) {
                 results.add(mc);
             }
-//            logger.info("found a cluster matching coords {} but not zoom {} vs {}. Cluster: {}", coords, zoom, mc.getZoom(), mc);
         }
         return results;
     }
@@ -444,16 +468,23 @@ public class SuperCluster {
         Set<Feature> points = new HashSet<>();
         if (cluster instanceof PointCluster) {
             points.add(this.points[cluster.index]);
-        } else {
-            Set<Integer> childrenClusterIndexes = this.clustersParentChilds.getOrDefault(
-                    cluster.getId(),
-                    new HashSet<>()
-            );
-            for (int childIndex : childrenClusterIndexes) {
-                MainCluster mc = this.clusters.get(childIndex);
-                points.addAll(this.getPointFromCluster(mc));
-            }
+        }
+        Set<Integer> childrenClusterIndexes = this.clustersParentChilds.getOrDefault(
+                cluster.getId(),
+                new HashSet<>()
+        );
+        for (int childIndex : childrenClusterIndexes) {
+            MainCluster mc = this.clusters.get(childIndex);
+            points.addAll(this.getPointFromCluster(mc));
         }
         return points;
+    }
+
+    public Feature[] getPoints() {
+        return points;
+    }
+
+    public KDBush[] getTrees() {
+        return trees;
     }
 }

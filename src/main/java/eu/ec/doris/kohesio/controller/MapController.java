@@ -1,7 +1,6 @@
 package eu.ec.doris.kohesio.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yeo.javasupercluster.SuperCluster;
 import eu.ec.doris.kohesio.geoIp.GeoIp;
 import eu.ec.doris.kohesio.geoIp.HttpReqRespUtils;
@@ -25,8 +24,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.wololo.geojson.Feature;
-import org.wololo.geojson.GeoJSON;
 import org.wololo.geojson.Point;
 import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
@@ -37,6 +36,9 @@ import java.security.Principal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/wikibase")
@@ -75,7 +77,6 @@ public class MapController {
     @Autowired
     ClusterService clusterService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final GeoJSONReader geoJSONReader = new GeoJSONReader();
     private static final WKTReader wktReader = new WKTReader();
 
@@ -85,7 +86,7 @@ public class MapController {
     }
 
     @GetMapping(value = "/facet/eu/search/project/map", produces = "application/json")
-    public ResponseEntity euSearchProjectMap(
+    public ResponseEntity<JSONObject> euSearchProjectMap(
             @RequestParam(value = "language", defaultValue = "en") String language,
             @RequestParam(value = "keywords", required = false) String keywords, //
             @RequestParam(value = "country", required = false) String country,
@@ -122,7 +123,7 @@ public class MapController {
             Integer timeout,
             Principal principal
     ) throws Exception {
-        logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {} boundingBox {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg, boundingBoxString);
+        logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {} town {} boundingBox {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg, town, boundingBoxString);
         facetController.initialize(language);
         if (timeout == null) {
             timeout = 300;
@@ -130,7 +131,6 @@ public class MapController {
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
             boundingBox = BoundingBox.createFromString(boundingBoxString);
-//            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
         }
 
         //simplify the query
@@ -143,87 +143,40 @@ public class MapController {
         if (granularityRegion != null) {
             c = null;
         }
+        // expand the keywords
         ExpandedQuery expandedQuery = null;
         String expandedQueryText = null;
         if (keywords != null) {
             expandedQuery = similarityService.expandQuery(keywords, language);
             expandedQueryText = expandedQuery.getExpandedQuery();
         }
-        if (town != null) {
-            NominatimService.Coordinates tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
+        // if the town is set, find it's location via nominatim geo-coding
+        if (town != null && boundingBox == null) {
+            eu.ec.doris.kohesio.payload.Coordinate tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
             if (tmpCoordinates != null) {
-                latitude = tmpCoordinates.getLatitude();
-                longitude = tmpCoordinates.getLongitude();
-
+                latitude = String.valueOf(tmpCoordinates.getLat());
+                longitude = String.valueOf(tmpCoordinates.getLng());
             }
         }
+
         String search = filtersGenerator.filterProject(
                 expandedQueryText, language, c, theme, fund, program, categoryOfIntervention,
                 policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen,
                 budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore,
                 endDateAfter, latitude, longitude, null, region, granularityRegion,
-                interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset
+                interreg, highlighted, cci, kohesioCategory, projectTypes, priorityAxis, boundingBox, limit, offset, true
         );
-        //computing the number of results
-        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search;// + "} ";
+
+        // there is a bounding box
         if (boundingBox != null) {
-            // TODO: this is a tmp fix because it look like the lucene index is not working properly
-            query += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
-            // End TODO
-            int numberTotal = 0;
-            ResponseEntity<JSONObject> tmp = getCoordinatesByGeographicSubdivision(
-                    boundingBox,
-                    zoom,
-                    search,
-                    language,
-                    !(country != null && granularityRegion != null),
-                    40
+            return handleBoundingBox(
+                    language, keywords, country, granularityRegion,
+                    limit, offset, town, zoom,
+                    timeout, boundingBox, search
             );
-            for (Object o : (JSONArray) tmp.getBody().get("subregions")) {
-                numberTotal += (int) ((JSONObject) o).get("count");
-            }
-            int maxNumberOfprojectBeforeGoingToSubRegion = 10000;
-            int mimNumberOfprojectBeforeGoingToSubRegion = 100;
-            logger.info("found {} projects", ((JSONArray) tmp.getBody().get("subregions")).size());
-            if (zoom >= 9 || numberTotal < maxNumberOfprojectBeforeGoingToSubRegion || ((JSONArray) tmp.getBody().get("subregions")).size() <= 1) {
-                logger.info("Number of projects in the bounding box: {}", numberTotal);
-                if (numberTotal > mimNumberOfprojectBeforeGoingToSubRegion) {
-                    // check if gran
-                    if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-                        Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-                        logger.info("{}\n{}", boundingBox.toGeometry(), geometry);
-//                        if (!boundingBox.toGeometry().contains(geometry)) {
-//                            boundingBox = new BoundingBox(geometry.getEnvelopeInternal());
-//                            logger.info("changing bbox to fit the region ask {}", boundingBox);
-//                        } else {
-//                            logger.info("keeping bbox");
-//                        }
-                    }
-                    List<Feature> features = getProjectsPoints(
-                            language, search, boundingBox, limit, offset, timeout
-                    );
-                    List<Feature> clusters = prepareCluster(features, boundingBox, zoom);
-                    logger.info("cluster: {} \nfound: {} projects \nwith {}", clusters.size(), features.size(), search);
-                    return createResponse(clusters, zoom, search, language, granularityRegion);
-                }
-                return mapReturnCoordinates(
-                        language,
-                        search,
-                        country,
-                        region,
-                        granularityRegion,
-                        latitude,
-                        longitude,
-                        cci,
-                        boundingBox,
-                        limit,
-                        offset,
-                        timeout
-                );
-            }
-            return tmp;
         }
-        query += "}";
+        //computing the number of results
+        String query = "SELECT (COUNT(DISTINCT ?s0) as ?c ) WHERE {" + search + "}";
         int numResults = 0;
         if (limit == null || limit > 2000) {
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
@@ -237,7 +190,6 @@ public class MapController {
         logger.debug("Number of results {}", numResults);
         boolean hasCoordinates = latitude != null && longitude != null;
         Nut nut = facetController.nutsRegion.get(granularityRegion);
-        boolean isInSweden = nut != null && "https://linkedopendata.eu/entity/Q11".equals(nut.country);
         boolean hasLowerGranularity = nut != null && !nut.narrower.isEmpty() || granularityRegion == null;
         boolean isGreekNuts2 = nut != null && "https://linkedopendata.eu/entity/Q17".equals(nut.country) && "nuts2".equals(nut.granularity);
         int maxProject = 2000;
@@ -257,11 +209,6 @@ public class MapController {
                     timeout
             );
         } else {
-            // remove the bounding box filter and coordinate triple for search
-            search = search.replaceAll(
-                    "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
-                    ""
-            );
             search = search.replace("?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .", "");
 
             if (granularityRegion == null) {
@@ -326,6 +273,83 @@ public class MapController {
                 return new ResponseEntity<>(result, HttpStatus.OK);
             }
         }
+    }
+
+    private ResponseEntity<JSONObject> handleBoundingBox(
+            String language, String keywords, String country, String granularityRegion,
+            Integer limit, Integer offset, String town, Integer zoom,
+            Integer timeout, BoundingBox boundingBox, String search
+    ) throws Exception {
+        BoundingBox bboxToUse = boundingBox;
+        if (town != null) {
+            bboxToUse = nominatimService.getBboxFromTown(town);
+            if (bboxToUse == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Town not found");
+            }
+        } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
+            Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+//            logger.info("\n{}\n{}\n", geometry, boundingBox);
+            if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
+                bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
+            }
+        }
+
+        if (zoom == -1) {
+            zoom = bboxToUse.getZoomLevel();
+        }
+
+        logger.info("zoom = {}", zoom);
+        if (zoom < 10 && (town == null || town.isEmpty())) {
+            HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
+                    bboxToUse,
+                    zoom,
+                    search,
+                    language,
+                    granularityRegion,
+                    country,
+                    180
+            );
+            return createResponse(tmp, search, language, granularityRegion, timeout);
+        }
+        // in this case create the clusters by taking all points
+        List<Feature> features = getProjectsPoints(
+                language, search, bboxToUse, granularityRegion,
+                limit, offset, keywords != null, timeout
+        );
+        Instant instant = Instant.now();
+        SuperCluster superCluster = clusterService.createCluster(
+                features.toArray(new Feature[0]),
+                60,
+                256,
+                0,
+                17,
+                64
+        );
+        logger.info("Time to getcluster: {}", Duration.between(instant, Instant.now()).toMillis());
+        List<Feature> clusters = prepareCluster(superCluster, bboxToUse, zoom);
+        return createResponse(superCluster, clusters, bboxToUse, zoom, search, language, granularityRegion);
+    }
+
+    private BoundingBox findBoundingbox(List<double[]> features) {
+        double maxX = Double.MIN_VALUE;
+        double minX = Double.MAX_VALUE;
+        double maxY = Double.MIN_VALUE;
+        double minY = Double.MAX_VALUE;
+        for (double[] coords : features) {
+            if (coords[0] > maxX) {
+                maxX = coords[0];
+            }
+            if (coords[0] < minX) {
+                minX = coords[0];
+            }
+            if (coords[1] > maxY) {
+                maxY = coords[1];
+            }
+            if (coords[1] < minY) {
+                minY = coords[1];
+            }
+        }
+        return new BoundingBox(minY, minX, maxY, maxX);
     }
 
     private HashMap<String, JSONObject> findLowerRegionCount(String region, String search, String language, int timeout) throws Exception {
@@ -395,14 +419,6 @@ public class MapController {
 
             } else {
                 optional += " OPTIONAL {SELECT DISTINCT ?o WHERE { ?nut <http://nuts.de/linkedopendata> <" + granularityRegion + ">  . ?nut  <http://nuts.de/geometry> ?o . }} ";
-            }
-            // check if granularity region is a country, if yes the filter is not needed
-            boolean isCountry = false;
-            for (Object jsonObject : facetController.facetEuCountries("en", null)) {
-                JSONObject o = (JSONObject) jsonObject;
-                if (granularityRegion.equals(o.get("instance"))) {
-                    isCountry = true;
-                }
             }
             // this is a hack to show brittany
             if ((latitude == null || longitude == null)) {
@@ -529,40 +545,6 @@ public class MapController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    private String getSmallestCommonNuts(List<String> nuts) {
-        if (nuts.size() == 0) {
-            return null;
-        }
-        if (nuts.size() == 1) {
-            return nuts.get(0);
-        }
-        HashMap<String, List<String>> upperNuts = new HashMap<>();
-        nuts.forEach(s1 -> {
-            upperNuts.put(s1, new ArrayList<>());
-        });
-        facetController.nutsRegion.forEach((s, nut) -> {
-            nuts.forEach(s1 -> {
-                if (nut.narrower.contains(s1)) {
-                    if (!upperNuts.get(s1).contains(s)) {
-                        upperNuts.get(s1).add(s);
-                    }
-                }
-            });
-        });
-        boolean found = true;
-        List<String> newNuts = new ArrayList<>();
-        for (Map.Entry<String, List<String>> entry : upperNuts.entrySet()) {
-            entry.getValue().forEach(s -> {
-                if (!newNuts.contains(s)) {
-                    newNuts.add(s);
-                }
-            });
-
-//            found &= entry.getValue().size() == 1;
-        }
-        return getSmallestCommonNuts(newNuts);
-    }
-
     @GetMapping(value = "/facet/eu/search/project/map/point", produces = "application/json")
     public ResponseEntity euSearchProjectMapPoint(
             @RequestParam(value = "language", defaultValue = "en") String language,
@@ -648,12 +630,31 @@ public class MapController {
                 priorityAxis,
                 boundingBox,
                 limit,
-                offset
+                offset,
+                false
         );
 
-        if (boundingBox != null) {
+        if (boundingBox != null && zoom < 18) {
+            SuperCluster superCluster = clusterService.createCluster(
+                    getProjectsPoints(
+                            language,
+                            search,
+                            boundingBox,
+                            granularityRegion,
+                            limit,
+                            offset,
+                            keywords != null,
+                            timeout
+                    )
+            );
             eu.ec.doris.kohesio.payload.Coordinate coords = new eu.ec.doris.kohesio.payload.Coordinate(coordinate);
-            return new ResponseEntity<>(mapPointBbox(language, search, boundingBox, limit, offset, coords, zoom, timeout), HttpStatus.OK);
+            if (!superCluster.containsPointAtCoordinates(coords)) {
+                return new ResponseEntity<>(new JSONArray(), HttpStatus.OK);
+//                return new ResponseEntity<>(mapPointBbox(superCluster, language, coords, zoom, timeout), HttpStatus.OK) ;
+            } else {
+                eu.ec.doris.kohesio.payload.Coordinate coordsFromCluster = superCluster.getCoordinateFromPointAtCoordinates(coords);
+                coordinate = coordsFromCluster.toBasicCoords();
+            }
         }
 
         String limitS = "";
@@ -705,90 +706,6 @@ public class MapController {
             }
         }
         return new ResponseEntity<>(result, HttpStatus.OK);
-    }
-
-    private JSONArray mapPointBbox(
-            String language,
-            String search,
-            BoundingBox boundingBox,
-            Integer limit,
-            Integer offset,
-            eu.ec.doris.kohesio.payload.Coordinate coordinate,
-            int zoom,
-            int timeout
-    ) throws Exception {
-        List<Feature> features = clusterService.getPointsInCluster(
-                getProjectsPoints(
-                        language,
-                        search,
-                        boundingBox,
-                        limit,
-                        offset,
-                        timeout
-                ),
-                coordinate,
-                boundingBox,
-                zoom
-        );
-
-        Set<String> projectUris = new HashSet<>();
-        for (Feature proj : features) {
-            projectUris.addAll((List<String>) proj.getProperties().get("projects"));
-        }
-        List<String> urisList = new ArrayList<>(projectUris);
-        logger.info("retrieving info for {} project(s) from {} coordinates at cluster coordinate {}", projectUris.size(), features.size(), coordinate.toLiteral());
-        JSONArray results = new JSONArray();
-        int step = 1000;
-        for (int i = 0; i < urisList.size(); i += step) {
-            String query = "SELECT DISTINCT ?s0 ?label ?curatedLabel ?infoRegioID WHERE { "
-                    + "VALUES ?s0 { <"
-                    + String.join("> <", urisList.subList(i, Math.min(urisList.size(), i + step)))
-                    + "> }"
-                    + " OPTIONAL {?s0 <http://www.w3.org/2000/01/rdf-schema#label> ?label. FILTER((LANG(?label)) = \""
-                    + language
-                    + "\") } "
-                    + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel. FILTER((LANG(?curatedLabel)) = \""
-                    + language
-                    + "\") } "
-                    + " OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . } "
-                    + "}";
-            TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
-            while (resultSet.hasNext()) {
-                BindingSet querySolution = resultSet.next();
-
-                HashMap<String, Object> item = new HashMap<>();
-
-                item.put("item", querySolution.getBinding("s0").getValue().stringValue());
-
-                if (querySolution.getBinding("curatedLabel") != null) {
-                    item.put("label", ((Literal) querySolution.getBinding("curatedLabel").getValue()).getLabel());
-                    if (querySolution.getBinding("label") != null) {
-                        item.put("originalLabel", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
-                    } else {
-                        item.put("originalLabel", null);
-                    }
-                } else if (querySolution.getBinding("label") != null) {
-                    item.put("label", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
-                    item.put("originalLabel", ((Literal) querySolution.getBinding("label").getValue()).getLabel());
-                } else {
-                    item.put("label", null);
-                    item.put("originalLabel", null);
-                }
-                if (querySolution.getBinding("infoRegioID") != null) {
-                    item.put("isHighlighted", true);
-                } else {
-                    item.put("isHighlighted", false);
-                }
-                JSONObject r = new JSONObject(item);
-//                logger.info("i = {}, {}, {}", i, urisList.size(), results.size());
-                if ((boolean) item.get("isHighlighted")) {
-                    results.add(0, r);
-                } else {
-                    results.add(r);
-                }
-            }
-        }
-        return results;
     }
 
 
@@ -873,13 +790,18 @@ public class MapController {
         return nutsRegion;
     }
 
+
     @GetMapping(value = "/facet/eu/map/nearby", produces = "application/json")
-    public ResponseEntity<JSONObject> geoIp(HttpServletRequest request) throws Exception {
-        logger.info("Find coordinates of given IP");
+    public ResponseEntity<JSONObject> geoIp(
+            @RequestParam(value = "language", defaultValue = "en") String language,
+            @RequestParam(value = "useCluster", defaultValue = "false") boolean useCluster,
+            HttpServletRequest request
+    ) throws Exception {
+        logger.info("Find coordinates of given IP : {}, {}", language, useCluster);
         String ip = httpReqRespUtils.getClientIpAddressIfServletRequestExist(request);
         GeoIp.Coordinates coordinates2 = geoIp.compute(ip);
         ResponseEntity<JSONObject> result = euSearchProjectMap(
-                "en", null,
+                language, null,
                 null, null,
                 null, null,
                 null, null,
@@ -897,8 +819,38 @@ public class MapController {
                 null, 400, null
         );
         JSONObject mod = result.getBody();
+        if (useCluster) {
+            JSONArray array = (JSONArray) mod.get("list");
+            List<double[]> coords = new ArrayList<>();
+            for (Object object : array) {
+                JSONObject jsonObject = (JSONObject) object;
+                String coordString = (String) jsonObject.get("coordinates");
+                coords.add(new eu.ec.doris.kohesio.payload.Coordinate(coordString).coords());
+            }
+            BoundingBox boundingBox = findBoundingbox(coords);
+            logger.info("found bbox : {}", boundingBox);
+            ResponseEntity<JSONObject> result2 = euSearchProjectMap(
+                    "en", null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    null, null,
+                    coordinates2.getLatitude(), coordinates2.getLongitude(),
+                    null, null,
+                    null, 500,
+                    0, null,
+                    null, null,
+                    null, null, null,
+                    null, null, boundingBox.toBounds(),
+                    -1, 400, null
+            );
+            mod = result2.getBody();
+        }
         mod.put("coordinates", coordinates2.getLatitude() + "," + coordinates2.getLongitude());
-        return new ResponseEntity<JSONObject>((JSONObject) mod, HttpStatus.OK);
+        return new ResponseEntity<>(mod, HttpStatus.OK);
     }
 
 
@@ -937,128 +889,154 @@ public class MapController {
         return null;
     }
 
-    private ResponseEntity<JSONObject> getCoordinatesByGeographicSubdivision(BoundingBox bbox, int zoom, String search, String language, boolean forceBaseCountry, int timeout) throws Exception {
-
-        // Get Country in bbox
-        String withinCountry = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS0>. "
-//                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
-
-//        String intersectCountry = "SELECT * WHERE {"
-//                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-//                + " <http://nuts.de/geometry> ?geo; "
-//                + " a <http://nuts.de/NUTS1>. "
-//                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-//                + "} ";
-
-        // Get NUTS 1 in bbox
-        String withinNuts1 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS1>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
-
-        String intersectNuts1 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS1>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
-
-        // Get NUTS 2 in bbox
-        String withinNuts2 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS2>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
-
-        String intersectNuts2 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS2>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
-
-        // Get NUTS 3 in bbox
-        String withinNuts3 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS3>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
-
-        String intersectNuts3 = "SELECT * WHERE {"
-                + " ?s <http://nuts.de/linkedopendata> ?lid; "
-                + " <http://nuts.de/geometry> ?geo; "
-                + " a <http://nuts.de/NUTS3>. "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
-
-        // Get LAU in bbox
-        String intersectLAU = "SELECT * WHERE {"
-                + " ?s <http://laus.de/linkedopendata> ?lid; "
-                + " <http://laus.de/geometry> ?geo; "
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
-                + "} ";
-
-        if (zoom <= 4 && forceBaseCountry) {
-            return createResponse(getZoneByQuery(withinCountry, "COUNTRY", timeout), search, language, timeout);
+    private HashMap<String, Zone> getCoordinatesByGeographicSubdivision(
+            BoundingBox bbox,
+            int zoom,
+            String search,
+            String language,
+            String granularityRegion,
+            String country,
+            int timeout
+    ) throws Exception {
+        // 1. compute for all NUTS1, NUTS2, NUTS3 that are non-statistical, the number of projects they contain 
+        String restrictNuts = "";
+        // if the country is set, restrict to nuts in the country
+        if (country != null) {
+            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P32> <" + country + "> . ";
         }
-        if (!getZoneByQuery(withinNuts1, "NUTS1", timeout).isEmpty()) {
-            return createResponse(getZoneByQuery(intersectNuts1, "NUTS1", timeout), search, language, timeout);
+        if (granularityRegion != null) {
+            restrictNuts = " ?nuts <https://linkedopendata.eu/prop/direct/P1845>* <" + granularityRegion + "> . ";
         }
-        if (!getZoneByQuery(withinNuts2, "NUTS2", timeout).isEmpty()) {
-            return createResponse(getZoneByQuery(intersectNuts2, "NUTS2", timeout), search, language, timeout);
+        String queryCount = "SELECT ?nuts (COUNT(DISTINCT ?s0)  AS ?count) WHERE { "
+                + search
+                // the projects must have a coordinate otherwise when zooming in there will be no point
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> ?nuts . "
+                + " FILTER EXISTS { "
+                + restrictNuts
+                + " { "
+                + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407315> "
+                + " } UNION { "
+                + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407316> "
+                + " } UNION { "
+                + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> "
+                + " } UNION { "
+                + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
+                + " } "
+                + " }} GROUP BY ?nuts";
+
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
+                sparqlEndpoint,
+                queryCount,
+                timeout,
+                "map"
+        );
+        // store the numbers in a hash map where the key is the NUTS url
+        HashMap<String, Integer> uriCount = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet bindings = resultSet.next();
+            String nutsOfCount = bindings.getBinding("nuts").getValue().stringValue();
+            Integer count = Integer.parseInt(bindings.getBinding("count").getValue().stringValue());
+            uriCount.put(nutsOfCount, count);
         }
-//        if (!getZoneByQuery(withinNuts3, "NUTS3", timeout).isEmpty()) {
-        return createResponse(getZoneByQuery(intersectNuts3, "NUTS3", timeout), search, language, timeout);
-//        }
-//        return createResponse(getZoneByQuery(intersectLAU, "LAU", timeout), search, language);
-
-
+        // 2. take only the nuts that are matching to the zoom level
+        // if the zoom is lower than 6 we show the numbers of the whole country
+        String query = "";
+        String type = "";
+        if (zoom < 5) {
+            // Get Country in bbox
+            query = "SELECT * WHERE {"
+                    + " ?s <http://nuts.de/linkedopendata> ?lid; "
+                    + " <http://nuts.de/geometry> ?geo; "
+                    + " a <http://nuts.de/NUTS0>. "
+                    + "} ";
+            type = "COUNTRY";
+        }
+        // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
+        else if (zoom <= 6) {
+            query = "SELECT * WHERE {"
+                    + " ?s <http://nuts.de/linkedopendata> ?lid . "
+                    + " ?s <http://nuts.de/geometry> ?geo . "
+                    + " ?s a <http://nuts.de/NUTS1>  "
+                    + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+                    + "} ";
+            type = "NUTS1";
+        }
+        // if the zoom is between 4 and 9 we show the numbers of the nuts 1 or 2
+        else if (zoom <= 7) {
+            query = "SELECT * WHERE {"
+                    + " ?s <http://nuts.de/linkedopendata> ?lid . "
+                    + " ?s <http://nuts.de/geometry> ?geo . "
+                    + " ?s a <http://nuts.de/NUTS2>  "
+                    + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+                    + "} ";
+            type = "NUTS2";
+        }
+        // if the zoom is higher than 9 we show the numbers of the nuts 2 or 3
+        else {
+            query = "SELECT * WHERE {"
+                    + " ?s <http://nuts.de/linkedopendata> ?lid . "
+                    + " ?s <http://nuts.de/geometry> ?geo . "
+                    + " ?s a <http://nuts.de/NUTS3> "
+                    + " FILTER(<http://www.opengis.net/def/function/geosparql/sfIntersects>(?geo, " + bbox.toLiteral() + "))"
+                    + "} ";
+            type = "NUTS3";
+        }
+        resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map");
+        HashMap<String, Zone> result = new HashMap<>();
+        while (resultSet.hasNext()) {
+            BindingSet querySolution = resultSet.next();
+            String uri = querySolution.getBinding("s").getValue().stringValue();
+            String lid = querySolution.getBinding("lid").getValue().stringValue();
+            String geo = querySolution.getBinding("geo").getValue().stringValue();
+            if (uriCount.containsKey(lid)) {
+                Zone zone = new Zone(uri, lid, geo, type, uriCount.get(lid));
+                result.put(lid, zone);
+            }
+        }
+        return result;
     }
 
-    private ResponseEntity<JSONObject> createResponse(HashMap<String, Zone> res, String search, String language, int timeout) throws Exception {
-//        logger.info("WE ARE HERE {} | {} ", search, language);
-        String granularityRegion = "https://linkedopendata.eu/entity/Q1";
+    private ResponseEntity<JSONObject> createResponse(
+            HashMap<String, Zone> res,
+            String search,
+            String language,
+            String granularityRegion,
+            int timeout
+    ) throws Exception {
+        if (granularityRegion == null) {
+            granularityRegion = "https://linkedopendata.eu/entity/Q1";
+        }
         HashMap<String, Object> result = new HashMap<>();
-
-        String tmpsearch = search.replaceAll(
-                "FILTER\\(<http://www\\.opengis\\.net/def/function/geosparql/ehContains>\\(.*\\)",
-                ""
-        );
         JSONArray resultList = new JSONArray();
-//        ArrayList<JSONObject> resultList = new ArrayList<>();
-        // count the number of project in each zone
         Instant start = Instant.now();
         for (Zone z : res.values()) {
-
-            z.queryNumberProjects(sparqlQueryService, sparqlEndpoint, tmpsearch, 30);
-            if (z.getNumberProjects() == 0) {
-                continue;
-            }
-
             HashMap<String, Object> element = new HashMap<>();
-
-            if (!"LAU".equals(z.getType())) {
-                if (facetController.nutsRegion.containsKey(z.getLid())) {
-                    element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
-                } else {
-                    element.put("regionLabel", "");
-                }
+            if (facetController.nutsRegion.containsKey(z.getLid())) {
+                element.put("regionLabel", facetController.nutsRegion.get(z.getLid()).name.get(language));
             } else {
                 element.put("regionLabel", "");
             }
             element.put("region", z.getLid());
-//            element.put("geoJson", facetController.nutsRegion.get(z.getLid()).geoJson);
+            //element.put("geo", z.getGeo());
             element.put("count", z.getNumberProjects());
-//            element.put("center", z.getCenterWkt());
-            if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
+            if (z.getNumberProjects() == 1) {
+                String query = "SELECT ?coords WHERE { "
+                        + search
+                        + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coords . "
+                        + " ?s0 <https://linkedopendata.eu/prop/direct/P1845> <" + z.getLid() + "> . "
+                        + "}";
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
+                if (resultSet.hasNext()) {
+                    BindingSet querySolution = resultSet.next();
+                    String coordsString = querySolution.getBinding("coords").getValue().stringValue();
+                    Coordinate pt = wktReader.read(coordsString).getCoordinate();
+                    String ret = pt.x + "," + pt.y;
+                    element.put("coordinates", ret);
+                } else {
+                    element.put("coordinates", z.getCenter());
+                }
+            } else if ("COUNTRY".equals(z.getType()) && facetController.nutsRegion.containsKey(z.getLid())) {
                 String query = "SELECT ?coords WHERE { <" + z.getLid() + "> <https://linkedopendata.eu/prop/direct/P127> ?coords.}LIMIT 1";
 
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
@@ -1071,44 +1049,22 @@ public class MapController {
                 } else {
                     element.put("coordinates", z.getCenter());
                 }
-
             } else {
                 element.put("coordinates", z.getCenter());
             }
-//            element.put("isHighlighted", false);
             element.put("cluster", true);
             resultList.add(new JSONObject(element));
         }
         Instant end = Instant.now();
         Duration elapsedTime = Duration.between(start, end);
         logger.debug("Count number projects each zone: {} milliseconds", elapsedTime.toMillis());
-//        result.put("list", resultList);
-//        result.put("subregions", resultList);
         result.put("subregions", resultList);
         result.put("region", granularityRegion);
-//        result.put("upperRegions", findUpperRegions(granularityRegion, language));
         result.put("upperRegions", new JSONArray());
-        result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
         result.put("geoJson", facetController.nutsRegion.get(granularityRegion).geoJson);
+        result.put("regionLabel", facetController.nutsRegion.get(granularityRegion).name.get(language));
+
         return new ResponseEntity<>(new JSONObject(result), HttpStatus.OK);
-    }
-
-    private HashMap<String, Zone> getZoneByQuery(String query, String type, int timeout) throws Exception {
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "map2");
-        HashMap<String, Zone> result = new HashMap<>();
-        while (resultSet.hasNext()) {
-            BindingSet querySolution = resultSet.next();
-            String uri = querySolution.getBinding("s").getValue().stringValue();
-            String lid = querySolution.getBinding("lid").getValue().stringValue();
-            String geo = querySolution.getBinding("geo").getValue().stringValue();
-
-            Zone zone = new Zone(uri, lid, geo, type);
-            if (!result.containsKey(lid)) {
-                result.put(lid, zone);
-            }
-            result.put(lid, zone);
-        }
-        return result;
     }
 
     private List<Feature> prepareCluster(SuperCluster superCluster, BoundingBox bbox, Integer zoom) {
@@ -1119,36 +1075,56 @@ public class MapController {
         );
     }
 
-    private List<Feature> prepareCluster(List<Feature> features, BoundingBox bbox, Integer zoom) {
-        return clusterService.getCluster(
-                clusterService.createCluster(
-                        features.toArray(new Feature[0]),
-                        60,
-                        256,
-                        0,
-                        20,
-                        64
-                ),
-                bbox,
-                zoom
-        );
-
-    }
-
     private List<Feature> getProjectsPoints(
             String language,
             String search,
             BoundingBox boundingBox,
+            String granularityRegion,
             Integer limit,
             Integer offset,
+            boolean useLuceneForGeoSparql,
             int timeout
     ) throws Exception {
         logger.info("Search project map point: language {} search {} boundingBox {} limit {} offset {}", language, search, boundingBox, limit, offset);
+        String tmpSearch = search.replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P127> \\?coordinates \\.", "")
+                .replaceAll("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> \\.", "")
+                .replaceAll("FILTER\\(<http://www.opengis.net/def/function/geosparql/ehContains>\\(.*\\)", "")
+                .replaceAll("FILTER\\(<http://www.opengis.net/def/function/geosparql/distance>.*\\)", "");
+
         String query = "SELECT DISTINCT ?s0 ?coordinates WHERE { "
-                + search
-                + " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates))"
-//                + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P1741> ?infoRegioID . }"
-                + "}";
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> ."
+                + " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates .";
+        if (!tmpSearch.replaceAll("\\s", "").isEmpty()) {
+            Pattern instanceOfPattern = Pattern.compile("\\?s0 <https://linkedopendata.eu/prop/direct/P35> <([^>]*)>\\s*\\.?");
+            Matcher instanceOfMatcher = instanceOfPattern.matcher(tmpSearch);
+            while (instanceOfMatcher.find()) {
+                String uri = instanceOfMatcher.group(1);
+                System.err.println(uri);
+                query += "?s0 <https://linkedopendata.eu/prop/direct/P35> <" + uri + ">.";
+            }
+            if (!useLuceneForGeoSparql) {
+                query += " FILTER EXISTS { ";
+            }
+            query += " " + tmpSearch + " ";
+            if (!useLuceneForGeoSparql) {
+                query += " }";
+            }
+        }
+        String filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(" + boundingBox.toLiteral() + ",?coordinates))";
+        // hack to run the geosparql not over lucene in case there is a freetext query over lucene
+        if (useLuceneForGeoSparql) {
+            filterBbox = "FILTER(<http://www.opengis.net/def/function/geosparql/sfWithin>(?coordinates," + boundingBox.toLiteral() + "))";
+            query += " " + filterBbox + " ";
+        } else {
+            query += " " + filterBbox + " " + filterBbox + " ";
+        }
+        if (granularityRegion != null) {
+            Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+            query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+        }
+        query += "}";
+
+        logger.info("sparql={}", sparqlEndpoint);
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
         while (resultSet.hasNext()) {
@@ -1168,7 +1144,6 @@ public class MapController {
             List<String> projects = projectByCoordinates.get(geometry);
             for (String uri : projects) {
                 Map<String, Object> properties = new HashMap<>();
-//                properties.put("project", uri);
                 properties.put("projects", projects);
                 Feature feature = new Feature(writer.write(geometry), properties);
                 features.add(feature);
@@ -1177,49 +1152,25 @@ public class MapController {
         return features;
     }
 
-    private ResponseEntity<JSONObject> createResponse(List<Feature> features, int zoom, String search, String language, String granularityRegion) throws Exception {
-        return createResponse(clusterService.createCluster(features.toArray(new Feature[0])), features, zoom, search, language, granularityRegion);
-    }
-
-    private ResponseEntity<JSONObject> createResponse(SuperCluster superCluster, List<Feature> features, int zoom, String search, String language, String granularityRegion) throws Exception {
+    private ResponseEntity<JSONObject> createResponse(SuperCluster superCluster, List<Feature> features, BoundingBox boundingBox, int zoom, String search, String language, String granularityRegion) throws Exception {
         HashMap<String, Object> result = new HashMap<>();
-//        result.put("list", features);
         List<JSONObject> subregions = new ArrayList<>();
-//        logger.info("Features: {}", features);
         for (Feature feature : features) {
             HashMap<String, Object> element = new HashMap<>();
-
-            List<Feature> nbPoint = clusterService.getPointsInCluster(
-                    superCluster,
-                    zoom,
-                    new eu.ec.doris.kohesio.payload.Coordinate(((Point) feature.getGeometry()).getCoordinates())
-            );
-
-
-            Boolean isClusterFromCluster = (Boolean) feature.getProperties().get("cluster");
-            logger.info(
-                    "Is cluster : {} | Point count : {} | Project count : {}",
-                    isClusterFromCluster,
-                    feature.getProperties().get("point_count"),
-                    ((List<String>) feature.getProperties().get("projects")).size()
-            );
             if (feature.getProperties().containsKey("cluster") && (boolean) feature.getProperties().get("cluster")) {
                 element.put("count", feature.getProperties().get("point_count"));
-                element.put("cluster", feature.getProperties().get("cluster"));
-//                element.put("projects", feature.getProperties().get("projects"));
             } else {
-//                element.put("projects", feature.getProperties().get("projects"));
                 element.put("count", ((List<String>) feature.getProperties().get("projects")).size());
-                element.put("cluster", false);
             }
             if (feature.getGeometry() instanceof Point) {
                 Point point = (Point) feature.getGeometry();
+                eu.ec.doris.kohesio.payload.Coordinate coordinate = new eu.ec.doris.kohesio.payload.Coordinate(point.getCoordinates());
+                element.put("cluster", !superCluster.containsPointAtCoordinates(coordinate));
                 element.put("coordinates", point.getCoordinates()[0] + "," + point.getCoordinates()[1]);
             } else {
+                element.put("cluster", false);
                 element.put("coordinates", null);
             }
-            element.put("cluster", nbPoint.size() != 1);
-            element.put("nbPoint", nbPoint.size());
             subregions.add(new JSONObject(element));
         }
         if (granularityRegion == null) {
@@ -1253,6 +1204,5 @@ public class MapController {
                 zoom
         );
     }
-
 
 }

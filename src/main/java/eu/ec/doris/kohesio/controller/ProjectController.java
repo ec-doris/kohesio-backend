@@ -28,16 +28,17 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.sail.lucene.SearchFields;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.mapstruct.Context;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
@@ -114,7 +115,7 @@ public class ProjectController {
                     + "?managingAuthorityLabel ?beneficiaryLink ?beneficiary ?beneficiaryLabelRight "
                     + "?beneficiaryLabel ?transliteration ?beneficiaryWikidata ?beneficiaryWebsite "
                     + "?beneficiaryString ?source ?source2 ?keepUrl ?curatedLabel ?curatedSummary ?rawCuratedSummary"
-                    + " ?instagramUsername ?facebookUserId ?twitterUsername ?youtubeVideoId"
+                    + " ?instagramUsername ?facebookUserId ?twitterUsername ?youtubeVideoId ?programPeriod"
                     + " WHERE { "
                     + "VALUES ?s0 { <" + id + "> } "
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P581563> ?curatedLabel . FILTER((LANG(?curatedLabel)) = \"" + language + "\") }"
@@ -134,7 +135,7 @@ public class ProjectController {
                     + " OPTIONAL { ?s0 wdt:P562941 ?keepId. wd:P562941 wdt:P877 ?formatter. BIND(REPLACE(?keepId, '^(.+)$', ?formatter) AS ?keepUrl). } . "
                     + " OPTIONAL { ?s0 p:P851 ?blank . "
                     + " ?blank ps:P851 ?image . "
-                    + " OPTIONAL {?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary . FILTER(LANG(?imageSummary)=\"" + language +"\")}"
+                    + " OPTIONAL {?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary . FILTER(LANG(?imageSummary)=\"" + language + "\")}"
                     + " ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . } "
                     + " OPTIONAL { ?s0 wdt:P1746 ?video . }"
                     + " OPTIONAL { ?s0 wdt:P1416 ?tweet . }"
@@ -145,13 +146,16 @@ public class ProjectController {
                     + "             ?country <http://www.w3.org/2000/01/rdf-schema#label> ?countryLabel. "
                     + "             FILTER((LANG(?countryLabel)) = \"" + language + "\") }"
                     + " OPTIONAL { ?s0 wdt:P1368 ?program ."
-                    + "             OPTIONAL { ?program wdt:P1367  ?program_cci . } "
-                    + "             ?program wdt:P1586 ?managingAuthority. "
                     + "             ?program <http://www.w3.org/2000/01/rdf-schema#label> ?programLabel. "
+                    + "             FILTER((LANG(?programLabel)) = \"" + language + "\") ."
+                    + "             OPTIONAL { ?program wdt:P1367  ?program_cci . } "
+                    + "             OPTIONAL {"
+                    + "               ?program wdt:P1586 ?managingAuthority. "
+                    + "               ?managingAuthority <http://www.w3.org/2000/01/rdf-schema#label> ?managingAuthorityLabel. } "
+                    + "             } "
+                    + "             OPTIONAL { ?program wdt:P605685 ?programPeriod . } "
                     + "             OPTIONAL { ?program wdt:P1742 ?programInfoRegioUrl . }"
                     + "             OPTIONAL { ?program wdt:P1750 ?source2 . }"
-                    + "             FILTER((LANG(?programLabel)) = \"" + language + "\") ."
-                    + "             ?managingAuthority <http://www.w3.org/2000/01/rdf-schema#label> ?managingAuthorityLabel. } "
                     + " OPTIONAL { ?s0 wdt:P888 ?category ."
                     + "             OPTIONAL { ?category <http://www.w3.org/2000/01/rdf-schema#label> ?categoryLabel. "
                     + "                         FILTER((LANG(?categoryLabel)) = \"" + language + "\") }"
@@ -212,11 +216,11 @@ public class ProjectController {
                     + "FILTER(STRLEN(STR(?regionId))>=5) "
                     + "}";
 
-            logger.info("HERE");
             TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 3, false, "projectDetail");
             TupleQueryResult resultSetCoords = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryCoordinates, 3, false, "projectDetail");
             TupleQueryResult resultSetRegion = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, queryRegion, 3, false, "projectDetail");
 
+            logger.info("q1:{} query:{}", resultSet, query);
             JSONObject result = new JSONObject();
             result.put("item", id.replace("https://linkedopendata.eu/entity/", ""));
             result.put("link", id);
@@ -510,7 +514,16 @@ public class ProjectController {
                                 querySolution.getBinding("source2").getValue().stringValue()
                         );
                     }
-                    program.put("programmingPeriodLabel", "2014-2020");
+                    if (querySolution.getBinding("programPeriod") != null) {
+                        String programmingPeriodUri = querySolution.getBinding("programPeriod").getValue().stringValue();
+                        if ("https://linkedopendata.eu/entity/Q7333084".equals(programmingPeriodUri)) {
+                            program.put("programmingPeriodLabel", "2014-2021");
+                        } else if ("https://linkedopendata.eu/entity/Q7333082".equals(programmingPeriodUri)) {
+                            program.put("programmingPeriodLabel", "2021-2027");
+                        } else {
+                            program.put("programmingPeriodLabel", "");
+                        }
+                    }
                 }
 
                 if (querySolution.getBinding("themeId") != null) {
@@ -684,7 +697,7 @@ public class ProjectController {
                 if (querySolution.getBinding("managingAuthorityLabel") != null) {
                     result.put(
                             "managingAuthorityLabel",
-                            ((Literal) querySolution.getBinding("managingAuthorityLabel").getValue())
+                            querySolution.getBinding("managingAuthorityLabel").getValue()
                                     .stringValue());
                 }
             }
@@ -952,12 +965,13 @@ public class ProjectController {
             logger.info("Expansion time " + (System.nanoTime() - start) / 1000000);
         }
         if (town != null) {
-            NominatimService.Coordinates tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
+            Coordinate tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
             if (tmpCoordinates != null) {
-                latitude = tmpCoordinates.getLatitude();
-                longitude = tmpCoordinates.getLongitude();
+                latitude = String.valueOf(tmpCoordinates.getLat());
+                longitude = String.valueOf(tmpCoordinates.getLng());
 
             } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "location not found");
                 // What should we do
             }
         }
@@ -991,7 +1005,8 @@ public class ProjectController {
                 priorityAxis,
                 null,
                 limit,
-                offset
+                offset,
+                false
         );
 
         int numResults = 0;
@@ -1000,28 +1015,28 @@ public class ProjectController {
 
         String orderBy = "";
         if (orderStartDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P20> ?startTime .}";
             if (orderStartDate) {
                 orderBy = "ORDER BY ASC(?startTime)";
             } else {
                 orderBy = "ORDER BY DESC(?startTime)";
             }
         } else if (orderEndDate != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P33> ?endTime .}";
             if (orderEndDate) {
                 orderBy = "ORDER BY ASC(?endTime)";
             } else {
                 orderBy = "ORDER BY DESC(?endTime)";
             }
         } else if (orderEuBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. ";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P835> ?euBudget. }";
             if (orderEuBudget) {
                 orderBy = "ORDER BY ASC(?euBudget)";
             } else {
                 orderBy = "ORDER BY DESC(?euBudget)";
             }
         } else if (orderTotalBudget != null) {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. ";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget. }";
             if (orderTotalBudget) {
                 orderBy = "ORDER BY ASC(?budget)";
             } else {
@@ -1029,7 +1044,7 @@ public class ProjectController {
             }
         } else if (orderReadabilityBudget != null) {
             //log uri <http://the-qa-company.com/qendpoint/#log>
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 . OPTIONAL { ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . } ";
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1  .} OPTIONAL { ?s0 <https://linkedopendata.eu/prop/prop/P590521> ?readability . } ";
             if (orderReadabilityBudget) {
                 orderBy = "ORDER BY ASC(<http://the-qa-company.com/qendpoint/#log>(?budget1) * ?readability)";
             } else {
@@ -1043,7 +1058,7 @@ public class ProjectController {
                 orderBy = "ORDER BY DESC(?readability)";
             }
         } else {
-            orderQuery += "?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 ."
+            orderQuery += "OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P474> ?budget1 .}"
                     + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P590521> ?readabilityBase ."
                     + "   OPTIONAL {?s0 <https://linkedopendata.eu/prop/direct/P562941> ?keepId .} "
                     + "   BIND(IF(BOUND(?keepId), ?readabilityBase * 0.5, ?readabilityBase) AS ?readability)"
@@ -1101,7 +1116,7 @@ public class ProjectController {
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/P851> ?blank ."
                 + " ?blank <https://linkedopendata.eu/prop/statement/P851> ?image ."
                 + " OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P1743> ?imageCopyright . }"
-                + " OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary. FILTER(LANG(?imageSummary)=\""+language+"\")} "
+                + " OPTIONAL { ?blank <https://linkedopendata.eu/prop/qualifier/P836> ?imageSummary. FILTER(LANG(?imageSummary)=\"" + language + "\")} "
                 + " }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P474> ?totalBudget. }"
                 + " OPTIONAL { ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates. }"
@@ -1408,10 +1423,10 @@ public class ProjectController {
 
 
         if (town != null) {
-            NominatimService.Coordinates tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
+            Coordinate tmpCoordinates = nominatimService.getCoordinatesFromTown(town);
             if (tmpCoordinates != null) {
-                latitude = tmpCoordinates.getLatitude();
-                longitude = tmpCoordinates.getLongitude();
+                latitude = String.valueOf(tmpCoordinates.getLat());
+                longitude = String.valueOf(tmpCoordinates.getLng());
 
             }
         }
@@ -1429,7 +1444,8 @@ public class ProjectController {
                 null, null,
                 null, null,
                 null, null, null, null,
-                limit, offset
+                limit, offset,
+                false
         );
 
         //computing the number of results

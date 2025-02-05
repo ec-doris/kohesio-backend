@@ -46,7 +46,7 @@ public class SPARQLQueryService {
 
     public TupleQueryResult executeAndCacheQuery(String sparqlEndpoint, String query, int timeout, boolean cache, String type) {
         query = spaceCleaner.matcher(query).replaceAll(" ");
-        logger.info("Executing given query: {}", query);
+        logger.info("Executing given of hash {}, query: {}", query.hashCode(), query);
         long start = System.nanoTime();
 
         File dir = new File(location + "/facet/cache/");
@@ -83,8 +83,7 @@ public class SPARQLQueryService {
         repo.setAdditionalHttpHeaders(additionalHttpHeaders);
 
         try {
-            TupleQueryResult resultSet =
-                    repo.getConnection().prepareTupleQuery(query).evaluate();
+            TupleQueryResult resultSet = repo.getConnection().prepareTupleQuery(query).evaluate();
             FileOutputStream out = new FileOutputStream(location + "/facet/cache/" + query.hashCode());
             TupleQueryResultHandler writer = new SPARQLResultsJSONWriter(out);
             QueryResults.report(resultSet, writer);
@@ -95,7 +94,8 @@ public class SPARQLQueryService {
             sparqlResultsJSONParser.setQueryResultHandler(tupleQueryResultHandler);
 
             sparqlResultsJSONParser.parseQueryResult(
-                    new FileInputStream(location + "/facet/cache/" + query.hashCode()));
+                    Files.newInputStream(Paths.get(location + "/facet/cache/" + query.hashCode()))
+            );
             long end = System.nanoTime();
             logger.info("Was NOT cached {}", query);
             logger.info("Time {}", (end - start) / 1000000);
@@ -109,6 +109,7 @@ public class SPARQLQueryService {
 
             return tupleQueryResultHandler.getQueryResult();
         } catch (QueryEvaluationException e) {
+            e.printStackTrace();
             logger.error("Query Evaluation Exception: [{}]", e.getMessage());
         } catch (QueryResultParseException e) {
             logger.error("To heavy timeout {} --- {}", query, timeout);
