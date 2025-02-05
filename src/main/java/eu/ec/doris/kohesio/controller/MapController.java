@@ -287,10 +287,13 @@ public class MapController {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Town not found");
             }
         } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
-            Geometry geometry = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+            Nut nut = facetController.nutsRegion.get(granularityRegion);
+            if (nut != null && nut.geoJson != null) {
+                Geometry geometry = geoJSONReader.read(nut.geoJson.replace("'", "\""));
 //            logger.info("\n{}\n{}\n", geometry, boundingBox);
-            if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
-                bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
+                if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
+                    bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
+                }
             }
         }
 
