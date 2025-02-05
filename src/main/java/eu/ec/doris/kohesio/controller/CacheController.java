@@ -316,6 +316,7 @@ public class CacheController {
 
     @PostMapping(value = "/facet/eu/cache/generate/map")
     public void generateCacheMap() throws Exception {
+        facetController.initialize("en");
         cacheMapWithBoundingBox();
     }
 
