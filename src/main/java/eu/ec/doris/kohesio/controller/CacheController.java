@@ -45,6 +45,7 @@ public class CacheController {
         facetController.initialize("en");
         logger.debug("Start generating map recursively");
         recursiveMap(null);
+        cacheMapWithBoundingBox();
         logger.debug("End recursive map");
         // cache statistics
         facetController.facetEuStatistics();
