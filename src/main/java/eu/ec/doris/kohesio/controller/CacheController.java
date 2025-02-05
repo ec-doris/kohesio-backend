@@ -322,7 +322,10 @@ public class CacheController {
     private List<String> getListFromApi(JSONArray array, String key) {
         List<String> list = new ArrayList<>();
         for (Object jso : array) {
-            list.add((String) ((JSONObject) jso).get(key));
+            String value = (String) ((JSONObject) jso).get(key);
+            if (value != null && !value.isEmpty() && !list.contains(value)) {
+                list.add(value);
+            }
         }
         return list;
     }
