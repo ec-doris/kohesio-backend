@@ -289,6 +289,7 @@ public class MapController {
         } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
             Nut nut = facetController.nutsRegion.get(granularityRegion);
             if (nut != null && nut.geoJson != null) {
+                logger.info("Loading Geojson: {}", nut.geoJson.replace("'", "\""));
                 Geometry geometry = geoJSONReader.read(nut.geoJson.replace("'", "\""));
 //            logger.info("\n{}\n{}\n", geometry, boundingBox);
                 if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
