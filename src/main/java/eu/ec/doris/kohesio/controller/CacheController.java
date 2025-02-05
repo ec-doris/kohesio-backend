@@ -1,5 +1,6 @@
 package eu.ec.doris.kohesio.controller;
 
+import eu.ec.doris.kohesio.services.SPARQLQueryService;
 import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -25,6 +26,9 @@ public class CacheController {
     @Value("${kohesio.directory}")
     String location;
 
+    @Value("${kohesio.sparqlEndpoint}")
+    String sparqlEndpoint;
+
     @Autowired
     ProjectController projectController;
     @Autowired
@@ -33,6 +37,8 @@ public class CacheController {
     FacetController facetController;
     @Autowired
     MapController mapController;
+    @Autowired
+    SPARQLQueryService sparqlQueryService;
 
     @ModelAttribute
     public void setVaryResponseHeader(HttpServletResponse response) {
@@ -369,11 +375,19 @@ public class CacheController {
             );
             List<String> regions = getListFromApi(facetController.facetEuRegions(country, "en", null), "region");
             for (String region : regions) {
-                wrapperMap(
-                        country, null, null, null,
-                        null, region, region,
-                        null, null, null
+                String query = "ASK { <" + region + "> <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q2727537> . }";
+                boolean resultSet = sparqlQueryService.executeBooleanQuery(
+                        sparqlEndpoint,
+                        query,
+                        20
                 );
+                if (!resultSet) {
+                    wrapperMap(
+                            country, null, null, null,
+                            null, region, region,
+                            null, null, null
+                    );
+                }
             }
 
             List<String> programs = getListFromApi(facetController.facetEuPrograms("en", country, null, null, null, null), "region");
