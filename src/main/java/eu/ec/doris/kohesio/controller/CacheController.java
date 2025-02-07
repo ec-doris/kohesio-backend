@@ -407,6 +407,32 @@ public class CacheController {
                     );
                 }
             }
+
+            List<String> policies = getListFromApi(facetController.facetPolicyObjective("en"), "instance");
+            for (String policy : policies) {
+                wrapperMap(
+                        country, null, null, null,
+                        policy, null, country,
+                        null, null, null
+                );
+                List<String> themesOfPolicy = getListFromApi(facetController.facetEuThematicObjective("en", policy, null), "instance");
+                for (String themeOfPolicy : themesOfPolicy) {
+                    wrapperMap(
+                            country, themeOfPolicy, null, null,
+                            policy, null, country,
+                            null, null, null
+                    );
+                }
+            }
+
+            List<String> themes = getListFromApi(facetController.facetEuThematicObjective("en"), "instance");
+            for (String theme : themes) {
+                wrapperMap(
+                        country, theme, null, null,
+                        null, null, country,
+                        null, null, null
+                );
+            }
         }
 
         List<String> policies = getListFromApi(facetController.facetPolicyObjective("en"), "instance");
