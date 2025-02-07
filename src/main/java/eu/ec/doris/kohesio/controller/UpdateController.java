@@ -12,6 +12,11 @@ import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.util.ClientBuilder;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.util.Literals;
+import org.eclipse.rdf4j.query.Binding;
+import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -30,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/wikibase/update")
@@ -50,6 +57,18 @@ public class UpdateController {
         List<MonolingualString> labels = updatePayload.getLabels();
         List<MonolingualString> descriptions = updatePayload.getDescriptions();
         List<MonolingualString> descriptionsRaw = updatePayload.getDescriptionsRaw();
+        String instagramUsername = updatePayload.getInstagramUsername();
+        String twitterUsername = updatePayload.getTwitterUsername();
+        String facebookUserId = updatePayload.getFacebookUserId();
+        String youtubeVideoId = updatePayload.getYoutubeVideoId();
+        String imageUrl = updatePayload.getImageUrl();
+        List<MonolingualString> imageSummaries = updatePayload.getImageSummaries();
+        String imageCopyright = updatePayload.getImageCopyright();
+
+        labels.forEach(this::escapeDoubleQuote);
+        descriptions.forEach(this::escapeDoubleQuote);
+        descriptionsRaw.forEach(this::escapeDoubleQuote);
+        imageSummaries.forEach(this::escapeDoubleQuote);
 
         logger.info("Project update by ID: id {} on {}", id, url);
 
@@ -59,12 +78,13 @@ public class UpdateController {
         boolean resultAsk = sparqlQueryService.executeBooleanQuery(
                 url,
                 queryCheck,
+                false,
                 2
         );
         if (!resultAsk) {
-            return new ResponseEntity<>(
-                    (JSONObject) (new JSONObject().put("message", "Bad Request - project ID not found")),
-                    HttpStatus.BAD_REQUEST
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Bad Request - project ID not found or is not a project"
             );
         } else {
             List<UpdateTriple> updateTriples = new ArrayList<>();
@@ -96,15 +116,17 @@ public class UpdateController {
                                 .append(language)
                                 .append("\") ")
                         ;
-                        tripleToInsert
-                                .append(" <")
-                                .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581563> \"")
-                                .append(label)
-                                .append("\"@")
-                                .append(language)
-                                .append(" . ")
-                        ;
+                        if (!label.isEmpty()) {
+                            tripleToInsert
+                                    .append(" <")
+                                    .append(id)
+                                    .append("> <https://linkedopendata.eu/prop/direct/P581563> \"")
+                                    .append(label)
+                                    .append("\"@")
+                                    .append(language)
+                                    .append(" . ")
+                            ;
+                        }
                         updateTriples.add(
                                 new UpdateTriple(
                                         tripleToDelete.toString(),
@@ -144,16 +166,17 @@ public class UpdateController {
                                 .append(language)
                                 .append("\") ")
                         ;
-                        tripleToInsert
-                                .append(" <")
-                                .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P581562> \"")
-                                .append(description)
-                                .append("\"@")
-                                .append(language)
-                                .append(" . ")
-                        ;
-
+                        if (!description.isEmpty()) {
+                            tripleToInsert
+                                    .append(" <")
+                                    .append(id)
+                                    .append("> <https://linkedopendata.eu/prop/direct/P581562> \"")
+                                    .append(description)
+                                    .append("\"@")
+                                    .append(language)
+                                    .append(" . ")
+                            ;
+                        }
                         updateTriples.add(
                                 new UpdateTriple(
                                         tripleToDelete.toString(),
@@ -166,7 +189,7 @@ public class UpdateController {
             }
 
             if (descriptionsRaw != null) {
-                for (MonolingualString descriptionRawObject: descriptionsRaw) {
+                for (MonolingualString descriptionRawObject : descriptionsRaw) {
                     String language = descriptionRawObject.getLanguage();
                     String descriptionRaw = descriptionRawObject.getText();
 
@@ -194,16 +217,17 @@ public class UpdateController {
                                 .append(language)
                                 .append("\") ")
                         ;
-                        tripleToInsert
-                                .append(" <")
-                                .append(id)
-                                .append("> <https://linkedopendata.eu/prop/direct/P589596> \"")
-                                .append(descriptionRaw)
-                                .append("\"@")
-                                .append(language)
-                                .append(" . ")
-                        ;
-
+                        if (!descriptionRaw.isEmpty()) {
+                            tripleToInsert
+                                    .append(" <")
+                                    .append(id)
+                                    .append("> <https://linkedopendata.eu/prop/direct/P589596> \"")
+                                    .append(descriptionRaw)
+                                    .append("\"@")
+                                    .append(language)
+                                    .append(" . ")
+                            ;
+                        }
                         updateTriples.add(
                                 new UpdateTriple(
                                         tripleToDelete.toString(),
@@ -215,20 +239,75 @@ public class UpdateController {
                 }
             }
 
+            // for instagram, facebook, twitter, youtube and image
+            // if null we skip if "" empty string we delete and if value we delete and setup the new value
+            if (instagramUsername != null) {
+                generateUpdateTriplesForValue(
+                        id,
+                        instagramUsername,
+                        updateTriples,
+                        "P478",
+                        "instagramUsername"
+                );
+            }
+            if (facebookUserId != null) {
+                generateUpdateTriplesForValue(
+                        id,
+                        facebookUserId,
+                        updateTriples,
+                        "P407",
+                        "facebookUserId"
+                );
+            }
+            if (twitterUsername != null) {
+                generateUpdateTriplesForValue(
+                        id,
+                        twitterUsername,
+                        updateTriples,
+                        "P241",
+                        "twitterUsername"
+                );
+            }
+            if (youtubeVideoId != null) {
+                generateUpdateTriplesForValue(
+                        id,
+                        youtubeVideoId,
+                        updateTriples,
+                        "P2210",
+                        "youtubeVideoId"
+                );
+            }
 
+            // handle image:
+            // we want to keep the qualifier if they exist and aren't updated
+            // and we want to update only the qualifier if only that is provided
+            if (imageCopyright != null || imageUrl != null || imageSummaries != null) {
+                if (imageSummaries != null) {
+                    for (MonolingualString imageSummary : imageSummaries) {
+                        generateUpdateTriplesForImage(id, imageUrl, imageCopyright, imageSummary, updateTriples);
+                    }
+                } else {
+                    generateUpdateTriplesForImage(id, imageUrl, imageCopyright, null, updateTriples);
+                }
+            }
+            logger.info("Updating {} triples", updateTriples.size());
             if (updateTriples.isEmpty()) {
-                return new ResponseEntity<>(
-                        (JSONObject) (new JSONObject().put("message", "Bad Request - nothing to update")),
-                        HttpStatus.BAD_REQUEST
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Bad Request - nothing to update"
                 );
             }
             for (UpdateTriple updateTriple : updateTriples) {
                 String queryDelete = updateTriple.getDeleteQuery();
                 String queryInsert = updateTriple.getInsertQuery();
-                System.err.println(queryDelete);
-                System.err.println(queryInsert);
-                sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
-                sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
+                if (queryDelete != null && !queryDelete.isEmpty()) {
+//                    logger.info("Executing delete query: {}", queryDelete);
+                    sparqlQueryService.executeUpdateQuery(url, queryDelete, 20);
+                }
+                if (queryInsert != null && !queryInsert.isEmpty()) {
+//                    logger.info("Executing Insert query: {}", queryInsert);
+                    sparqlQueryService.executeUpdateQuery(url, queryInsert, 20);
+                }
             }
 
             return new ResponseEntity<>(
@@ -238,11 +317,229 @@ public class UpdateController {
         }
     }
 
+    private void generateUpdateTriplesForImage(
+            String id,
+            String imageUrl,
+            String imageCopyright,
+            MonolingualString imageSummary,
+            List<UpdateTriple> updateTriples
+    ) {
+//        if (imageUrl != null && imageUrl.isEmpty()) {
+//            String tripleToDelete = "<"+id+"> <https://linkedopendata.eu/prop/P851> ?image.";
+//            UpdateTriple updateTriple = new UpdateTriple();
+//            updateTriples.add(
+//
+//            )
+//            return;
+//        }
+        String query = "SELECT ?image ?image_url ?image_summary ?image_copyright WHERE {"
+                + " <" + id + "> <https://linkedopendata.eu/prop/P851> ?image ."
+                + " ?image <https://linkedopendata.eu/prop/statement/P851> ?image_url."
+                + " OPTIONAL{?image <https://linkedopendata.eu/prop/qualifier/P836> ?image_summary.";
+        if (imageSummary != null) {
+            query += " FILTER(LANG(?image_summary)=\"" + imageSummary.getLanguage() + "\")";
+        }
+        query += "}"
+                + " OPTIONAL{?image <https://linkedopendata.eu/prop/qualifier/P1743> ?image_copyright.}"
+                + "}";
+        TupleQueryResult result = sparqlQueryService.executeAndCacheQuery(
+                sparqlEndpoint,
+                query,
+                20,
+                false,
+                "update"
+        );
+        if (result.hasNext()) {
+            while (result.hasNext()) {
+                BindingSet querySolution = result.next();
+                String oldImageStatement = querySolution.getBinding("image").getValue().stringValue();
+                String oldImageUrl = querySolution.getBinding("image_url").getValue().stringValue();
+                String oldImageCopyright = querySolution.getBinding("image_copyright").getValue().stringValue();
+                MonolingualString oldImageSummary = null;
+                if (querySolution.hasBinding("image_summary")) {
+                    oldImageSummary = new MonolingualString(
+                            ((Literal) querySolution.getBinding("image_summary").getValue()).getLanguage().get(),
+                            querySolution.getBinding("image_summary").getValue().stringValue()
+                    );
+                }
+
+                if (imageUrl != null && !oldImageUrl.equals(imageUrl)) {
+                    // update ps:P851 and wdt:P851
+                    String tripleImageUrlToDelete = "<" + oldImageStatement + ">"
+                            + " <https://linkedopendata.eu/prop/statement/P851> "
+                            + "\"" + oldImageUrl + "\" . ";
+                    String tripleImageUrlToWhere = "<" + id + ">"
+                            + " <https://linkedopendata.eu/prop/P851> "
+                            + "<" + oldImageStatement + "> . ";
+                    String tripleImageUrlToInsert = null;
+                    if (!imageUrl.isEmpty()) {
+                        tripleImageUrlToInsert = "<" + oldImageStatement + "> "
+                                + "<https://linkedopendata.eu/prop/statement/P851>"
+                                + " \"" + imageUrl + "\" . ";
+                    }
+
+                    updateTriples.add(
+                            new UpdateTriple(
+                                    tripleImageUrlToDelete,
+                                    tripleImageUrlToInsert,
+                                    tripleImageUrlToWhere
+                            )
+                    );
+                    String tripleImageUrlDirectToDelete = "<" + id + ">"
+                            + " <https://linkedopendata.eu/prop/direct/P851> "
+                            + "\"" + oldImageUrl + "\" . ";
+                    String tripleImageUrlDirectToWhere = "<" + id + ">"
+                            + " <https://linkedopendata.eu/prop/direct/P851> "
+                            + "<" + oldImageUrl + "> . ";
+                    String tripleImageUrlDirectToInsert = null;
+                    if (!imageUrl.isEmpty()) {
+                        tripleImageUrlDirectToInsert = "<" + id + "> "
+                                + "<https://linkedopendata.eu/prop/direct/P851>"
+                                + " \"" + imageUrl + "\" . ";
+                    }
+                    updateTriples.add(
+                            new UpdateTriple(
+                                    tripleImageUrlDirectToDelete,
+                                    tripleImageUrlDirectToInsert,
+                                    tripleImageUrlDirectToWhere
+                            )
+                    );
+                }
+                if (imageSummary != null && (oldImageSummary == null || !oldImageSummary.equals(imageSummary))) {
+                    String tripleImageToDelete = null;
+                    String tripleImageToWhere = null;
+                    String tripleImageToInsert = null;
+                    if (oldImageSummary != null) {
+                        tripleImageToDelete = "<" + oldImageStatement + ">"
+                                + " <https://linkedopendata.eu/prop/qualifier/P836> "
+                                + "\"" + oldImageSummary + "\" . ";
+                        tripleImageToWhere = "<" + id + ">"
+                                + " <https://linkedopendata.eu/prop/P851> "
+                                + "<" + oldImageStatement + "> . ";
+                    }
+                    if (!imageSummary.getText().isEmpty()) {
+                        tripleImageToInsert = "<" + oldImageStatement + "> "
+                                + "<https://linkedopendata.eu/prop/qualifier/P836>"
+                                + " " + imageSummary.toValue() + " . ";
+                    }
+                    updateTriples.add(
+                            new UpdateTriple(
+                                    tripleImageToDelete,
+                                    tripleImageToInsert,
+                                    tripleImageToWhere
+                            )
+                    );
+                }
+
+                if (imageCopyright != null && !oldImageCopyright.equals(imageCopyright)) {
+                    String tripleImageToDelete = "<" + oldImageStatement + ">"
+                            + " <https://linkedopendata.eu/prop/qualifier/P1743> "
+                            + "\"" + oldImageCopyright + "\" . ";
+                    String tripleImageToWhere = "<" + id + ">"
+                            + " <https://linkedopendata.eu/prop/P851> "
+                            + "<" + oldImageStatement + "> . ";
+                    String tripleImageToInsert = null;
+                    if (!imageCopyright.isEmpty()) {
+                        tripleImageToInsert = "<" + oldImageStatement + "> "
+                                + "<https://linkedopendata.eu/prop/qualifier/P1743>"
+                                + " \"" + imageCopyright + "\" . ";
+                    }
+                    updateTriples.add(
+                            new UpdateTriple(
+                                    tripleImageToDelete,
+                                    tripleImageToInsert,
+                                    tripleImageToWhere
+                            )
+                    );
+                }
+            }
+        } else {
+            if (imageUrl == null || imageUrl.isEmpty()) {
+                // if no image in graph and no image in payload just ignore it
+//                throw new ResponseStatusException(
+//                        HttpStatus.BAD_REQUEST,
+//                        "Bad Request - No image to edit"
+//                );
+            } else {
+                // this mean there wasn't any image before so we have to create all the triples ourselves
+                String fakeStatement = id + "-image-P851-" + UUID.randomUUID();
+                String tripleImageUrl = "<" + id + "> <https://linkedopendata.eu/prop/direct/P851> \"" + imageUrl + "\" . "
+                        + "<" + id + "> <https://linkedopendata.eu/prop/P851> <" + fakeStatement + "> . "
+                        + "<" + fakeStatement + "> <https://linkedopendata.eu/prop/statement/P851> \"" + imageUrl + "\" . ";
+                if (imageSummary != null && !imageSummary.getText().isEmpty()) {
+                    tripleImageUrl += "<" + fakeStatement + "> <https://linkedopendata.eu/prop/qualifier/P836> " + imageSummary.toValue() + " . ";
+                }
+                if (imageCopyright != null && !imageCopyright.isEmpty()) {
+                    tripleImageUrl += "<" + fakeStatement + "> <https://linkedopendata.eu/prop/qualifier/P1743> \"" + imageCopyright + "\" . ";
+                }
+                updateTriples.add(
+                        new UpdateTriple(
+                                null,
+                                tripleImageUrl,
+                                null
+                        )
+                );
+            }
+        }
+    }
+
+    private static void generateUpdateTriplesForValue(
+            String id,
+            String value,
+            List<UpdateTriple> updateTriples,
+            String pid,
+            String varName
+    ) {
+        StringBuilder tripleToDelete = new StringBuilder();
+        StringBuilder tripleToInsert = new StringBuilder();
+        StringBuilder tripleToWhere = new StringBuilder();
+
+        tripleToDelete
+                .append("<")
+                .append(id)
+                .append("> <https://linkedopendata.eu/prop/direct/")
+                .append(pid)
+                .append("> ?")
+                .append(varName)
+                .append(" . ")
+        ;
+
+        tripleToWhere
+                .append("<")
+                .append(id)
+                .append("> <https://linkedopendata.eu/prop/direct/")
+                .append(pid)
+                .append("> ?")
+                .append(varName)
+                .append(" . ")
+        ;
+        if (!value.isEmpty()) {
+            tripleToInsert
+                    .append("<")
+                    .append(id)
+                    .append("> <https://linkedopendata.eu/prop/direct/")
+                    .append(pid)
+                    .append("> \"")
+                    .append(value)
+                    .append("\" . ")
+            ;
+        }
+        updateTriples.add(
+                new UpdateTriple(
+                        tripleToDelete.toString(),
+                        tripleToInsert.toString(),
+                        tripleToWhere.toString()
+                )
+        );
+    }
+
     @PostMapping(value = "/project", produces = "application/json")
     public ResponseEntity<JSONObject> propagateUpdateProject(
             @RequestBody Update updatePayload
     ) throws IOException, ApiException {
         logger.info("Propagate update project {}", updatePayload.getId());
+        logger.info(updatePayload.toString());
+//        return updateProject(sparqlEndpoint, updatePayload);
         ApiClient client = ClientBuilder.cluster().build();
         String namespace = new String(
                 Files.readAllBytes(
@@ -287,7 +584,7 @@ public class UpdateController {
                 for (V1Container container : item.getSpec().getContainers()) {
                     if ("kohesio-qanswer-container".equals(container.getName())) {
                         port = container.getPorts().get(0).getContainerPort().toString();
-                        System.out.println("IP: " + ip + " phase: " + phase + " port: " + port);
+                        logger.info("IP: {} phase: {} port: {}", ip, phase, port);
                         break;
                     }
                 }
@@ -301,7 +598,11 @@ public class UpdateController {
         }
     }
 
-    private class UpdateTriple {
+    private void escapeDoubleQuote(MonolingualString ms) {
+        ms.setText(ms.getText().replace("\"", "\\\""));
+    }
+
+    private static class UpdateTriple {
         String tripleToDelete;
         String tripleToInsert;
         String tripleToWhere;
@@ -313,6 +614,9 @@ public class UpdateController {
         }
 
         public String getDeleteQuery() {
+            if (tripleToDelete == null || tripleToDelete.isEmpty()) {
+                return null;
+            }
             return "DELETE {" + tripleToDelete + "}"
                     + " WHERE { "
                     + tripleToWhere
@@ -320,6 +624,9 @@ public class UpdateController {
         }
 
         public String getInsertQuery() {
+            if (tripleToInsert == null || tripleToInsert.isEmpty()) {
+                return null;
+            }
             return "INSERT DATA {" + tripleToInsert + "}";
         }
 
@@ -328,7 +635,11 @@ public class UpdateController {
         }
 
         public void setTripleToDelete(String tripleToDelete) {
-            this.tripleToDelete = tripleToDelete;
+            if (tripleToDelete.isEmpty()) {
+                this.tripleToDelete = null;
+            } else {
+                this.tripleToDelete = tripleToDelete;
+            }
         }
 
         public String getTripleToInsert() {
@@ -336,7 +647,11 @@ public class UpdateController {
         }
 
         public void setTripleToInsert(String tripleToInsert) {
-            this.tripleToInsert = tripleToInsert;
+            if (tripleToInsert.isEmpty()) {
+                this.tripleToInsert = null;
+            } else {
+                this.tripleToInsert = tripleToInsert;
+            }
         }
 
         public String getTripleToWhere() {
@@ -345,6 +660,15 @@ public class UpdateController {
 
         public void setTripleToWhere(String tripleToWhere) {
             this.tripleToWhere = tripleToWhere;
+        }
+
+        @Override
+        public String toString() {
+            return "UpdateTriple{" +
+                    "tripleToDelete='" + tripleToDelete + '\'' +
+                    ", tripleToInsert='" + tripleToInsert + '\'' +
+                    ", tripleToWhere='" + tripleToWhere + '\'' +
+                    '}';
         }
     }
 }

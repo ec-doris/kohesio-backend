@@ -47,8 +47,9 @@ public class FiltersGenerator {
             String priorityAxis,
             BoundingBox boundingBox,
             Integer limit,
-            Integer offset
-    ) throws IOException {
+            Integer offset,
+            boolean flagFilter
+    ) {
         String search = "";
 
         search += " ?s0 <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q9934> . ";
@@ -78,23 +79,32 @@ public class FiltersGenerator {
         }
 
         if (ccis != null) {
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
-                    + " ?program <https://linkedopendata.eu/prop/direct/P1367> ?cci . "
-                    + "FILTER(?cci IN (";
-            for (String cci : ccis) {
-                search += " \"" + cci + "\",";
+            if (ccis.size() == 1) {
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
+                        + " ?program <https://linkedopendata.eu/prop/direct/P1367> \"" + ccis.get(0) + "\" . ";
+            } else {
+                search += " ?s0 <https://linkedopendata.eu/prop/direct/P1368> ?program . "
+                        + " ?program <https://linkedopendata.eu/prop/direct/P1367> ?cci . "
+                        + "FILTER(?cci IN (";
+                for (String cci : ccis) {
+                    search += " \"" + cci + "\",";
+                }
+                search = search.substring(0, search.length() - 1);
+                search += "))";
             }
-            search = search.substring(0, search.length() - 1);
-            search += "))";
         }
 
         if (categoryOfIntervention != null) {
-            search += "?s0 <https://linkedopendata.eu/prop/direct/P888> ?categoryOfIntervention . ";
-            search += "VALUES ?categoryOfIntervention {";
-            for (String category : categoryOfIntervention) {
-                search += "<" + category + "> ";
+            if (categoryOfIntervention.size() == 1) {
+                search += "?s0 <https://linkedopendata.eu/prop/direct/P888> <" + categoryOfIntervention.get(0) + "> . ";
+            } else {
+                search += "?s0 <https://linkedopendata.eu/prop/direct/P888> ?categoryOfIntervention . ";
+                search += "VALUES ?categoryOfIntervention {";
+                for (String category : categoryOfIntervention) {
+                    search += "<" + category + "> ";
+                }
+                search += "}";
             }
-            search += "}";
         }
 
         if (interreg != null && interreg) {
@@ -175,17 +185,11 @@ public class FiltersGenerator {
         if (isCoordinateSearch || isBoundingBoxSearch) {
             search += " ?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . ";
             if (isBoundingBoxSearch) {
-//                BoundingBox bbox = BoundingBox;
-                search += " FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + boundingBox.toWkt() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
             }
             if (isCoordinateSearch) {
                 if (radius == null) {
                     radius = 100L;
                 }
-//            search += "?s0 <https://linkedopendata.eu/prop/direct/P127> ?coordinates . "
-//                    + "FILTER ( "
-//                    + "<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>)"
-//                    + "< 100000) . ";
                 if (keywords == null) {
                     search += " FILTER(<http://www.opengis.net/def/function/geosparql/distance>(\"POINT(" + longitude + " " + latitude + ")\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates,<http://www.opengis.net/def/uom/OGC/1.0/metre>) < " + (radius * 1000) + ")";
                 } else {
@@ -210,34 +214,34 @@ public class FiltersGenerator {
         }
 
         if (theme != null || policyObjective != null) {
-//            if (country == null){
-            search += " { ";
-            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
-            if (theme != null) {
-                search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
-            }
-            if (policyObjective != null) {
-                search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
-            }
-            search += " } UNION { ";
+            search += "{";
             if (theme != null) {
                 search += " ?s0 <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
             }
             if (policyObjective != null) {
                 search += " ?s0 <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
             }
+            search += " } UNION { ";
+            search += " ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category . ";
+            if (policyObjective != null) {
+                if (flagFilter) {
+                    search += " FILTER EXISTS {";
+                }
+                search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
+                if (flagFilter) {
+                    search += "} ";
+                }
+            }
+            if (theme != null) {
+                if (flagFilter) {
+                    search += " FILTER EXISTS {";
+                }
+                search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
+                if (flagFilter) {
+                    search += "} ";
+                }
+            }
             search += " } ";
-//            } else {
-//                search += " FILTER EXISTS { ?s0 <https://linkedopendata.eu/prop/direct/P888> ?category. ";
-//                search += " FILTER EXISTS { ";
-//                if (theme != null) {
-//                    search += " ?category <https://linkedopendata.eu/prop/direct/P1848> <" + theme + "> .  ";
-//                }
-//                if (policyObjective != null) {
-//                    search += " ?category <https://linkedopendata.eu/prop/direct/P1849> <" + policyObjective + "> . ";
-//                }
-//                search += " } } ";
-//            }
         }
         return search;
     }

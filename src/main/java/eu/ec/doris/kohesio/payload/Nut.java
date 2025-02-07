@@ -1,16 +1,25 @@
 package eu.ec.doris.kohesio.payload;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public class Nut{
     public String uri;
-    public List<String> type = new ArrayList<>();
+    public Set<String> type = new HashSet<>();
     public HashMap<String, String> name= new HashMap<>();
     public String geoJson="";
     public String country="";
     public String nutsCode = "";
     public String granularity;
     public List<String> narrower = new ArrayList<String>();
+
+    @Override
+    public String toString() {
+        return "Nut{" +
+                "uri='" + uri + '\'' +
+                ", type=" + type +
+                ", name=" + name +
+                ", country='" + country + '\'' +
+                ", nutsCode='" + nutsCode + '\'' +
+                '}';
+    }
 }
