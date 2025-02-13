@@ -1169,10 +1169,6 @@ public class MapController {
             if (feature.getGeometry() instanceof Point) {
                 Point point = (Point) feature.getGeometry();
                 eu.ec.doris.kohesio.payload.Coordinate coordinate = new eu.ec.doris.kohesio.payload.Coordinate(point.getCoordinates());
-                logger.info(
-                        "Feature: {}",
-                        !superCluster.containsPointAtCoordinates(coordinate)
-                );
                 element.put("cluster", !superCluster.containsPointAtCoordinates(coordinate));
                 if (superCluster.containsPointAtCoordinates(coordinate)) {
                     eu.ec.doris.kohesio.payload.Coordinate coordinate1 = superCluster.getCoordinateFromPointAtCoordinates(coordinate);
