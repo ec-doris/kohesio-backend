@@ -221,6 +221,7 @@ public class FacetController {
                             boolean resultSet = sparqlQueryService.executeBooleanQuery(
                                     sparqlEndpoint,
                                     query,
+                                    false,
                                     20
                             );
                             if (resultSet) {
