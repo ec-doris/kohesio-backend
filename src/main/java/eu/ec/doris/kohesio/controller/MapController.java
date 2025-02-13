@@ -311,7 +311,7 @@ public class MapController {
                     language,
                     granularityRegion,
                     country,
-                    60
+                    20
             );
             return createResponse(tmp, search, language, granularityRegion, timeout);
         }
@@ -1174,8 +1174,12 @@ public class MapController {
                         !superCluster.containsPointAtCoordinates(coordinate)
                 );
                 element.put("cluster", !superCluster.containsPointAtCoordinates(coordinate));
-                eu.ec.doris.kohesio.payload.Coordinate coordinate1 = superCluster.getCoordinateFromPointAtCoordinates(coordinate);
-                element.put("coordinates", coordinate1.toBasicCoords());
+                if (superCluster.containsPointAtCoordinates(coordinate)) {
+                    eu.ec.doris.kohesio.payload.Coordinate coordinate1 = superCluster.getCoordinateFromPointAtCoordinates(coordinate);
+                    element.put("coordinates", coordinate1.toBasicCoords());
+                } else {
+                    element.put("coordinates", coordinate.toBasicCoords());
+                }
             } else {
                 element.put("cluster", false);
                 element.put("coordinates", null);
