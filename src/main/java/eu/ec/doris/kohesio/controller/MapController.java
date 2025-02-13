@@ -291,8 +291,7 @@ public class MapController {
             if (nut != null && nut.geoJson != null && !nut.geoJson.isEmpty()) {
                 logger.info("Loading Geojson: {}", nut.geoJson.replace("'", "\""));
                 Geometry geometry = geoJSONReader.read(nut.geoJson.replace("'", "\""));
-//            logger.info("\n{}\n{}\n", geometry, boundingBox);
-                if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
+                if (zoom == -1) {
                     bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
                 }
             }
@@ -303,7 +302,7 @@ public class MapController {
         }
 
         logger.info("zoom = {}", zoom);
-        if (zoom < 10 && (town == null || town.isEmpty())) {
+        if (zoom <= 10 && (town == null || town.isEmpty())) {
             HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
                     bboxToUse,
                     zoom,
@@ -593,7 +592,6 @@ public class MapController {
         }
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
-//            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
             boundingBox = BoundingBox.createFromString(boundingBoxString);
         }
 
@@ -638,28 +636,28 @@ public class MapController {
                 false
         );
 
-        if (boundingBox != null && zoom < 18) {
-            SuperCluster superCluster = clusterService.createCluster(
-                    getProjectsPoints(
-                            language,
-                            search,
-                            boundingBox,
-                            granularityRegion,
-                            limit,
-                            offset,
-                            keywords != null,
-                            timeout
-                    )
-            );
-            eu.ec.doris.kohesio.payload.Coordinate coords = new eu.ec.doris.kohesio.payload.Coordinate(coordinate);
-            if (!superCluster.containsPointAtCoordinates(coords)) {
-                return new ResponseEntity<>(new JSONArray(), HttpStatus.OK);
-//                return new ResponseEntity<>(mapPointBbox(superCluster, language, coords, zoom, timeout), HttpStatus.OK) ;
-            } else {
-                eu.ec.doris.kohesio.payload.Coordinate coordsFromCluster = superCluster.getCoordinateFromPointAtCoordinates(coords);
-                coordinate = coordsFromCluster.toBasicCoords();
-            }
-        }
+//        if (boundingBox != null && zoom < 18) {
+//            SuperCluster superCluster = clusterService.createCluster(
+//                    getProjectsPoints(
+//                            language,
+//                            search,
+//                            boundingBox,
+//                            granularityRegion,
+//                            limit,
+//                            offset,
+//                            keywords != null,
+//                            timeout
+//                    )
+//            );
+//            eu.ec.doris.kohesio.payload.Coordinate coords = new eu.ec.doris.kohesio.payload.Coordinate(coordinate);
+//            if (!superCluster.containsPointAtCoordinates(coords)) {
+//                return new ResponseEntity<>(new JSONArray(), HttpStatus.OK);
+////                return new ResponseEntity<>(mapPointBbox(superCluster, language, coords, zoom, timeout), HttpStatus.OK) ;
+//            } else {
+//                eu.ec.doris.kohesio.payload.Coordinate coordsFromCluster = superCluster.getCoordinateFromPointAtCoordinates(coords);
+//                coordinate = coordsFromCluster.toBasicCoords();
+//            }
+//        }
 
         String limitS = "";
         if (limit != null)
@@ -1123,13 +1121,18 @@ public class MapController {
             query += " " + filterBbox + " " + filterBbox + " ";
         }
         if (granularityRegion != null) {
-            Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-            query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+            Nut nut = facetController.nutsRegion.get(granularityRegion);
+            Geometry geometryGranularityRegion = geoJSONReader.read(nut.geoJson.replace("'", "\""));
+            if (nut.type.contains("country") || nut.country.equals("https://linkedopendata.eu/entity/Q15")) {
+                query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.convexHull().toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+            } else {
+                query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+            }
         }
         query += "}";
 
         logger.info("sparql={}", sparqlEndpoint);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false,"point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
@@ -1169,10 +1172,6 @@ public class MapController {
             if (feature.getGeometry() instanceof Point) {
                 Point point = (Point) feature.getGeometry();
                 eu.ec.doris.kohesio.payload.Coordinate coordinate = new eu.ec.doris.kohesio.payload.Coordinate(point.getCoordinates());
-                logger.info(
-                        "Feature: {}",
-                        !superCluster.containsPointAtCoordinates(coordinate)
-                );
                 element.put("cluster", !superCluster.containsPointAtCoordinates(coordinate));
                 if (superCluster.containsPointAtCoordinates(coordinate)) {
                     eu.ec.doris.kohesio.payload.Coordinate coordinate1 = superCluster.getCoordinateFromPointAtCoordinates(coordinate);
