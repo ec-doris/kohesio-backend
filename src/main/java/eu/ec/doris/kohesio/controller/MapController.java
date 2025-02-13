@@ -1124,12 +1124,16 @@ public class MapController {
         if (granularityRegion != null) {
             Nut nut = facetController.nutsRegion.get(granularityRegion);
             Geometry geometryGranularityRegion = geoJSONReader.read(nut.geoJson.replace("'", "\""));
-            query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.convexHull().toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+            if (nut.type.contains("country")) {
+                query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.convexHull().toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+            } else {
+                query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+            }
         }
         query += "}";
 
         logger.info("sparql={}", sparqlEndpoint);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false, "point");
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false,"point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
