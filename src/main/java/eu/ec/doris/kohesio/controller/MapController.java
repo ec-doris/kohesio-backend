@@ -1124,7 +1124,7 @@ public class MapController {
         if (granularityRegion != null) {
             Nut nut = facetController.nutsRegion.get(granularityRegion);
             Geometry geometryGranularityRegion = geoJSONReader.read(nut.geoJson.replace("'", "\""));
-            if (nut.type.contains("country")) {
+            if (nut.type.contains("country") || nut.country.equals("https://linkedopendata.eu/entity/Q15")) {
                 query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.convexHull().toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
             } else {
                 query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
