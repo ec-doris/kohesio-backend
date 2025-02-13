@@ -181,11 +181,11 @@ public class FacetController {
                     geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
                 }
                 if (nutsRegion.get(key).type.contains("country")) {
-                    if ("https://linkedopendata.eu/entity/Q7".equals(key)) {
-                        geometry = " ?nut <http://nuts.de/geoJson60M> ?regionGeo . ";
-                    } else {
+//                    if ("https://linkedopendata.eu/entity/Q7".equals(key)) {
+//                        geometry = " ?nut <http://nuts.de/geoJson60M> ?regionGeo . ";
+//                    } else {
                         geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
-                    }
+//                    }
                 }
 //        if (nutsRegion.get(key).type.equals("nuts1")){
 //          geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
