@@ -636,28 +636,28 @@ public class MapController {
                 false
         );
 
-        if (boundingBox != null && zoom < 18) {
-            SuperCluster superCluster = clusterService.createCluster(
-                    getProjectsPoints(
-                            language,
-                            search,
-                            boundingBox,
-                            granularityRegion,
-                            limit,
-                            offset,
-                            keywords != null,
-                            timeout
-                    )
-            );
-            eu.ec.doris.kohesio.payload.Coordinate coords = new eu.ec.doris.kohesio.payload.Coordinate(coordinate);
-            if (!superCluster.containsPointAtCoordinates(coords)) {
-                return new ResponseEntity<>(new JSONArray(), HttpStatus.OK);
-//                return new ResponseEntity<>(mapPointBbox(superCluster, language, coords, zoom, timeout), HttpStatus.OK) ;
-            } else {
-                eu.ec.doris.kohesio.payload.Coordinate coordsFromCluster = superCluster.getCoordinateFromPointAtCoordinates(coords);
-                coordinate = coordsFromCluster.toBasicCoords();
-            }
-        }
+//        if (boundingBox != null && zoom < 18) {
+//            SuperCluster superCluster = clusterService.createCluster(
+//                    getProjectsPoints(
+//                            language,
+//                            search,
+//                            boundingBox,
+//                            granularityRegion,
+//                            limit,
+//                            offset,
+//                            keywords != null,
+//                            timeout
+//                    )
+//            );
+//            eu.ec.doris.kohesio.payload.Coordinate coords = new eu.ec.doris.kohesio.payload.Coordinate(coordinate);
+//            if (!superCluster.containsPointAtCoordinates(coords)) {
+//                return new ResponseEntity<>(new JSONArray(), HttpStatus.OK);
+////                return new ResponseEntity<>(mapPointBbox(superCluster, language, coords, zoom, timeout), HttpStatus.OK) ;
+//            } else {
+//                eu.ec.doris.kohesio.payload.Coordinate coordsFromCluster = superCluster.getCoordinateFromPointAtCoordinates(coords);
+//                coordinate = coordsFromCluster.toBasicCoords();
+//            }
+//        }
 
         String limitS = "";
         if (limit != null)
