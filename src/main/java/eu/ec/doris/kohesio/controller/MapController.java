@@ -593,7 +593,6 @@ public class MapController {
         }
         BoundingBox boundingBox = null;
         if (boundingBoxString != null) {
-//            boundingBox = objectMapper.readValue(boundingBoxString, BoundingBox.class);
             boundingBox = BoundingBox.createFromString(boundingBoxString);
         }
 
@@ -1122,14 +1121,15 @@ public class MapController {
         } else {
             query += " " + filterBbox + " " + filterBbox + " ";
         }
-//        if (granularityRegion != null) {
-//            Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+        if (granularityRegion != null) {
+            Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+            query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.convexHull().toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
 //            query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
-//        }
+        }
         query += "}";
 
         logger.info("sparql={}", sparqlEndpoint);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, "point");
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false,"point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
