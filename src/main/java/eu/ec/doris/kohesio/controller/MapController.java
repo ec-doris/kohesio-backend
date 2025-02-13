@@ -291,8 +291,7 @@ public class MapController {
             if (nut != null && nut.geoJson != null && !nut.geoJson.isEmpty()) {
                 logger.info("Loading Geojson: {}", nut.geoJson.replace("'", "\""));
                 Geometry geometry = geoJSONReader.read(nut.geoJson.replace("'", "\""));
-//            logger.info("\n{}\n{}\n", geometry, boundingBox);
-                if (!geometry.convexHull().contains(boundingBox.toGeometry())) {
+                if (zoom == -1) {
                     bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
                 }
             }
