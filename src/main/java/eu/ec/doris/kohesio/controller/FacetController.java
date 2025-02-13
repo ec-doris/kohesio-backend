@@ -89,7 +89,7 @@ public class FacetController {
                         + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P32> ?country } "
                         + " OPTIONAL {?region <https://linkedopendata.eu/prop/direct/P192> ?nuts_code } "
                         + "}";
-                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30,"facet");
+                TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, 30, "facet");
                 while (resultSet.hasNext()) {
                     BindingSet querySolution = resultSet.next();
                     String key = querySolution.getBinding("region").getValue().stringValue();
@@ -181,17 +181,20 @@ public class FacetController {
                     geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
                 }
                 if (nutsRegion.get(key).type.contains("country")) {
-                    geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
+                    if ("https://linkedopendata.eu/entity/Q7".equals(key)) {
+                        geometry = " ?nut <http://nuts.de/geoJson60M> ?regionGeo . ";
+                    } else {
+                        geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
+                    }
                 }
 //        if (nutsRegion.get(key).type.equals("nuts1")){
 //          geometry = " ?nut <http://nuts.de/geoJson20M> ?regionGeo . ";
 //        }
 
-                String query =
-                        "SELECT ?regionGeo where {" +
-                                "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
-                                geometry +
-                                " }";
+                String query = "SELECT ?regionGeo where {" +
+                        "?nut <http://nuts.de/linkedopendata> <" + nutsRegion.get(key).uri + "> . " +
+                        geometry +
+                        " }";
                 TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
                         sparqlEndpoint,
                         query,
