@@ -1169,8 +1169,13 @@ public class MapController {
             if (feature.getGeometry() instanceof Point) {
                 Point point = (Point) feature.getGeometry();
                 eu.ec.doris.kohesio.payload.Coordinate coordinate = new eu.ec.doris.kohesio.payload.Coordinate(point.getCoordinates());
+                logger.info(
+                        "Feature: {}",
+                        !superCluster.containsPointAtCoordinates(coordinate)
+                );
                 element.put("cluster", !superCluster.containsPointAtCoordinates(coordinate));
-                element.put("coordinates", point.getCoordinates()[0] + "," + point.getCoordinates()[1]);
+                eu.ec.doris.kohesio.payload.Coordinate coordinate1 = superCluster.getCoordinateFromPointAtCoordinates(coordinate);
+                element.put("coordinates", coordinate1.toBasicCoords());
             } else {
                 element.put("cluster", false);
                 element.put("coordinates", null);
