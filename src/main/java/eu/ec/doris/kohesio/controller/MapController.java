@@ -1122,10 +1122,10 @@ public class MapController {
         } else {
             query += " " + filterBbox + " " + filterBbox + " ";
         }
-        if (granularityRegion != null) {
-            Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
-            query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
-        }
+//        if (granularityRegion != null) {
+//            Geometry geometryGranularityRegion = geoJSONReader.read(facetController.nutsRegion.get(granularityRegion).geoJson.replace("'", "\""));
+//            query += " " + "FILTER(<http://www.opengis.net/def/function/geosparql/ehContains>(\"" + geometryGranularityRegion.toText() + "\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>,?coordinates)) ";
+//        }
         query += "}";
 
         logger.info("sparql={}", sparqlEndpoint);
