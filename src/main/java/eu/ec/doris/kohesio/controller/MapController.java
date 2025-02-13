@@ -310,7 +310,7 @@ public class MapController {
                     language,
                     granularityRegion,
                     country,
-                    20
+                    60
             );
             return createResponse(tmp, search, language, granularityRegion, timeout);
         }
