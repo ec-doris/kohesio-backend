@@ -392,7 +392,7 @@ public class MapController {
                     language,
                     granularityRegion,
                     country,
-                    cache ? 300 : 30 // if it's during cache calculation we give more time than on live
+                    cache ? 300 : 60 // if it's during cache calculation we give more time than on live
             );
 //            logger.info("CGS : {}", tmp);
             return createResponse(tmp, search, language, granularityRegion, timeout);
