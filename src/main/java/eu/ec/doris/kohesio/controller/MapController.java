@@ -125,6 +125,85 @@ public class MapController {
             Integer timeout,
             Principal principal
     ) throws Exception {
+        return euSearchProjectMap(
+                language,
+                keywords,
+                country,
+                theme,
+                fund,
+                program,
+                categoryOfIntervention,
+                policyObjective,
+                budgetBiggerThen,
+                budgetSmallerThen,
+                budgetEUBiggerThen,
+                budgetEUSmallerThen,
+                startDateBefore,
+                startDateAfter,
+                endDateBefore,
+                endDateAfter,
+                latitude,
+                longitude,
+                region,
+                granularityRegion,
+                nuts3,
+                limit,
+                offset,
+                town,
+                radius,
+                interreg,
+                highlighted,
+                cci,
+                kohesioCategory,
+                projectTypes,
+                priorityAxis,
+                boundingBoxString,
+                zoom,
+                timeout,
+                principal,
+                false
+        );
+    }
+
+    public ResponseEntity<JSONObject> euSearchProjectMap(
+            String language,
+            String keywords,
+            String country,
+            String theme,
+            String fund,
+            String program,
+            List<String> categoryOfIntervention,
+            String policyObjective,
+            Long budgetBiggerThen,
+            Long budgetSmallerThen,
+            Long budgetEUBiggerThen,
+            Long budgetEUSmallerThen,
+            String startDateBefore,
+            String startDateAfter,
+            String endDateBefore,
+            String endDateAfter,
+            String latitude,
+            String longitude,
+            String region,
+            String granularityRegion,
+            String nuts3,
+            Integer limit,
+            Integer offset,
+            String town,
+            Long radius,
+            Boolean interreg,
+            Boolean highlighted,
+            List<String> cci,
+            String kohesioCategory,
+            List<String> projectTypes,
+            String priorityAxis,
+            String boundingBoxString,
+            Integer zoom,
+            Integer timeout,
+            Principal principal,
+            boolean cache
+    ) throws Exception {
+
         logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {} town {} boundingBox {}, priorityAxis {}, projectType {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg, town, boundingBoxString, priorityAxis, projectTypes);
         facetController.initialize(language);
         if (timeout == null) {
@@ -174,7 +253,7 @@ public class MapController {
             return handleBoundingBox(
                     language, keywords, country, granularityRegion,
                     limit, offset, town, zoom,
-                    timeout, boundingBox, search
+                    timeout, boundingBox, search, cache
             );
         }
         //computing the number of results
@@ -280,7 +359,8 @@ public class MapController {
     private ResponseEntity<JSONObject> handleBoundingBox(
             String language, String keywords, String country, String granularityRegion,
             Integer limit, Integer offset, String town, Integer zoom,
-            Integer timeout, BoundingBox boundingBox, String search
+            Integer timeout, BoundingBox boundingBox, String search,
+            boolean cache
     ) throws Exception {
         BoundingBox bboxToUse = boundingBox;
         if (town != null) {
@@ -312,7 +392,7 @@ public class MapController {
                     language,
                     granularityRegion,
                     country,
-                    60
+                    cache ? 300 : 20 // if it's during cache calculation we give more time than on live
             );
             logger.info("CGS : {}", tmp);
             return createResponse(tmp, search, language, granularityRegion, timeout);
@@ -928,7 +1008,7 @@ public class MapController {
                 + " } UNION { "
                 + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
                 + " } ";
-        if (!"https://linkedopendata.eu/entity/Q1".equals(granularityRegion)) {
+        if (granularityRegion != null && !"https://linkedopendata.eu/entity/Q1".equals(granularityRegion)) {
             queryCount += " UNION { VALUES ?nuts {<" + granularityRegion + "> }}";
         }
         queryCount += " }} GROUP BY ?nuts";

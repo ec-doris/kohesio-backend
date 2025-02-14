@@ -359,7 +359,7 @@ public class CacheController {
                 null, null, 0, null,
                 null, interreg, null, null,
                 null, projectTypes, priorityAxis, boundingBoxString,
-                4, 400, null
+                4, 400, null, true
         );
     }
 
@@ -520,7 +520,7 @@ public class CacheController {
                 null, null,
                 null, null, null,
                 null, null, null,
-                null, 400, null
+                null, 400, null, true
         );
         logger.debug("Response result: {}", responseEntity.getBody());
         if ((responseEntity.getBody()).get("subregions") instanceof JSONArray) {
