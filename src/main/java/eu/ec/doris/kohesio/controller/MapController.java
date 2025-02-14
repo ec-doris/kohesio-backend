@@ -384,7 +384,7 @@ public class MapController {
         }
 
         logger.info("zoom = {}", zoom);
-        if (zoom <= 10 && (town == null || town.isEmpty())) {
+        if (zoom < 10 && (town == null || town.isEmpty())) {
             HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
                     bboxToUse,
                     zoom,
