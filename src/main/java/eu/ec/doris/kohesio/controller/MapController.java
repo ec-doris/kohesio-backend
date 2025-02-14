@@ -312,7 +312,11 @@ public class MapController {
                     country,
                     60
             );
-            return createResponse(tmp, search, language, granularityRegion, timeout);
+            if (granularityRegion != null && granularityRegion.endsWith("Q204"))
+                logger.info("CGS : {}", tmp);
+            if (!tmp.isEmpty()) {
+                return createResponse(tmp, search, language, granularityRegion, timeout);
+            }
         }
         // in this case create the clusters by taking all points
         List<Feature> features = getProjectsPoints(
@@ -1132,7 +1136,7 @@ public class MapController {
         query += "}";
 
         logger.info("sparql={}", sparqlEndpoint);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false,"point");
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false, "point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
