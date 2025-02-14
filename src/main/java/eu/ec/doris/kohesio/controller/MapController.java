@@ -371,7 +371,7 @@ public class MapController {
         } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
             Nut nut = facetController.nutsRegion.get(granularityRegion);
             if (nut != null && nut.geoJson != null && !nut.geoJson.isEmpty()) {
-                logger.info("Loading Geojson: {}", nut.geoJson.replace("'", "\""));
+//                logger.info("Loading Geojson: {}", nut.geoJson.replace("'", "\""));
                 Geometry geometry = geoJSONReader.read(nut.geoJson.replace("'", "\""));
                 if (zoom == -1) {
                     bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
@@ -394,7 +394,7 @@ public class MapController {
                     country,
                     cache ? 300 : 20 // if it's during cache calculation we give more time than on live
             );
-            logger.info("CGS : {}", tmp);
+//            logger.info("CGS : {}", tmp);
             return createResponse(tmp, search, language, granularityRegion, timeout);
         }
         // in this case create the clusters by taking all points
