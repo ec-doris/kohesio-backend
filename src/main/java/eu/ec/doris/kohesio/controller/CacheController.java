@@ -359,7 +359,7 @@ public class CacheController {
                 null, null, 0, null,
                 null, interreg, null, null,
                 null, projectTypes, priorityAxis, boundingBoxString,
-                4, 400, null
+                4, 400, null, true
         );
     }
 
@@ -367,6 +367,7 @@ public class CacheController {
         String language = "en";
         List<String> countries = getListFromApi(facetController.facetEuCountries(language, null), "instance");
         countries.add(null);
+        List<String> funds = getListFromApi(facetController.facetEuFunds("eu", null), "instance");
         for (String country : countries) {
             wrapperMap(
                     country, null, null, null,
@@ -433,6 +434,13 @@ public class CacheController {
                         null, null, null
                 );
             }
+            for (String fund : funds) {
+                wrapperMap(
+                        country, null, fund, null,
+                        null, null, null,
+                        null, null, null
+                );
+            }
         }
 
         List<String> policies = getListFromApi(facetController.facetPolicyObjective("en"), "instance");
@@ -461,7 +469,6 @@ public class CacheController {
             );
         }
 
-        List<String> funds = getListFromApi(facetController.facetEuFunds("eu", null), "instance");
         for (String fund : funds) {
             wrapperMap(
                     null, null, fund, null,
@@ -520,7 +527,7 @@ public class CacheController {
                 null, null,
                 null, null, null,
                 null, null, null,
-                null, 400, null
+                null, 400, null, true
         );
         logger.debug("Response result: {}", responseEntity.getBody());
         if ((responseEntity.getBody()).get("subregions") instanceof JSONArray) {

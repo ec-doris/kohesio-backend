@@ -17,6 +17,7 @@ import org.json.simple.JSONObject;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.WKTReader;
+import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.wololo.geojson.Feature;
+import org.wololo.geojson.GeoJSON;
 import org.wololo.geojson.Point;
 import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
@@ -123,6 +125,85 @@ public class MapController {
             Integer timeout,
             Principal principal
     ) throws Exception {
+        return euSearchProjectMap(
+                language,
+                keywords,
+                country,
+                theme,
+                fund,
+                program,
+                categoryOfIntervention,
+                policyObjective,
+                budgetBiggerThen,
+                budgetSmallerThen,
+                budgetEUBiggerThen,
+                budgetEUSmallerThen,
+                startDateBefore,
+                startDateAfter,
+                endDateBefore,
+                endDateAfter,
+                latitude,
+                longitude,
+                region,
+                granularityRegion,
+                nuts3,
+                limit,
+                offset,
+                town,
+                radius,
+                interreg,
+                highlighted,
+                cci,
+                kohesioCategory,
+                projectTypes,
+                priorityAxis,
+                boundingBoxString,
+                zoom,
+                timeout,
+                principal,
+                false
+        );
+    }
+
+    public ResponseEntity<JSONObject> euSearchProjectMap(
+            String language,
+            String keywords,
+            String country,
+            String theme,
+            String fund,
+            String program,
+            List<String> categoryOfIntervention,
+            String policyObjective,
+            Long budgetBiggerThen,
+            Long budgetSmallerThen,
+            Long budgetEUBiggerThen,
+            Long budgetEUSmallerThen,
+            String startDateBefore,
+            String startDateAfter,
+            String endDateBefore,
+            String endDateAfter,
+            String latitude,
+            String longitude,
+            String region,
+            String granularityRegion,
+            String nuts3,
+            Integer limit,
+            Integer offset,
+            String town,
+            Long radius,
+            Boolean interreg,
+            Boolean highlighted,
+            List<String> cci,
+            String kohesioCategory,
+            List<String> projectTypes,
+            String priorityAxis,
+            String boundingBoxString,
+            Integer zoom,
+            Integer timeout,
+            Principal principal,
+            boolean cache
+    ) throws Exception {
+
         logger.info("Search Projects on map: language {} keywords {} country {} theme {} fund {} program {} categoryOfIntervention {} policyObjective {} budgetBiggerThen {} budgetSmallerThen {} budgetEUBiggerThen {} budgetEUSmallerThen {} startDateBefore {} startDateAfter {} endDateBefore {} endDateAfter {} region {} limit {} offset {} granularityRegion {}, lat {} long {} timeout {} interreg {} town {} boundingBox {}, priorityAxis {}, projectType {}", language, keywords, country, theme, fund, program, categoryOfIntervention, policyObjective, budgetBiggerThen, budgetSmallerThen, budgetEUBiggerThen, budgetEUSmallerThen, startDateBefore, startDateAfter, endDateBefore, endDateAfter, region, limit, offset, granularityRegion, latitude, longitude, timeout, interreg, town, boundingBoxString, priorityAxis, projectTypes);
         facetController.initialize(language);
         if (timeout == null) {
@@ -172,7 +253,7 @@ public class MapController {
             return handleBoundingBox(
                     language, keywords, country, granularityRegion,
                     limit, offset, town, zoom,
-                    timeout, boundingBox, search
+                    timeout, boundingBox, search, cache
             );
         }
         //computing the number of results
@@ -278,7 +359,8 @@ public class MapController {
     private ResponseEntity<JSONObject> handleBoundingBox(
             String language, String keywords, String country, String granularityRegion,
             Integer limit, Integer offset, String town, Integer zoom,
-            Integer timeout, BoundingBox boundingBox, String search
+            Integer timeout, BoundingBox boundingBox, String search,
+            boolean cache
     ) throws Exception {
         BoundingBox bboxToUse = boundingBox;
         if (town != null) {
@@ -289,7 +371,7 @@ public class MapController {
         } else if (granularityRegion != null && !granularityRegion.equals("https://linkedopendata.eu/entity/Q1")) {
             Nut nut = facetController.nutsRegion.get(granularityRegion);
             if (nut != null && nut.geoJson != null && !nut.geoJson.isEmpty()) {
-                logger.info("Loading Geojson: {}", nut.geoJson.replace("'", "\""));
+//                logger.info("Loading Geojson: {}", nut.geoJson.replace("'", "\""));
                 Geometry geometry = geoJSONReader.read(nut.geoJson.replace("'", "\""));
                 if (zoom == -1) {
                     bboxToUse = new BoundingBox(geometry.getEnvelopeInternal());
@@ -302,7 +384,7 @@ public class MapController {
         }
 
         logger.info("zoom = {}", zoom);
-        if (zoom <= 10 && (town == null || town.isEmpty())) {
+        if (zoom < 10 && (town == null || town.isEmpty())) {
             HashMap<String, Zone> tmp = getCoordinatesByGeographicSubdivision(
                     bboxToUse,
                     zoom,
@@ -310,8 +392,9 @@ public class MapController {
                     language,
                     granularityRegion,
                     country,
-                    20
+                    cache ? 300 : 20 // if it's during cache calculation we give more time than on live
             );
+//            logger.info("CGS : {}", tmp);
             return createResponse(tmp, search, language, granularityRegion, timeout);
         }
         // in this case create the clusters by taking all points
@@ -924,8 +1007,11 @@ public class MapController {
                 + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> "
                 + " } UNION { "
                 + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
-                + " } "
-                + " }} GROUP BY ?nuts";
+                + " } ";
+        if (granularityRegion != null && !"https://linkedopendata.eu/entity/Q1".equals(granularityRegion)) {
+            queryCount += " UNION { VALUES ?nuts {<" + granularityRegion + "> }}";
+        }
+        queryCount += " }} GROUP BY ?nuts";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
                 sparqlEndpoint,
@@ -995,6 +1081,13 @@ public class MapController {
                 Zone zone = new Zone(uri, lid, geo, type, uriCount.get(lid));
                 result.put(lid, zone);
             }
+        }
+        if (result.isEmpty() && uriCount.containsKey(granularityRegion)) {
+            Nut nut = facetController.nutsRegion.get(granularityRegion);
+            GeoJsonReader geoJsonReader = new GeoJsonReader();
+            Geometry geometry = geoJsonReader.read(nut.geoJson.replace("'", "\""));
+            Zone zone = new Zone("", granularityRegion, geometry.toText(), type, uriCount.get(granularityRegion));
+            result.put(granularityRegion, zone);
         }
         return result;
     }
@@ -1132,7 +1225,7 @@ public class MapController {
         query += "}";
 
         logger.info("sparql={}", sparqlEndpoint);
-        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false,"point");
+        TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(sparqlEndpoint, query, timeout, false, "point");
         HashMap<Geometry, List<String>> projectByCoordinates = new HashMap<>();
         while (resultSet.hasNext()) {
             BindingSet querySolution = resultSet.next();
