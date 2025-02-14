@@ -17,6 +17,7 @@ import org.json.simple.JSONObject;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.WKTReader;
+import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.wololo.geojson.Feature;
+import org.wololo.geojson.GeoJSON;
 import org.wololo.geojson.Point;
 import org.wololo.jts2geojson.GeoJSONReader;
 import org.wololo.jts2geojson.GeoJSONWriter;
@@ -312,11 +314,8 @@ public class MapController {
                     country,
                     60
             );
-            if (granularityRegion != null && granularityRegion.endsWith("Q204"))
-                logger.info("CGS : {}", tmp);
-            if (!tmp.isEmpty()) {
-                return createResponse(tmp, search, language, granularityRegion, timeout);
-            }
+            logger.info("CGS : {}", tmp);
+            return createResponse(tmp, search, language, granularityRegion, timeout);
         }
         // in this case create the clusters by taking all points
         List<Feature> features = getProjectsPoints(
@@ -928,8 +927,11 @@ public class MapController {
                 + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q4407317> "
                 + " } UNION { "
                 + " ?nuts <https://linkedopendata.eu/prop/direct/P35> <https://linkedopendata.eu/entity/Q510> "
-                + " } "
-                + " }} GROUP BY ?nuts";
+                + " } ";
+        if (!"https://linkedopendata.eu/entity/Q1".equals(granularityRegion)) {
+            queryCount += " UNION { VALUES ?nuts {<" + granularityRegion + "> }}";
+        }
+        queryCount += " }} GROUP BY ?nuts";
 
         TupleQueryResult resultSet = sparqlQueryService.executeAndCacheQuery(
                 sparqlEndpoint,
@@ -999,6 +1001,13 @@ public class MapController {
                 Zone zone = new Zone(uri, lid, geo, type, uriCount.get(lid));
                 result.put(lid, zone);
             }
+        }
+        if (result.isEmpty() && uriCount.containsKey(granularityRegion)) {
+            Nut nut = facetController.nutsRegion.get(granularityRegion);
+            GeoJsonReader geoJsonReader = new GeoJsonReader();
+            Geometry geometry = geoJsonReader.read(nut.geoJson.replace("'", "\""));
+            Zone zone = new Zone("", granularityRegion, geometry.toText(), type, uriCount.get(granularityRegion));
+            result.put(granularityRegion, zone);
         }
         return result;
     }
